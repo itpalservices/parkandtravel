@@ -1,0 +1,191 @@
+Please implement the backend REST API for the bookings feature, following these exact rules.
+
+1️⃣ Base URL
+
+All endpoints must be prefixed with:
+
+/api/bookings
+
+Use a clean structure with routes → controllers → services → models.
+
+2️⃣ Endpoint: GET /api/bookings
+
+Returns active bookings, with optional filters.
+
+🔹 Query parameters (optional)
+
+dateFrom — string, format YYYY-MM-DD
+
+dateTo — string, format YYYY-MM-DD
+
+search — string (used to search by name, surname, email, plateNo)
+
+page — integer (for pagination, default 1)
+
+limit — integer (for pagination, default 20)
+
+🔹 Active bookings definition
+
+Return ONLY bookings where:
+
+deleteflag = 0
+AND
+
+(dateTo + timeTo) > NOW (current timestamp)
+
+If timeTo is NULL, treat it as 23:59:59 for comparison.
+
+🔹 Date filter logic (very important)
+
+If no dateFrom and no dateTo are provided:
+→ Return all active bookings as defined above.
+
+If dateFrom or dateTo is provided:
+
+Validate both (those that exist):
+
+Must be valid dates in YYYY-MM-DD format.
+
+Must NOT be in the past (must be today or future date).
+
+If any provided date is before today, return:
+
+HTTP 400 Bad Request
+
+JSON:
+
+{ "error": "dateFrom/dateTo cannot be in the past" }
+
+
+If both are provided and dateFrom > dateTo:
+
+return 400 with:
+
+{ "error": "dateFrom cannot be after dateTo" }
+
+
+When dates are valid:
+
+Return only active bookings whose range overlaps [dateFrom, dateTo] (inclusive).
+For example:
+booking.dateFrom <= dateTo AND booking.dateTo >= dateFrom.
+
+🔹 Search logic
+
+If search is provided, filter results so that search matches (case-insensitive, partial match) at least one of:
+
+name
+
+surname
+
+email
+
+plateNo
+
+🔹 Ordering
+
+Order the results by:
+
+dateTo ascending
+
+then timeTo ascending (using COALESCE(timeTo, '23:59:59'))
+
+🔹 Response format
+
+Return JSON:
+
+{
+  "data": [
+    {
+      "id": "...",
+      "name": "...",
+      "surname": "...",
+      "email": "...",
+      "returnFlight": "...",
+      "dateFrom": "YYYY-MM-DD",
+      "timeFrom": "HH:MM:SS",
+      "dateTo": "YYYY-MM-DD",
+      "timeTo": "HH:MM:SS",
+      "mobile": "...",
+      "plateNo": "...",
+      "carBrand": "...",
+      "carModel": "...",
+      "carColor": "...",
+      "parkingType": "...",
+      "adults": 0,
+      "deleteflag": 0
+    }
+  ],
+  "meta": {
+    "total": 50,
+    "page": 1,
+    "limit": 20
+  }
+}
+
+3️⃣ Endpoint: GET /api/bookings/:id
+
+Returns the full details of a single booking by id.
+
+If not found, return 404 with:
+
+{ "error": "Booking not found" }
+
+4️⃣ Endpoint: PUT /api/bookings/:id/delete
+
+This is used when the user confirms “Delete” in the UI.
+
+Logic:
+
+Find booking by id.
+
+If not found → 404 with error.
+
+If found:
+
+Set deleteflag = 1.
+
+Save/update record.
+
+Return 200 with updated booking object.
+
+This operation must be idempotent:
+Calling it multiple times should not crash; once deleteflag is 1, it stays 1.
+
+Example response:
+
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "deleteflag": 1
+  }
+}
+
+5️⃣ Code organization
+
+routes/bookings.routes.ts
+
+Defines the routes and connects them to controller methods.
+
+controllers/bookings.controller.ts
+
+Handles request/response, validation of query params, passes to service.
+
+services/bookings.service.ts
+
+Contains all core business logic and ORM calls for bookings.
+
+models/
+
+Uses the ORM models defined in the previous step for Bookings and ParkingTypes.
+
+Use async/await, proper error handling, and return consistent JSON error formats.
+
+6️⃣ After finishing this step
+
+When all 3 endpoints work and follow the validation and filtering logic above, reply:
+
+“Step 3 completed”
+
+So I can move to Step 4 (Frontend routing & module structure + Bookings feature shell).
