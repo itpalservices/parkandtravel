@@ -1,14 +1,41 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model ParkingType {
+  id       String    @id @db.VarChar(25)
+  name     String    @db.VarChar(100)
+  bookings Booking[]
+
+  @@map("parking_types")
+}
+
+model Booking {
+  id           String       @id @default(uuid()) @db.Uuid
+  name         String       @db.VarChar(250)
+  surname      String       @db.VarChar(250)
+  email        String?      @db.VarChar(250)
+  returnFlight String?      @db.VarChar(10)
+  dateFrom     DateTime     @db.Date
+  timeFrom     DateTime?    @db.Time(6)
+  dateTo       DateTime     @db.Date
+  timeTo       DateTime?    @db.Time(6)
+  mobile       String?      @db.VarChar(20)
+  plateNo      String?      @db.VarChar(10)
+  carBrand     String?      @db.VarChar(100)
+  carModel     String?      @db.VarChar(100)
+  carColor     String?      @db.VarChar(100)
+  parkingTypeId String?     @db.VarChar(25)
+  adults       Int?
+  deleteflag   Int          @default(0)
+  createdAt    DateTime     @default(now())
+
+  parkingType  ParkingType? @relation(fields: [parkingTypeId], references: [id])
+
+  @@map("bookings")
 }
