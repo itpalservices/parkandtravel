@@ -1,0 +1,35 @@
+.page-container {
+  max-width: 1200px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+.placeholder-content {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 3rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.placeholder-icon {
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.placeholder-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-content p {
+  color: #6b7280;
+  margin: 0;
+}

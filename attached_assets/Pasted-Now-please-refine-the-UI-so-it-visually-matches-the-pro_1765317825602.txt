@@ -1,0 +1,219 @@
+Now please refine the UI so it visually matches the provided designs:
+
+Mobile “Admin Dashboard – Bookings” screen (PNG with phone mockup)
+
+Desktop Dashboard / Bookings table screen (PNG with laptop mockup)
+
+This is a Park & Travel parking booking admin panel.
+
+1️⃣ Global Layout & Navigation (Desktop)
+
+Use the desktop screenshot as the reference for the main layout.
+
+Implement the following:
+
+Top blue header bar
+
+Full-width bar with a solid blue background (similar to the mock).
+
+On the left: Park & Travel logo (image or text placeholder: “Park & Travel”).
+
+On the right: three icons aligned horizontally:
+
+user/profile icon
+
+settings/gear icon
+
+notifications/bell icon with a small red dot/badge (like the mock)
+
+The header text “Dashboard” should appear in white (or near-white) inside the content area, not as navbar text.
+
+Left sidebar menu
+
+A vertical menu on the left side (white background).
+
+Items (with appropriate icons), in this order:
+
+Home
+
+Bookings
+
+Customers
+
+Reports
+
+The active menu item (e.g., Bookings) should have:
+
+A light blue background highlight
+
+A subtle indicator bar or colored background similar to the mock.
+
+The sidebar remains fixed on desktop.
+
+Main content area
+
+To the right of the sidebar, the page content appears on a white background.
+
+At the top of this content area:
+
+Title text: Dashboard (for the dashboard route) or Bookings when we are on the bookings page.
+
+A search input on the upper right (for the Bookings table), styled like in the screenshot:
+
+Light grey background
+
+Rounded corners
+
+Placeholder text: Search for...
+
+Search icon on the right inside the input.
+
+Use Bootstrap grid + SCSS to match the spacing, fonts, and background colors as close as possible.
+
+2️⃣ Desktop Bookings Table UI (match laptop mock)
+
+On the /bookings route, the desktop version should look like the laptop screenshot:
+
+Table
+
+Full-width table in the content area.
+
+Columns (left to right) exactly as in the mock:
+
+Full Name
+
+Plate No.
+
+Vehicle / Model
+
+Check In (DateTime)
+
+Flight No
+
+Arrival Date/Time
+
+Parking Type (cov. / unc.)
+
+Actions
+
+Each row:
+
+First cell: avatar icon + full name (e.g., John Papadakis).
+
+Remaining cells: values like in the mock (plate number, model, dates/times, etc.).
+
+Actions: 3 vertical dots (⋮) aligned right.
+
+Search and table header
+
+Above the table, on the right, show the search box as in the mock:
+
+Placeholder: Search for...
+
+Search icon inside the input.
+
+Rounded corners, light grey background.
+
+Pagination
+
+At the bottom of the table, show pagination styled like the screenshot:
+
+Previous with left arrow, Next with right arrow.
+
+Numbers: 1, 2, 3, 4, 5, ..., 11
+
+Current page styled as active (e.g., different color or bold).
+
+Use SCSS to match row spacing, borders, and hover states similar to the mock.
+
+3️⃣ Mobile Bookings Screen UI (match phone mock)
+
+On small screens (mobile), the /bookings route must match the mobile mock you have provided.
+
+Header / Top blue area
+
+Use the same blue header with the Park & Travel logo centered at the top.
+
+On the left of the header, show a hamburger menu icon (three horizontal lines) similar to the mock.
+
+Below the logo, show the title:
+
+Admin Dashboard - Bookings
+
+Centered, black text on white background underneath the blue area.
+
+Search bar
+
+Full-width search bar matching the mock:
+
+Placeholder: Enter Customer Name, License Plate, or Flight
+
+Left side: search icon.
+
+Right side: black square button with white search icon (like the mock).
+
+Rounded corners and subtle border/shadow.
+
+Date range controls
+
+Exactly like the mock:
+
+Left: Start date placeholder
+
+Center: a button with an arrow (→) inside a grey square
+
+Right: End date placeholder
+
+Use ngbDatepicker for both Start date and End date, with the same date-range logic already implemented in Step 6.
+
+Layout should be in one row on mobile, with the middle arrow button between the two date fields, as in the mock.
+
+Current Bookings list
+
+Title: Current Bookings (centered, bold).
+
+List items:
+
+Left side: circular avatar icon.
+
+Next to it (left part): customer name (e.g., John Doe, Jane Smith, Emily Johnson) + flight number on the line below in smaller font (like “Flight A123”).
+
+Right side: merged booking info:
+
+License Plate: ABC123
+
+Check In: 10:00 AM
+
+Arrival Date/Time: 10-10-2025 12:15 PM
+
+Divider line between items (thin grey line).
+
+Pagination (bottom)
+
+Align the pagination at the bottom just like the mock:
+
+Previous on the left with arrow.
+
+Page numbers in the middle (e.g. 1, 2, 3, ... 11).
+
+Next on the right with arrow.
+
+Use SCSS and Bootstrap to match spacing, fonts, and alignment closely.
+
+4️⃣ Navigation between Dashboard, Bookings, Customers, Reports
+
+Ensure the navigation menu works as follows:
+
+Dashboard: default/home page, showing the title “Dashboard” and can have summary content (even simple placeholder text is fine now).
+
+Bookings: show the UI described above (desktop + mobile versions).
+
+Customers: simple placeholder page for now (title + “Customers section coming soon”).
+
+Reports: placeholder page for now.
+
+We want to demonstrate:
+
+Working navigation via sidebar (desktop).
+
+Working navigation via menu/hamburger in mobile (even if the mobile menu is simple for now).

@@ -1,176 +1,192 @@
-@import '../../../../styles/variables';
-
 .bookings-table-wrapper {
-  overflow: hidden;
+  background: #ffffff;
 }
 
-::ng-deep .ngx-datatable.bootstrap-table {
-  background: $card-bg;
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: collapse;
   
-  .datatable-header {
-    background: #f8f9fa;
-    border-bottom: 2px solid $border-color;
+  thead {
+    background-color: #f9fafb;
     
-    .datatable-header-cell {
-      padding: 14px 16px;
+    th {
+      padding: 0.875rem 1rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      font-size: 0.8125rem;
-      color: $text-secondary;
+      color: #6b7280;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      
-      &.actions-header {
-        text-align: center;
-      }
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
     }
   }
   
-  .datatable-body {
-    .datatable-body-row {
-      border-bottom: 1px solid $border-color;
+  tbody {
+    tr {
+      border-bottom: 1px solid #e5e7eb;
       transition: background-color 0.15s ease;
       
       &:hover {
-        background-color: rgba($primary-color, 0.04);
+        background-color: #f9fafb;
       }
       
-      .datatable-body-cell {
-        padding: 16px;
-        vertical-align: middle;
-        display: flex;
-        align-items: center;
-        
-        &.actions-cell {
-          justify-content: center;
-        }
+      &:last-child {
+        border-bottom: none;
       }
     }
-  }
-  
-  .datatable-footer {
-    display: none;
+    
+    td {
+      padding: 1rem;
+      font-size: 0.875rem;
+      color: #374151;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
   }
 }
 
 .name-cell {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  
-  .customer-name {
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: $text-primary;
-  }
-  
-  .customer-email {
-    font-size: 0.8125rem;
-    color: $text-muted;
-  }
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.details-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.detail-row {
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: $text-primary;
-  
-  .detail-icon {
-    color: $text-secondary;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  
-  .detail-label {
-    color: $text-secondary;
-    font-size: 0.8125rem;
-  }
-  
-  .detail-value {
-    color: $text-primary;
-    
-    &.plate-number {
-      font-weight: 600;
-      background: #e9ecef;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-family: monospace;
-    }
-    
-    &.car-details {
-      color: $text-secondary;
-    }
-    
-    &.parking-type {
-      font-weight: 500;
-      color: $primary-color;
-    }
-    
-    &.flight-number {
-      font-weight: 500;
-      color: $info-color;
-    }
-  }
-  
-  .detail-separator {
-    color: $border-color;
-    font-size: 0.75rem;
-  }
+  justify-content: center;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.customer-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.actions-col {
+  width: 50px;
+  text-align: right;
 }
 
 .actions-wrapper {
-  .btn-icon {
-    background: transparent;
-    border: none;
-    padding: 8px;
-    border-radius: $border-radius;
-    color: $text-secondary;
-    cursor: pointer;
-    transition: $transition-fast;
-    
-    &:hover {
-      background: rgba($primary-color, 0.1);
-      color: $primary-color;
-    }
-    
-    &:focus {
-      outline: none;
-      box-shadow: none;
-    }
-    
-    &::after {
-      display: none;
-    }
+  display: inline-block;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+  
+  &::after {
+    display: none;
   }
 }
 
-::ng-deep .dropdown-menu {
-  border: 1px solid $border-color;
-  box-shadow: $box-shadow;
-  border-radius: $border-radius;
-  padding: 4px 0;
+.dropdown-menu {
   min-width: 140px;
+  padding: 0.5rem 0;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+}
+
+[ngbDropdownItem] {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
   
-  .dropdown-item {
-    padding: 10px 16px;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    
-    &:hover {
-      background-color: rgba($primary-color, 0.08);
-    }
-    
-    &.text-danger:hover {
-      background-color: rgba($danger-color, 0.08);
-    }
+  &.text-danger {
+    color: #dc2626;
   }
+}
+
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background-color: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.page-number {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover:not(.active) {
+    background-color: #f3f4f6;
+  }
+  
+  &.active {
+    background-color: #2563eb;
+    color: #ffffff;
+  }
+}
+
+.page-ellipsis {
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
 }
