@@ -52,6 +52,10 @@
               }
             ],
             "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/@swimlane/ngx-datatable/index.css",
+              "node_modules/@swimlane/ngx-datatable/themes/material.css",
+              "node_modules/@swimlane/ngx-datatable/assets/icons.css",
               "src/styles.scss"
             ]
           },
@@ -81,6 +85,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "port": 5000,
+            "allowedHosts": true
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
