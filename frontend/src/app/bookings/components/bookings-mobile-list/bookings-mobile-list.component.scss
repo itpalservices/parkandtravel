@@ -1,0 +1,173 @@
+@import '../../../../styles/variables';
+
+.bookings-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-card {
+  background: $card-bg;
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow-sm;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 1px solid $border-color;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .customer-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0;
+  }
+  
+  .customer-email {
+    font-size: 0.8125rem;
+    color: $text-muted;
+  }
+}
+
+.card-actions {
+  .btn-icon {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: $border-radius;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: $transition-fast;
+    
+    &:hover {
+      background: rgba($primary-color, 0.1);
+      color: $primary-color;
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+    
+    &::after {
+      display: none;
+    }
+  }
+}
+
+.card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 12px;
+  
+  &.compact {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.detail-row-inline {
+  display: flex;
+  gap: 16px;
+}
+
+.detail-icon {
+  color: $text-secondary;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  
+  .detail-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: $text-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .detail-value {
+    font-size: 0.875rem;
+    color: $text-primary;
+    word-break: break-word;
+    
+    &.parking-type {
+      font-weight: 500;
+      color: $primary-color;
+    }
+    
+    &.flight-number {
+      font-weight: 500;
+      color: $info-color;
+    }
+  }
+}
+
+.vehicle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .plate-number {
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: #e9ecef;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    display: inline-block;
+    width: fit-content;
+  }
+  
+  .car-info {
+    font-size: 0.8125rem;
+    color: $text-secondary;
+  }
+}
+
+::ng-deep .dropdown-menu {
+  border: 1px solid $border-color;
+  box-shadow: $box-shadow;
+  border-radius: $border-radius;
+  padding: 4px 0;
+  min-width: 140px;
+  
+  .dropdown-item {
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    
+    &:hover {
+      background-color: rgba($primary-color, 0.08);
+    }
+    
+    &.text-danger:hover {
+      background-color: rgba($danger-color, 0.08);
+    }
+  }
+}

@@ -1,0 +1,229 @@
+Now please implement the full visual UI of the Bookings page on the frontend, following the provided desktop and mobile screenshots as closely as possible (layout, colors, spacing).
+
+Focus in this step on structure, styling, and basic data binding.
+We will refine date logic & actions in the next steps.
+
+1️⃣ BookingsPageComponent layout
+
+In BookingsPageComponent:
+
+Create a top filters bar that contains:
+
+A search input
+
+Two date inputs: Date From and Date To
+
+Below the filters bar, show:
+
+BookingsTableComponent for desktop (md and up)
+
+BookingsMobileListComponent for mobile (sm and down)
+
+Use Bootstrap responsive classes, for example:
+
+Desktop table visible: d-none d-md-block
+
+Mobile list visible: d-block d-md-none
+
+The overall structure in the template should be:
+
+A main container (.container or .container-fluid)
+
+A filters row (.row with columns for search and date range)
+
+A content row (.row containing desktop table or mobile list)
+
+Use SCSS for styling and match the design/mocks as much as possible (colors, paddings, font sizes).
+
+2️⃣ Search input (desktop + mobile)
+
+Create a search box that visually matches the mobile mock (screenshot2):
+
+Rounded borders
+
+Search icon on the left (use a Bootstrap icon or font-awesome if available, otherwise simple placeholder icon)
+
+Placeholder text such as: "Search by name, email, plate..."
+
+In BookingsPageComponent:
+
+Add a searchTerm property (string).
+
+Bind the <input> with [(ngModel)]="searchTerm".
+
+Add an (ngModelChange) event or (input) event to call a method like onSearchChange() that will later trigger API calls.
+
+Use the same visual structure for mobile and desktop (the layout changes, not the style theme).
+
+3️⃣ Date From / Date To controls (UI only for now)
+
+In BookingsPageComponent template:
+
+Add two date controls:
+
+Date From
+
+Date To
+
+For now:
+
+Use ngbDatepicker inputs (with ngbInput) so they can later be wired with ngbCalendar logic.
+
+Place them next to each other on desktop (e.g., using .col-md-3 / .col-md-3).
+
+On mobile, stack them vertically or as in your mobile mock.
+
+Keep the labels and placeholders according to the mock (e.g. "From", "To").
+
+We will implement all validation and min-date/max-date rules in the next steps.
+
+4️⃣ BookingsTableComponent (Desktop – Datatable)
+
+In BookingsTableComponent:
+
+Use the configured ngb-datatable / ngx-datatable plugin.
+
+The table must have these columns:
+
+Name
+
+Display name + surname together.
+
+Merged details column (no header text)
+
+This column should display everything else:
+
+Date From / Time From → Date To / Time To
+
+Plate number
+
+Car brand / model / color
+
+Parking type
+
+Adults (or guests)
+
+Return flight, if present
+
+Layout the text in lines/blocks that follow the structure of your desktop mock.
+
+Actions column
+
+On the right, with a 3-dots button (we will wire it later to Edit/Delete logic).
+
+For now, just place a button/icon that opens a simple dropdown or placeholder.
+
+Input data:
+
+Define an @Input() bookings: Booking[] = [];
+(Create a Booking interface/model in a shared location that matches backend fields.)
+
+For now, you can mock the bookings array inside BookingsPageComponent or start using BookingsService.getBookings() if already connected.
+
+Use SCSS for the table styling to match your desktop mock: row spacing, borders, background colors, fonts, etc.
+
+5️⃣ BookingsMobileListComponent (Mobile – Card/List View)
+
+In BookingsMobileListComponent:
+
+Replace the idea of a table with a list of cards, one card per booking.
+
+Structure:
+
+For each booking:
+
+Show customer name (name + surname) as the main title.
+
+Under that, show a merged details block very similar to the desktop merged column, but formatted vertically like in screenshot2.
+
+Include:
+
+Date/time range (From/To)
+
+Car details
+
+Plate number
+
+Parking type
+
+Adults
+
+Return flight (if present)
+
+On each card, add a 3-dots button (top-right or bottom-right) which will later open the Edit/Delete menu.
+
+Implementation:
+
+@Input() bookings: Booking[] = [];
+
+Use *ngFor="let booking of bookings" to loop.
+
+Styling:
+
+Use SCSS to make the cards look like the mobile mock:
+
+Rounded corners
+
+Shadow or subtle border
+
+Padding
+
+Proper spacing between rows/sections
+
+Nice typography hierarchy (title > labels > values)
+
+6️⃣ BookingRowComponent (Optional but recommended)
+
+If needed, use a BookingRowComponent as a reusable component for both:
+
+A row in the desktop table, or
+
+A card in the mobile list
+
+It can take:
+
+@Input() booking: Booking;
+
+and provide reusable HTML for the merged details block.
+
+7️⃣ Connect BookingsPageComponent to data (basic for now)
+
+In BookingsPageComponent:
+
+Inject BookingsService.
+
+On ngOnInit, call a method like loadBookings() which:
+
+Calls the backend endpoint GET /api/bookings via BookingsService.
+
+Subscribes and stores the results in a bookings: Booking[] property.
+
+Passes bookings to:
+
+<app-bookings-table [bookings]="bookings">
+
+<app-bookings-mobile-list [bookings]="bookings">
+
+You don’t need to wire the filters (search/date) to backend yet in this step — just the initial loading.
+
+8️⃣ After completing this step
+
+At the end of Step 5:
+
+/bookings route should show a fully designed layout:
+
+Filters bar with search and date range.
+
+Desktop table with columns as described.
+
+Mobile card list view matching screenshot2 style.
+
+Data from backend should populate the table/cards (at least basic list).
+
+Styles should be done in SCSS and responsive.
+
+When everything above is done, respond:
+
+“Step 5 completed”
+
+So we can move to Step 6, where we will implement the date range logic with ngbCalendar (min/max dates, enforcing “To ≥ From”, no past dates, same behavior desktop & mobile), and then Step 7 for the 3-dots Edit/Delete with SweetAlert.

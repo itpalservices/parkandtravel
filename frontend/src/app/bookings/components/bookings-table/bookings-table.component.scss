@@ -1,0 +1,176 @@
+@import '../../../../styles/variables';
+
+.bookings-table-wrapper {
+  overflow: hidden;
+}
+
+::ng-deep .ngx-datatable.bootstrap-table {
+  background: $card-bg;
+  
+  .datatable-header {
+    background: #f8f9fa;
+    border-bottom: 2px solid $border-color;
+    
+    .datatable-header-cell {
+      padding: 14px 16px;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      color: $text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      
+      &.actions-header {
+        text-align: center;
+      }
+    }
+  }
+  
+  .datatable-body {
+    .datatable-body-row {
+      border-bottom: 1px solid $border-color;
+      transition: background-color 0.15s ease;
+      
+      &:hover {
+        background-color: rgba($primary-color, 0.04);
+      }
+      
+      .datatable-body-cell {
+        padding: 16px;
+        vertical-align: middle;
+        display: flex;
+        align-items: center;
+        
+        &.actions-cell {
+          justify-content: center;
+        }
+      }
+    }
+  }
+  
+  .datatable-footer {
+    display: none;
+  }
+}
+
+.name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .customer-name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: $text-primary;
+  }
+  
+  .customer-email {
+    font-size: 0.8125rem;
+    color: $text-muted;
+  }
+}
+
+.details-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: $text-primary;
+  
+  .detail-icon {
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  
+  .detail-label {
+    color: $text-secondary;
+    font-size: 0.8125rem;
+  }
+  
+  .detail-value {
+    color: $text-primary;
+    
+    &.plate-number {
+      font-weight: 600;
+      background: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    
+    &.car-details {
+      color: $text-secondary;
+    }
+    
+    &.parking-type {
+      font-weight: 500;
+      color: $primary-color;
+    }
+    
+    &.flight-number {
+      font-weight: 500;
+      color: $info-color;
+    }
+  }
+  
+  .detail-separator {
+    color: $border-color;
+    font-size: 0.75rem;
+  }
+}
+
+.actions-wrapper {
+  .btn-icon {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    border-radius: $border-radius;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: $transition-fast;
+    
+    &:hover {
+      background: rgba($primary-color, 0.1);
+      color: $primary-color;
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+    
+    &::after {
+      display: none;
+    }
+  }
+}
+
+::ng-deep .dropdown-menu {
+  border: 1px solid $border-color;
+  box-shadow: $box-shadow;
+  border-radius: $border-radius;
+  padding: 4px 0;
+  min-width: 140px;
+  
+  .dropdown-item {
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    
+    &:hover {
+      background-color: rgba($primary-color, 0.08);
+    }
+    
+    &.text-danger:hover {
+      background-color: rgba($danger-color, 0.08);
+    }
+  }
+}
