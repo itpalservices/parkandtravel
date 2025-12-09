@@ -1,1 +1,51 @@
-/* You can add global styles to this file, and also import other style files */
+// Import shared SCSS files
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+// Global styles
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: $text-primary;
+  background-color: $body-bg;
+}
+
+// Responsive container
+.container-fluid {
+  width: 100%;
+  padding-right: $spacer;
+  padding-left: $spacer;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+// Utility classes
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: $spacer-xs; }
+.mt-2 { margin-top: $spacer-sm; }
+.mt-3 { margin-top: $spacer-md; }
+.mt-4 { margin-top: $spacer-lg; }
+.mt-5 { margin-top: $spacer-xl; }
+
+.mb-1 { margin-bottom: $spacer-xs; }
+.mb-2 { margin-bottom: $spacer-sm; }
+.mb-3 { margin-bottom: $spacer-md; }
+.mb-4 { margin-bottom: $spacer-lg; }
+.mb-5 { margin-bottom: $spacer-xl; }
+
+.p-1 { padding: $spacer-xs; }
+.p-2 { padding: $spacer-sm; }
+.p-3 { padding: $spacer-md; }
+.p-4 { padding: $spacer-lg; }
+.p-5 { padding: $spacer-xl; }
