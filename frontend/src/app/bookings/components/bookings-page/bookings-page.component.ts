@@ -30,13 +30,16 @@ export class BookingsPageComponent implements OnInit {
   constructor(private bookingsService: BookingsService) {}
 
   ngOnInit(): void {
+    console.log('BookingsPageComponent ngOnInit');
     this.loadBookings();
   }
 
   loadBookings(): void {
+    console.log('loadBookings called');
     this.loading = true;
     this.bookingsService.getBookings().subscribe({
       next: (response) => {
+        console.log('Bookings loaded:', response);
         this.bookings = response.data;
         this.loading = false;
       },
