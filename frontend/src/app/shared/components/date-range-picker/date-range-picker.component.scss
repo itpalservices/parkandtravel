@@ -1,0 +1,254 @@
+.date-range-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.date-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+  }
+
+  svg {
+    color: #6b7280;
+  }
+
+  .date-text {
+    font-weight: 500;
+  }
+}
+
+.dropdown-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1050;
+  display: flex;
+  min-width: 180px;
+
+  &.expanded {
+    min-width: auto;
+  }
+}
+
+.presets-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  min-width: 160px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.preset-btn {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+
+  &.active {
+    background-color: #6366f1;
+    color: #ffffff;
+  }
+}
+
+.custom-range-panel {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.calendars-container {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.calendar-wrapper {
+  ::ng-deep {
+    .ngb-dp-header {
+      padding: 0.5rem;
+      background: transparent;
+    }
+
+    .ngb-dp-months {
+      display: flex;
+    }
+
+    .ngb-dp-month {
+      background: transparent;
+    }
+
+    .ngb-dp-month-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+      height: 2rem;
+    }
+
+    .ngb-dp-weekdays {
+      border-bottom: none;
+      background: transparent;
+    }
+
+    .ngb-dp-weekday {
+      color: #6b7280;
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-style: normal;
+    }
+
+    .ngb-dp-day {
+      width: 2.25rem;
+      height: 2.25rem;
+      
+      .btn-light {
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        color: #374151;
+        background: transparent;
+        border: none;
+
+        &:hover:not(:disabled) {
+          background-color: #f3f4f6;
+        }
+
+        &.bg-primary {
+          background-color: #1f2937 !important;
+          color: #ffffff !important;
+        }
+
+        &:disabled {
+          color: #d1d5db;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .ngb-dp-arrow {
+      width: 2rem;
+      height: 2rem;
+
+      .ngb-dp-arrow-btn {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        color: #6b7280;
+
+        &:hover {
+          color: #374151;
+        }
+      }
+    }
+
+    .ngb-dp-navigation-select {
+      display: flex;
+      gap: 0.5rem;
+
+      .form-select {
+        padding: 0.25rem 1.5rem 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+
+        &:focus {
+          border-color: #6366f1;
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+      }
+    }
+  }
+}
+
+.custom-range-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.selected-range {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.apply-btn {
+  padding: 0.5rem 1.25rem;
+  background-color: #6366f1;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #4f46e5;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dropdown-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
+
+    &.expanded {
+      .presets-list {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+  }
+
+  .presets-list {
+    border-right: none;
+  }
+
+  .calendars-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

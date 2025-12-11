@@ -65,6 +65,8 @@ frontend/                    # Angular 21 project (port 4200, proxied through 50
         interceptors/
           http.interceptor.ts # Base URL interceptor
       shared/                # Shared module
+        components/
+          date-range-picker/ # Reusable date range picker with presets
         models/
           booking.model.ts   # Booking interfaces
       bookings/              # Bookings feature module
@@ -116,3 +118,7 @@ backend/                     # Express + TypeScript backend (port 5000)
 - Redesigned bookings table with proper columns and pagination
 - Redesigned mobile bookings list with card view and pagination
 - Added responsive design with mobile hamburger menu
+- Added shared DateRangePickerComponent with preset options (Today, Tomorrow, Next 7 Days, Next 30 Days, Custom Range)
+- Custom Range shows two side-by-side ngb-datepicker calendars with Apply button
+- Past dates are disabled in date picker (only today and future dates allowed)
+- Bookings table filters by check-in date based on selected date range
