@@ -11,7 +11,7 @@
 
   @if (isOpen) {
     <div class="dropdown-panel" [class.expanded]="showCustomRange">
-      <div class="presets-list">
+      <div class="presets-list" [class.with-border]="showCustomRange">
         @for (preset of presets; track preset.id) {
           <button 
             class="preset-btn" 
@@ -34,14 +34,15 @@
                 [markDisabled]="isDateDisabled"
                 [displayMonths]="1"
                 navigation="arrows"
+                (ngModelChange)="onFromDateChange()"
               ></ngb-datepicker>
             </div>
             <div class="calendar-wrapper">
               <ngb-datepicker
                 #dpTo
                 [(ngModel)]="toDate"
-                [minDate]="minDate"
-                [markDisabled]="isDateDisabled"
+                [minDate]="toMinDate"
+                [markDisabled]="isToDateDisabled"
                 [displayMonths]="1"
                 navigation="arrows"
               ></ngb-datepicker>

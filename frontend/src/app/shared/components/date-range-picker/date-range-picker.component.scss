@@ -52,7 +52,10 @@
   flex-direction: column;
   padding: 0.5rem 0;
   min-width: 160px;
-  border-right: 1px solid #e5e7eb;
+
+  &.with-border {
+    border-right: 1px solid #e5e7eb;
+  }
 }
 
 .preset-btn {
@@ -244,7 +247,10 @@
   }
 
   .presets-list {
-    border-right: none;
+    &.with-border {
+      border-right: none;
+      border-bottom: 1px solid #e5e7eb;
+    }
   }
 
   .calendars-container {
