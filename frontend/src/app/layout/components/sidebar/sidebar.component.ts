@@ -20,10 +20,10 @@ export class SidebarComponent {
   @Output() closeSidebar = new EventEmitter<void>();
 
   navItems: NavItem[] = [
-    { label: 'Home', route: '/dashboard', icon: 'home' },
-    { label: 'Bookings', route: '/bookings', icon: 'bookings' },
-    { label: 'Customers', route: '/customers', icon: 'customers' },
-    { label: 'Reports', route: '/reports', icon: 'reports' }
+    { label: 'Home', route: '/admin/dashboard', icon: 'home' },
+    { label: 'Bookings', route: '/admin/bookings', icon: 'bookings' },
+    { label: 'Customers', route: '/admin/customers', icon: 'customers' },
+    { label: 'Reports', route: '/admin/reports', icon: 'reports' }
   ];
 
   onClose(): void {

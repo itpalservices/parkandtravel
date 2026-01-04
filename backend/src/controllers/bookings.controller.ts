@@ -6,6 +6,7 @@ import {
   isValidDateFormat,
   isDateInPast,
   isValidUUID,
+  createGuestBooking as createGuestBookingService,
 } from "../services/bookings.service";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
@@ -106,6 +107,37 @@ export async function deleteBooking(req: Request, res: Response): Promise<void> 
     });
   } catch (error) {
     console.error("Error deleting booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function createGuestBooking(req: Request, res: Response): Promise<void> {
+  try {
+    const { fullName, email, phone, licensePlate, vehicleModel, flightNumber, checkInDate, checkOutDate, parkingTypeId } = req.body;
+
+    if (!fullName || !email || !phone || !licensePlate || !vehicleModel || !checkInDate || !checkOutDate || !parkingTypeId) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+
+    const result = await createGuestBookingService({
+      fullName,
+      email,
+      phone,
+      licensePlate,
+      vehicleModel,
+      flightNumber,
+      checkInDate,
+      checkOutDate,
+      parkingTypeId,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error creating guest booking:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

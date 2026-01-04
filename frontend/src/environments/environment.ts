@@ -1,4 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: '/api'
+  apiUrl: '/api',
+  auth0Domain: '',
+  auth0ClientId: ''
 };

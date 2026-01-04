@@ -199,4 +199,52 @@ export async function softDeleteBooking(id: string): Promise<{ id: string; delet
   };
 }
 
+interface CreateGuestBookingParams {
+  fullName: string;
+  email: string;
+  phone: string;
+  licensePlate: string;
+  vehicleModel: string;
+  flightNumber?: string | null;
+  checkInDate: string;
+  checkOutDate: string;
+  parkingTypeId: number;
+}
+
+export async function createGuestBooking(params: CreateGuestBookingParams): Promise<{ id: string }> {
+  const nameParts = params.fullName.trim().split(' ');
+  const name = nameParts[0] || '';
+  const surname = nameParts.slice(1).join(' ') || '';
+
+  const checkIn = new Date(params.checkInDate);
+  const checkOut = new Date(params.checkOutDate);
+
+  const booking = await prisma.booking.create({
+    data: {
+      name,
+      surname,
+      email: params.email,
+      mobile: params.phone,
+      plateNo: params.licensePlate,
+      carModel: params.vehicleModel,
+      returnFlight: params.flightNumber || null,
+      dateFrom: checkIn,
+      timeFrom: checkIn,
+      dateTo: checkOut,
+      timeTo: checkOut,
+      parkingTypeId: params.parkingTypeId.toString(),
+      deleteflag: 0,
+    },
+  });
+
+  return { id: booking.id };
+}
+
+export async function getParkingTypes(): Promise<{ id: string; name: string }[]> {
+  const types = await prisma.parkingType.findMany({
+    select: { id: true, name: true },
+  });
+  return types;
+}
+
 export { isValidDateFormat, isDateInPast, isValidUUID };

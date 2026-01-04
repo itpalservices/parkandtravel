@@ -1,0 +1,213 @@
+<div class="guest-booking-page">
+  <div class="booking-container">
+    <button class="back-btn" (click)="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back
+    </button>
+
+    <div class="header-section">
+      <h1>Book Your Parking</h1>
+      <p>Fill in the details below to reserve your parking spot</p>
+    </div>
+
+    @if (submitSuccess) {
+      <div class="success-message">
+        <div class="success-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h2>Booking Confirmed!</h2>
+        <p>Your parking reservation has been successfully created. You will receive a confirmation email shortly.</p>
+        <div class="success-actions">
+          <button class="btn-primary" (click)="createAnotherBooking()">Create Another Booking</button>
+          <button class="btn-secondary" (click)="goBack()">Back to Home</button>
+        </div>
+      </div>
+    } @else {
+      <form (ngSubmit)="submitBooking()" #bookingForm="ngForm">
+        @if (submitError) {
+          <div class="error-alert">
+            {{ submitError }}
+          </div>
+        }
+
+        <div class="form-section">
+          <h3>Personal Information</h3>
+          
+          <div class="form-group">
+            <label for="fullName">Full Name *</label>
+            <input
+              type="text"
+              id="fullName"
+              class="form-control"
+              [(ngModel)]="fullName"
+              name="fullName"
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                [(ngModel)]="email"
+                name="email"
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone *</label>
+              <input
+                type="tel"
+                id="phone"
+                class="form-control"
+                [(ngModel)]="phone"
+                name="phone"
+                placeholder="+1 234 567 8900"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Vehicle Information</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="licensePlate">License Plate *</label>
+              <input
+                type="text"
+                id="licensePlate"
+                class="form-control"
+                [(ngModel)]="licensePlate"
+                name="licensePlate"
+                placeholder="ABC123"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="vehicleModel">Vehicle Model *</label>
+              <input
+                type="text"
+                id="vehicleModel"
+                class="form-control"
+                [(ngModel)]="vehicleModel"
+                name="vehicleModel"
+                placeholder="e.g., Toyota Camry"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="flightNumber">Flight Number (Optional)</label>
+            <input
+              type="text"
+              id="flightNumber"
+              class="form-control"
+              [(ngModel)]="flightNumber"
+              name="flightNumber"
+              placeholder="e.g., BA1234"
+            />
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Booking Details</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Check-in Date *</label>
+              <input
+                class="form-control date-input"
+                placeholder="Select date"
+                name="checkInDate"
+                [(ngModel)]="checkInDate"
+                ngbDatepicker
+                #dpCheckIn="ngbDatepicker"
+                [minDate]="minDate"
+                [markDisabled]="isDateDisabled"
+                (click)="dpCheckIn.toggle()"
+                (ngModelChange)="onCheckInDateChange()"
+                readonly
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Check-in Time *</label>
+              <ngb-timepicker [(ngModel)]="checkInTime" name="checkInTime" [spinners]="false"></ngb-timepicker>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Check-out Date *</label>
+              <input
+                class="form-control date-input"
+                placeholder="Select date"
+                name="checkOutDate"
+                [(ngModel)]="checkOutDate"
+                ngbDatepicker
+                #dpCheckOut="ngbDatepicker"
+                [minDate]="checkOutMinDate"
+                [markDisabled]="isCheckOutDateDisabled"
+                (click)="dpCheckOut.toggle()"
+                readonly
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Check-out Time *</label>
+              <ngb-timepicker [(ngModel)]="checkOutTime" name="checkOutTime" [spinners]="false"></ngb-timepicker>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="parkingType">Parking Type *</label>
+            <select
+              id="parkingType"
+              class="form-control"
+              [(ngModel)]="selectedParkingType"
+              name="parkingType"
+              required
+            >
+              @for (type of parkingTypes; track type.id) {
+                <option [value]="type.id">{{ type.name }} - ${{ type.pricePerDay }}/day</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="!isFormValid() || submitting"
+          >
+            @if (submitting) {
+              <span class="spinner"></span>
+              Processing...
+            } @else {
+              Confirm Booking
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

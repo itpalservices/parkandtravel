@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, Output, OnInit, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnInit,
+  ElementRef,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
@@ -14,7 +22,7 @@ export interface DateRange {
   standalone: true,
   imports: [CommonModule, FormsModule, NgbDatepickerModule],
   templateUrl: './date-range-picker.component.html',
-  styleUrls: ['./date-range-picker.component.scss']
+  styleUrls: ['./date-range-picker.component.scss'],
 })
 export class DateRangePickerComponent implements OnInit {
   @Input() selectedPreset: string | null = null;
@@ -22,28 +30,31 @@ export class DateRangePickerComponent implements OnInit {
 
   isOpen = false;
   showCustomRange = false;
-  
+
   presets = [
     { id: 'today', label: 'Today' },
     { id: 'tomorrow', label: 'Tomorrow' },
     { id: 'next7days', label: 'Next 7 Days' },
     { id: 'next30days', label: 'Next 30 Days' },
-    { id: 'custom', label: 'Custom Range' }
+    { id: 'custom', label: 'Custom Range' },
   ];
 
   activePreset: string | null = null;
-  
+
   fromDate: NgbDateStruct | null = null;
   toDate: NgbDateStruct | null = null;
-  
+
   appliedFromDate: NgbDateStruct | null = null;
   appliedToDate: NgbDateStruct | null = null;
-  
+
   minDate: NgbDateStruct;
   toMinDate: NgbDateStruct;
   displayDate: string = '';
 
-  constructor(private calendar: NgbCalendar, private elementRef: ElementRef) {
+  constructor(
+    private calendar: NgbCalendar,
+    private elementRef: ElementRef,
+  ) {
     const today = this.calendar.getToday();
     this.minDate = today;
     this.toMinDate = today;
@@ -72,7 +83,7 @@ export class DateRangePickerComponent implements OnInit {
     if (presetId === 'custom') {
       this.showCustomRange = true;
       this.activePreset = 'custom';
-      
+
       if (this.appliedFromDate && this.appliedToDate) {
         this.fromDate = { ...this.appliedFromDate };
         this.toDate = { ...this.appliedToDate };
@@ -116,7 +127,7 @@ export class DateRangePickerComponent implements OnInit {
     if (this.fromDate && this.toDate) {
       this.appliedFromDate = { ...this.fromDate };
       this.appliedToDate = { ...this.toDate };
-      
+
       const from = this.ngbDateToDate(this.fromDate);
       const to = this.ngbDateToDate(this.toDate);
       this.emitDateRange(from, to, 'custom');
@@ -146,7 +157,7 @@ export class DateRangePickerComponent implements OnInit {
   private getDateRangeForPreset(presetId: string): { from: Date; to: Date } {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     switch (presetId) {
       case 'today':
         return { from: today, to: today };
@@ -197,10 +208,12 @@ export class DateRangePickerComponent implements OnInit {
 
   get displayRangeText(): string {
     if (this.activePreset === 'custom' && this.appliedFromDate && this.appliedToDate) {
-      return `${this.formatNgbDate(this.appliedFromDate)} - ${this.formatNgbDate(this.appliedToDate)}`;
+      return this.formatNgbDate(this.appliedFromDate) === this.formatNgbDate(this.appliedToDate)
+        ? this.formatNgbDate(this.appliedFromDate)
+        : `${this.formatNgbDate(this.appliedFromDate)} - ${this.formatNgbDate(this.appliedToDate)}`;
     }
     if (this.activePreset) {
-      const preset = this.presets.find(p => p.id === this.activePreset);
+      const preset = this.presets.find((p) => p.id === this.activePreset);
       if (preset && preset.id !== 'custom') {
         return preset.label;
       }

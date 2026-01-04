@@ -1,10 +1,20 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout/layout.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const appRoutes: Routes = [
   {
     path: '',
+    loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
+  },
+  {
+    path: 'guest/book',
+    loadComponent: () => import('./pages/guest-booking/guest-booking.component').then(m => m.GuestBookingComponent)
+  },
+  {
+    path: 'admin',
     component: LayoutComponent,
+    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',
@@ -31,6 +41,6 @@ export const appRoutes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'bookings'
+    redirectTo: ''
   }
 ];
