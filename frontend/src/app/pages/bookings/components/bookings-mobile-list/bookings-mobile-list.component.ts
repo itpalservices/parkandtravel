@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { Booking } from '../../../shared/models/booking.model';
+import { Booking } from '../../../../shared/models/booking.model';
 
 @Component({
   selector: 'app-bookings-mobile-list',

@@ -71,17 +71,17 @@ frontend/                    # Angular 21 project (port 4200, proxied through 50
           date-range-picker/ # Reusable date range picker with presets
         models/
           booking.model.ts   # Booking interfaces
-      bookings/              # Bookings feature module
-        components/
-          bookings-page/     # Main bookings page
-          bookings-table/    # Desktop table with pagination
-          bookings-mobile-list/ # Mobile card list with pagination
-      pages/                 # Static pages
+      pages/                 # All page components
         landing/             # Landing page with guest/login options
         guest-booking/       # Guest booking form
         dashboard/           # Dashboard page
         customers/           # Customers placeholder
         reports/             # Reports placeholder
+        bookings/            # Bookings feature module
+          components/
+            bookings-page/     # Main bookings page
+            bookings-table/    # Desktop table with pagination
+            bookings-mobile-list/ # Mobile card list with pagination
       app-routing.module.ts  # Routes with layout wrapper
       app.config.ts          # App configuration with zone.js
     styles/

@@ -25,7 +25,7 @@ export const appRoutes: Routes = [
       },
       {
         path: 'bookings',
-        loadChildren: () => import('./bookings/bookings.routes').then((m) => m.bookingsRoutes),
+        loadChildren: () => import('./pages/bookings/bookings.routes').then((m) => m.bookingsRoutes),
       },
       {
         path: 'customers',
@@ -39,7 +39,7 @@ export const appRoutes: Routes = [
       },
       {
         path: '',
-        redirectTo: 'bookings',
+        redirectTo: 'dashboard',
         pathMatch: 'full',
       },
     ],

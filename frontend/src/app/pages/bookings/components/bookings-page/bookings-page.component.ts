@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { BookingsService } from '../../../core/services/bookings.service';
-import { Booking } from '../../../shared/models/booking.model';
-import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
+import { BookingsService } from '../../../../core/services/bookings.service';
+import { Booking } from '../../../../shared/models/booking.model';
+import { DateRangePickerComponent, DateRange } from '../../../../shared/components/date-range-picker/date-range-picker.component';
 import { BookingsTableComponent } from '../bookings-table/bookings-table.component';
 import { BookingsMobileListComponent } from '../bookings-mobile-list/bookings-mobile-list.component';
 
