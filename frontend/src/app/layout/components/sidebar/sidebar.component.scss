@@ -48,16 +48,16 @@
 
   &:hover {
     background-color: #f3f4f6;
-    color: #2563eb;
+    color: #006B8F;
   }
 
   &.active {
-    background-color: #eff6ff;
-    color: #2563eb;
-    border-left-color: #2563eb;
+    background-color: #e6f3f7;
+    color: #006B8F;
+    border-left-color: #006B8F;
 
     .nav-icon {
-      color: #2563eb;
+      color: #006B8F;
     }
   }
 }

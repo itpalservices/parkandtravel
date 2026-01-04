@@ -75,7 +75,7 @@
   }
 
   &.active {
-    background-color: #6366f1;
+    background-color: #006B8F;
     color: #ffffff;
   }
 }
@@ -183,8 +183,8 @@
         border-radius: 4px;
 
         &:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+          border-color: #006B8F;
+          box-shadow: 0 0 0 2px rgba(0, 107, 143, 0.2);
         }
       }
     }
@@ -207,7 +207,7 @@
 
 .apply-btn {
   padding: 0.5rem 1.25rem;
-  background-color: #6366f1;
+  background-color: #006B8F;
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -217,7 +217,7 @@
   transition: background-color 0.15s ease;
 
   &:hover:not(:disabled) {
-    background-color: #4f46e5;
+    background-color: #005a78;
   }
 
   &:disabled {

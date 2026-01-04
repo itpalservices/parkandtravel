@@ -48,9 +48,9 @@
     }
     
     &:focus {
-      border-color: #2563eb;
+      border-color: #006B8F;
       background-color: #ffffff;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }
   }
   
@@ -148,8 +148,8 @@
     }
     
     &:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      border-color: #006B8F;
+      box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }
   }
 }
