@@ -2,12 +2,11 @@
   <div class="landing-container">
     <div class="logo-section">
       <div class="logo-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="1" y="3" width="15" height="13"></rect>
-          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-          <circle cx="5.5" cy="18.5" r="2.5"></circle>
-          <circle cx="18.5" cy="18.5" r="2.5"></circle>
-        </svg>
+        <img
+          style="border-radius: 10px"
+          src="assets/img/park-and-travel-logo.png"
+          alt="Park & Travel Logo"
+        />
       </div>
       <h1 class="app-title">Park & Travel</h1>
       <p class="app-subtitle">Parking Booking System</p>
@@ -15,26 +14,44 @@
 
     <div class="welcome-section">
       <h2>Welcome!</h2>
-      <p class="welcome-message">
-        Book your parking spot easily or login to manage bookings
-      </p>
+      <p class="welcome-message">Book your parking spot easily or login to manage bookings</p>
     </div>
 
     <div class="action-buttons">
       <button class="btn-guest" (click)="proceedAsGuest()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
         Proceed as a Guest
       </button>
-      
+
       <div class="divider">
         <span>or</span>
       </div>
 
       <button class="btn-login" (click)="login()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
           <polyline points="10 17 15 12 10 7"></polyline>
           <line x1="15" y1="12" x2="3" y2="12"></line>
@@ -42,9 +59,5 @@
         Login
       </button>
     </div>
-
-    <p class="admin-note">
-      Admin users can login to manage all bookings, customers, and reports
-    </p>
   </div>
 </div>

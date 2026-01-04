@@ -5,11 +5,13 @@ import { authGuard } from './core/guards/auth.guard';
 export const appRoutes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
+    loadComponent: () =>
+      import('./pages/landing/landing.component').then((m) => m.LandingComponent),
   },
   {
     path: 'guest/book',
-    loadComponent: () => import('./pages/guest-booking/guest-booking.component').then(m => m.GuestBookingComponent)
+    loadComponent: () =>
+      import('./pages/guest-booking/guest-booking.component').then((m) => m.GuestBookingComponent),
   },
   {
     path: 'admin',
@@ -18,29 +20,32 @@ export const appRoutes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
         path: 'bookings',
-        loadChildren: () => import('./bookings/bookings.routes').then(m => m.bookingsRoutes)
+        loadChildren: () => import('./bookings/bookings.routes').then((m) => m.bookingsRoutes),
       },
       {
         path: 'customers',
-        loadComponent: () => import('./pages/customers/customers.component').then(m => m.CustomersComponent)
+        loadComponent: () =>
+          import('./pages/customers/customers.component').then((m) => m.CustomersComponent),
       },
       {
         path: 'reports',
-        loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent)
+        loadComponent: () =>
+          import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
       },
       {
         path: '',
         redirectTo: 'bookings',
-        pathMatch: 'full'
-      }
-    ]
+        pathMatch: 'full',
+      },
+    ],
   },
   {
     path: '**',
-    redirectTo: ''
-  }
+    redirectTo: '',
+  },
 ];
