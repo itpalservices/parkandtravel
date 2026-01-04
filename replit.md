@@ -64,6 +64,8 @@ frontend/                    # Angular 21 project (port 4200, proxied through 50
           bookings.service.ts # Bookings API service
         interceptors/
           http.interceptor.ts # Base URL interceptor
+        guards/
+          auth.guard.ts      # Auth guard for protected routes
       shared/                # Shared module
         components/
           date-range-picker/ # Reusable date range picker with presets
@@ -75,6 +77,8 @@ frontend/                    # Angular 21 project (port 4200, proxied through 50
           bookings-table/    # Desktop table with pagination
           bookings-mobile-list/ # Mobile card list with pagination
       pages/                 # Static pages
+        landing/             # Landing page with guest/login options
+        guest-booking/       # Guest booking form
         dashboard/           # Dashboard page
         customers/           # Customers placeholder
         reports/             # Reports placeholder
@@ -112,6 +116,36 @@ backend/                     # Express + TypeScript backend (port 5000)
 - **Frontend**: `cd frontend && npm start` - Angular dev server on port 4200
 - **Backend**: `cd backend && npm run dev` - Express dev server on port 5000 (proxies to frontend)
 
+## Authentication
+
+### Auth0 Integration
+- **SDK**: @auth0/auth0-angular for SPA authentication
+- **Configuration**: `frontend/src/environments/environment.ts`
+  - Set `auth0Domain` and `auth0ClientId` with your Auth0 application credentials
+- **Flow**: 
+  - Landing page (/) shows "Proceed as Guest" and "Login" buttons
+  - Login redirects to Auth0 login flow
+  - After login, users are redirected to /admin/bookings
+  - Guest users can create bookings without authentication
+- **Protected Routes**: All /admin/* routes require authentication
+
+### Route Structure
+- `/` - Landing page (public)
+- `/guest/book` - Guest booking form (public)
+- `/admin/*` - Protected admin routes (requires Auth0 login)
+
+## API Endpoints
+
+### Public Endpoints
+- `GET /api/health` - Health check
+- `GET /api/parking-types` - List parking types
+- `POST /api/bookings/guest` - Create guest booking
+
+### Protected Endpoints (Admin)
+- `GET /api/bookings` - List bookings with filters
+- `GET /api/bookings/:id` - Get booking by ID
+- `PUT /api/bookings/:id/delete` - Soft delete booking
+
 ## Recent Changes
 - Added main layout with header, sidebar, and content area
 - Created Dashboard, Customers, and Reports placeholder pages
@@ -122,3 +156,8 @@ backend/                     # Express + TypeScript backend (port 5000)
 - Custom Range shows two side-by-side ngb-datepicker calendars with Apply button
 - Past dates are disabled in date picker (only today and future dates allowed)
 - Bookings table filters by check-in date based on selected date range
+- Added landing page with "Proceed as Guest" and "Login" buttons
+- Implemented Auth0 authentication integration
+- Created guest booking form for public users
+- Added auth guard to protect admin routes
+- Updated sidebar navigation to use /admin/* routes

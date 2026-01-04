@@ -116,19 +116,8 @@
   }
 }
 
-::ng-deep {
-  .ngb-tp {
-    .ngb-tp-input-container {
-      .form-control {
-        width: 3rem;
-        text-align: center;
-      }
-    }
-
-    .ngb-tp-spacer {
-      padding: 0 0.25rem;
-    }
-  }
+input[type="time"].form-control {
+  padding: 0.75rem 1rem;
 }
 
 .form-actions {

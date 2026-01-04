@@ -1,20 +1,37 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
-import { map, take } from 'rxjs/operators';
+import { map, take, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export const authGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.isAuthenticated$.pipe(
-    take(1),
-    map(isAuthenticated => {
-      if (isAuthenticated) {
-        return true;
-      }
-      router.navigate(['/']);
-      return false;
-    })
-  );
+  if (!environment.auth0Domain || !environment.auth0ClientId) {
+    router.navigate(['/']);
+    return false;
+  }
+
+  try {
+    const authService = inject(AuthService);
+
+    return authService.isAuthenticated$.pipe(
+      take(1),
+      map(isAuthenticated => {
+        if (isAuthenticated) {
+          return true;
+        }
+        router.navigate(['/']);
+        return false;
+      }),
+      catchError(() => {
+        router.navigate(['/']);
+        return of(false);
+      })
+    );
+  } catch {
+    router.navigate(['/']);
+    return false;
+  }
 };

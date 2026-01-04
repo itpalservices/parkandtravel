@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '@auth0/auth0-angular';
+import { AuthService, User } from '@auth0/auth0-angular';
+import { Observable, of } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -12,19 +14,23 @@ import { AuthService } from '@auth0/auth0-angular';
 export class HeaderComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
   
-  private authService = inject(AuthService);
+  private authService = environment.auth0Domain && environment.auth0ClientId 
+    ? inject(AuthService, { optional: true }) 
+    : null;
   
-  user$ = this.authService.user$;
+  user$: Observable<User | null | undefined> = this.authService?.user$ || of(null);
 
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
   }
 
   logout(): void {
-    this.authService.logout({
-      logoutParams: {
-        returnTo: window.location.origin
-      }
-    });
+    if (this.authService) {
+      this.authService.logout({
+        logoutParams: {
+          returnTo: window.location.origin
+        }
+      });
+    }
   }
 }

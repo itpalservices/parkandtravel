@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { NgbDatepickerModule, NgbDateStruct, NgbCalendar, NgbTimepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 
 interface ParkingType {
@@ -14,7 +14,7 @@ interface ParkingType {
 @Component({
   selector: 'app-guest-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgbDatepickerModule, NgbTimepickerModule],
+  imports: [CommonModule, FormsModule, NgbDatepickerModule],
   templateUrl: './guest-booking.component.html',
   styleUrls: ['./guest-booking.component.scss']
 })
@@ -31,9 +31,9 @@ export class GuestBookingComponent implements OnInit {
   flightNumber = '';
   
   checkInDate: NgbDateStruct | null = null;
-  checkInTime = { hour: 10, minute: 0 };
+  checkInTime = '10:00';
   checkOutDate: NgbDateStruct | null = null;
-  checkOutTime = { hour: 10, minute: 0 };
+  checkOutTime = '10:00';
   
   selectedParkingType = '';
   parkingTypes: ParkingType[] = [];
@@ -126,8 +126,8 @@ export class GuestBookingComponent implements OnInit {
       licensePlate: this.licensePlate.trim(),
       vehicleModel: this.vehicleModel.trim(),
       flightNumber: this.flightNumber.trim() || null,
-      checkInDate: this.formatDateForApi(this.checkInDate!, this.checkInTime),
-      checkOutDate: this.formatDateForApi(this.checkOutDate!, this.checkOutTime),
+      checkInDate: this.formatDateTimeForApi(this.checkInDate!, this.checkInTime),
+      checkOutDate: this.formatDateTimeForApi(this.checkOutDate!, this.checkOutTime),
       parkingTypeId: parseInt(this.selectedParkingType, 10)
     };
 
@@ -143,8 +143,9 @@ export class GuestBookingComponent implements OnInit {
     });
   }
 
-  private formatDateForApi(date: NgbDateStruct, time: { hour: number; minute: number }): string {
-    const d = new Date(date.year, date.month - 1, date.day, time.hour, time.minute);
+  private formatDateTimeForApi(date: NgbDateStruct, time: string): string {
+    const [hours, minutes] = time.split(':').map(Number);
+    const d = new Date(date.year, date.month - 1, date.day, hours, minutes);
     return d.toISOString();
   }
 

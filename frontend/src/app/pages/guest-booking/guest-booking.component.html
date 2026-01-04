@@ -148,8 +148,15 @@
             </div>
 
             <div class="form-group">
-              <label>Check-in Time *</label>
-              <ngb-timepicker [(ngModel)]="checkInTime" name="checkInTime" [spinners]="false"></ngb-timepicker>
+              <label for="checkInTime">Check-in Time *</label>
+              <input
+                type="time"
+                id="checkInTime"
+                class="form-control"
+                [(ngModel)]="checkInTime"
+                name="checkInTime"
+                required
+              />
             </div>
           </div>
 
@@ -172,8 +179,15 @@
             </div>
 
             <div class="form-group">
-              <label>Check-out Time *</label>
-              <ngb-timepicker [(ngModel)]="checkOutTime" name="checkOutTime" [spinners]="false"></ngb-timepicker>
+              <label for="checkOutTime">Check-out Time *</label>
+              <input
+                type="time"
+                id="checkOutTime"
+                class="form-control"
+                [(ngModel)]="checkOutTime"
+                name="checkOutTime"
+                required
+              />
             </div>
           </div>
 
@@ -187,7 +201,7 @@
               required
             >
               @for (type of parkingTypes; track type.id) {
-                <option [value]="type.id">{{ type.name }} - ${{ type.pricePerDay }}/day</option>
+                <option [value]="type.id">{{ type.name }}</option>
               }
             </select>
           </div>
