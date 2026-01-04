@@ -79,9 +79,8 @@ frontend/                    # Angular 21 project (port 4200, proxied through 50
         reports/             # Reports placeholder
         bookings/            # Bookings feature module
           components/
-            bookings-page/     # Main bookings page
-            bookings-table/    # Desktop table with pagination
-            bookings-mobile-list/ # Mobile card list with pagination
+            bookings-page/     # Main bookings page with search/filters
+            bookings-list/     # Unified list component (responsive: table on desktop, cards on mobile)
       app-routing.module.ts  # Routes with layout wrapper
       app.config.ts          # App configuration with zone.js
     styles/

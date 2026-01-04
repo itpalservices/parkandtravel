@@ -4,13 +4,13 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
 
 @Component({
-  selector: 'app-bookings-mobile-list',
+  selector: 'app-bookings-list',
   standalone: true,
   imports: [CommonModule, NgbDropdownModule],
-  templateUrl: './bookings-mobile-list.component.html',
-  styleUrls: ['./bookings-mobile-list.component.scss']
+  templateUrl: './bookings-list.component.html',
+  styleUrls: ['./bookings-list.component.scss']
 })
-export class BookingsMobileListComponent {
+export class BookingsListComponent {
   @Input() bookings: Booking[] = [];
   @Input() currentPage = 1;
   @Input() totalPages = 1;
@@ -26,18 +26,41 @@ export class BookingsMobileListComponent {
     });
   }
 
-  formatTime(time: string | null): string {
-    return time || '--:--';
-  }
-
   formatCheckIn(booking: Booking): string {
-    return booking.timeFrom || '10:00 AM';
+    const date = new Date(booking.dateFrom);
+    const dateStr = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const time = booking.timeFrom || '--:--';
+    return `${dateStr} ${time}`;
   }
 
   formatArrival(booking: Booking): string {
-    const date = this.formatDate(booking.dateTo);
-    const time = booking.timeTo || '12:15 PM';
-    return `${date} ${time}`;
+    const date = new Date(booking.dateTo);
+    const dateStr = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const time = booking.timeTo || '--:--';
+    return `${dateStr} ${time}`;
+  }
+
+  formatVehicle(booking: Booking): string {
+    const parts = [booking.carBrand, booking.carModel].filter(Boolean);
+    return parts.length > 0 ? parts.join(' ') : 'N/A';
+  }
+
+  formatParkingType(booking: Booking): string {
+    const type = booking.parkingType?.name || 'Standard';
+    if (type.toLowerCase().includes('covered') || type.toLowerCase().includes('cov')) {
+      return 'cov.';
+    } else if (type.toLowerCase().includes('uncovered') || type.toLowerCase().includes('unc')) {
+      return 'unc.';
+    }
+    return type;
   }
 
   onEdit(booking: Booking): void {

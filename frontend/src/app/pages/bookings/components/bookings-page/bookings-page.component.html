@@ -102,24 +102,13 @@
         <p class="text-muted mb-0">No bookings found</p>
       </div>
     } @else {
-      <div class="d-none d-md-block">
-        <app-bookings-table 
-          [bookings]="paginatedBookings"
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
-          [pageNumbers]="pageNumbers"
-          (pageChange)="onPageChange($event)"
-        ></app-bookings-table>
-      </div>
-      <div class="d-block d-md-none">
-        <app-bookings-mobile-list 
-          [bookings]="paginatedBookings"
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
-          [pageNumbers]="pageNumbers"
-          (pageChange)="onPageChange($event)"
-        ></app-bookings-mobile-list>
-      </div>
+      <app-bookings-list 
+        [bookings]="paginatedBookings"
+        [currentPage]="currentPage"
+        [totalPages]="totalPages"
+        [pageNumbers]="pageNumbers"
+        (pageChange)="onPageChange($event)"
+      ></app-bookings-list>
     }
   </div>
 </div>

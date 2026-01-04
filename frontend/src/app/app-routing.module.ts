@@ -16,7 +16,7 @@ export const appRoutes: Routes = [
   {
     path: 'admin',
     component: LayoutComponent,
-    canActivate: [authGuard],
+    //canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',
@@ -25,7 +25,8 @@ export const appRoutes: Routes = [
       },
       {
         path: 'bookings',
-        loadChildren: () => import('./pages/bookings/bookings.routes').then((m) => m.bookingsRoutes),
+        loadChildren: () =>
+          import('./pages/bookings/bookings.routes').then((m) => m.bookingsRoutes),
       },
       {
         path: 'customers',

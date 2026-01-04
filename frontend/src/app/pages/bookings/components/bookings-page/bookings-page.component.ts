@@ -5,8 +5,7 @@ import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { Booking } from '../../../../shared/models/booking.model';
 import { DateRangePickerComponent, DateRange } from '../../../../shared/components/date-range-picker/date-range-picker.component';
-import { BookingsTableComponent } from '../bookings-table/bookings-table.component';
-import { BookingsMobileListComponent } from '../bookings-mobile-list/bookings-mobile-list.component';
+import { BookingsListComponent } from '../bookings-list/bookings-list.component';
 
 @Component({
   selector: 'app-bookings-page',
@@ -16,8 +15,7 @@ import { BookingsMobileListComponent } from '../bookings-mobile-list/bookings-mo
     FormsModule,
     NgbDatepickerModule,
     DateRangePickerComponent,
-    BookingsTableComponent,
-    BookingsMobileListComponent
+    BookingsListComponent
   ],
   templateUrl: './bookings-page.component.html',
   styleUrls: ['./bookings-page.component.scss']
