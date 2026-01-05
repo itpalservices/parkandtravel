@@ -20,11 +20,8 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
         httpInterceptor: {
           allowedList: [
             {
-              uriMatcher: (uri: string) => {
-                const isBookingsEndpoint = uri.includes('/api/bookings');
-                const isGuestEndpoint = uri.includes('/api/bookings/guest');
-                return isBookingsEndpoint && !isGuestEndpoint;
-              },
+              uri: '**/api/bookings**',
+              allowAnonymous: true,
               tokenOptions: {
                 authorizationParams: {
                   audience: environment.auth0.audience
