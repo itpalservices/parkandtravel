@@ -1,61 +1,68 @@
 <div class="landing-page">
-  <div class="landing-container">
-    <div class="logo-section">
-      <div class="logo-icon">
-        <img
-          style="border-radius: 10px"
-          src="assets/img/park-and-travel-logo.png"
-          alt="Park & Travel Logo"
-        />
-      </div>
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="loader-spinner"></div>
+      <p class="loading-text">Loading...</p>
     </div>
-
-    <div class="welcome-section">
-      <h2>Welcome!</h2>
-      <p class="welcome-message">Book your parking spot easily or login to manage bookings</p>
-    </div>
-
-    <div class="action-buttons">
-      <button class="btn-guest" (click)="proceedAsGuest()">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        Proceed as a Guest
-      </button>
-
-      <div class="divider">
-        <span>or</span>
+  } @else {
+    <div class="landing-container">
+      <div class="logo-section">
+        <div class="logo-icon">
+          <img
+            style="border-radius: 10px"
+            src="assets/img/park-and-travel-logo.png"
+            alt="Park & Travel Logo"
+          />
+        </div>
       </div>
 
-      <button class="btn-login" (click)="login()">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-          <polyline points="10 17 15 12 10 7"></polyline>
-          <line x1="15" y1="12" x2="3" y2="12"></line>
-        </svg>
-        Login
-      </button>
+      <div class="welcome-section">
+        <h2>Welcome!</h2>
+        <p class="welcome-message">Book your parking spot easily or login to manage bookings</p>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-guest" (click)="proceedAsGuest()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Proceed as a Guest
+        </button>
+
+        <div class="divider">
+          <span>or</span>
+        </div>
+
+        <button class="btn-login" (click)="login()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+          Login
+        </button>
+      </div>
     </div>
-  </div>
+  }
 </div>
