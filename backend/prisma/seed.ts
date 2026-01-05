@@ -18,6 +18,48 @@ async function main() {
   });
   console.log(`Created ${parkingTypes.count} parking types`);
 
+  const phoneCodes = await prisma.phoneCode.createMany({
+    data: [
+      { isoCode: "CY", phoneCode: "+357" },
+      { isoCode: "GR", phoneCode: "+30" },
+      { isoCode: "GB", phoneCode: "+44" },
+      { isoCode: "US", phoneCode: "+1" },
+      { isoCode: "DE", phoneCode: "+49" },
+      { isoCode: "FR", phoneCode: "+33" },
+      { isoCode: "IT", phoneCode: "+39" },
+      { isoCode: "ES", phoneCode: "+34" },
+      { isoCode: "PT", phoneCode: "+351" },
+      { isoCode: "NL", phoneCode: "+31" },
+      { isoCode: "BE", phoneCode: "+32" },
+      { isoCode: "AT", phoneCode: "+43" },
+      { isoCode: "CH", phoneCode: "+41" },
+      { isoCode: "SE", phoneCode: "+46" },
+      { isoCode: "NO", phoneCode: "+47" },
+      { isoCode: "DK", phoneCode: "+45" },
+      { isoCode: "FI", phoneCode: "+358" },
+      { isoCode: "IE", phoneCode: "+353" },
+      { isoCode: "PL", phoneCode: "+48" },
+      { isoCode: "RU", phoneCode: "+7" },
+      { isoCode: "AU", phoneCode: "+61" },
+      { isoCode: "NZ", phoneCode: "+64" },
+      { isoCode: "CA", phoneCode: "+1" },
+      { isoCode: "IL", phoneCode: "+972" },
+      { isoCode: "AE", phoneCode: "+971" },
+      { isoCode: "SA", phoneCode: "+966" },
+      { isoCode: "EG", phoneCode: "+20" },
+      { isoCode: "ZA", phoneCode: "+27" },
+      { isoCode: "IN", phoneCode: "+91" },
+      { isoCode: "CN", phoneCode: "+86" },
+      { isoCode: "JP", phoneCode: "+81" },
+      { isoCode: "KR", phoneCode: "+82" },
+      { isoCode: "BR", phoneCode: "+55" },
+      { isoCode: "MX", phoneCode: "+52" },
+      { isoCode: "AR", phoneCode: "+54" },
+    ],
+    skipDuplicates: true,
+  });
+  console.log(`Created ${phoneCodes.count} phone codes`);
+
   const today = new Date();
   const futureDate = (daysFromNow: number) => {
     const date = new Date(today);
