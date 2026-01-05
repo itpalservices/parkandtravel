@@ -138,7 +138,8 @@ backend/                     # Express + TypeScript backend (port 5000)
 ### Public Endpoints
 - `GET /api/health` - Health check
 - `GET /api/parking-types` - List parking types
-- `POST /api/bookings/guest` - Create guest booking
+- `GET /api/phone-codes` - List phone codes with ISO country codes
+- `POST /api/bookings/guest` - Create guest booking (includes phoneCodeId)
 
 ### Protected Endpoints (Admin)
 - `GET /api/bookings` - List bookings with filters
@@ -169,3 +170,11 @@ backend/                     # Express + TypeScript backend (port 5000)
 - Date format in inputs: dd/MM/yyyy
 - Datepicker closes automatically when clicking outside
 - Added @angular/localize polyfill to support ng-bootstrap components
+- Added phone_codes database table (id, isoCode, phoneCode) with 35 country codes
+- Added phoneCodeId foreign key column to bookings table
+- Created GET /api/phone-codes endpoint for retrieving phone codes
+- Updated guest booking form with ngbDropdown for country code selection with flags
+- Phone number field now has separate country code dropdown and phone number input
+- Country flags loaded from flagcdn.com using ISO country codes
+- Cyprus (+357) is selected as default phone code
+- Flight number field is now optional

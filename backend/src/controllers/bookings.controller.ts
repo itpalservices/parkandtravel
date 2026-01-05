@@ -133,6 +133,7 @@ export async function createGuestBooking(
       fullName,
       email,
       phone,
+      phoneCodeId,
       licensePlate,
       vehicleBrand,
       vehicleModel,
@@ -157,8 +158,7 @@ export async function createGuestBooking(
       !checkOutTime ||
       !parkingTypeId ||
       !vehicleColor ||
-      !vehicleBrand ||
-      !flightNumber
+      !vehicleBrand
     ) {
       res.status(400).json({ error: "Missing required fields" });
       return;
@@ -168,6 +168,7 @@ export async function createGuestBooking(
       fullName,
       email,
       phone,
+      phoneCodeId: phoneCodeId || null,
       licensePlate,
       vehicleBrand,
       vehicleModel,

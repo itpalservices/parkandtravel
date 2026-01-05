@@ -7,6 +7,7 @@ import {
   NgbDateStruct,
   NgbCalendar,
   NgbDate,
+  NgbDropdownModule,
 } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
@@ -18,10 +19,16 @@ interface ParkingType {
   pricePerDay?: number;
 }
 
+interface PhoneCode {
+  id: string;
+  isoCode: string;
+  phoneCode: string;
+}
+
 @Component({
   selector: 'app-guest-booking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbDatepickerModule, FormFieldErrorComponent],
+  imports: [CommonModule, ReactiveFormsModule, NgbDatepickerModule, NgbDropdownModule, FormFieldErrorComponent],
   templateUrl: './guest-booking.component.html',
   styleUrls: ['./guest-booking.component.scss'],
 })
@@ -34,6 +41,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   bookingForm!: FormGroup;
   parkingTypes: ParkingType[] = [];
+  phoneCodes: PhoneCode[] = [];
+  selectedPhoneCode: PhoneCode | null = null;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -55,18 +64,19 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     this.bookingForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
+      phoneCodeId: ['', Validators.required],
       phone: [
         '',
         [
           Validators.required,
-          Validators.pattern(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/),
+          Validators.pattern(/^[0-9]{6,15}$/),
         ],
       ],
       licensePlate: ['', [Validators.required, Validators.minLength(2)]],
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
       vehicleColor: ['', [Validators.required, Validators.minLength(2)]],
-      flightNumber: ['', [Validators.required]],
+      flightNumber: [''],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       checkOutDate: [defaultCheckOut, Validators.required],
@@ -77,6 +87,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadParkingTypes();
+    this.loadPhoneCodes();
     this.setupCheckInDateListener();
   }
 
@@ -123,6 +134,35 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
       },
     });
+  }
+
+  loadPhoneCodes(): void {
+    this.apiService.get<PhoneCode[]>('/phone-codes').subscribe({
+      next: (codes) => {
+        this.phoneCodes = codes;
+        const cyprusCode = codes.find((c) => c.isoCode === 'CY');
+        if (cyprusCode) {
+          this.selectPhoneCode(cyprusCode);
+        } else if (codes.length > 0) {
+          this.selectPhoneCode(codes[0]);
+        }
+      },
+      error: () => {
+        this.phoneCodes = [
+          { id: 'default', isoCode: 'CY', phoneCode: '+357' },
+        ];
+        this.selectPhoneCode(this.phoneCodes[0]);
+      },
+    });
+  }
+
+  selectPhoneCode(code: PhoneCode): void {
+    this.selectedPhoneCode = code;
+    this.bookingForm.patchValue({ phoneCodeId: code.id });
+  }
+
+  getFlagUrl(isoCode: string): string {
+    return `https://flagcdn.com/w40/${isoCode.toLowerCase()}.png`;
   }
 
   private compareDates(date1: NgbDateStruct, date2: NgbDateStruct): number {
@@ -175,6 +215,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     const booking = {
       fullName: formValue.fullName.trim(),
       email: formValue.email.trim(),
+      phoneCodeId: formValue.phoneCodeId,
       phone: formValue.phone.trim(),
       licensePlate: formValue.licensePlate.trim(),
       vehicleModel: formValue.vehicleModel.trim(),
@@ -222,6 +263,12 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     });
     if (this.parkingTypes.length > 0) {
       this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id });
+    }
+    const cyprusCode = this.phoneCodes.find((c) => c.isoCode === 'CY');
+    if (cyprusCode) {
+      this.selectPhoneCode(cyprusCode);
+    } else if (this.phoneCodes.length > 0) {
+      this.selectPhoneCode(this.phoneCodes[0]);
     }
   }
 }

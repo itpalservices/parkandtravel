@@ -304,6 +304,87 @@ input[type="time"].form-control {
   }
 }
 
+.phone-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.phone-code-dropdown {
+  flex-shrink: 0;
+}
+
+.phone-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  min-width: 110px;
+  height: 100%;
+  font-size: 0.9375rem;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #d1d5db;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #006B8F;
+    box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
+  }
+  
+  &.is-invalid {
+    border-color: #dc3545;
+  }
+}
+
+.phone-code-menu {
+  max-height: 250px;
+  overflow-y: auto;
+  min-width: 180px;
+  padding: 0.25rem 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.phone-code-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  
+  &:hover {
+    background-color: #f0f9fb;
+  }
+}
+
+.flag-icon {
+  width: 24px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.phone-code-text {
+  font-weight: 500;
+  color: #374151;
+}
+
+.country-code-text {
+  color: #9ca3af;
+  font-size: 0.8125rem;
+  margin-left: auto;
+}
+
+.phone-number-input {
+  flex: 1;
+}
+
 @media (max-width: 600px) {
   .booking-container {
     padding: 1.5rem;
@@ -315,5 +396,10 @@ input[type="time"].form-control {
 
   .header-section h1 {
     font-size: 1.5rem;
+  }
+  
+  .phone-code-btn {
+    min-width: 95px;
+    padding: 0.75rem 0.75rem;
   }
 }
