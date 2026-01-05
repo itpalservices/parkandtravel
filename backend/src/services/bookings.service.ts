@@ -209,6 +209,7 @@ interface CreateGuestBookingParams {
   fullName: string;
   email: string;
   phone: string;
+  phoneCodeId?: string | null;
   licensePlate: string;
   vehicleBrand: string;
   vehicleModel: string;
@@ -245,6 +246,7 @@ export async function createGuestBooking(
       surname,
       email: params.email,
       mobile: params.phone,
+      phoneCodeId: params.phoneCodeId || null,
       plateNo: params.licensePlate,
       carBrand: params.vehicleBrand,
       carModel: params.vehicleModel,
@@ -269,6 +271,16 @@ export async function getParkingTypes(): Promise<
     select: { id: true, name: true },
   });
   return types;
+}
+
+export async function getPhoneCodes(): Promise<
+  { id: string; isoCode: string; phoneCode: string }[]
+> {
+  const codes = await prisma.phoneCode.findMany({
+    select: { id: true, isoCode: true, phoneCode: true },
+    orderBy: { phoneCode: "asc" },
+  });
+  return codes;
 }
 
 export { isValidDateFormat, isDateInPast, isValidUUID };

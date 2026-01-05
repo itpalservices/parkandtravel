@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import bookingsRoutes from "./routes/bookings.routes";
-import { getParkingTypes } from "./services/bookings.service";
+import { getParkingTypes, getPhoneCodes } from "./services/bookings.service";
 
 dotenv.config();
 
@@ -22,6 +22,16 @@ app.get("/api/parking-types", async (req, res) => {
     res.json(types);
   } catch (error) {
     console.error("Error getting parking types:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/phone-codes", async (req, res) => {
+  try {
+    const codes = await getPhoneCodes();
+    res.json(codes);
+  } catch (error) {
+    console.error("Error getting phone codes:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
