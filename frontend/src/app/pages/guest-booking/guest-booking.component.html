@@ -115,22 +115,34 @@
                     }
                   </button>
                   <div ngbDropdownMenu class="phone-code-menu">
-                    @for (code of phoneCodes; track code.id) {
-                      <button
-                        type="button"
-                        ngbDropdownItem
-                        (click)="selectPhoneCode(code)"
-                        class="phone-code-item"
-                      >
-                        <img
-                          [src]="getFlagUrl(code.isoCode)"
-                          [alt]="code.isoCode"
-                          class="flag-icon"
-                        />
-                        <span class="phone-code-text">{{ code.phoneCode }}</span>
-                        <span class="country-code-text">{{ code.isoCode }}</span>
-                      </button>
-                    }
+                    <div class="phone-search-container">
+                      <input
+                        type="text"
+                        class="phone-search-input"
+                        placeholder="Search country or code..."
+                        [(ngModel)]="phoneCodeSearch"
+                        [ngModelOptions]="{standalone: true}"
+                        (click)="$event.stopPropagation()"
+                      />
+                    </div>
+                    <div class="phone-codes-list">
+                      @for (code of filteredPhoneCodes; track code.id) {
+                        <button
+                          type="button"
+                          ngbDropdownItem
+                          (click)="selectPhoneCode(code)"
+                          class="phone-code-item"
+                        >
+                          <img
+                            [src]="getFlagUrl(code.isoCode)"
+                            [alt]="code.isoCode"
+                            class="flag-icon"
+                          />
+                          <span class="phone-code-text">{{ code.phoneCode }}</span>
+                          <span class="country-code-text">{{ code.isoCode }}</span>
+                        </button>
+                      }
+                    </div>
                   </div>
                 </div>
                 <input

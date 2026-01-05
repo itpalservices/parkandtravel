@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   NgbDatepickerModule,
@@ -28,7 +28,7 @@ interface PhoneCode {
 @Component({
   selector: 'app-guest-booking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbDatepickerModule, NgbDropdownModule, FormFieldErrorComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgbDatepickerModule, NgbDropdownModule, FormFieldErrorComponent],
   templateUrl: './guest-booking.component.html',
   styleUrls: ['./guest-booking.component.scss'],
 })
@@ -43,6 +43,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   parkingTypes: ParkingType[] = [];
   phoneCodes: PhoneCode[] = [];
   selectedPhoneCode: PhoneCode | null = null;
+  phoneCodeSearch = '';
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -159,10 +160,23 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   selectPhoneCode(code: PhoneCode): void {
     this.selectedPhoneCode = code;
     this.bookingForm.patchValue({ phoneCodeId: code.id });
+    this.phoneCodeSearch = '';
   }
 
   getFlagUrl(isoCode: string): string {
     return `https://flagcdn.com/w40/${isoCode.toLowerCase()}.png`;
+  }
+
+  get filteredPhoneCodes(): PhoneCode[] {
+    if (!this.phoneCodeSearch.trim()) {
+      return this.phoneCodes;
+    }
+    const search = this.phoneCodeSearch.toLowerCase().trim();
+    return this.phoneCodes.filter(
+      (code) =>
+        code.isoCode.toLowerCase().includes(search) ||
+        code.phoneCode.includes(search)
+    );
   }
 
   private compareDates(date1: NgbDateStruct, date2: NgbDateStruct): number {
