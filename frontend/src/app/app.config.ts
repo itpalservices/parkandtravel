@@ -21,7 +21,7 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
           allowedList: [
             {
               uri: '/api/bookings',
-              httpMethod: 'GET',
+              httpMethod: 'GET' as const,
               tokenOptions: {
                 authorizationParams: {
                   audience: environment.auth0.audience
@@ -30,7 +30,7 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
             },
             {
               uri: '/api/bookings/*',
-              httpMethod: 'GET',
+              httpMethod: 'GET' as const,
               tokenOptions: {
                 authorizationParams: {
                   audience: environment.auth0.audience
@@ -39,7 +39,7 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
             },
             {
               uri: '/api/bookings/*/delete',
-              httpMethod: 'PUT',
+              httpMethod: 'PUT' as const,
               tokenOptions: {
                 authorizationParams: {
                   audience: environment.auth0.audience

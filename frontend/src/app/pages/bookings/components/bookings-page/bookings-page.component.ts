@@ -23,6 +23,7 @@ import { BookingsListComponent } from '../bookings-list/bookings-list.component'
 export class BookingsPageComponent implements OnInit {
   bookings: Booking[] = [];
   loading = false;
+  errorMessage = '';
   searchTerm = '';
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
@@ -62,6 +63,7 @@ export class BookingsPageComponent implements OnInit {
 
   loadBookings(): void {
     this.loading = true;
+    this.errorMessage = '';
     
     const params: { dateFrom?: string; dateTo?: string; search?: string } = {};
     
@@ -84,6 +86,7 @@ export class BookingsPageComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load bookings:', err);
+        this.errorMessage = err.message || 'Failed to load bookings. Please try again.';
         this.loading = false;
       }
     });
