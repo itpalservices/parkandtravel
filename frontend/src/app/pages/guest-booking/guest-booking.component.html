@@ -196,18 +196,29 @@
           <div class="form-row">
             <div class="form-group">
               <label>Check-in Date *</label>
-              <input
-                class="form-control date-input"
-                [class.is-invalid]="hasError('checkInDate')"
-                placeholder="Select date"
-                formControlName="checkInDate"
-                ngbDatepicker
-                #dpCheckIn="ngbDatepicker"
-                [minDate]="minDate"
-                [markDisabled]="isDateDisabled"
-                (click)="dpCheckIn.toggle()"
-                readonly
-              />
+              <div class="input-group">
+                <input
+                  class="form-control date-input"
+                  [class.is-invalid]="hasError('checkInDate')"
+                  [value]="formatDate(bookingForm.get('checkInDate')?.value)"
+                  placeholder="dd/MM/yyyy"
+                  ngbDatepicker
+                  #dpCheckIn="ngbDatepicker"
+                  [minDate]="minDate"
+                  [markDisabled]="isDateDisabled"
+                  (dateSelect)="onCheckInDateSelect($event)"
+                  (click)="dpCheckIn.toggle()"
+                  readonly
+                />
+                <button class="btn btn-outline-secondary calendar-btn" type="button" (click)="dpCheckIn.toggle()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+              </div>
               <app-form-field-error [control]="f['checkInDate']" fieldName="Check-in Date">
               </app-form-field-error>
             </div>
@@ -217,9 +228,10 @@
               <input
                 type="time"
                 id="checkInTime"
-                class="form-control"
+                class="form-control time-input"
                 [class.is-invalid]="hasError('checkInTime')"
                 formControlName="checkInTime"
+                step="60"
               />
               <app-form-field-error [control]="f['checkInTime']" fieldName="Check-in Time">
               </app-form-field-error>
@@ -229,18 +241,29 @@
           <div class="form-row">
             <div class="form-group">
               <label>Check-out Date *</label>
-              <input
-                class="form-control date-input"
-                [class.is-invalid]="hasError('checkOutDate')"
-                placeholder="Select date"
-                formControlName="checkOutDate"
-                ngbDatepicker
-                #dpCheckOut="ngbDatepicker"
-                [minDate]="checkOutMinDate"
-                [markDisabled]="isCheckOutDateDisabled"
-                (click)="dpCheckOut.toggle()"
-                readonly
-              />
+              <div class="input-group">
+                <input
+                  class="form-control date-input"
+                  [class.is-invalid]="hasError('checkOutDate')"
+                  [value]="formatDate(bookingForm.get('checkOutDate')?.value)"
+                  placeholder="dd/MM/yyyy"
+                  ngbDatepicker
+                  #dpCheckOut="ngbDatepicker"
+                  [minDate]="checkOutMinDate"
+                  [markDisabled]="isCheckOutDateDisabled"
+                  (dateSelect)="onCheckOutDateSelect($event)"
+                  (click)="dpCheckOut.toggle()"
+                  readonly
+                />
+                <button class="btn btn-outline-secondary calendar-btn" type="button" (click)="dpCheckOut.toggle()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+              </div>
               <app-form-field-error [control]="f['checkOutDate']" fieldName="Check-out Date">
               </app-form-field-error>
             </div>
@@ -250,9 +273,10 @@
               <input
                 type="time"
                 id="checkOutTime"
-                class="form-control"
+                class="form-control time-input"
                 [class.is-invalid]="hasError('checkOutTime')"
                 formControlName="checkOutTime"
+                step="60"
               />
               <app-form-field-error [control]="f['checkOutTime']" fieldName="Check-out Time">
               </app-form-field-error>

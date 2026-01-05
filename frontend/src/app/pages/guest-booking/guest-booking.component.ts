@@ -139,6 +139,14 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     return this.compareDates(date, this.checkOutMinDate) < 0;
   };
 
+  onCheckInDateSelect(date: NgbDateStruct): void {
+    this.bookingForm.patchValue({ checkInDate: date });
+  }
+
+  onCheckOutDateSelect(date: NgbDateStruct): void {
+    this.bookingForm.patchValue({ checkOutDate: date });
+  }
+
   goBack(): void {
     this.router.navigate(['/']);
   }
@@ -173,8 +181,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       vehicleBrand: formValue.vehicleBrand.trim(),
       vehicleColor: formValue.vehicleColor.trim(),
       flightNumber: formValue.flightNumber?.trim() || null,
-      checkInDate: this.formatDateTimeForApi(formValue.checkInDate, formValue.checkInTime),
-      checkOutDate: this.formatDateTimeForApi(formValue.checkOutDate, formValue.checkOutTime),
+      checkInDate: this.formatDateForApi(formValue.checkInDate),
+      checkInTime: formValue.checkInTime,
+      checkOutDate: this.formatDateForApi(formValue.checkOutDate),
+      checkOutTime: formValue.checkOutTime,
       parkingTypeId: formValue.parkingType,
     };
 
@@ -190,10 +200,11 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     });
   }
 
-  private formatDateTimeForApi(date: NgbDateStruct, time: string): string {
-    const [hours, minutes] = time.split(':').map(Number);
-    const d = new Date(date.year, date.month - 1, date.day, hours, minutes);
-    return d.toISOString();
+  private formatDateForApi(date: NgbDateStruct): string {
+    const year = date.year;
+    const month = date.month.toString().padStart(2, '0');
+    const day = date.day.toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   createAnotherBooking(): void {

@@ -79,16 +79,26 @@
     border-bottom-right-radius: 0;
   }
   
-  .btn-outline-secondary {
+  .calendar-btn {
     border: 1px solid #e5e7eb;
     border-left: none;
-    border-top-left-radius: 0;
+    border-top-left-radius: 8px;
     border-bottom-left-radius: 0;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
     background: #f8f9fa;
     padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
     
     &:hover {
       background: #e9ecef;
+    }
+    
+    svg {
+      color: #6b7280;
     }
   }
 }

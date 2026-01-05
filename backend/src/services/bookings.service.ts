@@ -215,8 +215,16 @@ interface CreateGuestBookingParams {
   vehicleColor: string;
   flightNumber?: string | null;
   checkInDate: string;
+  checkInTime: string;
   checkOutDate: string;
-  parkingTypeId: number;
+  checkOutTime: string;
+  parkingTypeId: string;
+}
+
+function parseTimeToDate(timeStr: string): Date {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  const date = new Date(1970, 0, 1, hours, minutes, 0);
+  return date;
 }
 
 export async function createGuestBooking(
@@ -226,8 +234,10 @@ export async function createGuestBooking(
   const name = nameParts[0] || "";
   const surname = nameParts.slice(1).join(" ") || "";
 
-  const checkIn = new Date(params.checkInDate);
-  const checkOut = new Date(params.checkOutDate);
+  const checkInDate = new Date(params.checkInDate + "T00:00:00");
+  const checkOutDate = new Date(params.checkOutDate + "T00:00:00");
+  const checkInTime = parseTimeToDate(params.checkInTime);
+  const checkOutTime = parseTimeToDate(params.checkOutTime);
 
   const booking = await prisma.booking.create({
     data: {
@@ -240,11 +250,11 @@ export async function createGuestBooking(
       carModel: params.vehicleModel,
       carColor: params.vehicleColor,
       returnFlight: params.flightNumber || null,
-      dateFrom: checkIn,
-      timeFrom: checkIn,
-      dateTo: checkOut,
-      timeTo: checkOut,
-      parkingTypeId: params.parkingTypeId.toString(),
+      dateFrom: checkInDate,
+      timeFrom: checkInTime,
+      dateTo: checkOutDate,
+      timeTo: checkOutTime,
+      parkingTypeId: params.parkingTypeId,
       deleteflag: 0,
     },
   });

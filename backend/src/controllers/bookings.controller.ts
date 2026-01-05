@@ -139,7 +139,9 @@ export async function createGuestBooking(
       vehicleColor,
       flightNumber,
       checkInDate,
+      checkInTime,
       checkOutDate,
+      checkOutTime,
       parkingTypeId,
     } = req.body;
 
@@ -150,7 +152,9 @@ export async function createGuestBooking(
       !licensePlate ||
       !vehicleModel ||
       !checkInDate ||
+      !checkInTime ||
       !checkOutDate ||
+      !checkOutTime ||
       !parkingTypeId ||
       !vehicleColor ||
       !vehicleBrand ||
@@ -170,7 +174,9 @@ export async function createGuestBooking(
       vehicleColor,
       flightNumber,
       checkInDate,
+      checkInTime,
       checkOutDate,
+      checkOutTime,
       parkingTypeId,
     });
 
