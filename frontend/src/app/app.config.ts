@@ -20,7 +20,7 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
         httpInterceptor: {
           allowedList: [
             {
-              uri: '/api/bookings',
+              uri: `${window.location.origin}/api/bookings`,
               httpMethod: 'GET' as const,
               tokenOptions: {
                 authorizationParams: {
@@ -29,7 +29,7 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
               }
             },
             {
-              uri: '/api/bookings/*',
+              uri: `${window.location.origin}/api/bookings/*`,
               httpMethod: 'GET' as const,
               tokenOptions: {
                 authorizationParams: {
@@ -38,7 +38,7 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
               }
             },
             {
-              uri: '/api/bookings/*/delete',
+              uri: `${window.location.origin}/api/bookings/*/delete`,
               httpMethod: 'PUT' as const,
               tokenOptions: {
                 authorizationParams: {
