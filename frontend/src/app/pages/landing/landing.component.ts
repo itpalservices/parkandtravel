@@ -24,21 +24,20 @@ export class LandingComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.isAuth0Configured) {
-      combineLatest([
-        this.authService.isLoading$,
-        this.authService.isAuthenticated$
-      ]).pipe(
-        filter(([isLoading]) => !isLoading),
-        take(1),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe(([_, isAuthenticated]) => {
-        this.isAuthenticated = isAuthenticated;
-        this.isLoading = false;
-        
-        if (isAuthenticated) {
-          this.router.navigate(['/admin/bookings']);
-        }
-      });
+      combineLatest([this.authService.isLoading$, this.authService.isAuthenticated$])
+        .pipe(
+          filter(([isLoading]) => !isLoading),
+          take(1),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe(([_, isAuthenticated]) => {
+          this.isAuthenticated = isAuthenticated;
+
+          if (isAuthenticated) {
+            this.router.navigate(['/admin/dashboard']);
+            this.isLoading = false;
+          }
+        });
     } else {
       this.isLoading = false;
     }
