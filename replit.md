@@ -163,5 +163,9 @@ backend/                     # Express + TypeScript backend (port 5000)
 - Consolidated bookings-table and bookings-mobile-list into single BookingsListComponent with CSS media queries
 - Converted guest booking form to reactive forms with validation
 - Created shared FormFieldErrorComponent for consistent validation error messages
-- Updated guest booking form to use inline ngb-datepicker calendars for dates and native time inputs
+- Updated guest booking form with input fields that open ngb-datepicker popup on click
+- Check-in date enabled from tomorrow, check-out from day after check-in
+- Default check-in is tomorrow, check-out is day after tomorrow
+- Date format in inputs: dd/MM/yyyy
+- Datepicker closes automatically when clicking outside
 - Added @angular/localize polyfill to support ng-bootstrap components
