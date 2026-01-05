@@ -12,6 +12,7 @@
   "dependencies": {
     "@angular/localize": "^21.0.6",
     "@auth0/auth0-angular": "^2.4.0",
+    "express-oauth2-jwt-bearer": "^1.7.2",
     "http-proxy-middleware": "^3.0.5"
   }
 }
