@@ -29,7 +29,7 @@
         </div>
       </div>
     } @else {
-      <form (ngSubmit)="submitBooking()" #bookingForm="ngForm">
+      <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()">
         @if (submitError) {
           <div class="error-alert">
             {{ submitError }}
@@ -45,11 +45,14 @@
               type="text"
               id="fullName"
               class="form-control"
-              [(ngModel)]="fullName"
-              name="fullName"
+              [class.is-invalid]="hasError('fullName')"
+              formControlName="fullName"
               placeholder="Enter your full name"
-              required
             />
+            <app-form-field-error 
+              [control]="f['fullName']" 
+              fieldName="Full Name">
+            </app-form-field-error>
           </div>
 
           <div class="form-row">
@@ -59,11 +62,14 @@
                 type="email"
                 id="email"
                 class="form-control"
-                [(ngModel)]="email"
-                name="email"
+                [class.is-invalid]="hasError('email')"
+                formControlName="email"
                 placeholder="your@email.com"
-                required
               />
+              <app-form-field-error 
+                [control]="f['email']" 
+                fieldName="Email">
+              </app-form-field-error>
             </div>
 
             <div class="form-group">
@@ -72,11 +78,15 @@
                 type="tel"
                 id="phone"
                 class="form-control"
-                [(ngModel)]="phone"
-                name="phone"
+                [class.is-invalid]="hasError('phone')"
+                formControlName="phone"
                 placeholder="+1 234 567 8900"
-                required
               />
+              <app-form-field-error 
+                [control]="f['phone']" 
+                fieldName="Phone"
+                [customMessages]="{ pattern: 'Please enter a valid phone number' }">
+              </app-form-field-error>
             </div>
           </div>
         </div>
@@ -91,11 +101,14 @@
                 type="text"
                 id="licensePlate"
                 class="form-control"
-                [(ngModel)]="licensePlate"
-                name="licensePlate"
+                [class.is-invalid]="hasError('licensePlate')"
+                formControlName="licensePlate"
                 placeholder="ABC123"
-                required
               />
+              <app-form-field-error 
+                [control]="f['licensePlate']" 
+                fieldName="License Plate">
+              </app-form-field-error>
             </div>
 
             <div class="form-group">
@@ -104,11 +117,14 @@
                 type="text"
                 id="vehicleModel"
                 class="form-control"
-                [(ngModel)]="vehicleModel"
-                name="vehicleModel"
+                [class.is-invalid]="hasError('vehicleModel')"
+                formControlName="vehicleModel"
                 placeholder="e.g., Toyota Camry"
-                required
               />
+              <app-form-field-error 
+                [control]="f['vehicleModel']" 
+                fieldName="Vehicle Model">
+              </app-form-field-error>
             </div>
           </div>
 
@@ -118,8 +134,7 @@
               type="text"
               id="flightNumber"
               class="form-control"
-              [(ngModel)]="flightNumber"
-              name="flightNumber"
+              formControlName="flightNumber"
               placeholder="e.g., BA1234"
             />
           </div>
@@ -133,18 +148,20 @@
               <label>Check-in Date *</label>
               <input
                 class="form-control date-input"
+                [class.is-invalid]="hasError('checkInDate')"
                 placeholder="Select date"
-                name="checkInDate"
-                [(ngModel)]="checkInDate"
+                formControlName="checkInDate"
                 ngbDatepicker
                 #dpCheckIn="ngbDatepicker"
                 [minDate]="minDate"
                 [markDisabled]="isDateDisabled"
                 (click)="dpCheckIn.toggle()"
-                (ngModelChange)="onCheckInDateChange()"
                 readonly
-                required
               />
+              <app-form-field-error 
+                [control]="f['checkInDate']" 
+                fieldName="Check-in Date">
+              </app-form-field-error>
             </div>
 
             <div class="form-group">
@@ -153,10 +170,13 @@
                 type="time"
                 id="checkInTime"
                 class="form-control"
-                [(ngModel)]="checkInTime"
-                name="checkInTime"
-                required
+                [class.is-invalid]="hasError('checkInTime')"
+                formControlName="checkInTime"
               />
+              <app-form-field-error 
+                [control]="f['checkInTime']" 
+                fieldName="Check-in Time">
+              </app-form-field-error>
             </div>
           </div>
 
@@ -165,17 +185,20 @@
               <label>Check-out Date *</label>
               <input
                 class="form-control date-input"
+                [class.is-invalid]="hasError('checkOutDate')"
                 placeholder="Select date"
-                name="checkOutDate"
-                [(ngModel)]="checkOutDate"
+                formControlName="checkOutDate"
                 ngbDatepicker
                 #dpCheckOut="ngbDatepicker"
                 [minDate]="checkOutMinDate"
                 [markDisabled]="isCheckOutDateDisabled"
                 (click)="dpCheckOut.toggle()"
                 readonly
-                required
               />
+              <app-form-field-error 
+                [control]="f['checkOutDate']" 
+                fieldName="Check-out Date">
+              </app-form-field-error>
             </div>
 
             <div class="form-group">
@@ -184,10 +207,13 @@
                 type="time"
                 id="checkOutTime"
                 class="form-control"
-                [(ngModel)]="checkOutTime"
-                name="checkOutTime"
-                required
+                [class.is-invalid]="hasError('checkOutTime')"
+                formControlName="checkOutTime"
               />
+              <app-form-field-error 
+                [control]="f['checkOutTime']" 
+                fieldName="Check-out Time">
+              </app-form-field-error>
             </div>
           </div>
 
@@ -196,14 +222,18 @@
             <select
               id="parkingType"
               class="form-control"
-              [(ngModel)]="selectedParkingType"
-              name="parkingType"
-              required
+              [class.is-invalid]="hasError('parkingType')"
+              formControlName="parkingType"
             >
+              <option value="" disabled>Select parking type</option>
               @for (type of parkingTypes; track type.id) {
                 <option [value]="type.id">{{ type.name }}</option>
               }
             </select>
+            <app-form-field-error 
+              [control]="f['parkingType']" 
+              fieldName="Parking Type">
+            </app-form-field-error>
           </div>
         </div>
 
@@ -211,7 +241,7 @@
           <button
             type="submit"
             class="btn-submit"
-            [disabled]="!isFormValid() || submitting"
+            [disabled]="submitting"
           >
             @if (submitting) {
               <span class="spinner"></span>

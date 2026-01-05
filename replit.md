@@ -160,3 +160,7 @@ backend/                     # Express + TypeScript backend (port 5000)
 - Created guest booking form for public users
 - Added auth guard to protect admin routes
 - Updated sidebar navigation to use /admin/* routes
+- Consolidated bookings-table and bookings-mobile-list into single BookingsListComponent with CSS media queries
+- Converted guest booking form to reactive forms with validation
+- Created shared FormFieldErrorComponent for consistent validation error messages
+- Updated guest booking form to use ngb-datepicker for dates and native time inputs

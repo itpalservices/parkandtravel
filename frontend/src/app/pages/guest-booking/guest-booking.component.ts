@@ -1,9 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
+import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
+import { Subscription } from 'rxjs';
 
 interface ParkingType {
   id: number;
@@ -14,28 +16,23 @@ interface ParkingType {
 @Component({
   selector: 'app-guest-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgbDatepickerModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    NgbDatepickerModule,
+    FormFieldErrorComponent
+  ],
   templateUrl: './guest-booking.component.html',
   styleUrls: ['./guest-booking.component.scss']
 })
-export class GuestBookingComponent implements OnInit {
+export class GuestBookingComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private calendar = inject(NgbCalendar);
   private apiService = inject(ApiService);
+  private fb = inject(FormBuilder);
+  private checkInDateSubscription?: Subscription;
 
-  fullName = '';
-  email = '';
-  phone = '';
-  licensePlate = '';
-  vehicleModel = '';
-  flightNumber = '';
-  
-  checkInDate: NgbDateStruct | null = null;
-  checkInTime = '10:00';
-  checkOutDate: NgbDateStruct | null = null;
-  checkOutTime = '10:00';
-  
-  selectedParkingType = '';
+  bookingForm!: FormGroup;
   parkingTypes: ParkingType[] = [];
   
   minDate: NgbDateStruct;
@@ -49,10 +46,46 @@ export class GuestBookingComponent implements OnInit {
     const today = this.calendar.getToday();
     this.minDate = today;
     this.checkOutMinDate = today;
+    this.initForm();
+  }
+
+  private initForm(): void {
+    this.bookingForm = this.fb.group({
+      fullName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['', [Validators.required, Validators.pattern(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/)]],
+      licensePlate: ['', [Validators.required, Validators.minLength(2)]],
+      vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
+      flightNumber: [''],
+      checkInDate: [null, Validators.required],
+      checkInTime: ['10:00', Validators.required],
+      checkOutDate: [null, Validators.required],
+      checkOutTime: ['10:00', Validators.required],
+      parkingType: ['', Validators.required]
+    });
   }
 
   ngOnInit(): void {
     this.loadParkingTypes();
+    this.setupCheckInDateListener();
+  }
+
+  ngOnDestroy(): void {
+    this.checkInDateSubscription?.unsubscribe();
+  }
+
+  private setupCheckInDateListener(): void {
+    this.checkInDateSubscription = this.bookingForm.get('checkInDate')?.valueChanges.subscribe(
+      (checkInDate: NgbDateStruct | null) => {
+        if (checkInDate) {
+          this.checkOutMinDate = { ...checkInDate };
+          const checkOutDate = this.bookingForm.get('checkOutDate')?.value;
+          if (checkOutDate && this.compareDates(checkOutDate, checkInDate) < 0) {
+            this.bookingForm.patchValue({ checkOutDate: { ...checkInDate } });
+          }
+        }
+      }
+    );
   }
 
   loadParkingTypes(): void {
@@ -60,7 +93,7 @@ export class GuestBookingComponent implements OnInit {
       next: (types) => {
         this.parkingTypes = types;
         if (types.length > 0) {
-          this.selectedParkingType = types[0].id.toString();
+          this.bookingForm.patchValue({ parkingType: types[0].id.toString() });
         }
       },
       error: () => {
@@ -68,18 +101,9 @@ export class GuestBookingComponent implements OnInit {
           { id: 1, name: 'Standard', pricePerDay: 10 },
           { id: 2, name: 'Premium', pricePerDay: 20 }
         ];
-        this.selectedParkingType = '1';
+        this.bookingForm.patchValue({ parkingType: '1' });
       }
     });
-  }
-
-  onCheckInDateChange(): void {
-    if (this.checkInDate) {
-      this.checkOutMinDate = { ...this.checkInDate };
-      if (this.checkOutDate && this.compareDates(this.checkOutDate, this.checkInDate) < 0) {
-        this.checkOutDate = { ...this.checkInDate };
-      }
-    }
   }
 
   private compareDates(date1: NgbDateStruct, date2: NgbDateStruct): number {
@@ -100,35 +124,37 @@ export class GuestBookingComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  isFormValid(): boolean {
-    return !!(
-      this.fullName.trim() &&
-      this.email.trim() &&
-      this.phone.trim() &&
-      this.licensePlate.trim() &&
-      this.vehicleModel.trim() &&
-      this.checkInDate &&
-      this.checkOutDate &&
-      this.selectedParkingType
-    );
+  get f() {
+    return this.bookingForm.controls;
+  }
+
+  hasError(fieldName: string): boolean {
+    const control = this.bookingForm.get(fieldName);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
   submitBooking(): void {
-    if (!this.isFormValid()) return;
+    if (this.bookingForm.invalid) {
+      Object.keys(this.bookingForm.controls).forEach(key => {
+        this.bookingForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
 
     this.submitting = true;
     this.submitError = '';
 
+    const formValue = this.bookingForm.value;
     const booking = {
-      fullName: this.fullName.trim(),
-      email: this.email.trim(),
-      phone: this.phone.trim(),
-      licensePlate: this.licensePlate.trim(),
-      vehicleModel: this.vehicleModel.trim(),
-      flightNumber: this.flightNumber.trim() || null,
-      checkInDate: this.formatDateTimeForApi(this.checkInDate!, this.checkInTime),
-      checkOutDate: this.formatDateTimeForApi(this.checkOutDate!, this.checkOutTime),
-      parkingTypeId: parseInt(this.selectedParkingType, 10)
+      fullName: formValue.fullName.trim(),
+      email: formValue.email.trim(),
+      phone: formValue.phone.trim(),
+      licensePlate: formValue.licensePlate.trim(),
+      vehicleModel: formValue.vehicleModel.trim(),
+      flightNumber: formValue.flightNumber?.trim() || null,
+      checkInDate: this.formatDateTimeForApi(formValue.checkInDate, formValue.checkInTime),
+      checkOutDate: this.formatDateTimeForApi(formValue.checkOutDate, formValue.checkOutTime),
+      parkingTypeId: parseInt(formValue.parkingType, 10)
     };
 
     this.apiService.post('/bookings/guest', booking).subscribe({
@@ -151,13 +177,12 @@ export class GuestBookingComponent implements OnInit {
 
   createAnotherBooking(): void {
     this.submitSuccess = false;
-    this.fullName = '';
-    this.email = '';
-    this.phone = '';
-    this.licensePlate = '';
-    this.vehicleModel = '';
-    this.flightNumber = '';
-    this.checkInDate = null;
-    this.checkOutDate = null;
+    this.bookingForm.reset({
+      checkInTime: '10:00',
+      checkOutTime: '10:00'
+    });
+    if (this.parkingTypes.length > 0) {
+      this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id.toString() });
+    }
   }
 }

@@ -120,6 +120,16 @@ input[type="time"].form-control {
   padding: 0.75rem 1rem;
 }
 
+.form-control.is-invalid {
+  border-color: #dc3545;
+  
+  &:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+  }
+}
+
+
 .form-actions {
   margin-top: 2rem;
 }
