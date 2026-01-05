@@ -20,26 +20,11 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
         httpInterceptor: {
           allowedList: [
             {
-              uri: `${window.location.origin}/api/bookings`,
-              httpMethod: 'GET' as const,
-              tokenOptions: {
-                authorizationParams: {
-                  audience: environment.auth0.audience
-                }
-              }
-            },
-            {
-              uri: `${window.location.origin}/api/bookings/*`,
-              httpMethod: 'GET' as const,
-              tokenOptions: {
-                authorizationParams: {
-                  audience: environment.auth0.audience
-                }
-              }
-            },
-            {
-              uri: `${window.location.origin}/api/bookings/*/delete`,
-              httpMethod: 'PUT' as const,
+              uriMatcher: (uri: string) => {
+                const isBookingsEndpoint = uri.includes('/api/bookings');
+                const isGuestEndpoint = uri.includes('/api/bookings/guest');
+                return isBookingsEndpoint && !isGuestEndpoint;
+              },
               tokenOptions: {
                 authorizationParams: {
                   audience: environment.auth0.audience
