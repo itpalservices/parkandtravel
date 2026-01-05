@@ -61,7 +61,21 @@ export class DateRangePickerComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.selectedPreset && this.selectedPreset !== 'custom') {
+      this.activePreset = this.selectedPreset;
+      const range = this.getDateRangeForPreset(this.selectedPreset);
+      this.appliedFromDate = this.dateToNgbDate(range.from);
+      this.appliedToDate = this.dateToNgbDate(range.to);
+    }
     this.updateDisplayDate();
+  }
+
+  private dateToNgbDate(date: Date): NgbDateStruct {
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate()
+    };
   }
 
   @HostListener('document:click', ['$event'])

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { Booking } from '../../../../shared/models/booking.model';
 import { DateRangePickerComponent, DateRange } from '../../../../shared/components/date-range-picker/date-range-picker.component';
@@ -21,12 +21,9 @@ import { BookingsListComponent } from '../bookings-list/bookings-list.component'
   styleUrls: ['./bookings-page.component.scss']
 })
 export class BookingsPageComponent implements OnInit {
-  allBookings: Booking[] = [];
   bookings: Booking[] = [];
   loading = false;
   searchTerm = '';
-  dateFrom: NgbDateStruct | null = null;
-  dateTo: NgbDateStruct | null = null;
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
 
@@ -34,18 +31,55 @@ export class BookingsPageComponent implements OnInit {
   pageSize = 10;
   totalPages = 1;
 
-  constructor(private bookingsService: BookingsService) {}
+  constructor(
+    private bookingsService: BookingsService,
+    private calendar: NgbCalendar
+  ) {}
 
   ngOnInit(): void {
+    this.initDefaultDateRange();
     this.loadBookings();
+  }
+
+  private initDefaultDateRange(): void {
+    const today = this.calendar.getToday();
+    const fromDate = new Date(today.year, today.month - 1, today.day);
+    const toDate = new Date(today.year, today.month - 1, today.day);
+    
+    this.dateFilter = {
+      from: fromDate,
+      to: toDate,
+      preset: 'today'
+    };
+  }
+
+  private formatDateForApi(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   loadBookings(): void {
     this.loading = true;
-    this.bookingsService.getBookings().subscribe({
+    
+    const params: { dateFrom?: string; dateTo?: string; search?: string } = {};
+    
+    if (this.dateFilter.from) {
+      params.dateFrom = this.formatDateForApi(this.dateFilter.from);
+    }
+    if (this.dateFilter.to) {
+      params.dateTo = this.formatDateForApi(this.dateFilter.to);
+    }
+    if (this.searchTerm.trim()) {
+      params.search = this.searchTerm.trim();
+    }
+
+    this.bookingsService.getBookings(params).subscribe({
       next: (response) => {
-        this.allBookings = response.data;
-        this.applyFilters();
+        this.bookings = response.data;
+        this.totalPages = Math.ceil(this.bookings.length / this.pageSize) || 1;
+        this.currentPage = 1;
         this.loading = false;
       },
       error: (err) => {
@@ -55,40 +89,9 @@ export class BookingsPageComponent implements OnInit {
     });
   }
 
-  applyFilters(): void {
-    let filtered = [...this.allBookings];
-
-    if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(booking => 
-        booking.name.toLowerCase().includes(term) ||
-        booking.surname.toLowerCase().includes(term) ||
-        booking.plateNo.toLowerCase().includes(term) ||
-        (booking.returnFlight && booking.returnFlight.toLowerCase().includes(term))
-      );
-    }
-
-    if (this.dateFilter.from && this.dateFilter.to) {
-      const fromDate = new Date(this.dateFilter.from);
-      fromDate.setHours(0, 0, 0, 0);
-      const toDate = new Date(this.dateFilter.to);
-      toDate.setHours(23, 59, 59, 999);
-
-      filtered = filtered.filter(booking => {
-        const checkInDate = new Date(booking.dateFrom);
-        checkInDate.setHours(0, 0, 0, 0);
-        return checkInDate >= fromDate && checkInDate <= toDate;
-      });
-    }
-
-    this.bookings = filtered;
-    this.totalPages = Math.ceil(this.bookings.length / this.pageSize) || 1;
-    this.currentPage = 1;
-  }
-
   onDateRangeChange(range: DateRange): void {
     this.dateFilter = range;
-    this.applyFilters();
+    this.loadBookings();
   }
 
   get paginatedBookings(): Booking[] {
@@ -136,14 +139,6 @@ export class BookingsPageComponent implements OnInit {
   }
 
   onSearchChange(): void {
-    this.applyFilters();
-  }
-
-  onDateFromChange(): void {
-    this.currentPage = 1;
-  }
-
-  onDateToChange(): void {
-    this.currentPage = 1;
+    this.loadBookings();
   }
 }

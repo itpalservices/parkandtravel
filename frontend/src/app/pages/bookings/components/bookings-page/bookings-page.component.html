@@ -21,6 +21,7 @@
       </div>
       <div class="header-right">
         <app-date-range-picker
+          [selectedPreset]="dateFilter.preset"
           (dateRangeChange)="onDateRangeChange($event)"
         ></app-date-range-picker>
       </div>
@@ -55,38 +56,10 @@
     </div>
     
     <div class="date-range-row">
-      <div class="date-input-wrapper">
-        <input
-          class="form-control date-input"
-          placeholder="Start date"
-          name="dateFrom"
-          [(ngModel)]="dateFrom"
-          ngbDatepicker
-          #dpFrom="ngbDatepicker"
-          (click)="dpFrom.toggle()"
-          (ngModelChange)="onDateFromChange()"
-          readonly
-        />
-      </div>
-      <button class="arrow-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </button>
-      <div class="date-input-wrapper">
-        <input
-          class="form-control date-input"
-          placeholder="End date"
-          name="dateTo"
-          [(ngModel)]="dateTo"
-          ngbDatepicker
-          #dpTo="ngbDatepicker"
-          (click)="dpTo.toggle()"
-          (ngModelChange)="onDateToChange()"
-          readonly
-        />
-      </div>
+      <app-date-range-picker
+        [selectedPreset]="dateFilter.preset"
+        (dateRangeChange)="onDateRangeChange($event)"
+      ></app-date-range-picker>
     </div>
   </div>
 
