@@ -81,6 +81,7 @@
         [totalPages]="totalPages"
         [pageNumbers]="pageNumbers"
         (pageChange)="onPageChange($event)"
+        (bookingDeleted)="loadBookings()"
       ></app-bookings-list>
     }
   </div>

@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
+import { BookingsService } from '../../../../core/services/bookings.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-bookings-list',
@@ -16,6 +18,9 @@ export class BookingsListComponent {
   @Input() totalPages = 1;
   @Input() pageNumbers: number[] = [];
   @Output() pageChange = new EventEmitter<number>();
+  @Output() bookingDeleted = new EventEmitter<void>();
+
+  constructor(private bookingsService: BookingsService) {}
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -68,7 +73,41 @@ export class BookingsListComponent {
   }
 
   onDelete(booking: Booking): void {
-    console.log('Delete booking:', booking.id);
+    Swal.fire({
+      title: 'Delete Booking',
+      text: `Are you sure you want to delete the booking for ${booking.name} ${booking.surname}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.bookingsService.softDelete(booking.id).subscribe({
+          next: () => {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Booking deleted successfully',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
+            });
+            this.bookingDeleted.emit();
+          },
+          error: (err) => {
+            Swal.fire({
+              title: 'Error',
+              text: err.error?.message || 'Failed to delete booking. Please try again.',
+              icon: 'error',
+              confirmButtonColor: '#006B8F'
+            });
+          }
+        });
+      }
+    });
   }
 
   onPrevious(): void {

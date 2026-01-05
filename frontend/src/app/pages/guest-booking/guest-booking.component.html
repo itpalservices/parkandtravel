@@ -1,7 +1,17 @@
 <div class="guest-booking-page">
   <div class="booking-container">
     <button class="back-btn" (click)="goBack()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
@@ -16,15 +26,30 @@
     @if (submitSuccess) {
       <div class="success-message">
         <div class="success-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
         </div>
         <h2>Booking Confirmed!</h2>
-        <p>Your parking reservation has been successfully created. You will receive a confirmation email shortly.</p>
+        <p>
+          Your parking reservation has been successfully created. You will receive a confirmation
+          email shortly.
+        </p>
         <div class="success-actions">
-          <button class="btn-primary" (click)="createAnotherBooking()">Create Another Booking</button>
+          <button class="btn-primary" (click)="createAnotherBooking()">
+            Create Another Booking
+          </button>
           <button class="btn-secondary" (click)="goBack()">Back to Home</button>
         </div>
       </div>
@@ -38,7 +63,7 @@
 
         <div class="form-section">
           <h3>Personal Information</h3>
-          
+
           <div class="form-group">
             <label for="fullName">Full Name *</label>
             <input
@@ -49,9 +74,7 @@
               formControlName="fullName"
               placeholder="Enter your full name"
             />
-            <app-form-field-error 
-              [control]="f['fullName']" 
-              fieldName="Full Name">
+            <app-form-field-error [control]="f['fullName']" fieldName="Full Name">
             </app-form-field-error>
           </div>
 
@@ -66,9 +89,7 @@
                 formControlName="email"
                 placeholder="your@email.com"
               />
-              <app-form-field-error 
-                [control]="f['email']" 
-                fieldName="Email">
+              <app-form-field-error [control]="f['email']" fieldName="Email">
               </app-form-field-error>
             </div>
 
@@ -82,10 +103,11 @@
                 formControlName="phone"
                 placeholder="+1 234 567 8900"
               />
-              <app-form-field-error 
-                [control]="f['phone']" 
+              <app-form-field-error
+                [control]="f['phone']"
                 fieldName="Phone"
-                [customMessages]="{ pattern: 'Please enter a valid phone number' }">
+                [customMessages]="{ pattern: 'Please enter a valid phone number' }"
+              >
               </app-form-field-error>
             </div>
           </div>
@@ -93,6 +115,35 @@
 
         <div class="form-section">
           <h3>Vehicle Information</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="vehicleBrand">Vehicle Brand *</label>
+              <input
+                type="text"
+                id="vehicleBrand"
+                class="form-control"
+                [class.is-invalid]="hasError('vehicleBrand')"
+                formControlName="vehicleBrand"
+                placeholder="e.g., Toyota"
+              />
+              <app-form-field-error [control]="f['vehicleBrand']" fieldName="Vehicle Brand">
+              </app-form-field-error>
+            </div>
+            <div class="form-group">
+              <label for="vehicleModel">Vehicle Model *</label>
+              <input
+                type="text"
+                id="vehicleModel"
+                class="form-control"
+                [class.is-invalid]="hasError('vehicleModel')"
+                formControlName="vehicleModel"
+                placeholder="e.g., CH-R"
+              />
+              <app-form-field-error [control]="f['vehicleModel']" fieldName="Vehicle Model">
+              </app-form-field-error>
+            </div>
+          </div>
 
           <div class="form-row">
             <div class="form-group">
@@ -105,38 +156,22 @@
                 formControlName="licensePlate"
                 placeholder="ABC123"
               />
-              <app-form-field-error 
-                [control]="f['licensePlate']" 
-                fieldName="License Plate">
+              <app-form-field-error [control]="f['licensePlate']" fieldName="License Plate">
               </app-form-field-error>
             </div>
-
             <div class="form-group">
-              <label for="vehicleModel">Vehicle Model *</label>
+              <label for="vehicleColor">Vehicle Color *</label>
               <input
                 type="text"
-                id="vehicleModel"
+                id="vehicleColor"
                 class="form-control"
-                [class.is-invalid]="hasError('vehicleModel')"
-                formControlName="vehicleModel"
-                placeholder="e.g., Toyota Camry"
+                [class.is-invalid]="hasError('vehicleColor')"
+                formControlName="vehicleColor"
+                placeholder="e.g., Red"
               />
-              <app-form-field-error 
-                [control]="f['vehicleModel']" 
-                fieldName="Vehicle Model">
+              <app-form-field-error [control]="f['vehicleColor']" fieldName="Vehicle Color">
               </app-form-field-error>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="flightNumber">Flight Number (Optional)</label>
-            <input
-              type="text"
-              id="flightNumber"
-              class="form-control"
-              formControlName="flightNumber"
-              placeholder="e.g., BA1234"
-            />
           </div>
         </div>
 
@@ -145,30 +180,35 @@
 
           <div class="form-row">
             <div class="form-group">
+              <label for="flightNumber">Flight Number</label>
+              <input
+                type="text"
+                id="flightNumber"
+                class="form-control"
+                formControlName="flightNumber"
+                placeholder="e.g., BA1234"
+              />
+              <app-form-field-error [control]="f['flightNumber']" fieldName="Flight Number">
+              </app-form-field-error>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
               <label>Check-in Date *</label>
-              <div class="input-group">
-                <input
-                  class="form-control date-input"
-                  [class.is-invalid]="hasError('checkInDate')"
-                  placeholder="dd/MM/yyyy"
-                  [value]="formatDate(bookingForm.get('checkInDate')?.value)"
-                  ngbDatepicker
-                  #dpCheckIn="ngbDatepicker"
-                  [minDate]="minDate"
-                  [autoClose]="'outside'"
-                  (dateSelect)="bookingForm.patchValue({checkInDate: $event})"
-                  (click)="dpCheckIn.toggle()"
-                  readonly
-                />
-                <button class="btn btn-outline-secondary" type="button" (click)="dpCheckIn.toggle()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
-                  </svg>
-                </button>
-              </div>
-              <app-form-field-error 
-                [control]="f['checkInDate']" 
-                fieldName="Check-in Date">
+              <input
+                class="form-control date-input"
+                [class.is-invalid]="hasError('checkInDate')"
+                placeholder="Select date"
+                formControlName="checkInDate"
+                ngbDatepicker
+                #dpCheckIn="ngbDatepicker"
+                [minDate]="minDate"
+                [markDisabled]="isDateDisabled"
+                (click)="dpCheckIn.toggle()"
+                readonly
+              />
+              <app-form-field-error [control]="f['checkInDate']" fieldName="Check-in Date">
               </app-form-field-error>
             </div>
 
@@ -181,9 +221,7 @@
                 [class.is-invalid]="hasError('checkInTime')"
                 formControlName="checkInTime"
               />
-              <app-form-field-error 
-                [control]="f['checkInTime']" 
-                fieldName="Check-in Time">
+              <app-form-field-error [control]="f['checkInTime']" fieldName="Check-in Time">
               </app-form-field-error>
             </div>
           </div>
@@ -191,29 +229,19 @@
           <div class="form-row">
             <div class="form-group">
               <label>Check-out Date *</label>
-              <div class="input-group">
-                <input
-                  class="form-control date-input"
-                  [class.is-invalid]="hasError('checkOutDate')"
-                  placeholder="dd/MM/yyyy"
-                  [value]="formatDate(bookingForm.get('checkOutDate')?.value)"
-                  ngbDatepicker
-                  #dpCheckOut="ngbDatepicker"
-                  [minDate]="checkOutMinDate"
-                  [autoClose]="'outside'"
-                  (dateSelect)="bookingForm.patchValue({checkOutDate: $event})"
-                  (click)="dpCheckOut.toggle()"
-                  readonly
-                />
-                <button class="btn btn-outline-secondary" type="button" (click)="dpCheckOut.toggle()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
-                  </svg>
-                </button>
-              </div>
-              <app-form-field-error 
-                [control]="f['checkOutDate']" 
-                fieldName="Check-out Date">
+              <input
+                class="form-control date-input"
+                [class.is-invalid]="hasError('checkOutDate')"
+                placeholder="Select date"
+                formControlName="checkOutDate"
+                ngbDatepicker
+                #dpCheckOut="ngbDatepicker"
+                [minDate]="checkOutMinDate"
+                [markDisabled]="isCheckOutDateDisabled"
+                (click)="dpCheckOut.toggle()"
+                readonly
+              />
+              <app-form-field-error [control]="f['checkOutDate']" fieldName="Check-out Date">
               </app-form-field-error>
             </div>
 
@@ -226,9 +254,7 @@
                 [class.is-invalid]="hasError('checkOutTime')"
                 formControlName="checkOutTime"
               />
-              <app-form-field-error 
-                [control]="f['checkOutTime']" 
-                fieldName="Check-out Time">
+              <app-form-field-error [control]="f['checkOutTime']" fieldName="Check-out Time">
               </app-form-field-error>
             </div>
           </div>
@@ -246,19 +272,13 @@
                 <option [value]="type.id">{{ type.name }}</option>
               }
             </select>
-            <app-form-field-error 
-              [control]="f['parkingType']" 
-              fieldName="Parking Type">
+            <app-form-field-error [control]="f['parkingType']" fieldName="Parking Type">
             </app-form-field-error>
           </div>
         </div>
 
         <div class="form-actions">
-          <button
-            type="submit"
-            class="btn-submit"
-            [disabled]="submitting"
-          >
+          <button type="submit" class="btn-submit" [disabled]="submitting">
             @if (submitting) {
               <span class="spinner"></span>
               Processing...

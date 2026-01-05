@@ -2,7 +2,12 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { NgbDatepickerModule, NgbDateStruct, NgbCalendar, NgbDate } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDatepickerModule,
+  NgbDateStruct,
+  NgbCalendar,
+  NgbDate,
+} from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
 import { Subscription } from 'rxjs';
@@ -16,14 +21,9 @@ interface ParkingType {
 @Component({
   selector: 'app-guest-booking',
   standalone: true,
-  imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    NgbDatepickerModule,
-    FormFieldErrorComponent
-  ],
+  imports: [CommonModule, ReactiveFormsModule, NgbDatepickerModule, FormFieldErrorComponent],
   templateUrl: './guest-booking.component.html',
-  styleUrls: ['./guest-booking.component.scss']
+  styleUrls: ['./guest-booking.component.scss'],
 })
 export class GuestBookingComponent implements OnInit, OnDestroy {
   private router = inject(Router);
@@ -34,10 +34,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   bookingForm!: FormGroup;
   parkingTypes: ParkingType[] = [];
-  
+
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
-  
+
   submitting = false;
   submitSuccess = false;
   submitError = '';
@@ -55,15 +55,23 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     this.bookingForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/)]],
+      phone: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/),
+        ],
+      ],
       licensePlate: ['', [Validators.required, Validators.minLength(2)]],
+      vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
-      flightNumber: [''],
+      vehicleColor: ['', [Validators.required, Validators.minLength(2)]],
+      flightNumber: ['', [Validators.required]],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       checkOutDate: [defaultCheckOut, Validators.required],
       checkOutTime: ['10:00', Validators.required],
-      parkingType: ['', Validators.required]
+      parkingType: ['', Validators.required],
     });
   }
 
@@ -77,8 +85,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   }
 
   private setupCheckInDateListener(): void {
-    this.checkInDateSubscription = this.bookingForm.get('checkInDate')?.valueChanges.subscribe(
-      (checkInDate: NgbDateStruct | null) => {
+    this.checkInDateSubscription = this.bookingForm
+      .get('checkInDate')
+      ?.valueChanges.subscribe((checkInDate: NgbDateStruct | null) => {
         if (checkInDate) {
           const checkInNgbDate = new NgbDate(checkInDate.year, checkInDate.month, checkInDate.day);
           const nextDay = this.calendar.getNext(checkInNgbDate, 'd', 1);
@@ -88,8 +97,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
             this.bookingForm.patchValue({ checkOutDate: nextDay });
           }
         }
-      }
-    );
+      });
   }
 
   formatDate(date: NgbDateStruct | null): string {
@@ -110,10 +118,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       error: () => {
         this.parkingTypes = [
           { id: 'parkingType_covered', name: 'Covered' },
-          { id: 'parkingType_uncovered', name: 'Un Covered' }
+          { id: 'parkingType_uncovered', name: 'Un Covered' },
         ];
         this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
-      }
+      },
     });
   }
 
@@ -146,7 +154,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   submitBooking(): void {
     if (this.bookingForm.invalid) {
-      Object.keys(this.bookingForm.controls).forEach(key => {
+      Object.keys(this.bookingForm.controls).forEach((key) => {
         this.bookingForm.get(key)?.markAsTouched();
       });
       return;
@@ -162,10 +170,12 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       phone: formValue.phone.trim(),
       licensePlate: formValue.licensePlate.trim(),
       vehicleModel: formValue.vehicleModel.trim(),
+      vehicleBrand: formValue.vehicleBrand.trim(),
+      vehicleColor: formValue.vehicleColor.trim(),
       flightNumber: formValue.flightNumber?.trim() || null,
       checkInDate: this.formatDateTimeForApi(formValue.checkInDate, formValue.checkInTime),
       checkOutDate: this.formatDateTimeForApi(formValue.checkOutDate, formValue.checkOutTime),
-      parkingTypeId: formValue.parkingType
+      parkingTypeId: formValue.parkingType,
     };
 
     this.apiService.post('/bookings/guest', booking).subscribe({
@@ -176,7 +186,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.submitting = false;
         this.submitError = err.error?.message || 'Failed to create booking. Please try again.';
-      }
+      },
     });
   }
 
@@ -197,7 +207,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       checkInDate: tomorrow,
       checkOutDate: dayAfterTomorrow,
       checkInTime: '10:00',
-      checkOutTime: '10:00'
+      checkOutTime: '10:00',
     });
     if (this.parkingTypes.length > 0) {
       this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id });

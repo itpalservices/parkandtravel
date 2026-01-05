@@ -18,22 +18,32 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
 
     if (dateFrom !== undefined) {
       if (!isValidDateFormat(dateFrom as string)) {
-        res.status(400).json({ error: "dateFrom must be a valid date in YYYY-MM-DD format" });
+        res
+          .status(400)
+          .json({
+            error: "dateFrom must be a valid date in YYYY-MM-DD format",
+          });
         return;
       }
       if (isDateInPast(dateFrom as string)) {
-        res.status(400).json({ error: "dateFrom/dateTo cannot be in the past" });
+        res
+          .status(400)
+          .json({ error: "dateFrom/dateTo cannot be in the past" });
         return;
       }
     }
 
     if (dateTo !== undefined) {
       if (!isValidDateFormat(dateTo as string)) {
-        res.status(400).json({ error: "dateTo must be a valid date in YYYY-MM-DD format" });
+        res
+          .status(400)
+          .json({ error: "dateTo must be a valid date in YYYY-MM-DD format" });
         return;
       }
       if (isDateInPast(dateTo as string)) {
-        res.status(400).json({ error: "dateFrom/dateTo cannot be in the past" });
+        res
+          .status(400)
+          .json({ error: "dateFrom/dateTo cannot be in the past" });
         return;
       }
     }
@@ -85,7 +95,10 @@ export async function getBooking(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function deleteBooking(req: Request, res: Response): Promise<void> {
+export async function deleteBooking(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     const { id } = req.params;
 
@@ -111,11 +124,38 @@ export async function deleteBooking(req: Request, res: Response): Promise<void> 
   }
 }
 
-export async function createGuestBooking(req: Request, res: Response): Promise<void> {
+export async function createGuestBooking(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
-    const { fullName, email, phone, licensePlate, vehicleModel, flightNumber, checkInDate, checkOutDate, parkingTypeId } = req.body;
+    const {
+      fullName,
+      email,
+      phone,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkOutDate,
+      parkingTypeId,
+    } = req.body;
 
-    if (!fullName || !email || !phone || !licensePlate || !vehicleModel || !checkInDate || !checkOutDate || !parkingTypeId) {
+    if (
+      !fullName ||
+      !email ||
+      !phone ||
+      !licensePlate ||
+      !vehicleModel ||
+      !checkInDate ||
+      !checkOutDate ||
+      !parkingTypeId ||
+      !vehicleColor ||
+      !vehicleBrand ||
+      !flightNumber
+    ) {
       res.status(400).json({ error: "Missing required fields" });
       return;
     }
@@ -125,7 +165,9 @@ export async function createGuestBooking(req: Request, res: Response): Promise<v
       email,
       phone,
       licensePlate,
+      vehicleBrand,
       vehicleModel,
+      vehicleColor,
       flightNumber,
       checkInDate,
       checkOutDate,

@@ -53,7 +53,8 @@ function isDateInPast(dateStr: string): boolean {
 }
 
 function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
 }
 
@@ -82,14 +83,15 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   if (search) {
     const searchLower = search.toLowerCase().replace(/'/g, "''");
     whereConditions.push(
-      `(LOWER(b.name) LIKE '%${searchLower}%' OR LOWER(b.surname) LIKE '%${searchLower}%' OR LOWER(b.email) LIKE '%${searchLower}%' OR LOWER(b."plateNo") LIKE '%${searchLower}%')`
+      `(LOWER(b.name) LIKE '%${searchLower}%' OR LOWER(b.surname) LIKE '%${searchLower}%' OR LOWER(b.email) LIKE '%${searchLower}%' OR LOWER(b."plateNo") LIKE '%${searchLower}%')`,
     );
   }
 
   const whereClause = whereConditions.join(" AND ");
 
   const countQuery = `SELECT COUNT(*) as count FROM bookings b WHERE ${whereClause}`;
-  const countResult = await prisma.$queryRawUnsafe<{ count: bigint }[]>(countQuery);
+  const countResult =
+    await prisma.$queryRawUnsafe<{ count: bigint }[]>(countQuery);
   const total = Number(countResult[0].count);
 
   const offset = (page - 1) * limit;
@@ -148,7 +150,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   };
 }
 
-export async function getBookingById(id: string): Promise<BookingResponse | null> {
+export async function getBookingById(
+  id: string,
+): Promise<BookingResponse | null> {
   if (!isValidUUID(id)) return null;
 
   const booking = await prisma.booking.findUnique({
@@ -179,7 +183,9 @@ export async function getBookingById(id: string): Promise<BookingResponse | null
   };
 }
 
-export async function softDeleteBooking(id: string): Promise<{ id: string; deleteflag: number } | null> {
+export async function softDeleteBooking(
+  id: string,
+): Promise<{ id: string; deleteflag: number } | null> {
   if (!isValidUUID(id)) return null;
 
   const booking = await prisma.booking.findUnique({
@@ -204,17 +210,21 @@ interface CreateGuestBookingParams {
   email: string;
   phone: string;
   licensePlate: string;
+  vehicleBrand: string;
   vehicleModel: string;
+  vehicleColor: string;
   flightNumber?: string | null;
   checkInDate: string;
   checkOutDate: string;
   parkingTypeId: number;
 }
 
-export async function createGuestBooking(params: CreateGuestBookingParams): Promise<{ id: string }> {
-  const nameParts = params.fullName.trim().split(' ');
-  const name = nameParts[0] || '';
-  const surname = nameParts.slice(1).join(' ') || '';
+export async function createGuestBooking(
+  params: CreateGuestBookingParams,
+): Promise<{ id: string }> {
+  const nameParts = params.fullName.trim().split(" ");
+  const name = nameParts[0] || "";
+  const surname = nameParts.slice(1).join(" ") || "";
 
   const checkIn = new Date(params.checkInDate);
   const checkOut = new Date(params.checkOutDate);
@@ -226,7 +236,9 @@ export async function createGuestBooking(params: CreateGuestBookingParams): Prom
       email: params.email,
       mobile: params.phone,
       plateNo: params.licensePlate,
+      carBrand: params.vehicleBrand,
       carModel: params.vehicleModel,
+      carColor: params.vehicleColor,
       returnFlight: params.flightNumber || null,
       dateFrom: checkIn,
       timeFrom: checkIn,
@@ -240,7 +252,9 @@ export async function createGuestBooking(params: CreateGuestBookingParams): Prom
   return { id: booking.id };
 }
 
-export async function getParkingTypes(): Promise<{ id: string; name: string }[]> {
+export async function getParkingTypes(): Promise<
+  { id: string; name: string }[]
+> {
   const types = await prisma.parkingType.findMany({
     select: { id: true, name: true },
   });
