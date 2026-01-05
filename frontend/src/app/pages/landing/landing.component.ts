@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
@@ -13,10 +13,7 @@ import { environment } from '../../../environments/environment';
 })
 export class LandingComponent {
   private router = inject(Router);
-  private authService =
-    environment.auth0.domain && environment.auth0.clientId
-      ? inject(AuthService, { optional: true })
-      : null;
+  private injector = inject(Injector);
 
   isAuth0Configured = !!(environment.auth0.domain && environment.auth0.clientId);
 
@@ -25,10 +22,15 @@ export class LandingComponent {
   }
 
   login(): void {
-    if (this.authService) {
-      this.authService.loginWithRedirect({
-        appState: { target: '/admin/dashboard' },
-      });
+    if (this.isAuth0Configured) {
+      try {
+        const authService = this.injector.get(AuthService);
+        authService.loginWithRedirect({
+          appState: { target: '/admin/dashboard' },
+        });
+      } catch {
+        alert('Auth0 is not configured properly.');
+      }
     } else {
       alert('Auth0 is not configured. Please add your Auth0 domain and client ID.');
     }
