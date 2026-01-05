@@ -20,7 +20,26 @@ const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0
         httpInterceptor: {
           allowedList: [
             {
-              uri: '/api/bookings*',
+              uri: '/api/bookings',
+              httpMethod: 'GET',
+              tokenOptions: {
+                authorizationParams: {
+                  audience: environment.auth0.audience
+                }
+              }
+            },
+            {
+              uri: '/api/bookings/*',
+              httpMethod: 'GET',
+              tokenOptions: {
+                authorizationParams: {
+                  audience: environment.auth0.audience
+                }
+              }
+            },
+            {
+              uri: '/api/bookings/*/delete',
+              httpMethod: 'PUT',
               tokenOptions: {
                 authorizationParams: {
                   audience: environment.auth0.audience
