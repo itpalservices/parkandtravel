@@ -15,10 +15,7 @@ export interface Booking {
   adults: number;
   returnFlight: string | null;
   parkingTypeId: string;
-  parkingType?: {
-    id: string;
-    name: string;
-  };
+  parkingType?: string;
   deleteflag: number;
   createdAt: string;
   updatedAt: string;

@@ -45,7 +45,7 @@
               <td>{{ formatCheckIn(booking) }}</td>
               <td>{{ booking.returnFlight || '-' }}</td>
               <td>{{ formatArrival(booking) }}</td>
-              <td>{{ formatParkingType(booking) }}</td>
+              <td>{{ booking.parkingType }}</td>
               <td class="actions-col">
                 <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                   <button class="btn btn-icon" ngbDropdownToggle>

@@ -58,16 +58,6 @@ export class BookingsListComponent {
     return parts.length > 0 ? parts.join(' ') : 'N/A';
   }
 
-  formatParkingType(booking: Booking): string {
-    const type = booking.parkingType?.name || 'Standard';
-    if (type.toLowerCase().includes('covered') || type.toLowerCase().includes('cov')) {
-      return 'cov.';
-    } else if (type.toLowerCase().includes('uncovered') || type.toLowerCase().includes('unc')) {
-      return 'unc.';
-    }
-    return type;
-  }
-
   onEdit(booking: Booking): void {
     console.log('Edit booking:', booking.id);
   }
