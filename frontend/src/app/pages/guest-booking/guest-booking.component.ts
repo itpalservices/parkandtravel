@@ -1,6 +1,12 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   NgbDatepickerModule,
@@ -28,7 +34,14 @@ interface PhoneCode {
 @Component({
   selector: 'app-guest-booking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgbDatepickerModule, NgbDropdownModule, FormFieldErrorComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    NgbDatepickerModule,
+    NgbDropdownModule,
+    FormFieldErrorComponent,
+  ],
   templateUrl: './guest-booking.component.html',
   styleUrls: ['./guest-booking.component.scss'],
 })
@@ -66,18 +79,12 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       fullName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       phoneCodeId: ['', Validators.required],
-      phone: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(/^[0-9]{6,15}$/),
-        ],
-      ],
+      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{6,15}$/)]],
       licensePlate: ['', [Validators.required, Validators.minLength(2)]],
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
       vehicleColor: ['', [Validators.required, Validators.minLength(2)]],
-      flightNumber: [''],
+      flightNumber: ['', [Validators.required, Validators.minLength(2)]],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       checkOutDate: [defaultCheckOut, Validators.required],
@@ -149,9 +156,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         }
       },
       error: () => {
-        this.phoneCodes = [
-          { id: 'default', isoCode: 'CY', phoneCode: '+357' },
-        ];
+        this.phoneCodes = [{ id: 'default', isoCode: 'CY', phoneCode: '+357' }];
         this.selectPhoneCode(this.phoneCodes[0]);
       },
     });
@@ -173,9 +178,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     }
     const search = this.phoneCodeSearch.toLowerCase().trim();
     return this.phoneCodes.filter(
-      (code) =>
-        code.isoCode.toLowerCase().includes(search) ||
-        code.phoneCode.includes(search)
+      (code) => code.isoCode.toLowerCase().includes(search) || code.phoneCode.includes(search),
     );
   }
 
