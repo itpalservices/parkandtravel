@@ -7,11 +7,11 @@ import { appRoutes } from './app-routing.module';
 import { baseUrlInterceptor } from './core/interceptors/http.interceptor';
 import { environment } from '../environments/environment';
 
-const auth0Providers: Provider[] = environment.auth0Domain && environment.auth0ClientId
+const auth0Providers: Provider[] = environment.auth0.domain && environment.auth0.clientId
   ? [
       provideAuth0({
-        domain: environment.auth0Domain,
-        clientId: environment.auth0ClientId,
+        domain: environment.auth0.domain,
+        clientId: environment.auth0.clientId,
         authorizationParams: {
           redirect_uri: window.location.origin
         },

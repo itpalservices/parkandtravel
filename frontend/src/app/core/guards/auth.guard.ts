@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
 
-  if (!environment.auth0Domain || !environment.auth0ClientId) {
+  if (!environment.auth0.domain || !environment.auth0.clientId) {
     router.navigate(['/']);
     return false;
   }

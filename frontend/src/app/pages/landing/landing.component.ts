@@ -14,11 +14,11 @@ import { environment } from '../../../environments/environment';
 export class LandingComponent {
   private router = inject(Router);
   private authService =
-    environment.auth0Domain && environment.auth0ClientId
+    environment.auth0.domain && environment.auth0.clientId
       ? inject(AuthService, { optional: true })
       : null;
 
-  isAuth0Configured = !!(environment.auth0Domain && environment.auth0ClientId);
+  isAuth0Configured = !!(environment.auth0.domain && environment.auth0.clientId);
 
   proceedAsGuest(): void {
     this.router.navigate(['/guest/book']);

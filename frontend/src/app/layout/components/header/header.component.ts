@@ -14,7 +14,7 @@ import { environment } from '../../../../environments/environment';
 export class HeaderComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
   
-  private authService = environment.auth0Domain && environment.auth0ClientId 
+  private authService = environment.auth0.domain && environment.auth0.clientId 
     ? inject(AuthService, { optional: true }) 
     : null;
   
