@@ -8,9 +8,9 @@ import { FormFieldErrorComponent } from '../../shared/components/form-field-erro
 import { Subscription } from 'rxjs';
 
 interface ParkingType {
-  id: number;
+  id: string;
   name: string;
-  pricePerDay: number;
+  pricePerDay?: number;
 }
 
 @Component({
@@ -104,15 +104,15 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       next: (types) => {
         this.parkingTypes = types;
         if (types.length > 0) {
-          this.bookingForm.patchValue({ parkingType: types[0].id.toString() });
+          this.bookingForm.patchValue({ parkingType: types[0].id });
         }
       },
       error: () => {
         this.parkingTypes = [
-          { id: 1, name: 'Standard', pricePerDay: 10 },
-          { id: 2, name: 'Premium', pricePerDay: 20 }
+          { id: 'parkingType_covered', name: 'Covered' },
+          { id: 'parkingType_uncovered', name: 'Un Covered' }
         ];
-        this.bookingForm.patchValue({ parkingType: '1' });
+        this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
       }
     });
   }
@@ -165,7 +165,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       flightNumber: formValue.flightNumber?.trim() || null,
       checkInDate: this.formatDateTimeForApi(formValue.checkInDate, formValue.checkInTime),
       checkOutDate: this.formatDateTimeForApi(formValue.checkOutDate, formValue.checkOutTime),
-      parkingTypeId: parseInt(formValue.parkingType, 10)
+      parkingTypeId: formValue.parkingType
     };
 
     this.apiService.post('/bookings/guest', booking).subscribe({
@@ -200,7 +200,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       checkOutTime: '10:00'
     });
     if (this.parkingTypes.length > 0) {
-      this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id.toString() });
+      this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id });
     }
   }
 }
