@@ -20,6 +20,11 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 50%;
+
+  @media (max-width: 991.98px) {
+    max-width: 100%;
+  }
 }
 
 .loading-container {
@@ -59,7 +64,6 @@
     margin-bottom: 1rem;
   }
 }
-
 
 .form-section {
   display: flex;
@@ -119,6 +123,94 @@
     font-size: 0.75rem;
     margin-top: 0.25rem;
   }
+}
+
+.phone-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.phone-code-dropdown {
+  flex-shrink: 0;
+}
+
+.phone-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  min-width: 100px;
+  height: 42px;
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+
+  &::after {
+    margin-left: auto;
+  }
+}
+
+.flag-icon {
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.phone-code-menu {
+  min-width: 200px;
+  max-height: 300px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.phone-search-container {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.phone-search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+
+  &:focus {
+    outline: none;
+    border-color: #006B8F;
+  }
+}
+
+.phone-codes-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.phone-code-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+
+  .phone-code-text {
+    font-weight: 500;
+  }
+
+  .country-code-text {
+    color: #6b7280;
+    font-size: 0.75rem;
+    margin-left: auto;
+  }
+}
+
+.phone-number-input {
+  flex: 1;
 }
 
 .alert {

@@ -28,6 +28,7 @@ router.get("/profile", checkJwt, async (req: Request, res: Response) => {
         name: user.given_name || "",
         surname: user.family_name || "",
         phone: user.user_metadata?.phone_number || "",
+        phoneCode: user.user_metadata?.phone_code || "",
         emailVerified: user.email_verified,
         picture: user.picture,
       },
@@ -48,7 +49,7 @@ router.put("/profile", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    const { name, surname, phone } = req.body;
+    const { name, surname, phone, phoneCode } = req.body;
 
     if (name !== undefined && typeof name !== "string") {
       res.status(400).json({ error: "Invalid name" });
@@ -62,6 +63,11 @@ router.put("/profile", checkJwt, async (req: Request, res: Response) => {
 
     if (phone !== undefined && typeof phone !== "string") {
       res.status(400).json({ error: "Invalid phone" });
+      return;
+    }
+
+    if (phoneCode !== undefined && typeof phoneCode !== "string") {
+      res.status(400).json({ error: "Invalid phone code" });
       return;
     }
 
@@ -79,8 +85,14 @@ router.put("/profile", checkJwt, async (req: Request, res: Response) => {
       updateData.name = `${name || ""} ${surname || ""}`.trim();
     }
 
-    if (phone !== undefined) {
-      updateData.user_metadata = { phone_number: phone };
+    if (phone !== undefined || phoneCode !== undefined) {
+      updateData.user_metadata = {};
+      if (phone !== undefined) {
+        updateData.user_metadata.phone_number = phone;
+      }
+      if (phoneCode !== undefined) {
+        updateData.user_metadata.phone_code = phoneCode;
+      }
     }
 
     const updatedUser = await updateUser(userId, updateData);
@@ -92,6 +104,7 @@ router.put("/profile", checkJwt, async (req: Request, res: Response) => {
         name: updatedUser.given_name || "",
         surname: updatedUser.family_name || "",
         phone: updatedUser.user_metadata?.phone_number || "",
+        phoneCode: updatedUser.user_metadata?.phone_code || "",
         emailVerified: updatedUser.email_verified,
         picture: updatedUser.picture,
       },

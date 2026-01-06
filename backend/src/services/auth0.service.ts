@@ -27,6 +27,7 @@ interface Auth0User {
   picture?: string;
   user_metadata?: {
     phone_number?: string;
+    phone_code?: string;
   };
 }
 
@@ -98,7 +99,7 @@ export async function getUserById(userId: string): Promise<Auth0User | null> {
 
 export async function updateUser(
   userId: string,
-  data: { given_name?: string; family_name?: string; name?: string; user_metadata?: { phone_number?: string } }
+  data: { given_name?: string; family_name?: string; name?: string; user_metadata?: { phone_number?: string; phone_code?: string } }
 ): Promise<Auth0User> {
   const token = await getManagementToken();
 

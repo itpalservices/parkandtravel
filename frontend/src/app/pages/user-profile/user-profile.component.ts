@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
 import { ApiService } from '../../core/services/api.service';
 import Swal from 'sweetalert2';
@@ -10,14 +11,21 @@ interface UserProfile {
   name: string;
   surname: string;
   phone: string;
+  phoneCode: string;
   emailVerified: boolean;
   picture?: string;
+}
+
+interface PhoneCode {
+  id: string;
+  isoCode: string;
+  phoneCode: string;
 }
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormFieldErrorComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgbDropdownModule, FormFieldErrorComponent],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss'
 })
@@ -31,8 +39,14 @@ export class UserProfileComponent implements OnInit {
   loadError = '';
   saveError = '';
 
+  phoneCodes: PhoneCode[] = [];
+  selectedPhoneCode: PhoneCode | null = null;
+  phoneCodeSearch = '';
+  private userPhoneCode = '';
+
   ngOnInit(): void {
     this.initForm();
+    this.loadPhoneCodes();
     this.loadProfile();
   }
 
@@ -41,8 +55,37 @@ export class UserProfileComponent implements OnInit {
       email: [{ value: '', disabled: true }],
       name: ['', Validators.required],
       surname: ['', Validators.required],
-      phone: ['', [Validators.pattern(/^\d+$/)]]
+      phone: ['', [Validators.pattern(/^\d*$/)]]
     });
+  }
+
+  private loadPhoneCodes(): void {
+    this.apiService.get<PhoneCode[]>('/phone-codes').subscribe({
+      next: (codes) => {
+        this.phoneCodes = codes;
+        this.selectPhoneCodeFromUser();
+      },
+      error: () => {
+        this.phoneCodes = [{ id: 'default', isoCode: 'CY', phoneCode: '+357' }];
+        this.selectPhoneCodeFromUser();
+      }
+    });
+  }
+
+  private selectPhoneCodeFromUser(): void {
+    if (this.userPhoneCode && this.phoneCodes.length > 0) {
+      const userCode = this.phoneCodes.find(c => c.phoneCode === this.userPhoneCode);
+      if (userCode) {
+        this.selectedPhoneCode = userCode;
+        return;
+      }
+    }
+    const cyprusCode = this.phoneCodes.find(c => c.isoCode === 'CY');
+    if (cyprusCode && !this.selectedPhoneCode) {
+      this.selectedPhoneCode = cyprusCode;
+    } else if (this.phoneCodes.length > 0 && !this.selectedPhoneCode) {
+      this.selectedPhoneCode = this.phoneCodes[0];
+    }
   }
 
   loadProfile(): void {
@@ -58,6 +101,8 @@ export class UserProfileComponent implements OnInit {
             surname: response.data.surname,
             phone: response.data.phone
           });
+          this.userPhoneCode = response.data.phoneCode;
+          this.selectPhoneCodeFromUser();
         }
         this.loading = false;
       },
@@ -78,6 +123,25 @@ export class UserProfileComponent implements OnInit {
     return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
+  selectPhoneCode(code: PhoneCode): void {
+    this.selectedPhoneCode = code;
+    this.phoneCodeSearch = '';
+  }
+
+  getFlagUrl(isoCode: string): string {
+    return `https://flagcdn.com/w40/${isoCode.toLowerCase()}.png`;
+  }
+
+  get filteredPhoneCodes(): PhoneCode[] {
+    if (!this.phoneCodeSearch.trim()) {
+      return this.phoneCodes;
+    }
+    const search = this.phoneCodeSearch.toLowerCase().trim();
+    return this.phoneCodes.filter(
+      (code) => code.isoCode.toLowerCase().includes(search) || code.phoneCode.includes(search)
+    );
+  }
+
   saveProfile(): void {
     if (this.profileForm.invalid) {
       Object.values(this.profileForm.controls).forEach(control => {
@@ -93,7 +157,8 @@ export class UserProfileComponent implements OnInit {
     const updateData = {
       name: formValue.name,
       surname: formValue.surname,
-      phone: formValue.phone
+      phone: formValue.phone,
+      phoneCode: this.selectedPhoneCode?.phoneCode || ''
     };
 
     this.apiService.put<{ success: boolean; data: UserProfile }>('/user/profile', updateData).subscribe({
