@@ -1,3 +1,101 @@
 <div class="user-profile-page">
-  <h2>User Profile</h2>
+  <div class="page-header">
+    <h2>User Profile</h2>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading profile...</p>
+    </div>
+  } @else if (loadError) {
+    <div class="error-container">
+      <div class="error-message">{{ loadError }}</div>
+      <button class="btn btn-primary" (click)="loadProfile()">Try Again</button>
+    </div>
+  } @else {
+    <div class="profile-card">
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        @if (saveError) {
+          <div class="alert alert-danger">{{ saveError }}</div>
+        }
+        @if (saveSuccess) {
+          <div class="alert alert-success">Profile saved successfully!</div>
+        }
+
+        <div class="form-section">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              class="form-control"
+              formControlName="email"
+              placeholder="Email"
+            />
+            <small class="form-text text-muted">Email cannot be changed</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Name *</label>
+              <input
+                type="text"
+                id="name"
+                class="form-control"
+                [class.is-invalid]="hasError('name')"
+                formControlName="name"
+                placeholder="Enter your name"
+              />
+              <app-form-field-error [control]="f['name']" fieldName="Name">
+              </app-form-field-error>
+            </div>
+
+            <div class="form-group">
+              <label for="surname">Surname *</label>
+              <input
+                type="text"
+                id="surname"
+                class="form-control"
+                [class.is-invalid]="hasError('surname')"
+                formControlName="surname"
+                placeholder="Enter your surname"
+              />
+              <app-form-field-error [control]="f['surname']" fieldName="Surname">
+              </app-form-field-error>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input
+              type="tel"
+              id="phone"
+              class="form-control"
+              [class.is-invalid]="hasError('phone')"
+              formControlName="phone"
+              placeholder="Enter your phone number"
+            />
+            <app-form-field-error
+              [control]="f['phone']"
+              fieldName="Phone"
+              [customMessages]="{ pattern: 'Please enter a valid phone number (digits only)' }"
+            >
+            </app-form-field-error>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="saving">
+            @if (saving) {
+              <span class="btn-spinner"></span>
+              Saving...
+            } @else {
+              Save Changes
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
 </div>

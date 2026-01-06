@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import bookingsRoutes from "./routes/bookings.routes";
+import userRoutes from "./routes/user.routes";
 import { getParkingTypes, getPhoneCodes } from "./services/bookings.service";
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.get("/api/phone-codes", async (req, res) => {
 });
 
 app.use("/api/bookings", bookingsRoutes);
+app.use("/api/user", userRoutes);
 
 if (process.env.NODE_ENV !== "production") {
   const frontendProxy = createProxyMiddleware({

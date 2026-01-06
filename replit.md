@@ -221,4 +221,8 @@ exports.onExecutePostLogin = async (event, api) => {
 - Non-admin users are automatically redirected to bookings page
 - Updated header: removed cog and notification icons, made avatar clickable to user-profile page
 - Added email verification indicator (red dot) on avatar when user's email is not verified (from Auth0)
-- Created user-profile page at /admin/user-profile (placeholder for now)
+- Created user-profile page at /admin/user-profile with reactive form
+- User profile fetches and updates user data from Auth0 (name, surname, phone)
+- Email field is disabled and not editable
+- Added Auth0 Management API integration for user profile updates
+- Backend endpoints: GET/PUT /api/user/profile
