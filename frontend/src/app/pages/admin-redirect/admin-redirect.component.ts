@@ -6,8 +6,30 @@ import { take } from 'rxjs/operators';
 @Component({
   selector: 'app-admin-redirect',
   standalone: true,
-  template: '<div class="loading">Loading...</div>',
-  styles: ['.loading { display: flex; justify-content: center; align-items: center; height: 100vh; }']
+  template: `
+    <div class="loading">
+      <div class="spinner"></div>
+    </div>
+  `,
+  styles: [`
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50vh;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #006B8F;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  `]
 })
 export class AdminRedirectComponent implements OnInit {
   private router = inject(Router);

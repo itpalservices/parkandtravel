@@ -10,12 +10,18 @@
       </div>
     </div>
 
-    <div class="welcome-section">
-      <h2>Welcome!</h2>
-      <p class="welcome-message">Book your parking spot easily or login to manage bookings</p>
-    </div>
+    @if (isLoading) {
+      <div class="loading-section">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    } @else {
+      <div class="welcome-section">
+        <h2>Welcome!</h2>
+        <p class="welcome-message">Book your parking spot easily or login to manage bookings</p>
+      </div>
 
-    <div class="action-buttons">
+      <div class="action-buttons">
       <button class="btn-guest" (click)="proceedAsGuest()">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -56,6 +62,7 @@
         </svg>
         Login
       </button>
-    </div>
+      </div>
+    }
   </div>
 </div>
