@@ -1,8 +1,6 @@
 @use '../../../styles/variables' as *;
 
 .user-profile-page {
-  padding: 1.5rem;
-
   .page-header {
     margin-bottom: 1.5rem;
 
@@ -127,7 +125,6 @@
 
 .phone-input-group {
   display: flex;
-  gap: 0.5rem;
 }
 
 .phone-code-dropdown {
@@ -138,15 +135,22 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: white;
-  min-width: 100px;
-  height: 42px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px 0 0 8px;
+  background: #ffffff;
+  min-width: 110px;
+  height: 100%;
 
-  &:hover {
-    background-color: #f9fafb;
+  &:hover,
+  &:focus {
+    background-color: #f8f9fa;
+    border-color: #d1d5db;
+    color: #000000;
+
+    &::after {
+      color: #000000;
+    }
   }
 
   &::after {
@@ -211,6 +215,13 @@
 
 .phone-number-input {
   flex: 1;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-left: none !important;
+
+  &:focus {
+    border-left: 1px solid #006B8F !important;
+  }
 }
 
 .alert {

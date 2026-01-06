@@ -22,7 +22,7 @@
 
         <div class="form-section">
           <div class="form-group">
-            <label for="email">Email</label>
+            <label for="email">Email *</label>
             <input
               type="email"
               id="email"
@@ -44,8 +44,7 @@
                 formControlName="name"
                 placeholder="Enter your name"
               />
-              <app-form-field-error [control]="f['name']" fieldName="Name">
-              </app-form-field-error>
+              <app-form-field-error [control]="f['name']" fieldName="Name"> </app-form-field-error>
             </div>
 
             <div class="form-group">
@@ -64,7 +63,7 @@
           </div>
 
           <div class="form-group">
-            <label>Phone</label>
+            <label>Phone *</label>
             <div class="phone-input-group">
               <div ngbDropdown class="phone-code-dropdown">
                 <button
@@ -90,7 +89,7 @@
                       class="phone-search-input"
                       placeholder="Search country or code..."
                       [(ngModel)]="phoneCodeSearch"
-                      [ngModelOptions]="{standalone: true}"
+                      [ngModelOptions]="{ standalone: true }"
                       (click)="$event.stopPropagation()"
                     />
                   </div>
