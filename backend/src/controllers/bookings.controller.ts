@@ -60,6 +60,12 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
 
     const authUser = req.authUser as AuthUser | undefined;
     const isRegularUser = authUser?.role === "user";
+    
+    if (isRegularUser && !authUser?.email) {
+      res.status(403).json({ error: "Email claim required for user access" });
+      return;
+    }
+    
     const userEmail = isRegularUser ? authUser?.email : undefined;
 
     const result = await getBookings({
@@ -97,9 +103,15 @@ export async function getBooking(req: Request, res: Response): Promise<void> {
     const authUser = req.authUser as AuthUser | undefined;
     const isRegularUser = authUser?.role === "user";
     
-    if (isRegularUser && booking.email?.toLowerCase() !== authUser?.email?.toLowerCase()) {
-      res.status(403).json({ error: "Access denied" });
-      return;
+    if (isRegularUser) {
+      if (!authUser?.email) {
+        res.status(403).json({ error: "Email claim required for user access" });
+        return;
+      }
+      if (booking.email?.toLowerCase() !== authUser.email.toLowerCase()) {
+        res.status(403).json({ error: "Access denied" });
+        return;
+      }
     }
 
     res.json(booking);
@@ -125,12 +137,16 @@ export async function deleteBooking(
     const isRegularUser = authUser?.role === "user";
 
     if (isRegularUser) {
+      if (!authUser?.email) {
+        res.status(403).json({ error: "Email claim required for user access" });
+        return;
+      }
       const booking = await getBookingById(id);
       if (!booking) {
         res.status(404).json({ error: "Booking not found" });
         return;
       }
-      if (booking.email?.toLowerCase() !== authUser?.email?.toLowerCase()) {
+      if (booking.email?.toLowerCase() !== authUser.email.toLowerCase()) {
         res.status(403).json({ error: "Access denied" });
         return;
       }
