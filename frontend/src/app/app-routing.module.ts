@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout/layout.component';
 import { authGuard } from './core/guards/auth.guard';
+import { adminOnlyGuard } from './core/guards/role-redirect.guard';
 
 export const appRoutes: Routes = [
   {
@@ -20,6 +21,7 @@ export const appRoutes: Routes = [
     children: [
       {
         path: 'dashboard',
+        canActivate: [adminOnlyGuard],
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
@@ -30,18 +32,20 @@ export const appRoutes: Routes = [
       },
       {
         path: 'customers',
+        canActivate: [adminOnlyGuard],
         loadComponent: () =>
           import('./pages/customers/customers.component').then((m) => m.CustomersComponent),
       },
       {
         path: 'reports',
+        canActivate: [adminOnlyGuard],
         loadComponent: () =>
           import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
       },
       {
         path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/admin-redirect/admin-redirect.component').then((m) => m.AdminRedirectComponent),
       },
     ],
   },

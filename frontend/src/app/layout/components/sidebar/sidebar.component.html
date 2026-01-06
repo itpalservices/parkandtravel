@@ -1,7 +1,7 @@
 <div class="sidebar-overlay" [class.active]="isOpen" (click)="onClose()"></div>
 <aside class="sidebar" [class.open]="isOpen">
   <nav class="sidebar-nav">
-    @for (item of navItems; track item.route) {
+    @for (item of navItems$ | async; track item.route) {
       <a 
         class="nav-item"
         [routerLink]="item.route"
