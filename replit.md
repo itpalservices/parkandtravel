@@ -124,14 +124,50 @@ backend/                     # Express + TypeScript backend (port 5000)
 - **Flow**: 
   - Landing page (/) shows "Proceed as Guest" and "Login" buttons
   - Login redirects to Auth0 login flow
-  - After login, users are redirected to /admin/bookings
+  - After login, admins are redirected to /admin/dashboard, users/drivers to /admin/bookings
   - Guest users can create bookings without authentication
 - **Protected Routes**: All /admin/* routes require authentication
+
+### User Roles
+The system supports three user roles: **admin**, **driver**, and **user**.
+
+**Role Permissions:**
+- **Admin**: Full access to Dashboard, Bookings, Customers, and Reports
+- **Driver**: Access to Bookings only
+- **User**: Access to Bookings only (default role for new registrations)
+
+**Auth0 Role Configuration:**
+To set up roles in Auth0, create a Post Login Action with the following code:
+
+```javascript
+exports.onExecutePostLogin = async (event, api) => {
+  const namespace = 'https://park-and-travel/roles';
+  
+  // Get user's role from app_metadata (set during registration)
+  // Default to 'user' if no role is set
+  const role = event.user.app_metadata?.role || 'user';
+  
+  // Add role to the ID token and access token
+  api.idToken.setCustomClaim(namespace, role);
+  api.accessToken.setCustomClaim(namespace, role);
+};
+```
+
+**Setting User Roles:**
+- New users automatically get the 'user' role (default)
+- To assign a different role, update the user's `app_metadata.role` in Auth0 Dashboard or via Management API:
+  ```json
+  { "role": "admin" }  // or "driver" or "user"
+  ```
 
 ### Route Structure
 - `/` - Landing page (public)
 - `/guest/book` - Guest booking form (public)
 - `/admin/*` - Protected admin routes (requires Auth0 login)
+- `/admin/dashboard` - Admin only
+- `/admin/bookings` - All authenticated users
+- `/admin/customers` - Admin only
+- `/admin/reports` - Admin only
 
 ## API Endpoints
 
@@ -178,3 +214,8 @@ backend/                     # Express + TypeScript backend (port 5000)
 - Country flags loaded from flagcdn.com using ISO country codes
 - Cyprus (+357) is selected as default phone code
 - Flight number field is now optional
+- Implemented role-based access control with three roles (admin, driver, user)
+- Created RoleService to extract user roles from Auth0 tokens
+- Updated sidebar to show/hide menu items based on user role
+- Added adminOnlyGuard to protect admin-only routes (dashboard, customers, reports)
+- Non-admin users are automatically redirected to bookings page
