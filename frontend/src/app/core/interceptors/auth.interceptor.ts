@@ -39,7 +39,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       }),
       catchError((error) => {
         console.error('Failed to get access token:', error);
-        return next(req);
+        throw error;
       })
     );
   } catch (error) {
