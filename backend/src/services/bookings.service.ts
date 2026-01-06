@@ -6,6 +6,7 @@ interface GetBookingsParams {
   search?: string;
   page: number;
   limit: number;
+  userEmail?: string;
 }
 
 interface BookingResponse {
@@ -62,7 +63,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   data: BookingResponse[];
   meta: { total: number; page: number; limit: number };
 }> {
-  const { dateFrom, dateTo, search, page, limit } = params;
+  const { dateFrom, dateTo, search, page, limit, userEmail } = params;
 
   const now = new Date();
   const nowTime = now.toTimeString().split(" ")[0];
@@ -72,6 +73,11 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     `b.deleteflag = 0`,
     `(b."dateTo" > '${nowDate}'::date OR (b."dateTo" = '${nowDate}'::date AND COALESCE(b."timeTo"::time, '23:59:59'::time) > '${nowTime}'::time))`,
   ];
+
+  if (userEmail) {
+    const emailEscaped = userEmail.replace(/'/g, "''");
+    whereConditions.push(`LOWER(b.email) = LOWER('${emailEscaped}')`);
+  }
 
   if (dateFrom) {
     whereConditions.push(`b."dateTo" >= '${dateFrom}'::date`);

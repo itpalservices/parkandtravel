@@ -8,6 +8,7 @@ import {
   isValidUUID,
   createGuestBooking as createGuestBookingService,
 } from "../services/bookings.service";
+import { AuthUser } from "../middleware/auth.middleware";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
   try {
@@ -57,12 +58,17 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
       }
     }
 
+    const authUser = req.authUser as AuthUser | undefined;
+    const isRegularUser = authUser?.role === "user";
+    const userEmail = isRegularUser ? authUser?.email : undefined;
+
     const result = await getBookings({
       dateFrom: dateFrom as string | undefined,
       dateTo: dateTo as string | undefined,
       search: search as string | undefined,
       page: pageNum,
       limit: limitNum,
+      userEmail,
     });
 
     res.json(result);
@@ -88,6 +94,14 @@ export async function getBooking(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const authUser = req.authUser as AuthUser | undefined;
+    const isRegularUser = authUser?.role === "user";
+    
+    if (isRegularUser && booking.email?.toLowerCase() !== authUser?.email?.toLowerCase()) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+
     res.json(booking);
   } catch (error) {
     console.error("Error getting booking:", error);
@@ -105,6 +119,21 @@ export async function deleteBooking(
     if (!isValidUUID(id)) {
       res.status(400).json({ error: "Invalid booking ID format" });
       return;
+    }
+
+    const authUser = req.authUser as AuthUser | undefined;
+    const isRegularUser = authUser?.role === "user";
+
+    if (isRegularUser) {
+      const booking = await getBookingById(id);
+      if (!booking) {
+        res.status(404).json({ error: "Booking not found" });
+        return;
+      }
+      if (booking.email?.toLowerCase() !== authUser?.email?.toLowerCase()) {
+        res.status(403).json({ error: "Access denied" });
+        return;
+      }
     }
 
     const result = await softDeleteBooking(id);
