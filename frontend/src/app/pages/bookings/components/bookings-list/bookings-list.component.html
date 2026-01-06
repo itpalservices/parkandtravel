@@ -45,7 +45,14 @@
               <td>{{ formatCheckIn(booking) }}</td>
               <td>{{ booking.returnFlight || '-' }}</td>
               <td>{{ formatArrival(booking) }}</td>
-              <td>{{ booking.parkingType }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="booking.parkingType === 'Covered' ? 'bg-primary' : 'bg-secondary'"
+                >
+                  {{ booking.parkingType }}
+                </span>
+              </td>
               <td class="actions-col">
                 <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                   <button class="btn btn-icon" ngbDropdownToggle>

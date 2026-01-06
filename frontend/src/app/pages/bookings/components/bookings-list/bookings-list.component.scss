@@ -6,6 +6,10 @@
   overflow: visible;
 }
 
+.desktop-view {
+  overflow: auto;
+}
+
 .table {
   width: 100%;
   margin-bottom: 0;
@@ -116,6 +120,10 @@
   
   &.text-danger {
     color: #dc2626;
+  }
+
+  &:active {
+    background: transparent;
   }
 }
 
