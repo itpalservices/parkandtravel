@@ -21,7 +21,8 @@ import { BookingsListComponent } from '../bookings-list/bookings-list.component'
   styleUrls: ['./bookings-page.component.scss']
 })
 export class BookingsPageComponent implements OnInit {
-  bookings: Booking[] = [];
+  allBookings: Booking[] = [];
+  filteredBookings: Booking[] = [];
   loading = false;
   errorMessage = '';
   searchTerm = '';
@@ -65,7 +66,7 @@ export class BookingsPageComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
     
-    const params: { dateFrom?: string; dateTo?: string; search?: string } = {};
+    const params: { dateFrom?: string; dateTo?: string } = {};
     
     if (this.dateFilter.from) {
       params.dateFrom = this.formatDateForApi(this.dateFilter.from);
@@ -73,15 +74,11 @@ export class BookingsPageComponent implements OnInit {
     if (this.dateFilter.to) {
       params.dateTo = this.formatDateForApi(this.dateFilter.to);
     }
-    if (this.searchTerm.trim()) {
-      params.search = this.searchTerm.trim();
-    }
 
     this.bookingsService.getBookings(params).subscribe({
       next: (response) => {
-        this.bookings = response.data;
-        this.totalPages = Math.ceil(this.bookings.length / this.pageSize) || 1;
-        this.currentPage = 1;
+        this.allBookings = response.data;
+        this.applySearchFilter();
         this.loading = false;
       },
       error: (err) => {
@@ -92,6 +89,38 @@ export class BookingsPageComponent implements OnInit {
     });
   }
 
+  private applySearchFilter(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+    
+    if (!term) {
+      this.filteredBookings = [...this.allBookings];
+    } else {
+      this.filteredBookings = this.allBookings.filter(booking => {
+        const fullName = `${booking.name} ${booking.surname}`.toLowerCase();
+        const searchableFields = [
+          fullName,
+          booking.email,
+          booking.phone,
+          booking.plateNo,
+          booking.returnFlight,
+          booking.parkingType,
+          booking.dateFrom,
+          booking.dateTo,
+          booking.carBrand,
+          booking.carModel,
+          booking.carColor
+        ];
+        
+        return searchableFields.some(field => 
+          field && field.toLowerCase().includes(term)
+        );
+      });
+    }
+    
+    this.totalPages = Math.ceil(this.filteredBookings.length / this.pageSize) || 1;
+    this.currentPage = 1;
+  }
+
   onDateRangeChange(range: DateRange): void {
     this.dateFilter = range;
     this.loadBookings();
@@ -100,7 +129,7 @@ export class BookingsPageComponent implements OnInit {
   get paginatedBookings(): Booking[] {
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
-    return this.bookings.slice(start, end);
+    return this.filteredBookings.slice(start, end);
   }
 
   get pageNumbers(): number[] {
@@ -142,6 +171,6 @@ export class BookingsPageComponent implements OnInit {
   }
 
   onSearchChange(): void {
-    this.loadBookings();
+    this.applySearchFilter();
   }
 }
