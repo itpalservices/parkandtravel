@@ -132,9 +132,9 @@ backend/                     # Express + TypeScript backend (port 5000)
 The system supports three user roles: **admin**, **driver**, and **user**.
 
 **Role Permissions:**
-- **Admin**: Full access to Dashboard, Bookings, Customers, and Reports
-- **Driver**: Access to Bookings only
-- **User**: Access to Bookings only (default role for new registrations)
+- **Admin**: Full access to Dashboard, Bookings, Customers, and Reports (sees all bookings)
+- **Driver**: Access to Bookings only (sees all bookings)
+- **User**: Access to Bookings only (sees only their own bookings filtered by email)
 
 **Auth0 Role Configuration:**
 To set up roles in Auth0, create a Post Login Action with the following code:
