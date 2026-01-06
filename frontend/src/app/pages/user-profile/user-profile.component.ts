@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
 import { ApiService } from '../../core/services/api.service';
+import Swal from 'sweetalert2';
 
 interface UserProfile {
   email: string;
@@ -29,7 +30,6 @@ export class UserProfileComponent implements OnInit {
   saving = false;
   loadError = '';
   saveError = '';
-  saveSuccess = false;
 
   ngOnInit(): void {
     this.initForm();
@@ -88,7 +88,6 @@ export class UserProfileComponent implements OnInit {
 
     this.saving = true;
     this.saveError = '';
-    this.saveSuccess = false;
 
     const formValue = this.profileForm.getRawValue();
     const updateData = {
@@ -100,10 +99,15 @@ export class UserProfileComponent implements OnInit {
     this.apiService.put<{ success: boolean; data: UserProfile }>('/user/profile', updateData).subscribe({
       next: (response) => {
         if (response.success) {
-          this.saveSuccess = true;
-          setTimeout(() => {
-            this.saveSuccess = false;
-          }, 3000);
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Profile saved successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+          });
         }
         this.saving = false;
       },
