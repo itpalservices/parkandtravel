@@ -8,9 +8,10 @@ import { environment } from '../../../environments/environment';
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const isBookingsEndpoint = req.url.includes('/api/bookings');
   const isGuestEndpoint = req.url.includes('/api/bookings/guest');
+  const isUserEndpoint = req.url.includes('/api/user');
   const isPostRequest = req.method === 'POST';
   
-  const shouldAttachToken = isBookingsEndpoint && !(isGuestEndpoint && isPostRequest);
+  const shouldAttachToken = isUserEndpoint || (isBookingsEndpoint && !(isGuestEndpoint && isPostRequest));
   
   if (!shouldAttachToken) {
     return next(req);

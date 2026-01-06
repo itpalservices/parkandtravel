@@ -3,18 +3,18 @@
     <h2>User Profile</h2>
   </div>
 
-  @if (loading) {
-    <div class="loading-container">
-      <div class="spinner"></div>
-      <p>Loading profile...</p>
-    </div>
-  } @else if (loadError) {
-    <div class="error-container">
-      <div class="error-message">{{ loadError }}</div>
-      <button class="btn btn-primary" (click)="loadProfile()">Try Again</button>
-    </div>
-  } @else {
-    <div class="profile-card">
+  <div class="profile-section">
+    @if (loading) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+    } @else if (loadError) {
+      <div class="error-container">
+        <div class="error-message">{{ loadError }}</div>
+        <button class="btn btn-primary" (click)="loadProfile()">Try Again</button>
+      </div>
+    } @else {
       <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
         @if (saveError) {
           <div class="alert alert-danger">{{ saveError }}</div>
@@ -96,6 +96,6 @@
           </button>
         </div>
       </form>
-    </div>
-  }
+    }
+  </div>
 </div>
