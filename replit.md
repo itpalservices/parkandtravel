@@ -219,3 +219,6 @@ exports.onExecutePostLogin = async (event, api) => {
 - Updated sidebar to show/hide menu items based on user role
 - Added adminOnlyGuard to protect admin-only routes (dashboard, customers, reports)
 - Non-admin users are automatically redirected to bookings page
+- Updated header: removed cog and notification icons, made avatar clickable to user-profile page
+- Added email verification indicator (red dot) on avatar when user's email is not verified (from Auth0)
+- Created user-profile page at /admin/user-profile (placeholder for now)

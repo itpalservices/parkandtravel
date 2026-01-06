@@ -43,6 +43,11 @@ export const appRoutes: Routes = [
           import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
       },
       {
+        path: 'user-profile',
+        loadComponent: () =>
+          import('./pages/user-profile/user-profile.component').then((m) => m.UserProfileComponent),
+      },
+      {
         path: '',
         loadComponent: () =>
           import('./pages/admin-redirect/admin-redirect.component').then((m) => m.AdminRedirectComponent),

@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService, User } from '@auth0/auth0-angular';
-import { Observable, of } from 'rxjs';
+import { Observable, of, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
@@ -19,6 +20,10 @@ export class HeaderComponent {
     : null;
   
   user$: Observable<User | null | undefined> = this.authService?.user$ || of(null);
+  
+  emailVerified$: Observable<boolean> = this.user$.pipe(
+    map(user => user?.email_verified === true)
+  );
 
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
