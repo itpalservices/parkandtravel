@@ -79,11 +79,18 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     whereConditions.push(`LOWER(b.email) = LOWER('${emailEscaped}')`);
   }
 
-  if (dateFrom) {
-    whereConditions.push(`b."dateTo" >= '${dateFrom}'::date`);
-  }
-  if (dateTo) {
-    whereConditions.push(`b."dateFrom" <= '${dateTo}'::date`);
+  if (dateFrom && dateTo) {
+    whereConditions.push(
+      `((b."dateFrom" >= '${dateFrom}'::date AND b."dateFrom" <= '${dateTo}'::date) OR (b."dateTo" >= '${dateFrom}'::date AND b."dateTo" <= '${dateTo}'::date))`
+    );
+  } else if (dateFrom) {
+    whereConditions.push(
+      `(b."dateFrom" >= '${dateFrom}'::date OR b."dateTo" >= '${dateFrom}'::date)`
+    );
+  } else if (dateTo) {
+    whereConditions.push(
+      `(b."dateFrom" <= '${dateTo}'::date OR b."dateTo" <= '${dateTo}'::date)`
+    );
   }
 
   if (search) {
