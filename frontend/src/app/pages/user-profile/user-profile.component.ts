@@ -12,6 +12,7 @@ import { FormFieldErrorComponent } from '../../shared/components/form-field-erro
 import { ApiService } from '../../core/services/api.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
 import { RoleService, UserRoleInfo } from '../../core/services/role.service';
+import { SettingsService, ConfigurationSettings } from '../../core/services/settings.service';
 import Swal from 'sweetalert2';
 
 interface UserProfile {
@@ -61,13 +62,21 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   private userProfileService = inject(UserProfileService);
   private roleService = inject(RoleService);
   private modalService = inject(NgbModal);
+  private settingsService = inject(SettingsService);
 
   profileForm!: FormGroup;
   carForm!: FormGroup;
+  settingsForm!: FormGroup;
   loading = true;
   saving = false;
   loadError = '';
   saveError = '';
+
+  isAdmin = false;
+  settingsLoading = false;
+  settingsError = '';
+  savingSettings = false;
+  offerWashService = false;
 
   phoneCodes: PhoneCode[] = [];
   selectedPhoneCode: PhoneCode | null = null;
@@ -93,6 +102,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   ngOnInit(): void {
     this.initForm();
     this.initCarForm();
+    this.initSettingsForm();
     this.loadPhoneCodes();
     this.loadProfile();
     this.checkUserRole();
@@ -138,12 +148,142 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  private initSettingsForm(): void {
+    this.settingsForm = this.fb.group({
+      availableUncovered: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
+      availableCovered: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
+      priceUncovered: [null, [Validators.min(0)]],
+      priceCovered: [null, [Validators.min(0)]],
+      priceWash: [null, [Validators.min(0)]],
+    });
+  }
+
+  loadSettings(): void {
+    this.settingsLoading = true;
+    this.settingsError = '';
+
+    this.settingsService.getSettings().subscribe({
+      next: (settings) => {
+        this.settingsForm.patchValue({
+          availableUncovered: settings.availableUncovered,
+          availableCovered: settings.availableCovered,
+          priceUncovered: settings.priceUncovered,
+          priceCovered: settings.priceCovered,
+          priceWash: settings.priceWash,
+        });
+        this.offerWashService = settings.priceWash !== null;
+        this.settingsLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading settings:', error);
+        this.settingsError = 'Failed to load settings. Please try again.';
+        this.settingsLoading = false;
+      },
+    });
+  }
+
+  get hasAvailabilityError(): boolean {
+    const uncovered = this.settingsForm.get('availableUncovered')?.value;
+    const covered = this.settingsForm.get('availableCovered')?.value;
+    return (uncovered === null || uncovered === '' || uncovered === undefined) &&
+           (covered === null || covered === '' || covered === undefined);
+  }
+
+  get canSetPriceUncovered(): boolean {
+    const uncovered = this.settingsForm.get('availableUncovered')?.value;
+    return uncovered !== null && uncovered !== '' && uncovered !== undefined && Number(uncovered) > 0;
+  }
+
+  get canSetPriceCovered(): boolean {
+    const covered = this.settingsForm.get('availableCovered')?.value;
+    return covered !== null && covered !== '' && covered !== undefined && Number(covered) > 0;
+  }
+
+  toggleWashService(): void {
+    this.offerWashService = !this.offerWashService;
+    if (!this.offerWashService) {
+      this.settingsForm.patchValue({ priceWash: null });
+    }
+  }
+
+  saveSettings(): void {
+    if (this.hasAvailabilityError) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Validation Error',
+        text: 'At least one of Available Uncovered or Available Covered must be provided.',
+        confirmButtonColor: '#006B8F',
+      });
+      return;
+    }
+
+    const formValue = this.settingsForm.value;
+
+    if (!this.canSetPriceUncovered && formValue.priceUncovered) {
+      this.settingsForm.patchValue({ priceUncovered: null });
+    }
+    if (!this.canSetPriceCovered && formValue.priceCovered) {
+      this.settingsForm.patchValue({ priceCovered: null });
+    }
+
+    this.savingSettings = true;
+
+    const data: Partial<ConfigurationSettings> = {
+      availableUncovered: formValue.availableUncovered !== '' && formValue.availableUncovered !== null
+        ? Number(formValue.availableUncovered)
+        : null,
+      availableCovered: formValue.availableCovered !== '' && formValue.availableCovered !== null
+        ? Number(formValue.availableCovered)
+        : null,
+      priceUncovered: this.canSetPriceUncovered && formValue.priceUncovered !== '' && formValue.priceUncovered !== null
+        ? Number(formValue.priceUncovered)
+        : null,
+      priceCovered: this.canSetPriceCovered && formValue.priceCovered !== '' && formValue.priceCovered !== null
+        ? Number(formValue.priceCovered)
+        : null,
+      priceWash: this.offerWashService && formValue.priceWash !== '' && formValue.priceWash !== null
+        ? Number(formValue.priceWash)
+        : null,
+    };
+
+    this.settingsService.updateSettings(data).subscribe({
+      next: () => {
+        this.savingSettings = false;
+        Swal.fire({
+          icon: 'success',
+          title: 'Settings Saved',
+          text: 'Configuration settings have been updated successfully.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      },
+      error: (error) => {
+        console.error('Error saving settings:', error);
+        this.savingSettings = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Save Failed',
+          text: error.error?.error || 'Failed to save settings. Please try again.',
+          confirmButtonColor: '#006B8F',
+        });
+      },
+    });
+  }
+
+  get sf() {
+    return this.settingsForm.controls;
+  }
+
   private checkUserRole(): void {
     this.roleService.getUserRole().subscribe({
       next: (roleInfo: UserRoleInfo) => {
         this.isRegularUser = roleInfo.isUser;
+        this.isAdmin = roleInfo.isAdmin;
         if (this.isRegularUser) {
           this.loadCars();
+        }
+        if (this.isAdmin) {
+          this.loadSettings();
         }
       },
     });
