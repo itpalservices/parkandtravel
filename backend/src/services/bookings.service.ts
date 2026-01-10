@@ -277,12 +277,59 @@ export async function createGuestBooking(
 }
 
 export async function getParkingTypes(): Promise<
-  { id: string; name: string }[]
+  { id: string; name: string; pricePerDay: number | null }[]
 > {
   const types = await prisma.parkingType.findMany({
     select: { id: true, name: true },
   });
-  return types;
+
+  // Get availability settings to filter parking types
+  const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4)`,
+    'configurationSetting_availableUncovered',
+    'configurationSetting_availableCovered',
+    'configurationSetting_priceUncovered',
+    'configurationSetting_priceCovered'
+  );
+
+  const settingsMap = new Map<string, string | null>();
+  settings.forEach((s) => settingsMap.set(s.id, s.value));
+
+  const availableUncovered = parseAvailability(settingsMap.get('configurationSetting_availableUncovered'));
+  const availableCovered = parseAvailability(settingsMap.get('configurationSetting_availableCovered'));
+  const priceUncovered = parsePrice(settingsMap.get('configurationSetting_priceUncovered'));
+  const priceCovered = parsePrice(settingsMap.get('configurationSetting_priceCovered'));
+
+  // Filter types based on availability
+  const filteredTypes = types.filter((type) => {
+    if (type.id === 'parkingType_uncovered') {
+      return availableUncovered !== null && availableUncovered > 0;
+    }
+    if (type.id === 'parkingType_covered') {
+      return availableCovered !== null && availableCovered > 0;
+    }
+    return true;
+  });
+
+  // Add price per day to each type
+  return filteredTypes.map((type) => ({
+    id: type.id,
+    name: type.name,
+    pricePerDay: type.id === 'parkingType_uncovered' ? priceUncovered : 
+                 type.id === 'parkingType_covered' ? priceCovered : null,
+  }));
+}
+
+function parseAvailability(value: string | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? null : parsed;
+}
+
+function parsePrice(value: string | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? null : parsed;
 }
 
 export async function getPhoneCodes(): Promise<
