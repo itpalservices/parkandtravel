@@ -255,6 +255,12 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
     return price === null || price === '' || price === undefined || Number(price) <= 0;
   }
 
+  get hasMissingPriceWash(): boolean {
+    if (!this.offerWashService) return false;
+    const price = this.settingsForm.get('priceWash')?.value;
+    return price === null || price === '' || price === undefined || Number(price) < 1;
+  }
+
   toggleWashService(): void {
     this.offerWashService = !this.offerWashService;
     if (!this.offerWashService) {
@@ -273,7 +279,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
 
-    if (this.hasMissingPriceUncovered || this.hasMissingPriceCovered) {
+    if (this.hasMissingPriceUncovered || this.hasMissingPriceCovered || this.hasMissingPriceWash) {
       return;
     }
 
