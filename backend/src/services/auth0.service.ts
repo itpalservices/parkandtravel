@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "dev-c2p14cvw0yc4psqt.us.auth0.com";
+const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;
 const AUTH0_MANAGEMENT_CLIENT_ID = process.env.AUTH0_MANAGEMENT_CLIENT_ID;
 const AUTH0_MANAGEMENT_CLIENT_SECRET = process.env.AUTH0_MANAGEMENT_CLIENT_SECRET;
 
