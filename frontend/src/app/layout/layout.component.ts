@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { filter, take } from 'rxjs';
 import { HeaderComponent } from './components/header/header.component';
@@ -17,6 +17,7 @@ import Swal from 'sweetalert2';
 })
 export class LayoutComponent implements OnInit {
   private authService = inject(AuthService);
+  private router = inject(Router);
   
   sidebarOpen = signal(false);
 
@@ -40,10 +41,19 @@ export class LayoutComponent implements OnInit {
             position: 'top-end',
             icon: 'warning',
             title: 'Email not verified',
-            html: 'Please verify your email. <a href="/admin/user-profile" style="color: #006B8F; font-weight: 500; text-decoration: underline;">Go to Profile</a>',
+            html: 'Please verify your email. <a id="profile-link" href="javascript:void(0)" style="color: #006B8F; font-weight: 500; text-decoration: underline; cursor: pointer;">Go to Profile</a>',
             showConfirmButton: false,
             timer: 6000,
-            timerProgressBar: true
+            timerProgressBar: true,
+            didOpen: () => {
+              const link = document.getElementById('profile-link');
+              if (link) {
+                link.addEventListener('click', () => {
+                  Swal.close();
+                  this.router.navigate(['/admin/user-profile']);
+                });
+              }
+            }
           });
         }
       });
