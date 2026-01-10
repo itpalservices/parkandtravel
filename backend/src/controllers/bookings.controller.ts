@@ -19,11 +19,9 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
 
     if (dateFrom !== undefined) {
       if (!isValidDateFormat(dateFrom as string)) {
-        res
-          .status(400)
-          .json({
-            error: "dateFrom must be a valid date in YYYY-MM-DD format",
-          });
+        res.status(400).json({
+          error: "dateFrom must be a valid date in YYYY-MM-DD format",
+        });
         return;
       }
       if (isDateInPast(dateFrom as string)) {
@@ -60,12 +58,12 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
 
     const authUser = req.authUser as AuthUser | undefined;
     const isRegularUser = authUser?.role === "user";
-    
+
     if (isRegularUser && !authUser?.email) {
       res.status(403).json({ error: "Email claim required for user access" });
       return;
     }
-    
+
     const userEmail = isRegularUser ? authUser?.email : undefined;
 
     const result = await getBookings({
@@ -102,7 +100,7 @@ export async function getBooking(req: Request, res: Response): Promise<void> {
 
     const authUser = req.authUser as AuthUser | undefined;
     const isRegularUser = authUser?.role === "user";
-    
+
     if (isRegularUser) {
       if (!authUser?.email) {
         res.status(403).json({ error: "Email claim required for user access" });

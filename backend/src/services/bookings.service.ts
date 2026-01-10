@@ -61,7 +61,7 @@ function isValidUUID(str: string): boolean {
 
 export async function getBookings(params: GetBookingsParams): Promise<{
   data: BookingResponse[];
-  meta: { total: number; page: number; limit: number };
+  meta: { total: number; page: number };
 }> {
   const { dateFrom, dateTo, search, page, limit, userEmail } = params;
 
@@ -81,15 +81,15 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   if (dateFrom && dateTo) {
     whereConditions.push(
-      `((b."dateFrom" >= '${dateFrom}'::date AND b."dateFrom" <= '${dateTo}'::date) OR (b."dateTo" >= '${dateFrom}'::date AND b."dateTo" <= '${dateTo}'::date))`
+      `((b."dateFrom" >= '${dateFrom}'::date AND b."dateFrom" <= '${dateTo}'::date) OR (b."dateTo" >= '${dateFrom}'::date AND b."dateTo" <= '${dateTo}'::date))`,
     );
   } else if (dateFrom) {
     whereConditions.push(
-      `(b."dateFrom" >= '${dateFrom}'::date OR b."dateTo" >= '${dateFrom}'::date)`
+      `(b."dateFrom" >= '${dateFrom}'::date OR b."dateTo" >= '${dateFrom}'::date)`,
     );
   } else if (dateTo) {
     whereConditions.push(
-      `(b."dateFrom" <= '${dateTo}'::date OR b."dateTo" <= '${dateTo}'::date)`
+      `(b."dateFrom" <= '${dateTo}'::date OR b."dateTo" <= '${dateTo}'::date)`,
     );
   }
 
@@ -132,7 +132,6 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     WHERE ${whereClause}
     ORDER BY b."dateTo" ASC, COALESCE(b."timeTo"::time, '23:59:59'::time) ASC
-    LIMIT ${limit} OFFSET ${offset}
   `;
 
   const bookings = await prisma.$queryRawUnsafe<any[]>(dataQuery);
@@ -159,7 +158,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   return {
     data,
-    meta: { total, page, limit },
+    meta: { total, page },
   };
 }
 

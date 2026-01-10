@@ -30,7 +30,7 @@ export class BookingsPageComponent implements OnInit {
   dateFilter: DateRange = { from: null, to: null, preset: null };
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 10000;
   totalPages = 1;
 
   constructor(
