@@ -193,12 +193,12 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
 
   get canSetPriceUncovered(): boolean {
     const uncovered = this.settingsForm.get('availableUncovered')?.value;
-    return uncovered !== null && uncovered !== '' && uncovered !== undefined && Number(uncovered) > 0;
+    return uncovered !== null && uncovered !== '' && uncovered !== undefined && Number(uncovered) >= 0;
   }
 
   get canSetPriceCovered(): boolean {
     const covered = this.settingsForm.get('availableCovered')?.value;
-    return covered !== null && covered !== '' && covered !== undefined && Number(covered) > 0;
+    return covered !== null && covered !== '' && covered !== undefined && Number(covered) >= 0;
   }
 
   toggleWashService(): void {
@@ -252,12 +252,15 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       next: () => {
         this.savingSettings = false;
         this.settingsSubmitted = false;
-        Swal.fire({
-          icon: 'success',
-          title: 'Settings Saved',
-          text: 'Configuration settings have been updated successfully.',
-          timer: 2000,
+        Swal.mixin({
+          toast: true,
+          position: 'top-end',
           showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        }).fire({
+          icon: 'success',
+          title: 'Settings saved successfully',
         });
       },
       error: (error) => {
