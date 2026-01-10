@@ -182,6 +182,8 @@ exports.onExecutePostLogin = async (event, api) => {
 - `GET /api/bookings` - List bookings with filters
 - `GET /api/bookings/:id` - Get booking by ID
 - `PUT /api/bookings/:id/delete` - Soft delete booking
+- `GET /api/settings` - Get configuration settings (admin only)
+- `PUT /api/settings` - Update configuration settings (admin only)
 
 ## Recent Changes
 - Added main layout with header, sidebar, and content area
@@ -233,3 +235,9 @@ exports.onExecutePostLogin = async (event, api) => {
 - Created Cars section on user-profile page (only visible to regular users, not admin/driver)
 - Users can add, edit, and delete their cars with confirmation dialogs and toast notifications
 - Backend endpoints: GET/POST /api/cars, GET/PUT/DELETE /api/cars/:id (restricted to regular users only)
+- Added configuration_settings database table with 5 predefined setting IDs
+- Created Settings section on user-profile page (only visible to admin users)
+- Settings include: available uncovered/covered parking spaces (integer), prices per day (with € symbol)
+- Added optional car wash service toggle with pricing
+- Validation: at least one availability required, prices only editable when availability > 0
+- Backend validates non-negative integers for availability and non-negative numbers for prices
