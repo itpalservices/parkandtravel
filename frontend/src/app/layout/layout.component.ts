@@ -40,7 +40,7 @@ export class LayoutComponent implements OnInit {
             position: 'top-end',
             icon: 'warning',
             title: 'Email not verified',
-            text: 'Please verify your email. Click your avatar to go to Profile.',
+            html: 'Please verify your email. <a href="/admin/user-profile" style="color: #006B8F; font-weight: 500; text-decoration: underline;">Go to Profile</a>',
             showConfirmButton: false,
             timer: 6000,
             timerProgressBar: true
