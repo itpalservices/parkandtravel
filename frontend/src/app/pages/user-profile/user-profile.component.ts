@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -55,7 +55,7 @@ interface Car {
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss',
 })
-export class UserProfileComponent implements OnInit, OnDestroy {
+export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked {
   private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
   private userProfileService = inject(UserProfileService);
@@ -86,6 +86,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   savingCar = false;
   editingCar: Car | null = null;
 
+  @ViewChild('profileSection') profileSection!: ElementRef<HTMLElement>;
+  @ViewChild('carsSection') carsSection!: ElementRef<HTMLElement>;
+  private lastProfileHeight = 0;
+
   ngOnInit(): void {
     this.initForm();
     this.initCarForm();
@@ -97,6 +101,22 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.cooldownInterval) {
       clearInterval(this.cooldownInterval);
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    this.syncSectionHeights();
+  }
+
+  private syncSectionHeights(): void {
+    if (!this.isRegularUser || !this.profileSection?.nativeElement || !this.carsSection?.nativeElement) {
+      return;
+    }
+
+    const profileHeight = this.profileSection.nativeElement.offsetHeight;
+    if (profileHeight > 0 && profileHeight !== this.lastProfileHeight) {
+      this.lastProfileHeight = profileHeight;
+      this.carsSection.nativeElement.style.maxHeight = `${profileHeight}px`;
     }
   }
 

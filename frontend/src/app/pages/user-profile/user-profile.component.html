@@ -5,7 +5,7 @@
         <h2>User Profile</h2>
       </div>
 
-      <div class="profile-section">
+      <div class="profile-section" #profileSection>
         @if (loading) {
           <div class="loading-container">
             <div class="spinner"></div>
@@ -170,7 +170,7 @@
     </div>
 
     @if (isRegularUser) {
-      <div class="section-wrapper">
+      <div class="section-wrapper cars-wrapper">
         <div class="page-header">
           <h2>Cars</h2>
           <button class="btn btn-primary btn-sm" (click)="openCarModal(carModal)">
@@ -182,7 +182,7 @@
           </button>
         </div>
 
-        <div class="cars-section">
+        <div class="cars-section" #carsSection>
           @if (carsLoading) {
             <div class="loading-container">
               <div class="spinner"></div>
