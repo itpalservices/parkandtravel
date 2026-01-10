@@ -187,6 +187,7 @@ export async function createGuestBooking(
       checkOutDate,
       checkOutTime,
       parkingTypeId,
+      washService,
     } = req.body;
 
     if (
@@ -222,6 +223,7 @@ export async function createGuestBooking(
       checkOutDate,
       checkOutTime,
       parkingTypeId,
+      washService: washService === true,
     });
 
     res.status(201).json({

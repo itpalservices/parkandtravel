@@ -282,8 +282,8 @@ export async function createGuestBooking(
   const name = nameParts[0] || "";
   const surname = nameParts.slice(1).join(" ") || "";
 
-  const checkInDate = new Date(params.checkInDate + "T00:00:00");
-  const checkOutDate = new Date(params.checkOutDate + "T00:00:00");
+  const checkInDate = new Date(params.checkInDate + "T12:00:00Z");
+  const checkOutDate = new Date(params.checkOutDate + "T12:00:00Z");
   const checkInTime = parseTimeToDate(params.checkInTime);
   const checkOutTime = parseTimeToDate(params.checkOutTime);
 
