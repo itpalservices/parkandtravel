@@ -50,3 +50,10 @@ model Booking {
 
   @@map("bookings")
 }
+
+model ConfigurationSetting {
+  id    String  @id @db.VarChar(100)
+  value String? @db.VarChar(500)
+
+  @@map("configuration_settings")
+}
