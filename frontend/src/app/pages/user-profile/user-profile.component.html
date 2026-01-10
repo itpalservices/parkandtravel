@@ -189,6 +189,10 @@
             </div>
           } @else {
             <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
+              @if (settingsSaveError) {
+                <div class="alert alert-danger">{{ settingsSaveError }}</div>
+              }
+
               <div class="settings-group">
                 <h4>Available Parking Spaces</h4>
                 <p class="settings-hint">At least one of these must be provided.</p>

@@ -75,8 +75,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   isAdmin = false;
   settingsLoading = false;
   settingsError = '';
+  settingsSaveError = '';
   savingSettings = false;
   offerWashService = false;
+  settingsSubmitted = false;
 
   phoneCodes: PhoneCode[] = [];
   selectedPhoneCode: PhoneCode | null = null;
@@ -207,13 +209,13 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   saveSettings(): void {
+    this.settingsSubmitted = true;
+    this.settingsSaveError = '';
+
+    this.settingsForm.get('availableUncovered')?.markAsTouched();
+    this.settingsForm.get('availableCovered')?.markAsTouched();
+
     if (this.hasAvailabilityError) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Validation Error',
-        text: 'At least one of Available Uncovered or Available Covered must be provided.',
-        confirmButtonColor: '#006B8F',
-      });
       return;
     }
 
@@ -249,6 +251,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
     this.settingsService.updateSettings(data).subscribe({
       next: () => {
         this.savingSettings = false;
+        this.settingsSubmitted = false;
         Swal.fire({
           icon: 'success',
           title: 'Settings Saved',
@@ -260,12 +263,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       error: (error) => {
         console.error('Error saving settings:', error);
         this.savingSettings = false;
-        Swal.fire({
-          icon: 'error',
-          title: 'Save Failed',
-          text: error.error?.error || 'Failed to save settings. Please try again.',
-          confirmButtonColor: '#006B8F',
-        });
+        this.settingsSaveError = error.error?.error || 'Failed to save settings. Please try again.';
       },
     });
   }
