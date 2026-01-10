@@ -36,3 +36,15 @@ export interface BookingResponse {
   success: boolean;
   data: Booking;
 }
+
+export interface ParkingType {
+  id: string;
+  name: string;
+  pricePerDay: number | null;
+}
+
+export interface ParkingTypesResponse {
+  parkingTypes: ParkingType[];
+  washAvailable: boolean;
+  washPrice: number | null;
+}

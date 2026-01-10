@@ -38,7 +38,7 @@ export class BookingsListComponent {
       month: '2-digit',
       year: 'numeric'
     });
-    const time = booking.timeFrom || '--:--';
+    const time = booking.timeFrom?.slice(0, -3) || '--:--';
     return `${dateStr} ${time}`;
   }
 
@@ -49,7 +49,7 @@ export class BookingsListComponent {
       month: '2-digit',
       year: 'numeric'
     });
-    const time = booking.timeTo || '--:--';
+    const time = booking.timeTo?.slice(0, -3) || '--:--';
     return `${dateStr} ${time}`;
   }
 

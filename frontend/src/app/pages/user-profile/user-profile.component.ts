@@ -22,33 +22,8 @@ import { UserProfileService } from '../../core/services/user-profile.service';
 import { RoleService, UserRoleInfo } from '../../core/services/role.service';
 import { SettingsService, ConfigurationSettings } from '../../core/services/settings.service';
 import Swal from 'sweetalert2';
-
-interface UserProfile {
-  email: string;
-  name: string;
-  surname: string;
-  phone: string;
-  phoneCode: string;
-  emailVerified: boolean;
-  picture?: string;
-}
-
-interface PhoneCode {
-  id: string;
-  isoCode: string;
-  phoneCode: string;
-}
-
-interface Car {
-  id: string;
-  userId: string;
-  carBrand: string;
-  carModel: string;
-  carColor: string;
-  plateNo: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Car, UserProfile } from '../../shared/models/user-profile.model';
+import { PhoneCode } from '../../shared/models/phone-codes.model';
 
 @Component({
   selector: 'app-user-profile',

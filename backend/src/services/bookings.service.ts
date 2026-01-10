@@ -237,8 +237,7 @@ interface CreateGuestBookingParams {
 
 function parseTimeToDate(timeStr: string): Date {
   const [hours, minutes] = timeStr.split(":").map(Number);
-  const date = new Date(1970, 0, 1, hours, minutes, 0);
-  return date;
+  return new Date(Date.UTC(1970, 0, 1, hours, minutes, 0));
 }
 
 function calculateDays(checkInDate: Date, checkOutDate: Date): number {

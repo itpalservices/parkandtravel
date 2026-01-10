@@ -18,24 +18,8 @@ import {
 import { ApiService } from '../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
 import { Subscription } from 'rxjs';
-
-interface ParkingType {
-  id: string;
-  name: string;
-  pricePerDay: number | null;
-}
-
-interface ParkingTypesResponse {
-  parkingTypes: ParkingType[];
-  washAvailable: boolean;
-  washPrice: number | null;
-}
-
-interface PhoneCode {
-  id: string;
-  isoCode: string;
-  phoneCode: string;
-}
+import { ParkingType, ParkingTypesResponse } from '../../shared';
+import { PhoneCode } from '../../shared/models/phone-codes.model';
 
 @Component({
   selector: 'app-guest-booking',
