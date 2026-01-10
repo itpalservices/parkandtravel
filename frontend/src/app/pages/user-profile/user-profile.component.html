@@ -1,168 +1,317 @@
 <div class="user-profile-page">
-  <div class="page-header">
-    <h2>User Profile</h2>
-  </div>
-
-  <div class="profile-section">
-    @if (loading) {
-      <div class="loading-container">
-        <div class="spinner"></div>
-        <p>Loading profile...</p>
+  <div class="sections-container">
+    <div class="section-wrapper">
+      <div class="page-header">
+        <h2>User Profile</h2>
       </div>
-    } @else if (loadError) {
-      <div class="error-container">
-        <div class="error-message">{{ loadError }}</div>
-        <button class="btn btn-primary" (click)="loadProfile()">Try Again</button>
-      </div>
-    } @else {
-      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-        @if (saveError) {
-          <div class="alert alert-danger">{{ saveError }}</div>
-        }
 
-        <div class="form-section">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              class="form-control"
-              formControlName="email"
-              placeholder="Email"
-            />
-            <small class="form-text text-muted">Email cannot be changed</small>
-            @if (!emailVerified) {
-              <div class="email-verification-notice">
-                <span class="verification-warning">Your email is not verified.</span>
-                @if (resendCooldown > 0) {
-                  <span class="cooldown-text">Resend in {{ resendCooldown }}s</span>
-                } @else {
-                  <a 
-                    href="javascript:void(0)" 
-                    class="resend-link"
-                    [class.disabled]="resendingVerification"
-                    (click)="resendVerificationEmail()"
-                  >
-                    @if (resendingVerification) {
-                      Sending...
+      <div class="profile-section">
+        @if (loading) {
+          <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading profile...</p>
+          </div>
+        } @else if (loadError) {
+          <div class="error-container">
+            <div class="error-message">{{ loadError }}</div>
+            <button class="btn btn-primary" (click)="loadProfile()">Try Again</button>
+          </div>
+        } @else {
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            @if (saveError) {
+              <div class="alert alert-danger">{{ saveError }}</div>
+            }
+
+            <div class="form-section">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  class="form-control"
+                  formControlName="email"
+                  placeholder="Email"
+                />
+                <small class="form-text text-muted">Email cannot be changed</small>
+                @if (!emailVerified) {
+                  <div class="email-verification-notice">
+                    <span class="verification-warning">Your email is not verified.</span>
+                    @if (resendCooldown > 0) {
+                      <span class="cooldown-text">Resend in {{ resendCooldown }}s</span>
                     } @else {
-                      Resend verification email
+                      <a 
+                        href="javascript:void(0)" 
+                        class="resend-link"
+                        [class.disabled]="resendingVerification"
+                        (click)="resendVerificationEmail()"
+                      >
+                        @if (resendingVerification) {
+                          Sending...
+                        } @else {
+                          Resend verification email
+                        }
+                      </a>
                     }
-                  </a>
+                  </div>
                 }
               </div>
-            }
-          </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="name">Name *</label>
-              <input
-                type="text"
-                id="name"
-                class="form-control"
-                [class.is-invalid]="hasError('name')"
-                formControlName="name"
-                placeholder="Enter your name"
-              />
-              <app-form-field-error [control]="f['name']" fieldName="Name"> </app-form-field-error>
-            </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name">Name *</label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="form-control"
+                    [class.is-invalid]="hasError('name')"
+                    formControlName="name"
+                    placeholder="Enter your name"
+                  />
+                  <app-form-field-error [control]="f['name']" fieldName="Name"> </app-form-field-error>
+                </div>
 
-            <div class="form-group">
-              <label for="surname">Surname *</label>
-              <input
-                type="text"
-                id="surname"
-                class="form-control"
-                [class.is-invalid]="hasError('surname')"
-                formControlName="surname"
-                placeholder="Enter your surname"
-              />
-              <app-form-field-error [control]="f['surname']" fieldName="Surname">
-              </app-form-field-error>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Phone *</label>
-            <div class="phone-input-group">
-              <div ngbDropdown class="phone-code-dropdown">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary dropdown-toggle phone-code-btn"
-                  ngbDropdownToggle
-                >
-                  @if (selectedPhoneCode) {
-                    <img
-                      [src]="getFlagUrl(selectedPhoneCode.isoCode)"
-                      [alt]="selectedPhoneCode.isoCode"
-                      class="flag-icon"
-                    />
-                    <span>{{ selectedPhoneCode.phoneCode }}</span>
-                  } @else {
-                    <span>Select</span>
-                  }
-                </button>
-                <div ngbDropdownMenu class="phone-code-menu">
-                  <div class="phone-search-container">
-                    <input
-                      type="text"
-                      class="phone-search-input"
-                      placeholder="Search country or code..."
-                      [(ngModel)]="phoneCodeSearch"
-                      [ngModelOptions]="{ standalone: true }"
-                      (click)="$event.stopPropagation()"
-                    />
-                  </div>
-                  <div class="phone-codes-list">
-                    @for (code of filteredPhoneCodes; track code.id) {
-                      <button
-                        type="button"
-                        ngbDropdownItem
-                        (click)="selectPhoneCode(code)"
-                        class="phone-code-item"
-                      >
-                        <img
-                          [src]="getFlagUrl(code.isoCode)"
-                          [alt]="code.isoCode"
-                          class="flag-icon"
-                        />
-                        <span class="phone-code-text">{{ code.phoneCode }}</span>
-                        <span class="country-code-text">{{ code.isoCode }}</span>
-                      </button>
-                    }
-                  </div>
+                <div class="form-group">
+                  <label for="surname">Surname *</label>
+                  <input
+                    type="text"
+                    id="surname"
+                    class="form-control"
+                    [class.is-invalid]="hasError('surname')"
+                    formControlName="surname"
+                    placeholder="Enter your surname"
+                  />
+                  <app-form-field-error [control]="f['surname']" fieldName="Surname">
+                  </app-form-field-error>
                 </div>
               </div>
-              <input
-                type="tel"
-                id="phone"
-                class="form-control phone-number-input"
-                [class.is-invalid]="hasError('phone')"
-                formControlName="phone"
-                placeholder="99123456"
-              />
-            </div>
-            <app-form-field-error
-              [control]="f['phone']"
-              fieldName="Phone number"
-              [customMessages]="{ pattern: 'Please enter a valid phone number (digits only)' }"
-            >
-            </app-form-field-error>
-          </div>
-        </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="saving">
-            @if (saving) {
-              <span class="btn-spinner"></span>
-              Saving...
-            } @else {
-              Save Changes
-            }
+              <div class="form-group">
+                <label>Phone</label>
+                <div class="phone-input-group">
+                  <div ngbDropdown class="phone-code-dropdown">
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary dropdown-toggle phone-code-btn"
+                      ngbDropdownToggle
+                    >
+                      @if (selectedPhoneCode) {
+                        <img
+                          [src]="getFlagUrl(selectedPhoneCode.isoCode)"
+                          [alt]="selectedPhoneCode.isoCode"
+                          class="flag-icon"
+                        />
+                        <span>{{ selectedPhoneCode.phoneCode }}</span>
+                      } @else {
+                        <span>Select</span>
+                      }
+                    </button>
+                    <div ngbDropdownMenu class="phone-code-menu">
+                      <div class="phone-search-container">
+                        <input
+                          type="text"
+                          class="phone-search-input"
+                          placeholder="Search country or code..."
+                          [(ngModel)]="phoneCodeSearch"
+                          [ngModelOptions]="{ standalone: true }"
+                          (click)="$event.stopPropagation()"
+                        />
+                      </div>
+                      <div class="phone-codes-list">
+                        @for (code of filteredPhoneCodes; track code.id) {
+                          <button
+                            type="button"
+                            ngbDropdownItem
+                            (click)="selectPhoneCode(code)"
+                            class="phone-code-item"
+                          >
+                            <img
+                              [src]="getFlagUrl(code.isoCode)"
+                              [alt]="code.isoCode"
+                              class="flag-icon"
+                            />
+                            <span class="phone-code-text">{{ code.phoneCode }}</span>
+                            <span class="country-code-text">{{ code.isoCode }}</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="tel"
+                    id="phone"
+                    class="form-control phone-number-input"
+                    [class.is-invalid]="hasError('phone')"
+                    formControlName="phone"
+                    placeholder="99123456"
+                  />
+                </div>
+                <app-form-field-error
+                  [control]="f['phone']"
+                  fieldName="Phone number"
+                  [customMessages]="{ pattern: 'Please enter a valid phone number (digits only)' }"
+                >
+                </app-form-field-error>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="saving">
+                @if (saving) {
+                  <span class="btn-spinner"></span>
+                  Saving...
+                } @else {
+                  Save Changes
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+
+    @if (isRegularUser) {
+      <div class="section-wrapper">
+        <div class="page-header">
+          <h2>Cars</h2>
+          <button class="btn btn-primary btn-sm" (click)="openCarModal(carModal)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Car
           </button>
         </div>
-      </form>
+
+        <div class="cars-section">
+          @if (carsLoading) {
+            <div class="loading-container">
+              <div class="spinner"></div>
+              <p>Loading cars...</p>
+            </div>
+          } @else if (carsError) {
+            <div class="error-container">
+              <div class="error-message">{{ carsError }}</div>
+              <button class="btn btn-primary" (click)="loadCars()">Try Again</button>
+            </div>
+          } @else if (cars.length === 0) {
+            <div class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-6.07a1 1 0 0 0-.91-.58H5.6a1 1 0 0 0-.91.58L2 11l-1.16.86a1 1 0 0 0-.84.99V16h3"></path>
+                <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                <circle cx="16.5" cy="16.5" r="2.5"></circle>
+              </svg>
+              <p>No cars added yet</p>
+              <button class="btn btn-outline-primary btn-sm" (click)="openCarModal(carModal)">Add your first car</button>
+            </div>
+          } @else {
+            <div class="cars-grid">
+              @for (car of cars; track car.id) {
+                <div class="car-card">
+                  <div class="car-header">
+                    <div class="car-title">
+                      <h4>{{ car.carBrand }} {{ car.carModel }}</h4>
+                      <span class="plate-badge">{{ car.plateNo }}</span>
+                    </div>
+                    <div class="car-actions">
+                      <button class="btn-icon" title="Edit" (click)="openCarModal(carModal, car)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                      <button class="btn-icon btn-danger" title="Delete" (click)="deleteCar(car)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="car-details">
+                    <div class="detail-item">
+                      <span class="detail-label">Color</span>
+                      <span class="detail-value">{{ car.carColor }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
     }
   </div>
 </div>
+
+<ng-template #carModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">{{ editingCar ? 'Edit Car' : 'Add Car' }}</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="carForm">
+      <div class="form-group">
+        <label for="carBrand">Car Brand *</label>
+        <input
+          type="text"
+          id="carBrand"
+          class="form-control"
+          [class.is-invalid]="hasCarError('carBrand')"
+          formControlName="carBrand"
+          placeholder="e.g. Toyota"
+        />
+        <app-form-field-error [control]="cf['carBrand']" fieldName="Car brand"></app-form-field-error>
+      </div>
+
+      <div class="form-group">
+        <label for="carModel">Car Model *</label>
+        <input
+          type="text"
+          id="carModel"
+          class="form-control"
+          [class.is-invalid]="hasCarError('carModel')"
+          formControlName="carModel"
+          placeholder="e.g. Camry"
+        />
+        <app-form-field-error [control]="cf['carModel']" fieldName="Car model"></app-form-field-error>
+      </div>
+
+      <div class="form-group">
+        <label for="carColor">Car Color *</label>
+        <input
+          type="text"
+          id="carColor"
+          class="form-control"
+          [class.is-invalid]="hasCarError('carColor')"
+          formControlName="carColor"
+          placeholder="e.g. Silver"
+        />
+        <app-form-field-error [control]="cf['carColor']" fieldName="Car color"></app-form-field-error>
+      </div>
+
+      <div class="form-group">
+        <label for="plateNo">Plate Number *</label>
+        <input
+          type="text"
+          id="plateNo"
+          class="form-control"
+          [class.is-invalid]="hasCarError('plateNo')"
+          formControlName="plateNo"
+          placeholder="e.g. ABC-123"
+        />
+        <app-form-field-error [control]="cf['plateNo']" fieldName="Plate number"></app-form-field-error>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" [disabled]="savingCar" (click)="saveCar(modal)">
+      @if (savingCar) {
+        <span class="btn-spinner"></span>
+        Saving...
+      } @else {
+        {{ editingCar ? 'Update' : 'Add' }} Car
+      }
+    </button>
+  </div>
+</ng-template>

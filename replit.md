@@ -229,3 +229,7 @@ exports.onExecutePostLogin = async (event, api) => {
 - Backend endpoints: GET/PUT /api/user/profile, POST /api/user/resend-verification
 - Added resend verification email feature on user profile page with 60-second cooldown
 - Created UserProfileService for real-time profile updates across components (header reflects name changes immediately)
+- Added cars table in database with fields: id, userId, carBrand, carModel, carColor, plateNo, createdAt, updatedAt
+- Created Cars section on user-profile page (only visible to regular users, not admin/driver)
+- Users can add, edit, and delete their cars with confirmation dialogs and toast notifications
+- Backend endpoints: GET/POST /api/cars, GET/PUT/DELETE /api/cars/:id (restricted to regular users only)

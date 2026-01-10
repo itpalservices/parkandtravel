@@ -60,3 +60,26 @@ function extractUserInfo(req: Request, res: Response, next: NextFunction): void 
 }
 
 export const checkJwt = [jwtCheck, extractUserInfo];
+
+export function getUserRole(auth: any): UserRole {
+  if (!auth?.payload) {
+    return "user";
+  }
+
+  const payload = auth.payload;
+  const rolesClaim = payload[ROLE_NAMESPACE];
+
+  if (Array.isArray(rolesClaim) && rolesClaim.length > 0) {
+    const claimedRole = rolesClaim[0].toLowerCase();
+    if (claimedRole === "admin" || claimedRole === "driver" || claimedRole === "user") {
+      return claimedRole;
+    }
+  } else if (typeof rolesClaim === "string") {
+    const claimedRole = rolesClaim.toLowerCase();
+    if (claimedRole === "admin" || claimedRole === "driver" || claimedRole === "user") {
+      return claimedRole;
+    }
+  }
+
+  return "user";
+}

@@ -7,10 +7,11 @@ import {
   Validators,
   FormsModule,
 } from '@angular/forms';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbModalModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
 import { ApiService } from '../../core/services/api.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
+import { RoleService, UserRoleInfo } from '../../core/services/role.service';
 import Swal from 'sweetalert2';
 
 interface UserProfile {
@@ -29,6 +30,17 @@ interface PhoneCode {
   phoneCode: string;
 }
 
+interface Car {
+  id: string;
+  userId: string;
+  carBrand: string;
+  carModel: string;
+  carColor: string;
+  plateNo: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @Component({
   selector: 'app-user-profile',
   standalone: true,
@@ -37,6 +49,7 @@ interface PhoneCode {
     ReactiveFormsModule,
     FormsModule,
     NgbDropdownModule,
+    NgbModalModule,
     FormFieldErrorComponent,
   ],
   templateUrl: './user-profile.component.html',
@@ -46,8 +59,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
   private userProfileService = inject(UserProfileService);
+  private roleService = inject(RoleService);
+  private modalService = inject(NgbModal);
 
   profileForm!: FormGroup;
+  carForm!: FormGroup;
   loading = true;
   saving = false;
   loadError = '';
@@ -63,10 +79,19 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   resendCooldown = 0;
   private cooldownInterval: any = null;
 
+  isRegularUser = false;
+  cars: Car[] = [];
+  carsLoading = false;
+  carsError = '';
+  savingCar = false;
+  editingCar: Car | null = null;
+
   ngOnInit(): void {
     this.initForm();
+    this.initCarForm();
     this.loadPhoneCodes();
     this.loadProfile();
+    this.checkUserRole();
   }
 
   ngOnDestroy(): void {
@@ -81,6 +106,26 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       name: ['', Validators.required],
       surname: ['', Validators.required],
       phone: ['', [Validators.pattern(/^\d*$/)]],
+    });
+  }
+
+  private initCarForm(): void {
+    this.carForm = this.fb.group({
+      carBrand: ['', Validators.required],
+      carModel: ['', Validators.required],
+      carColor: ['', Validators.required],
+      plateNo: ['', Validators.required],
+    });
+  }
+
+  private checkUserRole(): void {
+    this.roleService.getUserRole().subscribe({
+      next: (roleInfo: UserRoleInfo) => {
+        this.isRegularUser = roleInfo.isUser;
+        if (this.isRegularUser) {
+          this.loadCars();
+        }
+      },
     });
   }
 
@@ -140,12 +185,40 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadCars(): void {
+    this.carsLoading = true;
+    this.carsError = '';
+
+    this.apiService.get<{ success: boolean; data: Car[] }>('/cars').subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.cars = response.data;
+        }
+        this.carsLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading cars:', error);
+        this.carsError = 'Failed to load cars.';
+        this.carsLoading = false;
+      },
+    });
+  }
+
   get f() {
     return this.profileForm.controls;
   }
 
+  get cf() {
+    return this.carForm.controls;
+  }
+
   hasError(field: string): boolean {
     const control = this.profileForm.get(field);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
+  }
+
+  hasCarError(field: string): boolean {
+    const control = this.carForm.get(field);
     return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
@@ -267,5 +340,149 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           this.saving = false;
         },
       });
+  }
+
+  openCarModal(content: any, car?: Car): void {
+    this.editingCar = car || null;
+    if (car) {
+      this.carForm.patchValue({
+        carBrand: car.carBrand,
+        carModel: car.carModel,
+        carColor: car.carColor,
+        plateNo: car.plateNo,
+      });
+    } else {
+      this.carForm.reset();
+    }
+    this.modalService.open(content, { centered: true });
+  }
+
+  saveCar(modal: any): void {
+    if (this.carForm.invalid) {
+      Object.values(this.carForm.controls).forEach((control) => {
+        control.markAsTouched();
+      });
+      return;
+    }
+
+    this.savingCar = true;
+    const carData = this.carForm.value;
+
+    if (this.editingCar) {
+      this.apiService
+        .put<{ success: boolean; data: Car }>(`/cars/${this.editingCar.id}`, carData)
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              const index = this.cars.findIndex((c) => c.id === this.editingCar!.id);
+              if (index !== -1) {
+                this.cars[index] = response.data;
+              }
+              Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Car updated successfully',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+              });
+              modal.close();
+            }
+            this.savingCar = false;
+          },
+          error: (error) => {
+            console.error('Error updating car:', error);
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'error',
+              title: 'Failed to update car',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            this.savingCar = false;
+          },
+        });
+    } else {
+      this.apiService
+        .post<{ success: boolean; data: Car }>('/cars', carData)
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.cars.unshift(response.data);
+              Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Car added successfully',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+              });
+              modal.close();
+            }
+            this.savingCar = false;
+          },
+          error: (error) => {
+            console.error('Error adding car:', error);
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'error',
+              title: 'Failed to add car',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            this.savingCar = false;
+          },
+        });
+    }
+  }
+
+  deleteCar(car: Car): void {
+    Swal.fire({
+      title: 'Delete Car?',
+      text: `Are you sure you want to delete ${car.carBrand} ${car.carModel}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.apiService.delete<{ success: boolean }>(`/cars/${car.id}`).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.cars = this.cars.filter((c) => c.id !== car.id);
+              Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Car deleted successfully',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting car:', error);
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'error',
+              title: 'Failed to delete car',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+          },
+        });
+      }
+    });
   }
 }
