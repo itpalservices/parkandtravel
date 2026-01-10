@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -41,7 +41,7 @@ interface PhoneCode {
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss',
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
 
@@ -56,10 +56,21 @@ export class UserProfileComponent implements OnInit {
   phoneCodeSearch = '';
   private userPhoneCode = '';
 
+  emailVerified = true;
+  resendingVerification = false;
+  resendCooldown = 0;
+  private cooldownInterval: any = null;
+
   ngOnInit(): void {
     this.initForm();
     this.loadPhoneCodes();
     this.loadProfile();
+  }
+
+  ngOnDestroy(): void {
+    if (this.cooldownInterval) {
+      clearInterval(this.cooldownInterval);
+    }
   }
 
   private initForm(): void {
@@ -67,7 +78,7 @@ export class UserProfileComponent implements OnInit {
       email: [{ value: '', disabled: true }],
       name: ['', Validators.required],
       surname: ['', Validators.required],
-      phone: ['', [Validators.required, Validators.pattern(/^\d*$/)]],
+      phone: ['', [Validators.pattern(/^\d*$/)]],
     });
   }
 
@@ -114,6 +125,7 @@ export class UserProfileComponent implements OnInit {
             phone: response.data.phone,
           });
           this.userPhoneCode = response.data.phoneCode;
+          this.emailVerified = response.data.emailVerified;
           this.selectPhoneCodeFromUser();
         }
         this.loading = false;
@@ -152,6 +164,58 @@ export class UserProfileComponent implements OnInit {
     return this.phoneCodes.filter(
       (code) => code.isoCode.toLowerCase().includes(search) || code.phoneCode.includes(search),
     );
+  }
+
+  resendVerificationEmail(): void {
+    if (this.resendCooldown > 0 || this.resendingVerification) {
+      return;
+    }
+
+    this.resendingVerification = true;
+
+    this.apiService.post<{ success: boolean; message: string }>('/user/resend-verification', {}).subscribe({
+      next: (response) => {
+        this.resendingVerification = false;
+        if (response.success) {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Verification email sent',
+            text: 'Please check your inbox and spam folder.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+          this.startCooldown();
+        }
+      },
+      error: (error) => {
+        this.resendingVerification = false;
+        console.error('Error sending verification email:', error);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Failed to send verification email',
+          text: 'Please try again later.',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
+  }
+
+  private startCooldown(): void {
+    this.resendCooldown = 60;
+    this.cooldownInterval = setInterval(() => {
+      this.resendCooldown--;
+      if (this.resendCooldown <= 0) {
+        clearInterval(this.cooldownInterval);
+        this.cooldownInterval = null;
+      }
+    }, 1000);
   }
 
   saveProfile(): void {

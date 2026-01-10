@@ -116,3 +116,20 @@ export async function updateUser(
 
   return response.data;
 }
+
+export async function sendVerificationEmail(userId: string): Promise<void> {
+  const token = await getManagementToken();
+
+  await axios.post(
+    `https://${AUTH0_DOMAIN}/api/v2/jobs/verification-email`,
+    {
+      user_id: userId,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}

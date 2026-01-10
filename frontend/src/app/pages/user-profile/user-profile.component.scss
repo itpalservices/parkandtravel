@@ -121,6 +121,39 @@
     font-size: 0.75rem;
     margin-top: 0.25rem;
   }
+
+  .email-verification-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+
+    .verification-warning {
+      color: #dc2626;
+    }
+
+    .cooldown-text {
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .resend-link {
+      color: #006B8F;
+      text-decoration: underline;
+      cursor: pointer;
+
+      &:hover {
+        color: #005570;
+      }
+
+      &.disabled {
+        color: #9ca3af;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    }
+  }
 }
 
 .phone-input-group {

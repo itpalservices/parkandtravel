@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail } from "../services/auth0.service";
 
 const router = Router();
 
@@ -112,6 +112,40 @@ router.put("/profile", checkJwt, async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error updating user profile:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to update user profile" });
+  }
+});
+
+router.post("/resend-verification", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const auth = (req as any).auth;
+    const userId = auth?.payload?.sub;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    if (user.email_verified) {
+      res.status(400).json({ error: "Email is already verified" });
+      return;
+    }
+
+    await sendVerificationEmail(userId);
+
+    res.json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (error: any) {
+    console.error("Error sending verification email:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to send verification email" });
   }
 });
 
