@@ -232,6 +232,7 @@ interface CreateGuestBookingParams {
   checkOutDate: string;
   checkOutTime: string;
   parkingTypeId: string;
+  washService?: boolean;
 }
 
 function parseTimeToDate(timeStr: string): Date {
@@ -240,9 +241,43 @@ function parseTimeToDate(timeStr: string): Date {
   return date;
 }
 
+function calculateDays(checkInDate: Date, checkOutDate: Date): number {
+  const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(diffDays, 1); // Minimum 1 day
+}
+
+async function getPriceSettings(): Promise<{
+  priceUncovered: number | null;
+  priceCovered: number | null;
+  priceWash: number | null;
+}> {
+  const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3)`,
+    'configurationSetting_priceUncovered',
+    'configurationSetting_priceCovered',
+    'configurationSetting_priceWash'
+  );
+
+  const settingsMap = new Map<string, string | null>();
+  settings.forEach((s) => settingsMap.set(s.id, s.value));
+
+  const parseFloatOrNull = (value: string | null | undefined): number | null => {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  return {
+    priceUncovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceUncovered')),
+    priceCovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceCovered')),
+    priceWash: parseFloatOrNull(settingsMap.get('configurationSetting_priceWash')),
+  };
+}
+
 export async function createGuestBooking(
   params: CreateGuestBookingParams,
-): Promise<{ id: string }> {
+): Promise<{ id: string; finalPrice: number | null }> {
   const nameParts = params.fullName.trim().split(" ");
   const name = nameParts[0] || "";
   const surname = nameParts.slice(1).join(" ") || "";
@@ -251,6 +286,25 @@ export async function createGuestBooking(
   const checkOutDate = new Date(params.checkOutDate + "T00:00:00");
   const checkInTime = parseTimeToDate(params.checkInTime);
   const checkOutTime = parseTimeToDate(params.checkOutTime);
+
+  // Calculate final price
+  const days = calculateDays(checkInDate, checkOutDate);
+  const priceSettings = await getPriceSettings();
+  
+  let parkingPricePerDay: number | null = null;
+  if (params.parkingTypeId === 'parkingType_uncovered') {
+    parkingPricePerDay = priceSettings.priceUncovered;
+  } else if (params.parkingTypeId === 'parkingType_covered') {
+    parkingPricePerDay = priceSettings.priceCovered;
+  }
+
+  let finalPrice: number | null = null;
+  if (parkingPricePerDay !== null) {
+    finalPrice = days * parkingPricePerDay;
+    if (params.washService && priceSettings.priceWash !== null) {
+      finalPrice += priceSettings.priceWash;
+    }
+  }
 
   const booking = await prisma.booking.create({
     data: {
@@ -269,27 +323,34 @@ export async function createGuestBooking(
       dateTo: checkOutDate,
       timeTo: checkOutTime,
       parkingTypeId: params.parkingTypeId,
+      washService: params.washService || false,
+      finalPrice: finalPrice,
       deleteflag: 0,
     },
   });
 
-  return { id: booking.id };
+  return { id: booking.id, finalPrice };
 }
 
-export async function getParkingTypes(): Promise<
-  { id: string; name: string; pricePerDay: number | null }[]
-> {
+export interface ParkingTypesResponse {
+  parkingTypes: { id: string; name: string; pricePerDay: number | null }[];
+  washAvailable: boolean;
+  washPrice: number | null;
+}
+
+export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   const types = await prisma.parkingType.findMany({
     select: { id: true, name: true },
   });
 
   // Get availability settings to filter parking types
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
-    'configurationSetting_priceCovered'
+    'configurationSetting_priceCovered',
+    'configurationSetting_priceWash'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -299,6 +360,7 @@ export async function getParkingTypes(): Promise<
   const availableCovered = parseAvailability(settingsMap.get('configurationSetting_availableCovered'));
   const priceUncovered = parsePrice(settingsMap.get('configurationSetting_priceUncovered'));
   const priceCovered = parsePrice(settingsMap.get('configurationSetting_priceCovered'));
+  const priceWash = parsePrice(settingsMap.get('configurationSetting_priceWash'));
 
   // Filter types based on availability
   const filteredTypes = types.filter((type) => {
@@ -312,12 +374,18 @@ export async function getParkingTypes(): Promise<
   });
 
   // Add price per day to each type
-  return filteredTypes.map((type) => ({
+  const parkingTypes = filteredTypes.map((type) => ({
     id: type.id,
     name: type.name,
     pricePerDay: type.id === 'parkingType_uncovered' ? priceUncovered : 
                  type.id === 'parkingType_covered' ? priceCovered : null,
   }));
+
+  return {
+    parkingTypes,
+    washAvailable: priceWash !== null,
+    washPrice: priceWash,
+  };
 }
 
 function parseAvailability(value: string | null | undefined): number | null {

@@ -22,7 +22,13 @@ import { Subscription } from 'rxjs';
 interface ParkingType {
   id: string;
   name: string;
-  pricePerDay?: number;
+  pricePerDay: number | null;
+}
+
+interface ParkingTypesResponse {
+  parkingTypes: ParkingType[];
+  washAvailable: boolean;
+  washPrice: number | null;
 }
 
 interface PhoneCode {
@@ -57,6 +63,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   phoneCodes: PhoneCode[] = [];
   selectedPhoneCode: PhoneCode | null = null;
   phoneCodeSearch = '';
+  washAvailable = false;
+  washPrice: number | null = null;
+  washServiceEnabled = false;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -127,21 +136,56 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   }
 
   loadParkingTypes(): void {
-    this.apiService.get<ParkingType[]>('/parking-types').subscribe({
-      next: (types) => {
-        this.parkingTypes = types;
-        if (types.length > 0) {
-          this.bookingForm.patchValue({ parkingType: types[0].id });
+    this.apiService.get<ParkingTypesResponse>('/parking-types').subscribe({
+      next: (response) => {
+        this.parkingTypes = response.parkingTypes;
+        this.washAvailable = response.washAvailable;
+        this.washPrice = response.washPrice;
+        if (response.parkingTypes.length > 0) {
+          this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
         }
       },
       error: () => {
         this.parkingTypes = [
-          { id: 'parkingType_covered', name: 'Covered' },
-          { id: 'parkingType_uncovered', name: 'Un Covered' },
+          { id: 'parkingType_covered', name: 'Covered', pricePerDay: null },
+          { id: 'parkingType_uncovered', name: 'Un Covered', pricePerDay: null },
         ];
+        this.washAvailable = false;
+        this.washPrice = null;
         this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
       },
     });
+  }
+
+  toggleWashService(): void {
+    this.washServiceEnabled = !this.washServiceEnabled;
+  }
+
+  getSelectedParkingType(): ParkingType | undefined {
+    const selectedId = this.bookingForm.get('parkingType')?.value;
+    return this.parkingTypes.find((t) => t.id === selectedId);
+  }
+
+  calculateDays(): number {
+    const checkIn = this.bookingForm.get('checkInDate')?.value;
+    const checkOut = this.bookingForm.get('checkOutDate')?.value;
+    if (!checkIn || !checkOut) return 0;
+    const checkInDate = new Date(checkIn.year, checkIn.month - 1, checkIn.day);
+    const checkOutDate = new Date(checkOut.year, checkOut.month - 1, checkOut.day);
+    const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(diffDays, 1);
+  }
+
+  calculateTotalPrice(): number | null {
+    const parkingType = this.getSelectedParkingType();
+    if (!parkingType || parkingType.pricePerDay === null) return null;
+    const days = this.calculateDays();
+    let total = days * parkingType.pricePerDay;
+    if (this.washServiceEnabled && this.washPrice !== null) {
+      total += this.washPrice;
+    }
+    return total;
   }
 
   loadPhoneCodes(): void {
@@ -244,6 +288,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       checkOutDate: this.formatDateForApi(formValue.checkOutDate),
       checkOutTime: formValue.checkOutTime,
       parkingTypeId: formValue.parkingType,
+      washService: this.washServiceEnabled,
     };
 
     this.apiService.post('/bookings/guest', booking).subscribe({
@@ -278,6 +323,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       checkInTime: '10:00',
       checkOutTime: '10:00',
     });
+    this.washServiceEnabled = false;
     if (this.parkingTypes.length > 0) {
       this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id });
     }

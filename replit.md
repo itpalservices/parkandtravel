@@ -241,3 +241,9 @@ exports.onExecutePostLogin = async (event, api) => {
 - Added optional car wash service toggle with pricing
 - Validation: at least one availability required, prices only editable when availability > 0
 - Backend validates non-negative integers for availability and non-negative numbers for prices
+- Added washService (boolean) and finalPrice (decimal) columns to bookings table
+- Guest booking page shows car wash service toggle when priceWash is configured in settings
+- Final price is calculated as: (days of reservation * parking type price) + car wash price (if enabled)
+- Price summary displayed on guest booking form with breakdown of parking days and wash service
+- GET /api/parking-types now returns { parkingTypes, washAvailable, washPrice } object
+- Parking types filtered based on availability settings (only shows types with available spaces > 0)
