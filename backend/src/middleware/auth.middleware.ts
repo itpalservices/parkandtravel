@@ -1,4 +1,4 @@
-import { auth } from "express-oauth2-jwt-bearer";
+import { auth, InvalidRequestError, UnauthorizedError } from "express-oauth2-jwt-bearer";
 import { Request, Response, NextFunction } from "express";
 
 const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "dev-c2p14cvw0yc4psqt.us.auth0.com";
@@ -25,6 +25,34 @@ const jwtCheck = auth({
   issuerBaseURL: `https://${AUTH0_DOMAIN}/`,
   tokenSigningAlg: "RS256",
 });
+
+function handleAuthError(err: Error, req: Request, res: Response, next: NextFunction): void {
+  if (err instanceof InvalidRequestError) {
+    res.status(401).json({ 
+      error: "Access token is required",
+      message: "Please provide a valid access token in the Authorization header"
+    });
+    return;
+  }
+  if (err instanceof UnauthorizedError) {
+    res.status(401).json({ 
+      error: "Invalid or expired token",
+      message: "Your access token is invalid or has expired. Please log in again."
+    });
+    return;
+  }
+  next(err);
+}
+
+function jwtCheckWithErrorHandling(req: Request, res: Response, next: NextFunction): void {
+  jwtCheck(req, res, (err?: any) => {
+    if (err) {
+      handleAuthError(err, req, res, next);
+    } else {
+      next();
+    }
+  });
+}
 
 function extractUserInfo(req: Request, res: Response, next: NextFunction): void {
   const auth = (req as any).auth;
@@ -59,7 +87,7 @@ function extractUserInfo(req: Request, res: Response, next: NextFunction): void 
   next();
 }
 
-export const checkJwt = [jwtCheck, extractUserInfo];
+export const checkJwt = [jwtCheckWithErrorHandling, extractUserInfo];
 
 export function getUserRole(auth: any): UserRole {
   if (!auth?.payload) {
