@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, inject, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewChecked,
+  inject,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -121,7 +129,11 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   private syncSectionHeights(): void {
-    if (!this.isRegularUser || !this.profileSection?.nativeElement || !this.carsSection?.nativeElement) {
+    if (
+      !this.isRegularUser ||
+      !this.profileSection?.nativeElement ||
+      !this.carsSection?.nativeElement
+    ) {
       return;
     }
 
@@ -152,11 +164,37 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private initSettingsForm(): void {
     this.settingsForm = this.fb.group({
-      availableUncovered: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
-      availableCovered: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
-      priceUncovered: [null, [Validators.min(0)]],
-      priceCovered: [null, [Validators.min(0)]],
-      priceWash: [null, [Validators.min(0)]],
+      availableUncovered: [null, [Validators.min(1), Validators.pattern(/^\d*$/)]],
+      availableCovered: [null, [Validators.min(1), Validators.pattern(/^\d*$/)]],
+      priceUncovered: [null, [Validators.min(1)]],
+      priceCovered: [null, [Validators.min(1)]],
+      priceWash: [null, [Validators.min(1)]],
+    });
+
+    this.settingsForm.get('availableUncovered')!.valueChanges.subscribe((value) => {
+      const priceUncoveredCtrl = this.settingsForm.get('priceUncovered')!;
+
+      if (value === null || value === 0) {
+        priceUncoveredCtrl.reset({
+          value: null,
+          disabled: true,
+        });
+      } else {
+        priceUncoveredCtrl.enable();
+      }
+    });
+
+    this.settingsForm.get('availableCovered')!.valueChanges.subscribe((value) => {
+      const priceCoveredCtrl = this.settingsForm.get('priceCovered')!;
+
+      if (value === null || value === 0) {
+        priceCoveredCtrl.reset({
+          value: null,
+          disabled: true,
+        });
+      } else {
+        priceCoveredCtrl.enable();
+      }
     });
   }
 
@@ -187,18 +225,34 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   get hasAvailabilityError(): boolean {
     const uncovered = this.settingsForm.get('availableUncovered')?.value;
     const covered = this.settingsForm.get('availableCovered')?.value;
-    return (uncovered === null || uncovered === '' || uncovered === undefined) &&
-           (covered === null || covered === '' || covered === undefined);
+    return (
+      (uncovered === null || uncovered === '' || uncovered === undefined || uncovered === 0) &&
+      (covered === null || covered === '' || covered === undefined || covered === 0)
+    );
   }
 
   get canSetPriceUncovered(): boolean {
     const uncovered = this.settingsForm.get('availableUncovered')?.value;
-    return uncovered !== null && uncovered !== '' && uncovered !== undefined && Number(uncovered) >= 0;
+    return (
+      uncovered !== null && uncovered !== '' && uncovered !== undefined && Number(uncovered) >= 1
+    );
   }
 
   get canSetPriceCovered(): boolean {
     const covered = this.settingsForm.get('availableCovered')?.value;
-    return covered !== null && covered !== '' && covered !== undefined && Number(covered) >= 0;
+    return covered !== null && covered !== '' && covered !== undefined && Number(covered) >= 1;
+  }
+
+  get hasMissingPriceUncovered(): boolean {
+    if (!this.canSetPriceUncovered) return false;
+    const price = this.settingsForm.get('priceUncovered')?.value;
+    return price === null || price === '' || price === undefined || Number(price) <= 0;
+  }
+
+  get hasMissingPriceCovered(): boolean {
+    if (!this.canSetPriceCovered) return false;
+    const price = this.settingsForm.get('priceCovered')?.value;
+    return price === null || price === '' || price === undefined || Number(price) <= 0;
   }
 
   toggleWashService(): void {
@@ -219,6 +273,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
 
+    if (this.hasMissingPriceUncovered || this.hasMissingPriceCovered) {
+      return;
+    }
+
     const formValue = this.settingsForm.value;
 
     if (!this.canSetPriceUncovered && formValue.priceUncovered) {
@@ -231,21 +289,28 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
     this.savingSettings = true;
 
     const data: Partial<ConfigurationSettings> = {
-      availableUncovered: formValue.availableUncovered !== '' && formValue.availableUncovered !== null
-        ? Number(formValue.availableUncovered)
-        : null,
-      availableCovered: formValue.availableCovered !== '' && formValue.availableCovered !== null
-        ? Number(formValue.availableCovered)
-        : null,
-      priceUncovered: this.canSetPriceUncovered && formValue.priceUncovered !== '' && formValue.priceUncovered !== null
-        ? Number(formValue.priceUncovered)
-        : null,
-      priceCovered: this.canSetPriceCovered && formValue.priceCovered !== '' && formValue.priceCovered !== null
-        ? Number(formValue.priceCovered)
-        : null,
-      priceWash: this.offerWashService && formValue.priceWash !== '' && formValue.priceWash !== null
-        ? Number(formValue.priceWash)
-        : null,
+      availableUncovered:
+        formValue.availableUncovered !== '' && formValue.availableUncovered !== null
+          ? Number(formValue.availableUncovered)
+          : null,
+      availableCovered:
+        formValue.availableCovered !== '' && formValue.availableCovered !== null
+          ? Number(formValue.availableCovered)
+          : null,
+      priceUncovered:
+        this.canSetPriceUncovered &&
+        formValue.priceUncovered !== '' &&
+        formValue.priceUncovered !== null
+          ? Number(formValue.priceUncovered)
+          : null,
+      priceCovered:
+        this.canSetPriceCovered && formValue.priceCovered !== '' && formValue.priceCovered !== null
+          ? Number(formValue.priceCovered)
+          : null,
+      priceWash:
+        this.offerWashService && formValue.priceWash !== '' && formValue.priceWash !== null
+          ? Number(formValue.priceWash)
+          : null,
     };
 
     this.settingsService.updateSettings(data).subscribe({
@@ -409,38 +474,40 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
 
     this.resendingVerification = true;
 
-    this.apiService.post<{ success: boolean; message: string }>('/user/resend-verification', {}).subscribe({
-      next: (response) => {
-        this.resendingVerification = false;
-        if (response.success) {
+    this.apiService
+      .post<{ success: boolean; message: string }>('/user/resend-verification', {})
+      .subscribe({
+        next: (response) => {
+          this.resendingVerification = false;
+          if (response.success) {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Verification email sent',
+              text: 'Please check your inbox and spam folder.',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true,
+            });
+            this.startCooldown();
+          }
+        },
+        error: (error) => {
+          this.resendingVerification = false;
+          console.error('Error sending verification email:', error);
           Swal.fire({
             toast: true,
             position: 'top-end',
-            icon: 'success',
-            title: 'Verification email sent',
-            text: 'Please check your inbox and spam folder.',
+            icon: 'error',
+            title: 'Failed to send verification email',
+            text: 'Please try again later.',
             showConfirmButton: false,
             timer: 4000,
             timerProgressBar: true,
           });
-          this.startCooldown();
-        }
-      },
-      error: (error) => {
-        this.resendingVerification = false;
-        console.error('Error sending verification email:', error);
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'error',
-          title: 'Failed to send verification email',
-          text: 'Please try again later.',
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true,
-        });
-      },
-    });
+        },
+      });
   }
 
   private startCooldown(): void {
@@ -573,39 +640,37 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           },
         });
     } else {
-      this.apiService
-        .post<{ success: boolean; data: Car }>('/cars', carData)
-        .subscribe({
-          next: (response) => {
-            if (response.success) {
-              this.cars.unshift(response.data);
-              Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'Car added successfully',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-              });
-              modal.close();
-            }
-            this.savingCar = false;
-          },
-          error: (error) => {
-            console.error('Error adding car:', error);
+      this.apiService.post<{ success: boolean; data: Car }>('/cars', carData).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.cars.unshift(response.data);
             Swal.fire({
               toast: true,
               position: 'top-end',
-              icon: 'error',
-              title: 'Failed to add car',
+              icon: 'success',
+              title: 'Car added successfully',
               showConfirmButton: false,
               timer: 3000,
               timerProgressBar: true,
             });
-            this.savingCar = false;
-          },
-        });
+            modal.close();
+          }
+          this.savingCar = false;
+        },
+        error: (error) => {
+          console.error('Error adding car:', error);
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'Failed to add car',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.savingCar = false;
+        },
+      });
     }
   }
 

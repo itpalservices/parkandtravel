@@ -243,6 +243,7 @@
                         type="number"
                         id="priceUncovered"
                         class="form-control"
+                        [class.is-invalid]="settingsSubmitted && hasMissingPriceUncovered"
                         formControlName="priceUncovered"
                         placeholder="0.00"
                         min="0"
@@ -252,6 +253,9 @@
                     </div>
                     @if (!canSetPriceUncovered) {
                       <small class="form-text text-muted">Set available uncovered spaces first</small>
+                    }
+                    @if (settingsSubmitted && hasMissingPriceUncovered) {
+                      <div class="validation-error">Price is required when availability is set</div>
                     }
                   </div>
 
@@ -263,6 +267,7 @@
                         type="number"
                         id="priceCovered"
                         class="form-control"
+                        [class.is-invalid]="settingsSubmitted && hasMissingPriceCovered"
                         formControlName="priceCovered"
                         placeholder="0.00"
                         min="0"
@@ -273,11 +278,14 @@
                     @if (!canSetPriceCovered) {
                       <small class="form-text text-muted">Set available covered spaces first</small>
                     }
+                    @if (settingsSubmitted && hasMissingPriceCovered) {
+                      <div class="validation-error">Price is required when availability is set</div>
+                    }
                   </div>
                 </div>
               </div>
 
-              <div class="s">
+              <div class="settings-group">
                 <h4>Car Wash Service</h4>
 
                 <div class="wash-service-toggle">
