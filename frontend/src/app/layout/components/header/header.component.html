@@ -50,7 +50,7 @@
               <span class="verification-badge"></span>
             }
           </div>
-          <span class="user-name d-none d-md-inline">{{ user.name }}</span>
+          <span class="user-name d-none d-md-inline">{{ displayName$ | async }}</span>
         </div>
       </a>
     }

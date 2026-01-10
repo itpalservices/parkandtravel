@@ -62,6 +62,7 @@ frontend/                    # Angular 21 project (port 4200, proxied through 50
         services/
           api.service.ts     # Centralized API service
           bookings.service.ts # Bookings API service
+          user-profile.service.ts # Shared user profile state for real-time header updates
         interceptors/
           http.interceptor.ts # Base URL interceptor
         guards/
@@ -225,4 +226,6 @@ exports.onExecutePostLogin = async (event, api) => {
 - User profile fetches and updates user data from Auth0 (name, surname, phone)
 - Email field is disabled and not editable
 - Added Auth0 Management API integration for user profile updates
-- Backend endpoints: GET/PUT /api/user/profile
+- Backend endpoints: GET/PUT /api/user/profile, POST /api/user/resend-verification
+- Added resend verification email feature on user profile page with 60-second cooldown
+- Created UserProfileService for real-time profile updates across components (header reflects name changes immediately)

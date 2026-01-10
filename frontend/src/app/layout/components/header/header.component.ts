@@ -2,8 +2,9 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '@auth0/auth0-angular';
-import { Observable, of, map } from 'rxjs';
+import { Observable, of, map, combineLatest } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { UserProfileService, UserProfileData } from '../../../core/services/user-profile.service';
 
 @Component({
   selector: 'app-header',
@@ -18,11 +19,22 @@ export class HeaderComponent {
   private authService = environment.auth0.domain && environment.auth0.clientId 
     ? inject(AuthService, { optional: true }) 
     : null;
+  private userProfileService = inject(UserProfileService);
   
   user$: Observable<User | null | undefined> = this.authService?.user$ || of(null);
+  profile$: Observable<UserProfileData | null> = this.userProfileService.profile$;
   
-  emailVerified$: Observable<boolean> = this.user$.pipe(
-    map(user => user?.email_verified === true)
+  displayName$: Observable<string> = combineLatest([this.user$, this.profile$]).pipe(
+    map(([user, profile]) => {
+      if (profile && (profile.name || profile.surname)) {
+        return `${profile.name} ${profile.surname}`.trim();
+      }
+      return user?.name || '';
+    })
+  );
+  
+  emailVerified$: Observable<boolean> = this.profile$.pipe(
+    map(profile => profile?.emailVerified === true)
   );
 
   onToggleSidebar(): void {

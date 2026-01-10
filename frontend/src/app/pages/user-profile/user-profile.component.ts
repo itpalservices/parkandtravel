@@ -10,6 +10,7 @@ import {
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
 import { ApiService } from '../../core/services/api.service';
+import { UserProfileService } from '../../core/services/user-profile.service';
 import Swal from 'sweetalert2';
 
 interface UserProfile {
@@ -44,6 +45,7 @@ interface PhoneCode {
 export class UserProfileComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
+  private userProfileService = inject(UserProfileService);
 
   profileForm!: FormGroup;
   loading = true;
@@ -242,6 +244,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.success) {
+            this.userProfileService.updateProfile({
+              name: response.data.name,
+              surname: response.data.surname,
+              emailVerified: response.data.emailVerified,
+            });
             Swal.fire({
               toast: true,
               position: 'top-end',
