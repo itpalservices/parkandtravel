@@ -207,9 +207,9 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         this.settingsForm.patchValue({
           availableUncovered: settings.availableUncovered,
           availableCovered: settings.availableCovered,
-          priceUncovered: settings.priceUncovered,
-          priceCovered: settings.priceCovered,
-          priceWash: settings.priceWash,
+          priceUncovered: settings.priceUncovered?.toFixed(2),
+          priceCovered: settings.priceCovered?.toFixed(2),
+          priceWash: settings.priceWash?.toFixed(2),
         });
         this.offerWashService = settings.priceWash !== null;
         this.settingsLoading = false;

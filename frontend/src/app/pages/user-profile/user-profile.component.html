@@ -295,7 +295,7 @@
                 </div>
               </div>
 
-              <div class="settings-group">
+              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
                 <h4>Car Wash Service</h4>
 
                 <div class="wash-service-toggle">
@@ -325,16 +325,12 @@
                         type="number"
                         id="priceWash"
                         class="form-control"
-                        [class.is-invalid]="settingsSubmitted && hasMissingPriceWash"
                         formControlName="priceWash"
                         placeholder="0.00"
-                        min="1"
+                        min="0"
                         step="0.01"
                       />
                     </div>
-                    @if (settingsSubmitted && hasMissingPriceWash) {
-                      <div class="validation-error">Price must be at least €1 when car wash service is enabled</div>
-                    }
                   </div>
                 }
               </div>
