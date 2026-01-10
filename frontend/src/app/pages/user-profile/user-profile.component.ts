@@ -354,7 +354,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     } else {
       this.carForm.reset();
     }
-    this.modalService.open(content, { centered: true });
+    this.modalService.open(content, { centered: true, beforeDismiss: () => true });
+    setTimeout(() => {
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement) {
+        activeElement.blur();
+      }
+    }, 0);
   }
 
   saveCar(modal: any): void {
