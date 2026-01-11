@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { Booking } from '../../../../shared/models/booking.model';
@@ -13,6 +14,7 @@ import { BookingsListComponent } from '../bookings-list/bookings-list.component'
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     NgbDatepickerModule,
     DateRangePickerComponent,
     BookingsListComponent

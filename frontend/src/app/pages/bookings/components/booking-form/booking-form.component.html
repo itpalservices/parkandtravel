@@ -1,0 +1,465 @@
+<div class="booking-form-page">
+  <div class="booking-container">
+    <button class="back-btn" (click)="goBack()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back to Bookings
+    </button>
+
+    <div class="header-section">
+      <h1>Add Booking</h1>
+      <p>Fill in the details below to create a new booking</p>
+    </div>
+
+    @if (submitSuccess) {
+      <div class="success-message">
+        <div class="success-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h2>Booking Created!</h2>
+        <p>
+          The booking has been successfully created.
+        </p>
+        <div class="success-actions">
+          <button class="btn-primary" (click)="createAnotherBooking()">
+            Create Another Booking
+          </button>
+          <button class="btn-secondary" (click)="goBack()">Back to Bookings</button>
+        </div>
+      </div>
+    } @else {
+      <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()">
+        @if (submitError) {
+          <div class="error-alert">
+            {{ submitError }}
+          </div>
+        }
+
+        <div class="form-section">
+          <h3>Personal Information</h3>
+
+          <div class="form-group">
+            <label for="fullName">Full Name *</label>
+            <input
+              type="text"
+              id="fullName"
+              class="form-control"
+              [class.is-invalid]="hasError('fullName')"
+              formControlName="fullName"
+              placeholder="Enter full name"
+            />
+            <app-form-field-error [control]="f['fullName']" fieldName="Full Name">
+            </app-form-field-error>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                [class.is-invalid]="hasError('email')"
+                formControlName="email"
+                placeholder="email@example.com"
+              />
+              <app-form-field-error [control]="f['email']" fieldName="Email">
+              </app-form-field-error>
+            </div>
+
+            <div class="form-group">
+              <label>Phone *</label>
+              <div class="phone-input-group">
+                <div ngbDropdown class="phone-code-dropdown">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary dropdown-toggle phone-code-btn"
+                    [class.is-invalid]="hasError('phoneCodeId')"
+                    ngbDropdownToggle
+                  >
+                    @if (selectedPhoneCode) {
+                      <img
+                        [src]="getFlagUrl(selectedPhoneCode.isoCode)"
+                        [alt]="selectedPhoneCode.isoCode"
+                        class="flag-icon"
+                      />
+                      <span>{{ selectedPhoneCode.phoneCode }}</span>
+                    } @else {
+                      <span>Select</span>
+                    }
+                  </button>
+                  <div ngbDropdownMenu class="phone-code-menu">
+                    <div class="phone-search-container">
+                      <input
+                        type="text"
+                        class="phone-search-input"
+                        placeholder="Search country or code..."
+                        [(ngModel)]="phoneCodeSearch"
+                        [ngModelOptions]="{standalone: true}"
+                        (click)="$event.stopPropagation()"
+                      />
+                    </div>
+                    <div class="phone-codes-list">
+                      @for (code of filteredPhoneCodes; track code.id) {
+                        <button
+                          type="button"
+                          ngbDropdownItem
+                          (click)="selectPhoneCode(code)"
+                          class="phone-code-item"
+                        >
+                          <img
+                            [src]="getFlagUrl(code.isoCode)"
+                            [alt]="code.isoCode"
+                            class="flag-icon"
+                          />
+                          <span class="phone-code-text">{{ code.phoneCode }}</span>
+                          <span class="country-code-text">{{ code.isoCode }}</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <input
+                  type="tel"
+                  id="phone"
+                  class="form-control phone-number-input"
+                  [class.is-invalid]="hasError('phone')"
+                  formControlName="phone"
+                  placeholder="99123456"
+                />
+              </div>
+              <app-form-field-error
+                [control]="f['phone']"
+                fieldName="Phone number"
+                [customMessages]="{ pattern: 'Please enter a valid phone number (digits only)' }"
+              >
+              </app-form-field-error>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Vehicle Information</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="vehicleBrand">Vehicle Brand *</label>
+              <input
+                type="text"
+                id="vehicleBrand"
+                class="form-control"
+                [class.is-invalid]="hasError('vehicleBrand')"
+                formControlName="vehicleBrand"
+                placeholder="e.g., Toyota"
+              />
+              <app-form-field-error [control]="f['vehicleBrand']" fieldName="Vehicle Brand">
+              </app-form-field-error>
+            </div>
+            <div class="form-group">
+              <label for="vehicleModel">Vehicle Model *</label>
+              <input
+                type="text"
+                id="vehicleModel"
+                class="form-control"
+                [class.is-invalid]="hasError('vehicleModel')"
+                formControlName="vehicleModel"
+                placeholder="e.g., CH-R"
+              />
+              <app-form-field-error [control]="f['vehicleModel']" fieldName="Vehicle Model">
+              </app-form-field-error>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="licensePlate">License Plate *</label>
+              <input
+                type="text"
+                id="licensePlate"
+                class="form-control"
+                [class.is-invalid]="hasError('licensePlate')"
+                formControlName="licensePlate"
+                placeholder="ABC123"
+              />
+              <app-form-field-error [control]="f['licensePlate']" fieldName="License Plate">
+              </app-form-field-error>
+            </div>
+            <div class="form-group">
+              <label for="vehicleColor">Vehicle Color *</label>
+              <input
+                type="text"
+                id="vehicleColor"
+                class="form-control"
+                [class.is-invalid]="hasError('vehicleColor')"
+                formControlName="vehicleColor"
+                placeholder="e.g., Red"
+              />
+              <app-form-field-error [control]="f['vehicleColor']" fieldName="Vehicle Color">
+              </app-form-field-error>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Booking Details</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flightNumber">Flight Number</label>
+              <input
+                type="text"
+                id="flightNumber"
+                class="form-control"
+                formControlName="flightNumber"
+                placeholder="e.g. BA1234"
+              />
+              <app-form-field-error [control]="f['flightNumber']" fieldName="Flight Number">
+              </app-form-field-error>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Check-in Date *</label>
+              <div class="input-group">
+                <input
+                  class="form-control date-input"
+                  [class.is-invalid]="hasError('checkInDate')"
+                  [value]="formatDate(bookingForm.get('checkInDate')?.value)"
+                  placeholder="dd/MM/yyyy"
+                  ngbDatepicker
+                  #dpCheckIn="ngbDatepicker"
+                  [minDate]="minDate"
+                  [markDisabled]="isDateDisabled"
+                  (dateSelect)="onCheckInDateSelect($event)"
+                  (click)="dpCheckIn.toggle()"
+                  readonly
+                />
+                <button
+                  class="btn btn-outline-secondary calendar-btn"
+                  type="button"
+                  (click)="dpCheckIn.toggle()"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+              </div>
+              <app-form-field-error [control]="f['checkInDate']" fieldName="Check-in Date">
+              </app-form-field-error>
+            </div>
+
+            <div class="form-group">
+              <label for="checkInTime">Check-in Time *</label>
+              <input
+                type="time"
+                id="checkInTime"
+                class="form-control time-input"
+                [class.is-invalid]="hasError('checkInTime')"
+                formControlName="checkInTime"
+                step="60"
+              />
+              <app-form-field-error [control]="f['checkInTime']" fieldName="Check-in Time">
+              </app-form-field-error>
+            </div>
+          </div>
+
+          <div class="form-group transport-question">
+            <label>How will the car get to the parking? *</label>
+            <select
+              class="form-control"
+              [class.is-invalid]="hasError('dropOffOption')"
+              formControlName="dropOffOption"
+            >
+              <option value="self_drive">Customer will drive to the parking</option>
+              <option value="airport_pickup">Pick up car at the airport</option>
+            </select>
+            <app-form-field-error [control]="f['dropOffOption']" fieldName="Drop-off option">
+            </app-form-field-error>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Check-out Date *</label>
+              <div class="input-group">
+                <input
+                  class="form-control date-input"
+                  [class.is-invalid]="hasError('checkOutDate')"
+                  [value]="formatDate(bookingForm.get('checkOutDate')?.value)"
+                  placeholder="dd/MM/yyyy"
+                  ngbDatepicker
+                  #dpCheckOut="ngbDatepicker"
+                  [minDate]="checkOutMinDate"
+                  [markDisabled]="isCheckOutDateDisabled"
+                  (dateSelect)="onCheckOutDateSelect($event)"
+                  (click)="dpCheckOut.toggle()"
+                  readonly
+                />
+                <button
+                  class="btn btn-outline-secondary calendar-btn"
+                  type="button"
+                  (click)="dpCheckOut.toggle()"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+              </div>
+              <app-form-field-error [control]="f['checkOutDate']" fieldName="Check-out Date">
+              </app-form-field-error>
+            </div>
+
+            <div class="form-group">
+              <label for="checkOutTime">Check-out Time *</label>
+              <input
+                type="time"
+                id="checkOutTime"
+                class="form-control time-input"
+                [class.is-invalid]="hasError('checkOutTime')"
+                formControlName="checkOutTime"
+                step="60"
+              />
+              <app-form-field-error [control]="f['checkOutTime']" fieldName="Check-out Time">
+              </app-form-field-error>
+            </div>
+          </div>
+
+          <div class="form-group transport-question">
+            <label>How will the customer get their car back? *</label>
+            <select
+              class="form-control"
+              [class.is-invalid]="hasError('pickUpOption')"
+              formControlName="pickUpOption"
+            >
+              <option value="airport_delivery">Deliver car to the airport</option>
+              <option value="self_pickup">Customer will pick up from parking</option>
+            </select>
+            <app-form-field-error [control]="f['pickUpOption']" fieldName="Pick-up option">
+            </app-form-field-error>
+          </div>
+
+          <div class="form-group">
+            <label for="parkingType">Parking Type *</label>
+            <select
+              id="parkingType"
+              class="form-control"
+              [class.is-invalid]="hasError('parkingType')"
+              formControlName="parkingType"
+            >
+              <option value="" disabled>Select parking type</option>
+              @for (type of parkingTypes; track type.id) {
+                <option [value]="type.id">{{ type.name }}</option>
+              }
+            </select>
+            <app-form-field-error [control]="f['parkingType']" fieldName="Parking Type">
+            </app-form-field-error>
+          </div>
+
+          @if (washAvailable) {
+            <div class="wash-service-section">
+              <div class="wash-service-toggle">
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    [checked]="washServiceEnabled"
+                    (change)="toggleWashService()"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">
+                  Add Car Wash Service
+                  @if (washPrice !== null) {
+                    <span class="wash-price">(+{{ washPrice | currency:'EUR':'symbol':'1.2-2' }})</span>
+                  }
+                </span>
+              </div>
+            </div>
+          }
+
+          @if (calculateTotalPrice() !== null) {
+            <div class="price-summary">
+              <div class="price-breakdown">
+                <div class="price-row">
+                  <span>Parking ({{ calculateDays() }} {{ calculateDays() === 1 ? 'day' : 'days' }})</span>
+                  <span>{{ (getSelectedParkingType()?.pricePerDay || 0) * calculateDays() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+                @if (washServiceEnabled && washPrice !== null) {
+                  <div class="price-row">
+                    <span>Car Wash Service</span>
+                    <span>{{ washPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                  </div>
+                }
+              </div>
+              <div class="price-total">
+                <span>Total</span>
+                <span class="total-amount">{{ calculateTotalPrice() | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit" [disabled]="submitting">
+            @if (submitting) {
+              <span class="spinner"></span>
+              Processing...
+            } @else {
+              Create Booking
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>
