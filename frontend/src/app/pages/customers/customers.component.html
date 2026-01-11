@@ -1,33 +1,84 @@
-<div class="page-container">
-  <h1 class="page-title">Customers</h1>
+<div class="customers-page">
+  <div class="page-header d-none d-md-block">
+    <div class="header-row">
+      <div class="header-left">
+        <h1 class="page-title">Customers</h1>
+        <div class="search-box">
+          <input
+            type="text"
+            class="form-control search-input"
+            placeholder="Search for..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+          />
+          <span class="search-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  @if (loading) {
-    <div class="loading-container">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <div class="mobile-controls d-md-none">
+    <div class="mobile-header-row">
+      <h1 class="page-title mb-2">Customers</h1>
+    </div>
+    
+    <div class="mobile-search-row">
+      <div class="mobile-search-box">
+        <span class="search-icon-left">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search by name, email, or phone..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+        />
+        <button class="search-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
       </div>
     </div>
-  } @else if (error) {
-    <div class="error-container">
-      <div class="alert alert-danger" role="alert">
-        {{ error }}
+  </div>
+
+  <div class="customers-content">
+    @if (loading) {
+      <div class="loading-spinner text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
-    </div>
-  } @else if (customers.length === 0) {
-    <div class="placeholder-content">
-      <div class="placeholder-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
+    } @else if (error) {
+      <div class="error-message text-center py-5">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        <button class="btn btn-primary" (click)="loadCustomers()">Try Again</button>
       </div>
-      <h2>No customers found</h2>
-      <p>There are no registered customers yet.</p>
-    </div>
-  } @else {
-    <div class="customers-list-wrapper">
+    } @else if (filteredCustomers.length === 0) {
+      <div class="no-customers text-center py-5">
+        <div class="placeholder-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <p class="text-muted mb-0">{{ searchTerm ? 'No customers found matching your search' : 'No customers found' }}</p>
+      </div>
+    } @else {
       <div class="desktop-view d-none d-md-block">
         <div class="table-responsive">
           <table class="table">
@@ -136,59 +187,57 @@
         </div>
       </div>
 
-      @if (totalPages > 1) {
-        <div class="pagination-wrapper">
-          <button class="pagination-btn prev" [disabled]="currentPage === 1" (click)="onPrevious()">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            Previous
-          </button>
+      <div class="pagination-wrapper">
+        <button class="pagination-btn prev" [disabled]="currentPage === 1" (click)="onPrevious()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Previous
+        </button>
 
-          <div class="page-numbers">
-            @for (page of pageNumbers; track $index) {
-              @if (page === -1) {
-                <span class="page-ellipsis">...</span>
-              } @else {
-                <button
-                  class="page-number"
-                  [class.active]="page === currentPage"
-                  (click)="onPageClick(page)"
-                >
-                  {{ page }}
-                </button>
-              }
+        <div class="page-numbers">
+          @for (page of pageNumbers; track $index) {
+            @if (page === -1) {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button
+                class="page-number"
+                [class.active]="page === currentPage"
+                (click)="onPageChange(page)"
+              >
+                {{ page }}
+              </button>
             }
-          </div>
-
-          <button class="pagination-btn next" [disabled]="currentPage === totalPages" (click)="onNext()">
-            Next
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
+          }
         </div>
-      }
-    </div>
-  }
+
+        <button class="pagination-btn next" [disabled]="currentPage === totalPages" (click)="onNext()">
+          Next
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
 </div>

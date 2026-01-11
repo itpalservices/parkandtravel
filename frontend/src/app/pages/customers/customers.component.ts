@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 
 interface Customer {
   userId: string;
@@ -21,20 +21,21 @@ interface PhoneCode {
 @Component({
   selector: 'app-customers',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.scss'
 })
 export class CustomersComponent implements OnInit {
-  customers: Customer[] = [];
+  allCustomers: Customer[] = [];
+  filteredCustomers: Customer[] = [];
   phoneCodes: PhoneCode[] = [];
   loading = true;
   error: string | null = null;
+  searchTerm = '';
 
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
-  pageNumbers: number[] = [];
 
   constructor(private api: ApiService) {}
 
@@ -60,9 +61,8 @@ export class CustomersComponent implements OnInit {
 
     this.api.get<{ success: boolean; data: Customer[] }>('/user/customers').subscribe({
       next: (response) => {
-        this.customers = response.data;
-        this.totalPages = Math.ceil(this.customers.length / this.pageSize);
-        this.updatePageNumbers();
+        this.allCustomers = response.data;
+        this.applySearchFilter();
         this.loading = false;
       },
       error: (err) => {
@@ -73,32 +73,48 @@ export class CustomersComponent implements OnInit {
     });
   }
 
+  applySearchFilter(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      this.filteredCustomers = [...this.allCustomers];
+    } else {
+      this.filteredCustomers = this.allCustomers.filter(customer => {
+        const fullName = `${customer.name} ${customer.surname}`.toLowerCase();
+        const searchableFields = [
+          fullName,
+          customer.email,
+          customer.name,
+          customer.surname,
+          customer.phone,
+          customer.phoneCode
+        ];
+
+        return searchableFields.some(field =>
+          field && field.toLowerCase().includes(term)
+        );
+      });
+    }
+
+    this.totalPages = Math.ceil(this.filteredCustomers.length / this.pageSize) || 1;
+    this.currentPage = 1;
+  }
+
+  onSearchChange(): void {
+    this.applySearchFilter();
+  }
+
   get paginatedCustomers(): Customer[] {
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
-    return this.customers.slice(start, end);
+    return this.filteredCustomers.slice(start, end);
   }
 
-  getCountryFlag(phoneCode: string): string {
-    if (!phoneCode) return '';
-    const code = this.phoneCodes.find(pc => pc.phoneCode === phoneCode);
-    if (code) {
-      return `https://flagcdn.com/24x18/${code.isoCode.toLowerCase()}.png`;
-    }
-    return '';
-  }
-
-  getIsoCode(phoneCode: string): string {
-    if (!phoneCode) return '';
-    const code = this.phoneCodes.find(pc => pc.phoneCode === phoneCode);
-    return code?.isoCode || '';
-  }
-
-  updatePageNumbers(): void {
+  get pageNumbers(): number[] {
     const pages: number[] = [];
-    const maxVisible = 5;
+    const maxVisiblePages = 5;
 
-    if (this.totalPages <= maxVisible) {
+    if (this.totalPages <= maxVisiblePages + 2) {
       for (let i = 1; i <= this.totalPages; i++) {
         pages.push(i);
       }
@@ -123,27 +139,39 @@ export class CustomersComponent implements OnInit {
       pages.push(this.totalPages);
     }
 
-    this.pageNumbers = pages;
+    return pages;
+  }
+
+  getCountryFlag(phoneCode: string): string {
+    if (!phoneCode) return '';
+    const code = this.phoneCodes.find(pc => pc.phoneCode === phoneCode);
+    if (code) {
+      return `https://flagcdn.com/24x18/${code.isoCode.toLowerCase()}.png`;
+    }
+    return '';
+  }
+
+  getIsoCode(phoneCode: string): string {
+    if (!phoneCode) return '';
+    const code = this.phoneCodes.find(pc => pc.phoneCode === phoneCode);
+    return code?.isoCode || '';
   }
 
   onPrevious(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.updatePageNumbers();
     }
   }
 
   onNext(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.updatePageNumbers();
     }
   }
 
-  onPageClick(page: number): void {
-    if (page > 0 && page !== this.currentPage) {
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.updatePageNumbers();
     }
   }
 }
