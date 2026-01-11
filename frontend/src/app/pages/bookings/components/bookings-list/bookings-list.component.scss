@@ -182,6 +182,23 @@
   color: #6b7280;
 }
 
+.wash-service-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #374151;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+  margin-top: 0.25rem;
+  
+  svg {
+    color: #6b7280;
+  }
+}
+
 .booking-right {
   flex: 1;
   display: flex;
