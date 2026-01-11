@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-bookings-list',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule],
+  imports: [CommonModule, NgbDropdownModule, CurrencyPipe],
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss']
 })

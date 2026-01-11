@@ -16,6 +16,8 @@ export interface Booking {
   returnFlight: string | null;
   parkingTypeId: string;
   parkingType?: string;
+  washService: boolean;
+  finalPrice: number | null;
   deleteflag: number;
   createdAt: string;
   updatedAt: string;

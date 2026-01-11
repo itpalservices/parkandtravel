@@ -12,6 +12,8 @@
             <th>Flight No</th>
             <th>Check Out</th>
             <th>Parking Type</th>
+            <th>Wash</th>
+            <th>Price</th>
             <th class="actions-col"></th>
           </tr>
         </thead>
@@ -53,6 +55,12 @@
                   {{ booking.parkingType }}
                 </span>
               </td>
+              <td>
+                <span class="badge" [ngClass]="booking.washService ? 'bg-success' : 'bg-light text-dark'">
+                  {{ booking.washService ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>{{ booking.finalPrice !== null ? (booking.finalPrice | currency:'EUR':'symbol':'1.2-2') : '-' }}</td>
               <td class="actions-col">
                 <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                   <button class="btn btn-icon" ngbDropdownToggle>
@@ -161,6 +169,18 @@
             <div class="detail-row">
               <span class="detail-label">Arrival Date/Time:</span>
               <span class="detail-value">{{ formatArrival(booking) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Wash Service:</span>
+              <span class="detail-value">
+                <span class="badge" [ngClass]="booking.washService ? 'bg-success' : 'bg-light text-dark'">
+                  {{ booking.washService ? 'Yes' : 'No' }}
+                </span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Final Price:</span>
+              <span class="detail-value">{{ booking.finalPrice !== null ? (booking.finalPrice | currency:'EUR':'symbol':'1.2-2') : '-' }}</span>
             </div>
           </div>
           <div class="actions-wrapper m-auto" ngbDropdown placement="bottom-end" container="body">
