@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail } from "../services/auth0.service";
 
 const router = Router();
 
@@ -146,6 +146,34 @@ router.post("/resend-verification", checkJwt, async (req: Request, res: Response
   } catch (error: any) {
     console.error("Error sending verification email:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+router.get("/search", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+
+    if (!authUser || (authUser.role !== "admin" && authUser.role !== "driver")) {
+      res.status(403).json({ error: "Only admins and drivers can search for users" });
+      return;
+    }
+
+    const email = req.query.email as string;
+
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "Email parameter is required" });
+      return;
+    }
+
+    const result = await searchRegularUserByEmail(email.toLowerCase().trim());
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Error searching user:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to search for user" });
   }
 });
 

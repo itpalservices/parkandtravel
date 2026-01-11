@@ -733,6 +733,27 @@ input[type="time"].form-control {
   margin-top: 0.25rem;
 }
 
+.user-found-hint {
+  font-size: 0.8125rem;
+  color: #059669;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &::before {
+    content: '\2713';
+    font-weight: bold;
+  }
+}
+
+.user-not-found-hint {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
 @media (max-width: 600px) {
   .booking-section {
     padding: 1rem;

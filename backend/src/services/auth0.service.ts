@@ -133,3 +133,61 @@ export async function sendVerificationEmail(userId: string): Promise<void> {
     }
   );
 }
+
+interface Auth0Role {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export async function getUserRoles(userId: string): Promise<string[]> {
+  const token = await getManagementToken();
+
+  try {
+    const response = await axios.get<Auth0Role[]>(
+      `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}/roles`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data.map((role) => role.name.toLowerCase());
+  } catch (error: any) {
+    console.error("Error fetching user roles:", error.response?.data || error.message);
+    return [];
+  }
+}
+
+export async function searchRegularUserByEmail(email: string): Promise<{
+  found: boolean;
+  userId?: string;
+  fullName?: string;
+  phone?: string;
+  phoneCode?: string;
+}> {
+  const user = await getUserByEmail(email);
+
+  if (!user) {
+    return { found: false };
+  }
+
+  const roles = await getUserRoles(user.user_id);
+  
+  if (roles.includes("admin") || roles.includes("driver")) {
+    return { found: false };
+  }
+
+  const fullName = user.name || 
+    [user.given_name, user.family_name].filter(Boolean).join(" ") || 
+    "";
+
+  return {
+    found: true,
+    userId: user.user_id,
+    fullName,
+    phone: user.user_metadata?.phone_number || "",
+    phoneCode: user.user_metadata?.phone_code || "",
+  };
+}

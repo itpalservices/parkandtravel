@@ -32,6 +32,10 @@
                   <div class="loading-placeholder">Loading your profile...</div>
                 }
 
+                @if (isAdminOrDriver && searchingUser) {
+                  <div class="loading-placeholder">Searching for user...</div>
+                }
+
                 <div class="form-row">
                   <div class="form-group">
                     <label for="email">Email *</label>
@@ -43,7 +47,15 @@
                       [class.disabled-field]="f['email'].disabled"
                       formControlName="email"
                       placeholder="email@example.com"
+                      (blur)="onEmailBlur()"
                     />
+                    @if (isAdminOrDriver && userSearched && !searchingUser) {
+                      @if (foundUserId) {
+                        <div class="user-found-hint">User found - fields auto-filled</div>
+                      } @else {
+                        <div class="user-not-found-hint">No user found - please fill in the details</div>
+                      }
+                    }
                     <app-form-field-error [control]="f['email']" fieldName="Email">
                     </app-form-field-error>
                   </div>

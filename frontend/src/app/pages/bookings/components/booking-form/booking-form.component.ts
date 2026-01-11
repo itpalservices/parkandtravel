@@ -67,6 +67,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   submitting = false;
   
   isRegularUser = false;
+  isAdminOrDriver = false;
   userProfile: UserProfile | null = null;
   cars: Car[] = [];
   selectedCar: Car | null = null;
@@ -74,6 +75,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   profileLoading = false;
   savingCar = false;
   private modalRef: NgbModalRef | null = null;
+
+  searchingUser = false;
+  foundUserId: string | null = null;
+  userSearched = false;
+  pendingFoundUserData: { fullName?: string; phone?: string; phoneCode?: string } | null = null;
 
   constructor() {
     const today = this.calendar.getToday();
@@ -126,12 +132,100 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.roleService.getUserRole().subscribe({
       next: (roleInfo: UserRoleInfo) => {
         this.isRegularUser = roleInfo.isUser;
+        this.isAdminOrDriver = roleInfo.isAdmin || roleInfo.isDriver;
+        
         if (this.isRegularUser) {
           this.loadUserProfile();
           this.loadUserCars();
+        } else if (this.isAdminOrDriver) {
+          this.initAdminDriverForm();
         }
       },
     });
+  }
+
+  private initAdminDriverForm(): void {
+    this.bookingForm.get('phone')?.disable();
+    this.bookingForm.get('phoneCodeId')?.disable();
+    this.bookingForm.get('fullName')?.disable();
+  }
+
+  private applyFoundUserData(data: { fullName?: string; phone?: string; phoneCode?: string }): void {
+    if (data.fullName) {
+      this.bookingForm.patchValue({ fullName: data.fullName });
+      this.bookingForm.get('fullName')?.disable();
+    } else {
+      this.bookingForm.get('fullName')?.enable();
+    }
+
+    if (data.phone) {
+      this.bookingForm.patchValue({ phone: data.phone });
+      this.bookingForm.get('phone')?.disable();
+    } else {
+      this.bookingForm.get('phone')?.enable();
+    }
+
+    if (data.phoneCode) {
+      if (this.phoneCodes.length > 0) {
+        const matchingCode = this.phoneCodes.find(c => c.phoneCode === data.phoneCode);
+        if (matchingCode) {
+          this.selectPhoneCode(matchingCode, true);
+        } else {
+          this.bookingForm.get('phoneCodeId')?.enable();
+        }
+        this.pendingFoundUserData = null;
+      } else {
+        this.pendingFoundUserData = data;
+        this.bookingForm.get('phoneCodeId')?.enable();
+      }
+    } else {
+      this.bookingForm.get('phoneCodeId')?.enable();
+      this.pendingFoundUserData = null;
+    }
+  }
+
+  onEmailBlur(): void {
+    if (!this.isAdminOrDriver) return;
+
+    const emailControl = this.bookingForm.get('email');
+    if (!emailControl || emailControl.invalid) {
+      return;
+    }
+
+    const email = emailControl.value?.trim().toLowerCase();
+    if (!email) return;
+
+    this.searchingUser = true;
+    this.userSearched = false;
+
+    this.apiService
+      .get<{ success: boolean; data: { found: boolean; userId?: string; fullName?: string; phone?: string; phoneCode?: string } }>(
+        `/user/search?email=${encodeURIComponent(email)}`
+      )
+      .subscribe({
+        next: (response) => {
+          this.searchingUser = false;
+          this.userSearched = true;
+
+          if (response.success && response.data.found) {
+            this.foundUserId = response.data.userId || null;
+            this.applyFoundUserData(response.data);
+          } else {
+            this.foundUserId = null;
+            this.bookingForm.get('fullName')?.enable();
+            this.bookingForm.get('phone')?.enable();
+            this.bookingForm.get('phoneCodeId')?.enable();
+          }
+        },
+        error: () => {
+          this.searchingUser = false;
+          this.userSearched = true;
+          this.foundUserId = null;
+          this.bookingForm.get('fullName')?.enable();
+          this.bookingForm.get('phone')?.enable();
+          this.bookingForm.get('phoneCodeId')?.enable();
+        },
+      });
   }
 
   private loadUserProfile(): void {
@@ -358,6 +452,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       next: (codes) => {
         this.phoneCodes = codes;
         
+        if (this.pendingFoundUserData?.phoneCode) {
+          const matchingCode = codes.find(c => c.phoneCode === this.pendingFoundUserData!.phoneCode);
+          if (matchingCode) {
+            this.selectPhoneCode(matchingCode, true);
+          }
+          this.pendingFoundUserData = null;
+          return;
+        }
+        
         if (this.userProfile?.phoneCode) {
           const matchingCode = codes.find(c => c.phoneCode === this.userProfile!.phoneCode);
           if (matchingCode) {
@@ -383,7 +486,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   selectPhoneCode(code: PhoneCode, disableAfter = false): void {
     this.selectedPhoneCode = code;
     this.bookingForm.patchValue({ phoneCodeId: code.id });
-    if (disableAfter && this.isRegularUser) {
+    if (disableAfter) {
       this.bookingForm.get('phoneCodeId')?.disable();
     }
     this.phoneCodeSearch = '';
@@ -449,7 +552,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.submitting = true;
 
     const formValue = this.bookingForm.getRawValue();
-    const booking = {
+    const booking: Record<string, unknown> = {
       fullName: formValue.fullName.trim(),
       email: formValue.email.trim(),
       phoneCodeId: formValue.phoneCodeId,
@@ -468,6 +571,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       parkingTypeId: formValue.parkingType,
       washService: this.washServiceEnabled,
     };
+
+    if (this.isAdminOrDriver) {
+      booking['userId'] = this.foundUserId;
+    }
 
     this.apiService.post('/bookings', booking).subscribe({
       next: () => {

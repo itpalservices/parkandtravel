@@ -266,6 +266,7 @@ export async function createBooking(
       washService,
       dropOffOption,
       pickUpOption,
+      userId: requestUserId,
     } = req.body;
 
     if (
@@ -289,7 +290,14 @@ export async function createBooking(
     }
 
     const authUser = req.authUser as AuthUser | undefined;
-    const userId = authUser?.sub || null;
+    const isAdminOrDriver = authUser?.role === "admin" || authUser?.role === "driver";
+    
+    let userId: string | null;
+    if (isAdminOrDriver) {
+      userId = requestUserId !== undefined ? requestUserId : null;
+    } else {
+      userId = authUser?.sub || null;
+    }
 
     const result = await createBookingService({
       fullName,
