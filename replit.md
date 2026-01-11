@@ -43,6 +43,11 @@ Preferred communication style: Simple, everyday language.
 - **Car Management**: Regular users can add, edit, and delete their cars.
 - **Configuration Settings**: Admin users can manage parking availability, prices per day, and car wash service options.
 
+### Booking Form Features
+- **Regular Users**: Personal info (email, phone, fullName) auto-filled from profile and disabled when values exist. Car selection dropdown to choose from saved vehicles. Add New Car modal if no saved vehicles exist.
+- **Admin/Driver Users**: Email field enabled initially, phone and fullName fields disabled. When email is entered and focus leaves, system searches Auth0 for matching regular users (excluding admin/driver roles). If found, fields are auto-filled and userId is set. If not found, fields are enabled for manual entry and userId is null.
+- Toast notifications for success/error messages using SweetAlert2.
+
 ## External Dependencies
 
 ### Database
