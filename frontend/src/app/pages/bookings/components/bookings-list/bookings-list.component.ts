@@ -58,6 +58,24 @@ export class BookingsListComponent {
     return parts.length > 0 ? parts.join(' ') : 'N/A';
   }
 
+  formatDropOff(option: string | null): string {
+    if (!option) return '-';
+    switch (option) {
+      case 'self_drive': return 'Self';
+      case 'airport_pickup': return 'Pickup';
+      default: return '-';
+    }
+  }
+
+  formatPickUp(option: string | null): string {
+    if (!option) return '-';
+    switch (option) {
+      case 'self_pickup': return 'Self';
+      case 'airport_delivery': return 'Delivery';
+      default: return '-';
+    }
+  }
+
   onEdit(booking: Booking): void {
     console.log('Edit booking:', booking.id);
   }

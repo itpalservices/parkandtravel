@@ -204,7 +204,9 @@ export async function createGuestBooking(
       !checkOutTime ||
       !parkingTypeId ||
       !vehicleColor ||
-      !vehicleBrand
+      !vehicleBrand ||
+      !dropOffOption ||
+      !pickUpOption
     ) {
       res.status(400).json({ error: "Missing required fields" });
       return;

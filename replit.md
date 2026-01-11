@@ -247,3 +247,10 @@ exports.onExecutePostLogin = async (event, api) => {
 - Price summary displayed on guest booking form with breakdown of parking days and wash service
 - GET /api/parking-types now returns { parkingTypes, washAvailable, washPrice } object
 - Parking types filtered based on availability settings (only shows types with available spaces > 0)
+- Added dropOffOption and pickUpOption columns to bookings table for car transport options
+- Guest booking form now includes "How will your car get to the parking?" dropdown (self_drive, airport_pickup)
+- Guest booking form now includes "How will you get your car back?" dropdown (airport_delivery, self_pickup)
+- Bookings list displays transport options with short labels: "Self", "Pickup", "Delivery"
+- Mobile bookings list shows transport options inline with check-in/check-out times
+- Wash service and final price columns added to bookings list (desktop and mobile)
+- Mobile view shows wash service badge only when enabled
