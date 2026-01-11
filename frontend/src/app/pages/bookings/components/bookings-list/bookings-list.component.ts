@@ -61,8 +61,8 @@ export class BookingsListComponent {
   formatDropOff(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_drive': return 'Self';
-      case 'airport_pickup': return 'Pickup';
+      case 'self_drive': return 'Self Drop-Off';
+      case 'airport_pickup': return 'Airport Pick-Up';
       default: return '-';
     }
   }
@@ -70,8 +70,8 @@ export class BookingsListComponent {
   formatPickUp(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_pickup': return 'Self';
-      case 'airport_delivery': return 'Delivery';
+      case 'self_pickup': return 'Self Pick-Up';
+      case 'airport_delivery': return 'Delivery to airport';
       default: return '-';
     }
   }

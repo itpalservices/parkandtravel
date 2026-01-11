@@ -77,7 +77,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
       vehicleColor: ['', [Validators.required, Validators.minLength(2)]],
-      flightNumber: [''],
+      flightNumber: ['', [Validators.required]],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
