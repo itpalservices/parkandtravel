@@ -20,6 +20,7 @@ import { FormFieldErrorComponent } from '../../../../shared/components/form-fiel
 import { Subscription } from 'rxjs';
 import { ParkingType, ParkingTypesResponse } from '../../../../shared';
 import { PhoneCode } from '../../../../shared/models/phone-codes.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-booking-form',
@@ -55,8 +56,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   checkOutMinDate: NgbDateStruct;
 
   submitting = false;
-  submitSuccess = false;
-  submitError = '';
 
   constructor() {
     const today = this.calendar.getToday();
@@ -77,7 +76,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
       vehicleColor: ['', [Validators.required, Validators.minLength(2)]],
-      flightNumber: [''],
+      flightNumber: ['', [Validators.required]],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
@@ -256,7 +255,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
 
     this.submitting = true;
-    this.submitError = '';
 
     const formValue = this.bookingForm.value;
     const booking = {
@@ -282,11 +280,28 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.apiService.post('/bookings', booking).subscribe({
       next: () => {
         this.submitting = false;
-        this.submitSuccess = true;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Booking created successfully',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+        this.router.navigate(['/admin/bookings']);
       },
       error: (err) => {
         this.submitting = false;
-        this.submitError = err.error?.message || 'Failed to create booking. Please try again.';
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.message || 'Failed to create booking. Please try again.',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
       },
     });
   }
@@ -298,30 +313,4 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
 
-  createAnotherBooking(): void {
-    this.submitSuccess = false;
-    const today = this.calendar.getToday();
-    const tomorrow = this.calendar.getNext(today, 'd', 1);
-    const dayAfterTomorrow = this.calendar.getNext(tomorrow, 'd', 1);
-    this.minDate = tomorrow;
-    this.checkOutMinDate = dayAfterTomorrow;
-    this.bookingForm.reset({
-      checkInDate: tomorrow,
-      checkOutDate: dayAfterTomorrow,
-      checkInTime: '10:00',
-      checkOutTime: '10:00',
-      dropOffOption: 'self_drive',
-      pickUpOption: 'self_pickup',
-    });
-    this.washServiceEnabled = false;
-    if (this.parkingTypes.length > 0) {
-      this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id });
-    }
-    const cyprusCode = this.phoneCodes.find((c) => c.isoCode === 'CY');
-    if (cyprusCode) {
-      this.selectPhoneCode(cyprusCode);
-    } else if (this.phoneCodes.length > 0) {
-      this.selectPhoneCode(this.phoneCodes[0]);
-    }
-  }
 }

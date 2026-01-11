@@ -259,3 +259,6 @@ exports.onExecutePostLogin = async (event, api) => {
 - Added "Add Booking" button to bookings page header (desktop shows text + icon, mobile shows icon only)
 - Backend POST /api/bookings endpoint creates booking with userId from authenticated user's Auth0 sub claim
 - Updated AuthUser interface to include 'sub' property for user identification
+- Booking form page design matches other admin pages (page header with back button, full-width section card)
+- On successful booking submission, shows success toast and redirects to bookings list
+- On error, shows error toast instead of inline error message
