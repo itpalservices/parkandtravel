@@ -29,6 +29,9 @@ interface Auth0User {
     phone_number?: string;
     phone_code?: string;
   };
+  app_metadata?: {
+    role?: string;
+  };
 }
 
 let cachedToken: string | null = null;
@@ -173,9 +176,9 @@ export async function searchRegularUserByEmail(email: string): Promise<{
     return { found: false };
   }
 
-  const roles = await getUserRoles(user.user_id);
-  
-  if (roles.includes("admin") || roles.includes("driver")) {
+  // Check app_metadata.role - exclude admin and driver users
+  const userRole = user.app_metadata?.role?.toLowerCase();
+  if (userRole === "admin" || userRole === "driver") {
     return { found: false };
   }
 
