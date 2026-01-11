@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -14,12 +14,16 @@ import {
   NgbCalendar,
   NgbDate,
   NgbDropdownModule,
+  NgbModal,
+  NgbModalRef,
 } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../../../shared/components/form-field-error/form-field-error.component';
 import { Subscription } from 'rxjs';
 import { ParkingType, ParkingTypesResponse } from '../../../../shared';
 import { PhoneCode } from '../../../../shared/models/phone-codes.model';
+import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
+import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -41,9 +45,14 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   private calendar = inject(NgbCalendar);
   private apiService = inject(ApiService);
   private fb = inject(FormBuilder);
+  private roleService = inject(RoleService);
+  private modalService = inject(NgbModal);
   private checkInDateSubscription?: Subscription;
 
+  @ViewChild('addCarModal') addCarModal!: TemplateRef<unknown>;
+
   bookingForm!: FormGroup;
+  carForm!: FormGroup;
   parkingTypes: ParkingType[] = [];
   phoneCodes: PhoneCode[] = [];
   selectedPhoneCode: PhoneCode | null = null;
@@ -56,6 +65,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   checkOutMinDate: NgbDateStruct;
 
   submitting = false;
+  
+  isRegularUser = false;
+  userProfile: UserProfile | null = null;
+  cars: Car[] = [];
+  selectedCar: Car | null = null;
+  carsLoading = false;
+  profileLoading = false;
+  savingCar = false;
+  private modalRef: NgbModalRef | null = null;
 
   constructor() {
     const today = this.calendar.getToday();
@@ -91,6 +109,168 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.loadParkingTypes();
     this.loadPhoneCodes();
     this.setupCheckInDateListener();
+    this.checkUserRole();
+    this.initCarForm();
+  }
+
+  private initCarForm(): void {
+    this.carForm = this.fb.group({
+      carBrand: ['', [Validators.required, Validators.minLength(2)]],
+      carModel: ['', [Validators.required, Validators.minLength(2)]],
+      carColor: ['', [Validators.required, Validators.minLength(2)]],
+      plateNo: ['', [Validators.required, Validators.minLength(2)]],
+    });
+  }
+
+  private checkUserRole(): void {
+    this.roleService.getUserRole().subscribe({
+      next: (roleInfo: UserRoleInfo) => {
+        this.isRegularUser = roleInfo.isUser;
+        if (this.isRegularUser) {
+          this.loadUserProfile();
+          this.loadUserCars();
+        }
+      },
+    });
+  }
+
+  private loadUserProfile(): void {
+    this.profileLoading = true;
+    this.apiService.get<{ success: boolean; data: UserProfile }>('/user/profile').subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.userProfile = response.data;
+          this.fillUserProfileFields();
+        }
+        this.profileLoading = false;
+      },
+      error: () => {
+        this.profileLoading = false;
+      },
+    });
+  }
+
+  private fillUserProfileFields(): void {
+    if (!this.userProfile) return;
+
+    const fullName = `${this.userProfile.name} ${this.userProfile.surname}`.trim();
+    
+    if (fullName) {
+      this.bookingForm.patchValue({ fullName });
+      this.bookingForm.get('fullName')?.disable();
+    }
+    
+    if (this.userProfile.email) {
+      this.bookingForm.patchValue({ email: this.userProfile.email });
+      this.bookingForm.get('email')?.disable();
+    }
+    
+    if (this.userProfile.phone) {
+      this.bookingForm.patchValue({ phone: this.userProfile.phone });
+      this.bookingForm.get('phone')?.disable();
+    }
+
+    if (this.userProfile.phoneCode && this.phoneCodes.length > 0) {
+      const matchingCode = this.phoneCodes.find(c => c.phoneCode === this.userProfile!.phoneCode);
+      if (matchingCode) {
+        this.selectPhoneCode(matchingCode, true);
+      }
+    }
+  }
+
+  private loadUserCars(): void {
+    this.carsLoading = true;
+    this.apiService.get<{ success: boolean; data: Car[] }>('/cars').subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.cars = response.data;
+          if (this.cars.length > 0) {
+            this.selectCar(this.cars[0]);
+          }
+        }
+        this.carsLoading = false;
+      },
+      error: () => {
+        this.carsLoading = false;
+      },
+    });
+  }
+
+  selectCar(car: Car): void {
+    this.selectedCar = car;
+    this.bookingForm.patchValue({
+      vehicleBrand: car.carBrand,
+      vehicleModel: car.carModel,
+      vehicleColor: car.carColor,
+      licensePlate: car.plateNo,
+    });
+
+    this.bookingForm.get('vehicleBrand')?.disable();
+    this.bookingForm.get('vehicleModel')?.disable();
+    this.bookingForm.get('vehicleColor')?.disable();
+    this.bookingForm.get('licensePlate')?.disable();
+  }
+
+  openAddCarModal(): void {
+    this.carForm.reset();
+    this.modalRef = this.modalService.open(this.addCarModal, {
+      centered: true,
+      backdrop: 'static',
+    });
+  }
+
+  closeModal(): void {
+    this.modalRef?.close();
+    this.modalRef = null;
+  }
+
+  saveNewCar(): void {
+    if (this.carForm.invalid) {
+      Object.values(this.carForm.controls).forEach((control) => {
+        control.markAsTouched();
+      });
+      return;
+    }
+
+    this.savingCar = true;
+    const carData = this.carForm.value;
+
+    this.apiService.post<{ success: boolean; data: Car }>('/cars', carData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.cars.push(response.data);
+          this.selectCar(response.data);
+          this.closeModal();
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Car added successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        }
+        this.savingCar = false;
+      },
+      error: (err) => {
+        this.savingCar = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.message || 'Failed to add car',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
+  }
+
+  hasCarFormError(fieldName: string): boolean {
+    const control = this.carForm.get(fieldName);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
   ngOnDestroy(): void {
@@ -177,6 +357,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.apiService.get<PhoneCode[]>('/phone-codes').subscribe({
       next: (codes) => {
         this.phoneCodes = codes;
+        
+        if (this.userProfile?.phoneCode) {
+          const matchingCode = codes.find(c => c.phoneCode === this.userProfile!.phoneCode);
+          if (matchingCode) {
+            this.selectPhoneCode(matchingCode, true);
+            return;
+          }
+        }
+        
         const cyprusCode = codes.find((c) => c.isoCode === 'CY');
         if (cyprusCode) {
           this.selectPhoneCode(cyprusCode);
@@ -191,9 +380,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  selectPhoneCode(code: PhoneCode): void {
+  selectPhoneCode(code: PhoneCode, disableAfter = false): void {
     this.selectedPhoneCode = code;
     this.bookingForm.patchValue({ phoneCodeId: code.id });
+    if (disableAfter && this.isRegularUser) {
+      this.bookingForm.get('phoneCodeId')?.disable();
+    }
     this.phoneCodeSearch = '';
   }
 
@@ -256,7 +448,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     this.submitting = true;
 
-    const formValue = this.bookingForm.value;
+    const formValue = this.bookingForm.getRawValue();
     const booking = {
       fullName: formValue.fullName.trim(),
       email: formValue.email.trim(),

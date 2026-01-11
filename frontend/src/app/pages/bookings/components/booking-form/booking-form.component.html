@@ -28,6 +28,10 @@
 
               <div class="form-group">
 
+                @if (isRegularUser && profileLoading) {
+                  <div class="loading-placeholder">Loading your profile...</div>
+                }
+
                 <div class="form-row">
                   <div class="form-group">
                     <label for="email">Email *</label>
@@ -36,6 +40,7 @@
                       id="email"
                       class="form-control"
                       [class.is-invalid]="hasError('email')"
+                      [class.disabled-field]="f['email'].disabled"
                       formControlName="email"
                       placeholder="email@example.com"
                     />
@@ -51,6 +56,8 @@
                           type="button"
                           class="btn btn-outline-secondary dropdown-toggle phone-code-btn"
                           [class.is-invalid]="hasError('phoneCodeId')"
+                          [class.disabled-field]="f['phoneCodeId'].disabled"
+                          [disabled]="f['phoneCodeId'].disabled"
                           ngbDropdownToggle
                         >
                           @if (selectedPhoneCode) {
@@ -100,6 +107,7 @@
                         id="phone"
                         class="form-control phone-number-input"
                         [class.is-invalid]="hasError('phone')"
+                        [class.disabled-field]="f['phone'].disabled"
                         formControlName="phone"
                         placeholder="99123456"
                       />
@@ -121,6 +129,7 @@
                   id="fullName"
                   class="form-control"
                   [class.is-invalid]="hasError('fullName')"
+                  [class.disabled-field]="f['fullName'].disabled"
                   formControlName="fullName"
                   placeholder="Enter full name"
                 />
@@ -132,6 +141,42 @@
             <div class="form-section">
               <h3>Vehicle Information</h3>
 
+              @if (isRegularUser) {
+                <div class="form-group car-select-group">
+                  <label>Select Car *</label>
+                  @if (carsLoading) {
+                    <div class="loading-placeholder">Loading your cars...</div>
+                  } @else if (cars.length === 0) {
+                    <div class="no-cars-message">
+                      <p>You don't have any saved cars yet.</p>
+                      <button type="button" class="btn btn-primary btn-add-car" (click)="openAddCarModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add New Car
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="car-select-wrapper">
+                      <select class="form-control car-select" (change)="selectCar(cars[$any($event.target).selectedIndex])">
+                        @for (car of cars; track car.id; let i = $index) {
+                          <option [value]="car.id" [selected]="selectedCar?.id === car.id">
+                            {{ car.carBrand }} {{ car.carModel }} - {{ car.plateNo }}
+                          </option>
+                        }
+                      </select>
+                      <button type="button" class="btn btn-outline-secondary btn-add-car-inline" (click)="openAddCarModal()" title="Add new car">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="vehicleBrand">Vehicle Brand *</label>
@@ -140,6 +185,7 @@
                     id="vehicleBrand"
                     class="form-control"
                     [class.is-invalid]="hasError('vehicleBrand')"
+                    [class.disabled-field]="f['vehicleBrand'].disabled"
                     formControlName="vehicleBrand"
                     placeholder="e.g., Toyota"
                   />
@@ -153,6 +199,7 @@
                     id="vehicleModel"
                     class="form-control"
                     [class.is-invalid]="hasError('vehicleModel')"
+                    [class.disabled-field]="f['vehicleModel'].disabled"
                     formControlName="vehicleModel"
                     placeholder="e.g., CH-R"
                   />
@@ -169,6 +216,7 @@
                     id="licensePlate"
                     class="form-control"
                     [class.is-invalid]="hasError('licensePlate')"
+                    [class.disabled-field]="f['licensePlate'].disabled"
                     formControlName="licensePlate"
                     placeholder="ABC123"
                   />
@@ -182,6 +230,7 @@
                     id="vehicleColor"
                     class="form-control"
                     [class.is-invalid]="hasError('vehicleColor')"
+                    [class.disabled-field]="f['vehicleColor'].disabled"
                     formControlName="vehicleColor"
                     placeholder="e.g., Red"
                   />
@@ -441,3 +490,81 @@
     </div>
   </div>
 </div>
+
+<ng-template #addCarModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Add New Car</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="carForm">
+      <div class="form-group">
+        <label for="carBrand">Car Brand *</label>
+        <input
+          type="text"
+          id="carBrand"
+          class="form-control"
+          [class.is-invalid]="hasCarFormError('carBrand')"
+          formControlName="carBrand"
+          placeholder="e.g., Toyota"
+        />
+        @if (hasCarFormError('carBrand')) {
+          <div class="invalid-feedback d-block">Car brand is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="carModel">Car Model *</label>
+        <input
+          type="text"
+          id="carModel"
+          class="form-control"
+          [class.is-invalid]="hasCarFormError('carModel')"
+          formControlName="carModel"
+          placeholder="e.g., Corolla"
+        />
+        @if (hasCarFormError('carModel')) {
+          <div class="invalid-feedback d-block">Car model is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="carColor">Car Color *</label>
+        <input
+          type="text"
+          id="carColor"
+          class="form-control"
+          [class.is-invalid]="hasCarFormError('carColor')"
+          formControlName="carColor"
+          placeholder="e.g., White"
+        />
+        @if (hasCarFormError('carColor')) {
+          <div class="invalid-feedback d-block">Car color is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="plateNo">License Plate *</label>
+        <input
+          type="text"
+          id="plateNo"
+          class="form-control"
+          [class.is-invalid]="hasCarFormError('plateNo')"
+          formControlName="plateNo"
+          placeholder="e.g., ABC123"
+        />
+        @if (hasCarFormError('plateNo')) {
+          <div class="invalid-feedback d-block">License plate is required</div>
+        }
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+    <button type="button" class="btn btn-primary" [disabled]="savingCar" (click)="saveNewCar()">
+      @if (savingCar) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+        Saving...
+      } @else {
+        Add Car
+      }
+    </button>
+  </div>
+</ng-template>
