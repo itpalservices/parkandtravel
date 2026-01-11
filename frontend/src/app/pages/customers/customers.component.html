@@ -315,11 +315,11 @@
           <thead>
             <tr>
               <th>Plate No.</th>
-              <th>Vehicle/Model</th>
+              <th>Vehicle / Model</th>
               <th>Vehicle Color</th>
-              <th>Check-in</th>
+              <th>Check in</th>
               <th>Car Drop-off</th>
-              <th>Check-out</th>
+              <th>Check out</th>
               <th>Car Pick-up</th>
               <th>Parking Type</th>
               <th>Wash Service</th>
@@ -336,7 +336,14 @@
                 <td>{{ getDropOffLabel(booking.dropOffOption) }}</td>
                 <td>{{ formatDate(booking.dateTo) }} {{ formatTime(booking.timeTo) }}</td>
                 <td>{{ getPickUpLabel(booking.pickUpOption) }}</td>
-                <td>{{ booking.parkingType || '-' }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="booking.parkingType === 'Covered' ? 'bg-primary' : 'bg-secondary'"
+                  >
+                    {{ booking.parkingType }}
+                  </span>
+                </td>
                 <td>
                   @if (booking.washService) {
                     <span class="badge bg-success">Yes</span>

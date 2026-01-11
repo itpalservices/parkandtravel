@@ -340,8 +340,8 @@ export class CustomersComponent implements OnInit {
   getDropOffLabel(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_drive': return 'Self Drive';
-      case 'airport_pickup': return 'Airport Pickup';
+      case 'self_drive': return 'Self Drop-Off';
+      case 'airport_pickup': return 'Airport Pick-Up';
       default: return option;
     }
   }
@@ -349,8 +349,8 @@ export class CustomersComponent implements OnInit {
   getPickUpLabel(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_drive': return 'Self Drive';
-      case 'airport_delivery': return 'Airport Delivery';
+      case 'self_pickup': return 'Self Pick-Up';
+      case 'airport_delivery': return 'Delivery to airport';
       default: return option;
     }
   }
