@@ -48,6 +48,13 @@ Preferred communication style: Simple, everyday language.
 - **Admin/Driver Users**: Email field enabled initially, phone and fullName fields disabled. When email is entered and focus leaves, system searches Auth0 for matching regular users (excluding admin/driver roles). If found, fields are auto-filled and userId is set. If not found, fields are enabled for manual entry and userId is null.
 - Toast notifications for success/error messages using SweetAlert2.
 
+### Customers Management
+- **Admin Only**: Only admin users can view the customers list.
+- **Data Source**: Fetches all regular users from Auth0 (excludes admins and drivers based on app_metadata.role).
+- **Display**: Shows email, name, surname, phone code (with country flag), and phone number.
+- **Phone Flags**: Phone codes are matched against the phone_codes database table to display country flags from flagcdn.com.
+- **Responsive**: Desktop table view and mobile card view matching the bookings list styling.
+
 ## External Dependencies
 
 ### Database
