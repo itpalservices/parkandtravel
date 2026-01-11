@@ -28,6 +28,8 @@ interface BookingResponse {
   adults: number | null;
   washService: boolean;
   finalPrice: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
   deleteflag: number;
 }
 
@@ -131,6 +133,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b.adults,
       b."washService",
       b."finalPrice",
+      b."dropOffOption",
+      b."pickUpOption",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -159,6 +163,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    dropOffOption: b.dropOffOption || null,
+    pickUpOption: b.pickUpOption || null,
     deleteflag: b.deleteflag,
   }));
 
@@ -199,6 +205,8 @@ export async function getBookingById(
     adults: booking.adults,
     washService: booking.washService ?? false,
     finalPrice: booking.finalPrice !== null ? parseFloat(booking.finalPrice.toString()) : null,
+    dropOffOption: booking.dropOffOption || null,
+    pickUpOption: booking.pickUpOption || null,
     deleteflag: booking.deleteflag,
   };
 }
@@ -241,6 +249,8 @@ interface CreateGuestBookingParams {
   checkOutTime: string;
   parkingTypeId: string;
   washService?: boolean;
+  dropOffOption?: string | null;
+  pickUpOption?: string | null;
 }
 
 function parseTimeToDate(timeStr: string): Date {
@@ -332,6 +342,8 @@ export async function createGuestBooking(
       parkingTypeId: params.parkingTypeId,
       washService: params.washService || false,
       finalPrice: finalPrice,
+      dropOffOption: params.dropOffOption || null,
+      pickUpOption: params.pickUpOption || null,
       deleteflag: 0,
     },
   });
