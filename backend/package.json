@@ -4,7 +4,7 @@
   "main": "src/server.ts",
   "scripts": {
     "dev": "ts-node src/server.ts",
-    "build": "tsc && xcopy generated dist\\generated /E /I /Y",
+    "build": "tsc && xcopy src\\generated dist\\generated /E /I /Y",
     "start": "node dist/server.js",
     "seed": "ts-node prisma/seed.ts"
   },
