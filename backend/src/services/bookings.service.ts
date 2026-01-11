@@ -492,4 +492,60 @@ export async function getPhoneCodes(): Promise<
   return codes;
 }
 
+export async function getBookingsByUserId(userId: string): Promise<BookingResponse[]> {
+  const bookings = await prisma.$queryRawUnsafe<any[]>(`
+    SELECT 
+      b.id,
+      b.name,
+      b.surname,
+      b.email,
+      b."returnFlight",
+      b."dateFrom",
+      b."timeFrom",
+      b."dateTo",
+      b."timeTo",
+      b.mobile,
+      b."plateNo",
+      b."carBrand",
+      b."carModel",
+      b."carColor",
+      b."parkingTypeId",
+      pt.name as "parkingTypeName",
+      b.adults,
+      b."washService",
+      b."finalPrice",
+      b."dropOffOption",
+      b."pickUpOption",
+      b.deleteflag
+    FROM bookings b
+    LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    WHERE b."userId" = $1 AND b.deleteflag = 0
+    ORDER BY b."dateFrom" DESC, COALESCE(b."timeFrom"::time, '00:00:00'::time) DESC
+  `, userId);
+
+  return bookings.map((b: any) => ({
+    id: b.id,
+    name: b.name,
+    surname: b.surname,
+    email: b.email,
+    returnFlight: b.returnFlight,
+    dateFrom: formatDate(b.dateFrom),
+    timeFrom: formatTime(b.timeFrom),
+    dateTo: formatDate(b.dateTo),
+    timeTo: formatTime(b.timeTo),
+    mobile: b.mobile,
+    plateNo: b.plateNo,
+    carBrand: b.carBrand,
+    carModel: b.carModel,
+    carColor: b.carColor,
+    parkingType: b.parkingTypeName,
+    adults: b.adults,
+    washService: b.washService ?? false,
+    finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    dropOffOption: b.dropOffOption || null,
+    pickUpOption: b.pickUpOption || null,
+    deleteflag: b.deleteflag,
+  }));
+}
+
 export { isValidDateFormat, isDateInPast, isValidUUID };

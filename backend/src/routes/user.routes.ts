@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
 import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers } from "../services/auth0.service";
+import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
 
@@ -195,6 +196,34 @@ router.get("/search", checkJwt, async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error searching user:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to search for user" });
+  }
+});
+
+router.get("/:userId/bookings", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can view customer booking history" });
+      return;
+    }
+
+    const { userId } = req.params;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
+    const bookings = await getBookingsByUserId(userId);
+
+    res.json({
+      success: true,
+      data: bookings,
+    });
+  } catch (error: any) {
+    console.error("Error fetching user bookings:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch user bookings" });
   }
 });
 
