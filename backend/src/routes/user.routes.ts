@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers } from "../services/auth0.service";
 
 const router = Router();
 
@@ -146,6 +146,27 @@ router.post("/resend-verification", checkJwt, async (req: Request, res: Response
   } catch (error: any) {
     console.error("Error sending verification email:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+router.get("/customers", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can view customers" });
+      return;
+    }
+
+    const customers = await getAllRegularUsers();
+
+    res.json({
+      success: true,
+      data: customers,
+    });
+  } catch (error: any) {
+    console.error("Error fetching customers:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch customers" });
   }
 });
 

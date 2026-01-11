@@ -163,6 +163,68 @@ export async function getUserRoles(userId: string): Promise<string[]> {
   }
 }
 
+export async function getAllRegularUsers(): Promise<{
+  userId: string;
+  email: string;
+  name: string;
+  surname: string;
+  phone: string;
+  phoneCode: string;
+}[]> {
+  const token = await getManagementToken();
+  const allUsers: Auth0User[] = [];
+  let page = 0;
+  const perPage = 100;
+  const maxPages = 10; // Limit to prevent rate limiting issues
+
+  try {
+    while (page < maxPages) {
+      const response = await axios.get<Auth0User[]>(
+        `https://${AUTH0_DOMAIN}/api/v2/users`,
+        {
+          params: {
+            page,
+            per_page: perPage,
+            include_totals: false,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      allUsers.push(...response.data);
+      
+      if (response.data.length < perPage) {
+        break;
+      }
+      page++;
+    }
+  } catch (error: any) {
+    if (error.response?.status === 429) {
+      console.error("Auth0 rate limit reached, returning partial results");
+    } else {
+      throw error;
+    }
+  }
+
+  // Filter to only regular users - exclude admin and driver roles from app_metadata
+  // Users with no role, role="user", or any other role that's not admin/driver are considered regular users
+  const regularUsers = allUsers.filter(user => {
+    const role = user.app_metadata?.role?.toLowerCase();
+    return role !== "admin" && role !== "driver";
+  });
+
+  return regularUsers.map(user => ({
+    userId: user.user_id,
+    email: user.email,
+    name: user.given_name || "",
+    surname: user.family_name || "",
+    phone: user.user_metadata?.phone_number || "",
+    phoneCode: user.user_metadata?.phone_code || "",
+  }));
+}
+
 export async function searchRegularUserByEmail(email: string): Promise<{
   found: boolean;
   userId?: string;

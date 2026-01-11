@@ -1,15 +1,194 @@
 <div class="page-container">
   <h1 class="page-title">Customers</h1>
-  <div class="placeholder-content">
-    <div class="placeholder-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
-    <h2>Customers section coming soon</h2>
-    <p>This feature is under development.</p>
-  </div>
+  } @else if (error) {
+    <div class="error-container">
+      <div class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+    </div>
+  } @else if (customers.length === 0) {
+    <div class="placeholder-content">
+      <div class="placeholder-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <h2>No customers found</h2>
+      <p>There are no registered customers yet.</p>
+    </div>
+  } @else {
+    <div class="customers-list-wrapper">
+      <div class="desktop-view d-none d-md-block">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Phone Code</th>
+                <th>Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (customer of paginatedCustomers; track customer.userId) {
+                <tr>
+                  <td>
+                    <div class="email-cell">
+                      <div class="avatar">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                      </div>
+                      <span class="customer-email">{{ customer.email }}</span>
+                    </div>
+                  </td>
+                  <td>{{ customer.name || '-' }}</td>
+                  <td>{{ customer.surname || '-' }}</td>
+                  <td>
+                    @if (customer.phoneCode) {
+                      <div class="phone-code-cell">
+                        @if (getCountryFlag(customer.phoneCode)) {
+                          <img [src]="getCountryFlag(customer.phoneCode)" [alt]="getIsoCode(customer.phoneCode)" class="country-flag">
+                        }
+                        <span>{{ customer.phoneCode }}</span>
+                      </div>
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td>{{ customer.phone || '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mobile-view d-block d-md-none">
+        <div class="customers-cards">
+          @for (customer of paginatedCustomers; track customer.userId) {
+            <div class="customer-item">
+              <div class="customer-left m-auto">
+                <div class="avatar m-auto">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <div class="customer-info">
+                  <span class="customer-name">{{ customer.name || '-' }} {{ customer.surname || '' }}</span>
+                  <span class="customer-email-mobile">{{ customer.email }}</span>
+                </div>
+              </div>
+              <div class="customer-right">
+                <div class="detail-row">
+                  <span class="detail-label text-start">Phone Code:</span>
+                  <span class="detail-value">
+                    @if (customer.phoneCode) {
+                      @if (getCountryFlag(customer.phoneCode)) {
+                        <img [src]="getCountryFlag(customer.phoneCode)" [alt]="getIsoCode(customer.phoneCode)" class="country-flag">
+                      }
+                      {{ customer.phoneCode }}
+                    } @else {
+                      -
+                    }
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label text-start">Phone:</span>
+                  <span class="detail-value">{{ customer.phone || '-' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (totalPages > 1) {
+        <div class="pagination-wrapper">
+          <button class="pagination-btn prev" [disabled]="currentPage === 1" (click)="onPrevious()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Previous
+          </button>
+
+          <div class="page-numbers">
+            @for (page of pageNumbers; track $index) {
+              @if (page === -1) {
+                <span class="page-ellipsis">...</span>
+              } @else {
+                <button
+                  class="page-number"
+                  [class.active]="page === currentPage"
+                  (click)="onPageClick(page)"
+                >
+                  {{ page }}
+                </button>
+              }
+            }
+          </div>
+
+          <button class="pagination-btn next" [disabled]="currentPage === totalPages" (click)="onNext()">
+            Next
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+  }
 </div>
