@@ -80,8 +80,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       flightNumber: ['', [Validators.required, Validators.minLength(2)]],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
+      dropOffOption: ['self_drive', Validators.required],
       checkOutDate: [defaultCheckOut, Validators.required],
       checkOutTime: ['10:00', Validators.required],
+      pickUpOption: ['self_pickup', Validators.required],
       parkingType: ['', Validators.required],
     });
   }
@@ -269,8 +271,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       flightNumber: formValue.flightNumber?.trim() || null,
       checkInDate: this.formatDateForApi(formValue.checkInDate),
       checkInTime: formValue.checkInTime,
+      dropOffOption: formValue.dropOffOption,
       checkOutDate: this.formatDateForApi(formValue.checkOutDate),
       checkOutTime: formValue.checkOutTime,
+      pickUpOption: formValue.pickUpOption,
       parkingTypeId: formValue.parkingType,
       washService: this.washServiceEnabled,
     };
@@ -306,6 +310,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       checkOutDate: dayAfterTomorrow,
       checkInTime: '10:00',
       checkOutTime: '10:00',
+      dropOffOption: 'self_drive',
+      pickUpOption: 'self_pickup',
     });
     this.washServiceEnabled = false;
     if (this.parkingTypes.length > 0) {

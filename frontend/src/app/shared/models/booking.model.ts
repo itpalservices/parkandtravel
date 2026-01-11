@@ -18,6 +18,8 @@ export interface Booking {
   parkingType?: string;
   washService: boolean;
   finalPrice: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
   deleteflag: number;
   createdAt: string;
   updatedAt: string;
