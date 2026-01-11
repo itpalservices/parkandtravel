@@ -253,6 +253,10 @@ interface CreateGuestBookingParams {
   pickUpOption?: string | null;
 }
 
+export interface CreateBookingParams extends CreateGuestBookingParams {
+  userId?: string | null;
+}
+
 function parseTimeToDate(timeStr: string): Date {
   const [hours, minutes] = timeStr.split(":").map(Number);
   return new Date(Date.UTC(1970, 0, 1, hours, minutes, 0));
@@ -325,6 +329,65 @@ export async function createGuestBooking(
 
   const booking = await prisma.booking.create({
     data: {
+      name,
+      surname,
+      email: params.email,
+      mobile: params.phone,
+      phoneCodeId: params.phoneCodeId || null,
+      plateNo: params.licensePlate,
+      carBrand: params.vehicleBrand,
+      carModel: params.vehicleModel,
+      carColor: params.vehicleColor,
+      returnFlight: params.flightNumber || null,
+      dateFrom: checkInDate,
+      timeFrom: checkInTime,
+      dateTo: checkOutDate,
+      timeTo: checkOutTime,
+      parkingTypeId: params.parkingTypeId,
+      washService: params.washService || false,
+      finalPrice: finalPrice,
+      dropOffOption: params.dropOffOption || null,
+      pickUpOption: params.pickUpOption || null,
+      deleteflag: 0,
+    },
+  });
+
+  return { id: booking.id, finalPrice };
+}
+
+export async function createBooking(
+  params: CreateBookingParams,
+): Promise<{ id: string; finalPrice: number | null }> {
+  const nameParts = params.fullName.trim().split(" ");
+  const name = nameParts[0] || "";
+  const surname = nameParts.slice(1).join(" ") || "";
+
+  const checkInDate = new Date(params.checkInDate + "T12:00:00Z");
+  const checkOutDate = new Date(params.checkOutDate + "T12:00:00Z");
+  const checkInTime = parseTimeToDate(params.checkInTime);
+  const checkOutTime = parseTimeToDate(params.checkOutTime);
+
+  const days = calculateDays(checkInDate, checkOutDate);
+  const priceSettings = await getPriceSettings();
+  
+  let parkingPricePerDay: number | null = null;
+  if (params.parkingTypeId === 'parkingType_uncovered') {
+    parkingPricePerDay = priceSettings.priceUncovered;
+  } else if (params.parkingTypeId === 'parkingType_covered') {
+    parkingPricePerDay = priceSettings.priceCovered;
+  }
+
+  let finalPrice: number | null = null;
+  if (parkingPricePerDay !== null) {
+    finalPrice = days * parkingPricePerDay;
+    if (params.washService && priceSettings.priceWash !== null) {
+      finalPrice += priceSettings.priceWash;
+    }
+  }
+
+  const booking = await prisma.booking.create({
+    data: {
+      userId: params.userId || null,
       name,
       surname,
       email: params.email,

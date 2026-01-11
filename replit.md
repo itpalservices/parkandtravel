@@ -254,3 +254,8 @@ exports.onExecutePostLogin = async (event, api) => {
 - Mobile bookings list shows transport options inline with check-in/check-out times
 - Wash service and final price columns added to bookings list (desktop and mobile)
 - Mobile view shows wash service badge only when enabled
+- Added nullable userId column to bookings table (VARCHAR(255)) for authenticated user bookings
+- Created BookingFormComponent at /admin/bookings/new for authenticated users to create bookings
+- Added "Add Booking" button to bookings page header (desktop shows text + icon, mobile shows icon only)
+- Backend POST /api/bookings endpoint creates booking with userId from authenticated user's Auth0 sub claim
+- Updated AuthUser interface to include 'sub' property for user identification

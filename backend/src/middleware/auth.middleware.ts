@@ -8,6 +8,7 @@ const ROLE_NAMESPACE = "https://park-and-travel/roles";
 export type UserRole = "admin" | "driver" | "user";
 
 export interface AuthUser {
+  sub: string;
   email: string;
   role: UserRole;
 }
@@ -58,11 +59,13 @@ function extractUserInfo(req: Request, res: Response, next: NextFunction): void 
   const auth = (req as any).auth;
   
   if (!auth?.payload) {
-    req.authUser = { email: "", role: "user" };
+    req.authUser = { sub: "", email: "", role: "user" };
     return next();
   }
 
   const payload = auth.payload;
+  
+  const sub = payload.sub || "";
   
   const email = payload.email || 
                 payload["https://park-and-travel/email"] || 
@@ -83,7 +86,7 @@ function extractUserInfo(req: Request, res: Response, next: NextFunction): void 
     }
   }
 
-  req.authUser = { email, role };
+  req.authUser = { sub, email, role };
   next();
 }
 

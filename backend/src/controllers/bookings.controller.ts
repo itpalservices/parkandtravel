@@ -7,6 +7,7 @@ import {
   isDateInPast,
   isValidUUID,
   createGuestBooking as createGuestBookingService,
+  createBooking as createBookingService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 
@@ -238,6 +239,85 @@ export async function createGuestBooking(
     });
   } catch (error) {
     console.error("Error creating guest booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function createBooking(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const {
+      fullName,
+      email,
+      phone,
+      phoneCodeId,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      parkingTypeId,
+      washService,
+      dropOffOption,
+      pickUpOption,
+    } = req.body;
+
+    if (
+      !fullName ||
+      !email ||
+      !phone ||
+      !licensePlate ||
+      !vehicleModel ||
+      !checkInDate ||
+      !checkInTime ||
+      !checkOutDate ||
+      !checkOutTime ||
+      !parkingTypeId ||
+      !vehicleColor ||
+      !vehicleBrand ||
+      !dropOffOption ||
+      !pickUpOption
+    ) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+
+    const authUser = req.authUser as AuthUser | undefined;
+    const userId = authUser?.sub || null;
+
+    const result = await createBookingService({
+      fullName,
+      email,
+      phone,
+      phoneCodeId: phoneCodeId || null,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      parkingTypeId,
+      washService: washService === true,
+      dropOffOption: dropOffOption || null,
+      pickUpOption: pickUpOption || null,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
