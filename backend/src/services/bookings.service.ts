@@ -26,6 +26,8 @@ interface BookingResponse {
   carColor: string | null;
   parkingType: string | null;
   adults: number | null;
+  washService: boolean;
+  finalPrice: number | null;
   deleteflag: number;
 }
 
@@ -127,6 +129,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."parkingTypeId",
       pt.name as "parkingTypeName",
       b.adults,
+      b."washService",
+      b."finalPrice",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -153,6 +157,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     carColor: b.carColor,
     parkingType: b.parkingTypeName,
     adults: b.adults,
+    washService: b.washService ?? false,
+    finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
     deleteflag: b.deleteflag,
   }));
 
@@ -191,6 +197,8 @@ export async function getBookingById(
     carColor: booking.carColor,
     parkingType: booking.parkingType?.name || null,
     adults: booking.adults,
+    washService: booking.washService ?? false,
+    finalPrice: booking.finalPrice !== null ? parseFloat(booking.finalPrice.toString()) : null,
     deleteflag: booking.deleteflag,
   };
 }
