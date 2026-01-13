@@ -8,6 +8,8 @@ import { Booking } from '../../../../shared/models/booking.model';
 import { DateRangePickerComponent, DateRange } from '../../../../shared/components/date-range-picker/date-range-picker.component';
 import { BookingsListComponent } from '../bookings-list/bookings-list.component';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
+import { take } from 'rxjs';
+import { AuthService } from '@auth0/auth0-angular';
 
 @Component({
   selector: 'app-bookings-page',
@@ -31,6 +33,7 @@ export class BookingsPageComponent implements OnInit {
   searchTerm = '';
 
   isAdmin: boolean = false;
+  verifiedEmail: boolean | undefined = false;
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
 
@@ -41,13 +44,15 @@ export class BookingsPageComponent implements OnInit {
   constructor(
     private bookingsService: BookingsService,
     private calendar: NgbCalendar,
-    private roleService: RoleService
+    private roleService: RoleService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.initDefaultDateRange();
     this.loadBookings();
     this.checkUserRole();
+    this.checkEmailVerification();
   }
 
   private initDefaultDateRange(): void {
@@ -187,6 +192,14 @@ export class BookingsPageComponent implements OnInit {
       next: (roleInfo: UserRoleInfo) => {
         this.isAdmin = roleInfo.isAdmin;
       },
+    });
+  }
+
+  private checkEmailVerification() {
+    this.authService.user$.pipe(take(1)).subscribe(user => {
+      if (user) {
+        this.verifiedEmail = user.email_verified;
+      }
     });
   }
 }

@@ -19,12 +19,13 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../../../shared/components/form-field-error/form-field-error.component';
-import { Subscription } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 import { ParkingType, ParkingTypesResponse } from '../../../../shared';
 import { PhoneCode } from '../../../../shared/models/phone-codes.model';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
 import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
 import Swal from 'sweetalert2';
+import { AuthService } from '@auth0/auth0-angular';
 
 @Component({
   selector: 'app-booking-form',
@@ -81,7 +82,34 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   userSearched = false;
   pendingFoundUserData: { fullName?: string; phone?: string; phoneCode?: string } | null = null;
 
-  constructor() {
+  constructor(private authService: AuthService) {
+    this.authService.user$.pipe(take(1)).subscribe(user => {
+      if (user) {
+        if (!user.email_verified) {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'Email not verified',
+            html: 'Please verify your email. <a id="profile-link" href="javascript:void(0)" style="color: #006B8F; font-weight: 500; text-decoration: underline; cursor: pointer;">Go to Profile</a>',
+            showConfirmButton: false,
+            timer: 6000,
+            timerProgressBar: true,
+            didOpen: () => {
+              const link = document.getElementById('profile-link');
+              if (link) {
+                link.addEventListener('click', () => {
+                  Swal.close();
+                  this.router.navigate(['/admin/user-profile']);
+                });
+              }
+            }
+          });
+          this.router.navigate(['/bookings']);
+        }
+      }
+    });
+    
     const today = this.calendar.getToday();
     const tomorrow = this.calendar.getNext(today, 'd', 1);
     const dayAfterTomorrow = this.calendar.getNext(tomorrow, 'd', 1);
