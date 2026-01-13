@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
-import { CAR_DROP_OFF_OPTIONS } from '../../shared/statics/car-drop-off.model';
-import { CAR_PICK_UP_OPTIONS } from '../../shared/statics/car-pick-up.model';
+import { CAR_DROP_OFF_OPTIONS, CAR_DROP_OFF_OPTIONS_LABELS } from '../../shared/statics/car-drop-off.model';
+import { CAR_PICK_UP_OPTIONS, CAR_PICK_UP_OPTIONS_LABELS } from '../../shared/statics/car-pick-up.model';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
 import { Customer } from '../../shared/models/customers.model';
 import { HistoryBooking } from '../../shared/models/booking.model';
@@ -313,8 +313,8 @@ export class CustomersComponent implements OnInit {
   getDropOffLabel(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case CAR_DROP_OFF_OPTIONS.selfDropOff: return 'Self Drop-Off';
-      case CAR_DROP_OFF_OPTIONS.airportPickUp: return 'Airport Pick-Up';
+      case CAR_DROP_OFF_OPTIONS.selfDropOff: return CAR_DROP_OFF_OPTIONS_LABELS.selfDropOff;
+      case CAR_DROP_OFF_OPTIONS.airportPickUp: return CAR_DROP_OFF_OPTIONS_LABELS.airportPickUp;
       default: return option;
     }
   }
@@ -322,8 +322,8 @@ export class CustomersComponent implements OnInit {
   getPickUpLabel(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case CAR_PICK_UP_OPTIONS.selfPickUp: return 'Self Pick-Up';
-      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return 'Delivery to airport';
+      case CAR_PICK_UP_OPTIONS.selfPickUp: return CAR_PICK_UP_OPTIONS_LABELS.selfPickUp;
+      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return CAR_PICK_UP_OPTIONS_LABELS.deliveryToAirport;
       default: return option;
     }
   }
