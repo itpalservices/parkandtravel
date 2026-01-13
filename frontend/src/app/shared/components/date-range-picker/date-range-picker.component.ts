@@ -26,6 +26,8 @@ export interface DateRange {
 })
 export class DateRangePickerComponent implements OnInit {
   @Input() selectedPreset: string | null = null;
+  @Input() enablePastDates: boolean = false;
+
   @Output() dateRangeChange = new EventEmitter<DateRange>();
 
   isOpen = false;
@@ -47,8 +49,8 @@ export class DateRangePickerComponent implements OnInit {
   appliedFromDate: NgbDateStruct | null = null;
   appliedToDate: NgbDateStruct | null = null;
 
-  minDate: NgbDateStruct;
-  toMinDate: NgbDateStruct;
+  minDate?: NgbDateStruct;
+  toMinDate?: NgbDateStruct;
   displayDate: string = '';
 
   constructor(
@@ -56,11 +58,21 @@ export class DateRangePickerComponent implements OnInit {
     private elementRef: ElementRef,
   ) {
     const today = this.calendar.getToday();
-    this.minDate = today;
-    this.toMinDate = today;
+    this.minDate = this.enablePastDates ? null! : today;
+    this.toMinDate = this.enablePastDates ? null! : today;
   }
 
   ngOnInit(): void {
+    const today = this.calendar.getToday();
+
+    if (this.enablePastDates) {
+      this.minDate = undefined;
+      this.toMinDate = undefined;
+    } else {
+      this.minDate = today;
+      this.toMinDate = today;
+    }
+
     if (this.selectedPreset && this.selectedPreset !== 'custom') {
       this.activePreset = this.selectedPreset;
       const range = this.getDateRangeForPreset(this.selectedPreset);
@@ -125,13 +137,17 @@ export class DateRangePickerComponent implements OnInit {
   }
 
   private updateToMinDate(): void {
+    if (this.enablePastDates) {
+      this.toMinDate = this.fromDate ? { ...this.fromDate } : undefined;
+      return;
+    }
+
     if (this.fromDate) {
       const today = this.calendar.getToday();
-      if (this.compareDates(this.fromDate, today) >= 0) {
-        this.toMinDate = { ...this.fromDate };
-      } else {
-        this.toMinDate = today;
-      }
+      this.toMinDate =
+        this.compareDates(this.fromDate, today) >= 0
+          ? { ...this.fromDate }
+          : today;
     } else {
       this.toMinDate = this.calendar.getToday();
     }
@@ -151,15 +167,19 @@ export class DateRangePickerComponent implements OnInit {
   }
 
   isDateDisabled = (date: NgbDateStruct): boolean => {
+    if (this.enablePastDates) {
+      return false;
+    }
     const today = this.calendar.getToday();
     return this.compareDates(date, today) < 0;
   };
 
   isToDateDisabled = (date: NgbDateStruct): boolean => {
-    if (this.compareDates(date, this.toMinDate) < 0) {
-      return true;
+    if (this.enablePastDates || !this.toMinDate) {
+      return false;
     }
-    return false;
+
+    return this.compareDates(date, this.toMinDate) < 0;
   };
 
   private compareDates(date1: NgbDateStruct, date2: NgbDateStruct): number {

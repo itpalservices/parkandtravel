@@ -38,9 +38,8 @@
           <div class="calendars-container">
             <div class="calendar-wrapper">
               <ngb-datepicker
-                #dpFrom
                 [(ngModel)]="fromDate"
-                [minDate]="minDate"
+                [minDate]="minDate!"
                 [markDisabled]="isDateDisabled"
                 [displayMonths]="1"
                 navigation="arrows"
@@ -49,9 +48,8 @@
             </div>
             <div class="calendar-wrapper">
               <ngb-datepicker
-                #dpTo
                 [(ngModel)]="toDate"
-                [minDate]="toMinDate"
+                [minDate]="toMinDate!"
                 [markDisabled]="isToDateDisabled"
                 [displayMonths]="1"
                 navigation="arrows"

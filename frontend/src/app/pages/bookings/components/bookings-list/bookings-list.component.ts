@@ -71,7 +71,7 @@ export class BookingsListComponent implements OnInit {
     if (!option) return '-';
     switch (option) {
       case CAR_DROP_OFF_OPTIONS.selfDropOff: return CAR_DROP_OFF_OPTIONS_LABELS.selfDropOff;
-      case CAR_DROP_OFF_OPTIONS.airportPickUp: return CAR_DROP_OFF_OPTIONS.airportPickUp;
+      case CAR_DROP_OFF_OPTIONS.airportPickUp: return CAR_DROP_OFF_OPTIONS_LABELS.airportPickUp;
       default: return '-';
     }
   }
@@ -80,7 +80,7 @@ export class BookingsListComponent implements OnInit {
     if (!option) return '-';
     switch (option) {
       case CAR_PICK_UP_OPTIONS.selfPickUp: return CAR_PICK_UP_OPTIONS_LABELS.selfPickUp;
-      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return CAR_PICK_UP_OPTIONS.deliveryToAirport;
+      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return CAR_PICK_UP_OPTIONS_LABELS.deliveryToAirport;
       default: return '-';
     }
   }

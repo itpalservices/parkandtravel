@@ -25,12 +25,12 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
         });
         return;
       }
-      if (isDateInPast(dateFrom as string)) {
-        res
-          .status(400)
-          .json({ error: "dateFrom/dateTo cannot be in the past" });
-        return;
-      }
+      // if (isDateInPast(dateFrom as string)) {
+      //   res
+      //     .status(400)
+      //     .json({ error: "dateFrom/dateTo cannot be in the past" });
+      //   return;
+      // }
     }
 
     if (dateTo !== undefined) {
@@ -40,12 +40,12 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
           .json({ error: "dateTo must be a valid date in YYYY-MM-DD format" });
         return;
       }
-      if (isDateInPast(dateTo as string)) {
-        res
-          .status(400)
-          .json({ error: "dateFrom/dateTo cannot be in the past" });
-        return;
-      }
+      // if (isDateInPast(dateTo as string)) {
+      //   res
+      //     .status(400)
+      //     .json({ error: "dateFrom/dateTo cannot be in the past" });
+      //   return;
+      // }
     }
 
     if (dateFrom && dateTo) {
