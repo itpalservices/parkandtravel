@@ -6,7 +6,7 @@ interface GetBookingsParams {
   search?: string;
   page: number;
   limit: number;
-  userEmail?: string;
+  userId?: string;
 }
 
 interface BookingResponse {
@@ -30,6 +30,7 @@ interface BookingResponse {
   finalPrice: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
+  userId: string | null;
   deleteflag: number;
 }
 
@@ -67,7 +68,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   data: BookingResponse[];
   meta: { total: number; page: number };
 }> {
-  const { dateFrom, dateTo, search, page, limit, userEmail } = params;
+  const { dateFrom, dateTo, search, page, limit, userId } = params;
 
   const now = new Date();
   const nowTime = now.toTimeString().split(" ")[0];
@@ -78,9 +79,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     `(b."dateTo" > '${nowDate}'::date OR (b."dateTo" = '${nowDate}'::date AND COALESCE(b."timeTo"::time, '23:59:59'::time) > '${nowTime}'::time))`,
   ];
 
-  if (userEmail) {
-    const emailEscaped = userEmail.replace(/'/g, "''");
-    whereConditions.push(`LOWER(b.email) = LOWER('${emailEscaped}')`);
+  if (userId) {
+    whereConditions.push(`b."userId" = '${userId}'`);
   }
 
   if (dateFrom && dateTo) {
@@ -135,7 +135,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."finalPrice",
       b."dropOffOption",
       b."pickUpOption",
-      b.deleteflag
+      b.deleteflag,
+      b."userId"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     WHERE ${whereClause}
@@ -165,6 +166,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
+    userId: b.userId || null,
     deleteflag: b.deleteflag,
   }));
 
@@ -207,6 +209,7 @@ export async function getBookingById(
     finalPrice: booking.finalPrice !== null ? parseFloat(booking.finalPrice.toString()) : null,
     dropOffOption: booking.dropOffOption || null,
     pickUpOption: booking.pickUpOption || null,
+    userId: booking.userId || null,
     deleteflag: booking.deleteflag,
   };
 }
@@ -516,6 +519,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."finalPrice",
       b."dropOffOption",
       b."pickUpOption",
+      b."userId",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -544,6 +548,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
+    userId: b.userId || null,
     deleteflag: b.deleteflag,
   }));
 }

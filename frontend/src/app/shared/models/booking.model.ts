@@ -21,6 +21,7 @@ export interface Booking {
   dropOffOption: string | null;
   pickUpOption: string | null;
   deleteflag: number;
+  userId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,4 +52,21 @@ export interface ParkingTypesResponse {
   parkingTypes: ParkingType[];
   washAvailable: boolean;
   washPrice: number | null;
+}
+
+export interface HistoryBooking {
+  id: string;
+  plateNo: string;
+  carBrand: string;
+  carModel: string;
+  carColor: string;
+  dateFrom: string;
+  timeFrom: string | null;
+  dateTo: string;
+  timeTo: string | null;
+  parkingType: string;
+  washService: boolean;
+  finalPrice: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
 }

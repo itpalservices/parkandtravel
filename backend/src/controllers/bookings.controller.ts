@@ -65,7 +65,7 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const userEmail = isRegularUser ? authUser?.email : undefined;
+    const userId = isRegularUser ? authUser?.sub : undefined;
 
     const result = await getBookings({
       dateFrom: dateFrom as string | undefined,
@@ -73,7 +73,7 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
       search: search as string | undefined,
       page: pageNum,
       limit: limitNum,
-      userEmail,
+      userId,
     });
 
     res.json(result);

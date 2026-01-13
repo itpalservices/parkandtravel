@@ -6,9 +6,3 @@ export interface Customer {
   phone: string;
   phoneCode: string;
 }
-
-export interface PhoneCode {
-  id: string;
-  isoCode: string;
-  phoneCode: string;
-}

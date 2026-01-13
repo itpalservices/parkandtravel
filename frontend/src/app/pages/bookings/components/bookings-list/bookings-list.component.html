@@ -15,6 +15,9 @@
             <th>Flight No.</th>
             <th>Parking Type</th>
             <th>Wash Service</th>
+            @if (isAdmin) {
+              <th>Source</th>
+            }
             <th>Price</th>
             <th class="actions-col"></th>
           </tr>
@@ -66,7 +69,17 @@
                 >
                   {{ booking.washService ? 'Yes' : 'No' }}
                 </span>
-              </td>
+              </td>              
+              @if (isAdmin) {
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="booking.userId ? 'bg-info' : 'bg-black'"
+                  >
+                    {{ booking.userId ? 'Registered User' : 'Guest' }}
+                  </span>
+                </td>
+              }
               <td>
                 {{
                   booking.finalPrice !== null
@@ -168,6 +181,14 @@
             <div class="customer-info">
               <span class="customer-name">{{ booking.name }} {{ booking.surname }}</span>
               <span class="flight-info">License: {{ booking.plateNo || 'N/A' }}</span>
+              <span class="wash-service-badge">
+                <span
+                  class="badge"
+                  [ngClass]="booking.parkingType === 'Covered' ? 'bg-primary' : 'bg-secondary'"
+                >
+                  {{ booking.parkingType }}
+                </span>
+              </span>
               @if (booking.washService) {
                 <span class="wash-service-badge">
                   <svg
@@ -197,17 +218,30 @@
               <span class="detail-value">{{ booking.returnFlight }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label text-start">Check In:</span>
+              <span class="detail-label text-start my-auto">Check In:</span>
               <span class="detail-value"
                 >{{ formatCheckIn(booking) }} ({{ formatDropOff(booking.dropOffOption) }})</span
               >
             </div>
             <div class="detail-row">
-              <span class="detail-label text-start">Check Out:</span>
+              <span class="detail-label text-start my-auto">Check Out:</span>
               <span class="detail-value"
                 >{{ formatArrival(booking) }} ({{ formatPickUp(booking.pickUpOption) }})</span
               >
             </div>
+            @if (isAdmin) {
+              <div class="detail-row">
+                <span class="detail-label text-start my-auto">Source:</span>
+                <span class="detail-value">
+                  <span
+                    class="badge"
+                    [ngClass]="booking.userId ? 'bg-info' : 'bg-black'"
+                  >
+                    {{ booking.userId ? 'Registered User' : 'Guest' }}
+                  </span>
+                </span>
+              </div>
+            }
             <div class="detail-row">
               <span class="detail-label"></span>
               <span class="detail-value">{{

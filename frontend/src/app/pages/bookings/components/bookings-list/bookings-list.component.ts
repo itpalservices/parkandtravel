@@ -1,9 +1,12 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import Swal from 'sweetalert2';
+import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
+import { CAR_PICK_UP_OPTIONS } from '../../../../shared/statics/car-pick-up.model';
+import { CAR_DROP_OFF_OPTIONS } from '../../../../shared/statics/car-drop-off.model';
 
 @Component({
   selector: 'app-bookings-list',
@@ -12,7 +15,7 @@ import Swal from 'sweetalert2';
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss']
 })
-export class BookingsListComponent {
+export class BookingsListComponent implements OnInit {  
   @Input() bookings: Booking[] = [];
   @Input() currentPage = 1;
   @Input() totalPages = 1;
@@ -20,7 +23,13 @@ export class BookingsListComponent {
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
-  constructor(private bookingsService: BookingsService) {}
+  isAdmin: boolean = false;
+
+  constructor(private bookingsService: BookingsService, private roleService: RoleService) {}
+
+  ngOnInit() {    
+    this.checkUserRole();
+  }
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -61,8 +70,8 @@ export class BookingsListComponent {
   formatDropOff(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_drive': return 'Self Drop-Off';
-      case 'airport_pickup': return 'Airport Pick-Up';
+      case CAR_DROP_OFF_OPTIONS.selfDropOff: return 'Self Drop-Off';
+      case CAR_DROP_OFF_OPTIONS.airportPickUp: return 'Airport Pick-Up';
       default: return '-';
     }
   }
@@ -70,8 +79,8 @@ export class BookingsListComponent {
   formatPickUp(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_pickup': return 'Self Pick-Up';
-      case 'airport_delivery': return 'Delivery to airport';
+      case CAR_PICK_UP_OPTIONS.selfPickUp: return 'Self Pick-Up';
+      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return 'Delivery to airport';
       default: return '-';
     }
   }
@@ -135,4 +144,12 @@ export class BookingsListComponent {
       this.pageChange.emit(page);
     }
   }
+
+  private checkUserRole(): void {
+      this.roleService.getUserRole().subscribe({
+        next: (roleInfo: UserRoleInfo) => {
+          this.isAdmin = roleInfo.isAdmin;
+        },
+      });
+    }
 }

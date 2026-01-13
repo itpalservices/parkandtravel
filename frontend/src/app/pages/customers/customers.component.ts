@@ -3,38 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
-
-interface Customer {
-  userId: string;
-  email: string;
-  name: string;
-  surname: string;
-  phone: string;
-  phoneCode: string;
-}
-
-interface PhoneCode {
-  id: string;
-  isoCode: string;
-  phoneCode: string;
-}
-
-interface HistoryBooking {
-  id: string;
-  plateNo: string;
-  carBrand: string;
-  carModel: string;
-  carColor: string;
-  dateFrom: string;
-  timeFrom: string | null;
-  dateTo: string;
-  timeTo: string | null;
-  parkingType: string;
-  washService: boolean;
-  finalPrice: number | null;
-  dropOffOption: string | null;
-  pickUpOption: string | null;
-}
+import { CAR_DROP_OFF_OPTIONS } from '../../shared/statics/car-drop-off.model';
+import { CAR_PICK_UP_OPTIONS } from '../../shared/statics/car-pick-up.model';
+import { PhoneCode } from '../../shared/models/phone-codes.model';
+import { Customer } from '../../shared/models/customers.model';
+import { HistoryBooking } from '../../shared/models/booking.model';
 
 @Component({
   selector: 'app-customers',
@@ -340,8 +313,8 @@ export class CustomersComponent implements OnInit {
   getDropOffLabel(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_drive': return 'Self Drop-Off';
-      case 'airport_pickup': return 'Airport Pick-Up';
+      case CAR_DROP_OFF_OPTIONS.selfDropOff: return 'Self Drop-Off';
+      case CAR_DROP_OFF_OPTIONS.airportPickUp: return 'Airport Pick-Up';
       default: return option;
     }
   }
@@ -349,8 +322,8 @@ export class CustomersComponent implements OnInit {
   getPickUpLabel(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case 'self_pickup': return 'Self Pick-Up';
-      case 'airport_delivery': return 'Delivery to airport';
+      case CAR_PICK_UP_OPTIONS.selfPickUp: return 'Self Pick-Up';
+      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return 'Delivery to airport';
       default: return option;
     }
   }
