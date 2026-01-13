@@ -7,6 +7,7 @@ import { BookingsService } from '../../../../core/services/bookings.service';
 import { Booking } from '../../../../shared/models/booking.model';
 import { DateRangePickerComponent, DateRange } from '../../../../shared/components/date-range-picker/date-range-picker.component';
 import { BookingsListComponent } from '../bookings-list/bookings-list.component';
+import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
 
 @Component({
   selector: 'app-bookings-page',
@@ -29,6 +30,8 @@ export class BookingsPageComponent implements OnInit {
   errorMessage = '';
   searchTerm = '';
 
+  isAdmin: boolean = false;
+
   dateFilter: DateRange = { from: null, to: null, preset: null };
 
   currentPage = 1;
@@ -37,12 +40,14 @@ export class BookingsPageComponent implements OnInit {
 
   constructor(
     private bookingsService: BookingsService,
-    private calendar: NgbCalendar
+    private calendar: NgbCalendar,
+    private roleService: RoleService
   ) {}
 
   ngOnInit(): void {
     this.initDefaultDateRange();
     this.loadBookings();
+    this.checkUserRole();
   }
 
   private initDefaultDateRange(): void {
@@ -174,5 +179,14 @@ export class BookingsPageComponent implements OnInit {
 
   onSearchChange(): void {
     this.applySearchFilter();
+  }
+  
+
+  private checkUserRole(): void {
+    this.roleService.getUserRole().subscribe({
+      next: (roleInfo: UserRoleInfo) => {
+        this.isAdmin = roleInfo.isAdmin;
+      },
+    });
   }
 }

@@ -1,10 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import Swal from 'sweetalert2';
-import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
+import { RoleService } from '../../../../core/services/role.service';
 import { CAR_PICK_UP_OPTIONS, CAR_PICK_UP_OPTIONS_LABELS } from '../../../../shared/statics/car-pick-up.model';
 import { CAR_DROP_OFF_OPTIONS, CAR_DROP_OFF_OPTIONS_LABELS } from '../../../../shared/statics/car-drop-off.model';
 
@@ -15,21 +15,16 @@ import { CAR_DROP_OFF_OPTIONS, CAR_DROP_OFF_OPTIONS_LABELS } from '../../../../s
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss']
 })
-export class BookingsListComponent implements OnInit {  
+export class BookingsListComponent {  
   @Input() bookings: Booking[] = [];
   @Input() currentPage = 1;
   @Input() totalPages = 1;
   @Input() pageNumbers: number[] = [];
+  @Input() isAdmin: boolean = false;
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
-  isAdmin: boolean = false;
-
   constructor(private bookingsService: BookingsService, private roleService: RoleService) {}
-
-  ngOnInit() {    
-    this.checkUserRole();
-  }
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -144,12 +139,4 @@ export class BookingsListComponent implements OnInit {
       this.pageChange.emit(page);
     }
   }
-
-  private checkUserRole(): void {
-      this.roleService.getUserRole().subscribe({
-        next: (roleInfo: UserRoleInfo) => {
-          this.isAdmin = roleInfo.isAdmin;
-        },
-      });
-    }
 }
