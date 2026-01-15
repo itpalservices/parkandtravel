@@ -100,6 +100,7 @@
       </div>
     } @else {
       <app-bookings-list 
+        [isAdmin]="isAdmin"
         [bookings]="paginatedBookings"
         [currentPage]="currentPage"
         [totalPages]="totalPages"
