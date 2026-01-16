@@ -7,7 +7,7 @@ import {
   Validators,
   FormsModule,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   NgbDatepickerModule,
   NgbDateStruct,
@@ -26,6 +26,12 @@ import { RoleService, UserRoleInfo } from '../../../../core/services/role.servic
 import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
 import Swal from 'sweetalert2';
 import { AuthService } from '@auth0/auth0-angular';
+import { FormAction } from '../../../../shared/enums/form-action.enum';
+
+enum FormType {
+  NewBooking,
+  ExistingBooking
+}
 
 @Component({
   selector: 'app-booking-form',
@@ -82,7 +88,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   userSearched = false;
   pendingFoundUserData: { fullName?: string; phone?: string; phoneCode?: string } | null = null;
 
-  constructor(private authService: AuthService) {
+  readonly formType: FormType;
+
+  constructor(private authService: AuthService, private _activatedRoute: ActivatedRoute) {
+    const [{path}] = this._activatedRoute.snapshot.url;
+
+    this.formType = path === FormAction.Add ? FormType.NewBooking : FormType.ExistingBooking;
+
     this.authService.user$.pipe(take(1)).subscribe(user => {
       if (user) {
         if (!user.email_verified) {

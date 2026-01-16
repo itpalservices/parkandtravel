@@ -4,18 +4,20 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import Swal from 'sweetalert2';
-import { RoleService } from '../../../../core/services/role.service';
 import { CAR_PICK_UP_OPTIONS, CAR_PICK_UP_OPTIONS_LABELS } from '../../../../shared/statics/car-pick-up.model';
 import { CAR_DROP_OFF_OPTIONS, CAR_DROP_OFF_OPTIONS_LABELS } from '../../../../shared/statics/car-drop-off.model';
+import { RouterModule } from '@angular/router';
+import { FormAction } from '../../../../shared/enums/form-action.enum';
 
 @Component({
   selector: 'app-bookings-list',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule, CurrencyPipe],
+  imports: [CommonModule, NgbDropdownModule, CurrencyPipe, RouterModule],
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss']
 })
-export class BookingsListComponent {  
+export class BookingsListComponent {
+  FormAction = FormAction;
   @Input() bookings: Booking[] = [];
   @Input() currentPage = 1;
   @Input() totalPages = 1;
@@ -24,7 +26,7 @@ export class BookingsListComponent {
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
-  constructor(private bookingsService: BookingsService, private roleService: RoleService) {}
+  constructor(private bookingsService: BookingsService) {}
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -78,10 +80,6 @@ export class BookingsListComponent {
       case CAR_PICK_UP_OPTIONS.deliveryToAirport: return CAR_PICK_UP_OPTIONS_LABELS.deliveryToAirport;
       default: return '-';
     }
-  }
-
-  onEdit(booking: Booking): void {
-    console.log('Edit booking:', booking.id);
   }
 
   onDelete(booking: Booking): void {
