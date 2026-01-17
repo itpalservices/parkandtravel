@@ -97,6 +97,25 @@
   }
 }
 
+.stat-value-placeholder {
+  display: block;
+  height: 2.5rem;
+  width: 60px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: glow 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+}
+
+@keyframes glow {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .checkinout-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

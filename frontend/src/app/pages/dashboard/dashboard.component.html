@@ -26,7 +26,11 @@
             </svg>
           </div>
         </div>
-        <span class="stat-value blue">{{ stats.totalCars }}</span>
+        @if (loading) {
+          <span class="stat-value-placeholder"></span>
+        } @else {
+          <span class="stat-value blue">{{ stats.totalCars }}</span>
+        }
       </div>
 
       <div class="stat-card">
@@ -52,7 +56,11 @@
             </svg>
           </div>
         </div>
-        <span class="stat-value green">{{ stats.todayCheckIns }}</span>
+        @if (loading) {
+          <span class="stat-value-placeholder"></span>
+        } @else {
+          <span class="stat-value green">{{ stats.todayCheckIns }}</span>
+        }
       </div>
 
       <div class="stat-card">
@@ -78,7 +86,11 @@
             </svg>
           </div>
         </div>
-        <span class="stat-value orange">{{ stats.todayCheckOuts }}</span>
+        @if (loading) {
+          <span class="stat-value-placeholder"></span>
+        } @else {
+          <span class="stat-value orange">{{ stats.todayCheckOuts }}</span>
+        }
       </div>
 
       <div class="stat-card">
@@ -102,7 +114,11 @@
             </svg>
           </div>
         </div>
-        <span class="stat-value green">{{ stats.carsForWashToday }}</span>
+        @if (loading) {
+          <span class="stat-value-placeholder"></span>
+        } @else {
+          <span class="stat-value green">{{ stats.carsForWashToday }}</span>
+        }
       </div>
 
       <div class="stat-card">
@@ -126,7 +142,11 @@
             </svg>
           </div>
         </div>
-        <span class="stat-value orange">{{ stats.carsForWashTomorrow }}</span>
+        @if (loading) {
+          <span class="stat-value-placeholder"></span>
+        } @else {
+          <span class="stat-value orange">{{ stats.carsForWashTomorrow }}</span>
+        }
       </div>
     </div>
 
