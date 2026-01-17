@@ -4,8 +4,14 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import Swal from 'sweetalert2';
-import { CAR_PICK_UP_OPTIONS, CAR_PICK_UP_OPTIONS_LABELS } from '../../../../shared/statics/car-pick-up.model';
-import { CAR_DROP_OFF_OPTIONS, CAR_DROP_OFF_OPTIONS_LABELS } from '../../../../shared/statics/car-drop-off.model';
+import {
+  CAR_PICK_UP_OPTIONS,
+  CAR_PICK_UP_OPTIONS_LABELS,
+} from '../../../../shared/statics/car-pick-up.model';
+import {
+  CAR_DROP_OFF_OPTIONS,
+  CAR_DROP_OFF_OPTIONS_LABELS,
+} from '../../../../shared/statics/car-drop-off.model';
 import { RouterModule } from '@angular/router';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
 
@@ -14,7 +20,7 @@ import { FormAction } from '../../../../shared/enums/form-action.enum';
   standalone: true,
   imports: [CommonModule, NgbDropdownModule, CurrencyPipe, RouterModule],
   templateUrl: './bookings-list.component.html',
-  styleUrls: ['./bookings-list.component.scss']
+  styleUrls: ['./bookings-list.component.scss'],
 })
 export class BookingsListComponent {
   FormAction = FormAction;
@@ -23,6 +29,7 @@ export class BookingsListComponent {
   @Input() totalPages = 1;
   @Input() pageNumbers: number[] = [];
   @Input() isAdmin: boolean = false;
+  @Input() isDriver: boolean = false;
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
@@ -33,7 +40,7 @@ export class BookingsListComponent {
     return date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   }
 
@@ -42,7 +49,7 @@ export class BookingsListComponent {
     const dateStr = date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
     const time = booking.timeFrom?.slice(0, -3) || '--:--';
     return `${dateStr} ${time}`;
@@ -53,7 +60,7 @@ export class BookingsListComponent {
     const dateStr = date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
     const time = booking.timeTo?.slice(0, -3) || '--:--';
     return `${dateStr} ${time}`;
@@ -67,18 +74,24 @@ export class BookingsListComponent {
   formatDropOff(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case CAR_DROP_OFF_OPTIONS.selfDropOff: return CAR_DROP_OFF_OPTIONS_LABELS.selfDropOff;
-      case CAR_DROP_OFF_OPTIONS.airportPickUp: return CAR_DROP_OFF_OPTIONS_LABELS.airportPickUp;
-      default: return '-';
+      case CAR_DROP_OFF_OPTIONS.selfDropOff:
+        return CAR_DROP_OFF_OPTIONS_LABELS.selfDropOff;
+      case CAR_DROP_OFF_OPTIONS.airportPickUp:
+        return CAR_DROP_OFF_OPTIONS_LABELS.airportPickUp;
+      default:
+        return '-';
     }
   }
 
   formatPickUp(option: string | null): string {
     if (!option) return '-';
     switch (option) {
-      case CAR_PICK_UP_OPTIONS.selfPickUp: return CAR_PICK_UP_OPTIONS_LABELS.selfPickUp;
-      case CAR_PICK_UP_OPTIONS.deliveryToAirport: return CAR_PICK_UP_OPTIONS_LABELS.deliveryToAirport;
-      default: return '-';
+      case CAR_PICK_UP_OPTIONS.selfPickUp:
+        return CAR_PICK_UP_OPTIONS_LABELS.selfPickUp;
+      case CAR_PICK_UP_OPTIONS.deliveryToAirport:
+        return CAR_PICK_UP_OPTIONS_LABELS.deliveryToAirport;
+      default:
+        return '-';
     }
   }
 
@@ -91,7 +104,7 @@ export class BookingsListComponent {
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, delete it',
-      cancelButtonText: 'Cancel'
+      cancelButtonText: 'Cancel',
     }).then((result) => {
       if (result.isConfirmed) {
         this.bookingsService.softDelete(booking.id).subscribe({
@@ -103,7 +116,7 @@ export class BookingsListComponent {
               title: 'Booking deleted successfully',
               showConfirmButton: false,
               timer: 3000,
-              timerProgressBar: true
+              timerProgressBar: true,
             });
             this.bookingDeleted.emit();
           },
@@ -112,9 +125,9 @@ export class BookingsListComponent {
               title: 'Error',
               text: err.error?.message || 'Failed to delete booking. Please try again.',
               icon: 'error',
-              confirmButtonColor: '#006B8F'
+              confirmButtonColor: '#006B8F',
             });
-          }
+          },
         });
       }
     });

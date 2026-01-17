@@ -5,7 +5,10 @@ import { RouterLink } from '@angular/router';
 import { NgbDatepickerModule, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { Booking } from '../../../../shared/models/booking.model';
-import { DateRangePickerComponent, DateRange } from '../../../../shared/components/date-range-picker/date-range-picker.component';
+import {
+  DateRangePickerComponent,
+  DateRange,
+} from '../../../../shared/components/date-range-picker/date-range-picker.component';
 import { BookingsListComponent } from '../bookings-list/bookings-list.component';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
 import { take } from 'rxjs';
@@ -20,10 +23,10 @@ import { AuthService } from '@auth0/auth0-angular';
     RouterLink,
     NgbDatepickerModule,
     DateRangePickerComponent,
-    BookingsListComponent
+    BookingsListComponent,
   ],
   templateUrl: './bookings-page.component.html',
-  styleUrls: ['./bookings-page.component.scss']
+  styleUrls: ['./bookings-page.component.scss'],
 })
 export class BookingsPageComponent implements OnInit {
   allBookings: Booking[] = [];
@@ -33,6 +36,7 @@ export class BookingsPageComponent implements OnInit {
   searchTerm = '';
 
   isAdmin: boolean = false;
+  isDriver: boolean = false;
   verifiedEmail: boolean | undefined = false;
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
@@ -45,7 +49,7 @@ export class BookingsPageComponent implements OnInit {
     private bookingsService: BookingsService,
     private calendar: NgbCalendar,
     private roleService: RoleService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -59,11 +63,11 @@ export class BookingsPageComponent implements OnInit {
     const today = this.calendar.getToday();
     const fromDate = new Date(today.year, today.month - 1, today.day);
     const toDate = new Date(today.year, today.month - 1, today.day);
-    
+
     this.dateFilter = {
       from: fromDate,
       to: toDate,
-      preset: 'today'
+      preset: 'today',
     };
   }
 
@@ -77,9 +81,9 @@ export class BookingsPageComponent implements OnInit {
   loadBookings(): void {
     this.loading = true;
     this.errorMessage = '';
-    
+
     const params: { dateFrom?: string; dateTo?: string } = {};
-    
+
     if (this.dateFilter.from) {
       params.dateFrom = this.formatDateForApi(this.dateFilter.from);
     }
@@ -97,17 +101,17 @@ export class BookingsPageComponent implements OnInit {
         console.error('Failed to load bookings:', err);
         this.errorMessage = err.message || 'Failed to load bookings. Please try again.';
         this.loading = false;
-      }
+      },
     });
   }
 
   private applySearchFilter(): void {
     const term = this.searchTerm.trim().toLowerCase();
-    
+
     if (!term) {
       this.filteredBookings = [...this.allBookings];
     } else {
-      this.filteredBookings = this.allBookings.filter(booking => {
+      this.filteredBookings = this.allBookings.filter((booking) => {
         const fullName = `${booking.name} ${booking.surname}`.toLowerCase();
         const searchableFields = [
           fullName,
@@ -120,15 +124,13 @@ export class BookingsPageComponent implements OnInit {
           booking.dateTo,
           booking.carBrand,
           booking.carModel,
-          booking.carColor
+          booking.carColor,
         ];
-        
-        return searchableFields.some(field => 
-          field && field.toLowerCase().includes(term)
-        );
+
+        return searchableFields.some((field) => field && field.toLowerCase().includes(term));
       });
     }
-    
+
     this.totalPages = Math.ceil(this.filteredBookings.length / this.pageSize) || 1;
     this.currentPage = 1;
   }
@@ -147,32 +149,32 @@ export class BookingsPageComponent implements OnInit {
   get pageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
-    
+
     if (this.totalPages <= maxVisiblePages + 2) {
       for (let i = 1; i <= this.totalPages; i++) {
         pages.push(i);
       }
     } else {
       pages.push(1);
-      
+
       if (this.currentPage > 3) {
         pages.push(-1);
       }
-      
+
       const start = Math.max(2, this.currentPage - 1);
       const end = Math.min(this.totalPages - 1, this.currentPage + 1);
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
-      
+
       if (this.currentPage < this.totalPages - 2) {
         pages.push(-1);
       }
-      
+
       pages.push(this.totalPages);
     }
-    
+
     return pages;
   }
 
@@ -185,18 +187,18 @@ export class BookingsPageComponent implements OnInit {
   onSearchChange(): void {
     this.applySearchFilter();
   }
-  
 
   private checkUserRole(): void {
     this.roleService.getUserRole().subscribe({
       next: (roleInfo: UserRoleInfo) => {
+        this.isDriver = roleInfo.isDriver;
         this.isAdmin = roleInfo.isAdmin;
       },
     });
   }
 
   private checkEmailVerification() {
-    this.authService.user$.pipe(take(1)).subscribe(user => {
+    this.authService.user$.pipe(take(1)).subscribe((user) => {
       if (user) {
         this.verifiedEmail = user.email_verified;
       }
