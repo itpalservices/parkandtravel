@@ -78,7 +78,6 @@ export class BookingsPageComponent implements OnInit {
       dateFrom: this.dateFilter.from ? this.formatDateForApi(this.dateFilter.from) : null,
       dateTo: this.dateFilter.to ? this.formatDateForApi(this.dateFilter.to) : null,
     };
-    console.log('dateRangeFilterForList updated:', this.dateRangeFilterForList);
   }
 
   private formatDateForApi(date: Date): string {
