@@ -87,6 +87,7 @@
           </div>
           <app-date-range-picker
             [enablePastDates]="true"
+            [selectedPreset]="'today'"
             (dateRangeChange)="onCheckInDateRangeChange($event)"
           ></app-date-range-picker>
         </div>
@@ -118,6 +119,7 @@
           </div>
           <app-date-range-picker
             [enablePastDates]="true"
+            [selectedPreset]="'today'"
             (dateRangeChange)="onCheckOutDateRangeChange($event)"
           ></app-date-range-picker>
         </div>
