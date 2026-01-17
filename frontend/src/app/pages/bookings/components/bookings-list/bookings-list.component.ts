@@ -169,9 +169,9 @@ export class BookingsListComponent {
     if (!this.dateRangeFilter?.dateFrom && !this.dateRangeFilter?.dateTo) {
       return false;
     }
-    const checkInDate = this.normalizeDate(booking.dateFrom);
-    const filterFrom = this.dateRangeFilter.dateFrom ? this.normalizeDate(this.dateRangeFilter.dateFrom) : null;
-    const filterTo = this.dateRangeFilter.dateTo ? this.normalizeDate(this.dateRangeFilter.dateTo) : null;
+    const checkInDate = this.extractDatePart(booking.dateFrom);
+    const filterFrom = this.dateRangeFilter.dateFrom;
+    const filterTo = this.dateRangeFilter.dateTo;
 
     if (filterFrom && filterTo) {
       return checkInDate >= filterFrom && checkInDate <= filterTo;
@@ -187,9 +187,9 @@ export class BookingsListComponent {
     if (!this.dateRangeFilter?.dateFrom && !this.dateRangeFilter?.dateTo) {
       return false;
     }
-    const checkOutDate = this.normalizeDate(booking.dateTo);
-    const filterFrom = this.dateRangeFilter.dateFrom ? this.normalizeDate(this.dateRangeFilter.dateFrom) : null;
-    const filterTo = this.dateRangeFilter.dateTo ? this.normalizeDate(this.dateRangeFilter.dateTo) : null;
+    const checkOutDate = this.extractDatePart(booking.dateTo);
+    const filterFrom = this.dateRangeFilter.dateFrom;
+    const filterTo = this.dateRangeFilter.dateTo;
 
     if (filterFrom && filterTo) {
       return checkOutDate >= filterFrom && checkOutDate <= filterTo;
@@ -201,7 +201,13 @@ export class BookingsListComponent {
     return false;
   }
 
-  private normalizeDate(dateString: string): string {
+  private extractDatePart(dateString: string): string {
+    if (dateString.includes('T')) {
+      return dateString.split('T')[0];
+    }
+    if (dateString.length === 10 && dateString.includes('-')) {
+      return dateString;
+    }
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
