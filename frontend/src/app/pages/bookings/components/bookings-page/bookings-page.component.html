@@ -170,6 +170,7 @@
         [currentPage]="currentPage"
         [totalPages]="totalPages"
         [pageNumbers]="pageNumbers"
+        [dateRangeFilter]="dateRangeFilterForList"
         (pageChange)="onPageChange($event)"
         (bookingDeleted)="loadBookings()"
       ></app-bookings-list>
