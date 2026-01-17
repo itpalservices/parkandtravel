@@ -154,7 +154,7 @@ export class WashServiceReportComponent implements OnInit {
       item.plateNo,
       item.vehicleModel,
       item.vehicleColor,
-      item.carPickup,
+      this.formatPickUp(item.carPickup),
       `${item.checkOutDate} ${item.checkOutTime}`,
     ]);
 
