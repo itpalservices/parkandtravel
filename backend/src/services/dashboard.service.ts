@@ -31,7 +31,8 @@ function formatTime(time: Date | null): string {
 function formatDisplayDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  return `${day}/${month}`;
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
