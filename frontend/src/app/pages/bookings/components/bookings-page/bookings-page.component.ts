@@ -40,6 +40,7 @@ export class BookingsPageComponent implements OnInit {
   verifiedEmail: boolean | undefined = false;
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
+  dateRangeFilterForList: { dateFrom: string | null; dateTo: string | null } = { dateFrom: null, dateTo: null };
 
   currentPage = 1;
   pageSize = 10;
@@ -68,6 +69,14 @@ export class BookingsPageComponent implements OnInit {
       from: fromDate,
       to: toDate,
       preset: 'today',
+    };
+    this.updateDateRangeFilterForList();
+  }
+
+  private updateDateRangeFilterForList(): void {
+    this.dateRangeFilterForList = {
+      dateFrom: this.dateFilter.from ? this.formatDateForApi(this.dateFilter.from) : null,
+      dateTo: this.dateFilter.to ? this.formatDateForApi(this.dateFilter.to) : null,
     };
   }
 
@@ -137,6 +146,7 @@ export class BookingsPageComponent implements OnInit {
 
   onDateRangeChange(range: DateRange): void {
     this.dateFilter = range;
+    this.updateDateRangeFilterForList();
     this.loadBookings();
   }
 
@@ -186,13 +196,6 @@ export class BookingsPageComponent implements OnInit {
 
   onSearchChange(): void {
     this.applySearchFilter();
-  }
-
-  get dateRangeFilterForList(): { dateFrom: string | null; dateTo: string | null } {
-    return {
-      dateFrom: this.dateFilter.from ? this.formatDateForApi(this.dateFilter.from) : null,
-      dateTo: this.dateFilter.to ? this.formatDateForApi(this.dateFilter.to) : null,
-    };
   }
 
   private checkUserRole(): void {
