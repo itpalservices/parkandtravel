@@ -4,6 +4,8 @@ import {
   Input,
   Output,
   OnInit,
+  OnChanges,
+  SimpleChanges,
   ElementRef,
   HostListener,
 } from '@angular/core';
@@ -24,8 +26,10 @@ export interface DateRange {
   templateUrl: './date-range-picker.component.html',
   styleUrls: ['./date-range-picker.component.scss'],
 })
-export class DateRangePickerComponent implements OnInit {
+export class DateRangePickerComponent implements OnInit, OnChanges {
   @Input() selectedPreset: string | null = null;
+  @Input() selectedFromDate: Date | null = null;
+  @Input() selectedToDate: Date | null = null;
   @Input() enablePastDates: boolean = false;
   @Input() enableCustomRange: boolean = true;
 
@@ -74,13 +78,30 @@ export class DateRangePickerComponent implements OnInit {
       this.toMinDate = today;
     }
 
-    if (this.selectedPreset && this.selectedPreset !== 'custom') {
+    this.syncFromInputs();
+    this.updateDisplayDate();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedPreset'] || changes['selectedFromDate'] || changes['selectedToDate']) {
+      if (!changes['selectedPreset']?.firstChange) {
+        this.syncFromInputs();
+        this.updateDisplayDate();
+      }
+    }
+  }
+
+  private syncFromInputs(): void {
+    if (this.selectedPreset === 'custom' && this.selectedFromDate && this.selectedToDate) {
+      this.activePreset = 'custom';
+      this.appliedFromDate = this.dateToNgbDate(this.selectedFromDate);
+      this.appliedToDate = this.dateToNgbDate(this.selectedToDate);
+    } else if (this.selectedPreset && this.selectedPreset !== 'custom') {
       this.activePreset = this.selectedPreset;
       const range = this.getDateRangeForPreset(this.selectedPreset);
       this.appliedFromDate = this.dateToNgbDate(range.from);
       this.appliedToDate = this.dateToNgbDate(range.to);
     }
-    this.updateDisplayDate();
   }
 
   private dateToNgbDate(date: Date): NgbDateStruct {

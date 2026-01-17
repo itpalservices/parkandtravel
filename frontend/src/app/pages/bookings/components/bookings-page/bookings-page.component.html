@@ -55,6 +55,8 @@
         }
         <app-date-range-picker
           [selectedPreset]="dateFilter.preset"
+          [selectedFromDate]="dateFilter.from"
+          [selectedToDate]="dateFilter.to"
           (dateRangeChange)="onDateRangeChange($event)"
           [enablePastDates]="true"
         ></app-date-range-picker>
@@ -134,6 +136,8 @@
     <div class="date-range-row">
       <app-date-range-picker
         [selectedPreset]="dateFilter.preset"
+        [selectedFromDate]="dateFilter.from"
+        [selectedToDate]="dateFilter.to"
         (dateRangeChange)="onDateRangeChange($event)"
         [enablePastDates]="true"
       ></app-date-range-picker>
@@ -166,7 +170,6 @@
         [currentPage]="currentPage"
         [totalPages]="totalPages"
         [pageNumbers]="pageNumbers"
-        [dateRangeFilter]="dateRangeFilterForList"
         (pageChange)="onPageChange($event)"
         (bookingDeleted)="loadBookings()"
       ></app-bookings-list>
