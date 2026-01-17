@@ -4,8 +4,10 @@ import { DateRangePickerComponent, DateRange } from '../../shared/components/dat
 import { ApiService } from '../../core/services/api.service';
 
 interface CheckInOutItem {
-  licensePlate: string;
+  id: string;
+  plateNo: string;
   customerName: string;
+  date: string;
   time: string;
   flightNumber: string;
 }
@@ -37,26 +39,25 @@ export class DashboardComponent implements OnInit {
   };
 
   loading = true;
+  loadingCheckIns = true;
+  loadingCheckOuts = true;
 
-  upcomingCheckIns: CheckInOutItem[] = [
-    { licensePlate: 'ABC-1234', customerName: 'John Doe', time: '14:30', flightNumber: 'FR123' },
-    { licensePlate: 'XYZ-5678', customerName: 'Maria P.', time: '16:15', flightNumber: 'A3456' },
-    { licensePlate: 'DEF-9012', customerName: 'Dimitris K.', time: '18:45', flightNumber: 'EK789' },
-    { licensePlate: 'DEF-9012', customerName: 'Nikos K.', time: '18:45', flightNumber: 'EK789' },
-    { licensePlate: 'GHI-3456', customerName: 'Anna S.', time: '20:00', flightNumber: 'LH234' },
-    { licensePlate: 'JKL-7890', customerName: 'Kostas M.', time: '21:30', flightNumber: 'BA567' },
-  ];
+  upcomingCheckIns: CheckInOutItem[] = [];
+  upcomingCheckOuts: CheckInOutItem[] = [];
 
-  upcomingCheckOuts: CheckInOutItem[] = [
-    { licensePlate: 'GHI-3456', customerName: 'Anna S.', time: '09:00', flightNumber: 'LH234' },
-    { licensePlate: 'JKL-7890', customerName: 'Kostas M.', time: '11:30', flightNumber: 'BA567' },
-    { licensePlate: 'MNO-2345', customerName: 'Elena T.', time: '15:20', flightNumber: 'TK890' },
-    { licensePlate: 'MNO-2345', customerName: 'Christina T.', time: '15:20', flightNumber: 'TK890' },
-    { licensePlate: 'PQR-6789', customerName: 'George P.', time: '17:45', flightNumber: 'AZ123' },
-  ];
+  private checkInDateRange: DateRange | null = null;
+  private checkOutDateRange: DateRange | null = null;
 
   ngOnInit(): void {
     this.loadDashboardStats();
+    const today = new Date();
+    const todayStr = this.formatDateForApi(today);
+    this.loadCheckIns(todayStr, todayStr);
+    this.loadCheckOuts(todayStr, todayStr);
+  }
+
+  private formatDateForApi(date: Date): string {
+    return date.toISOString().split('T')[0];
   }
 
   private loadDashboardStats(): void {
@@ -73,11 +74,49 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  private loadCheckIns(dateFrom: string, dateTo: string): void {
+    this.loadingCheckIns = true;
+    this.apiService.get<CheckInOutItem[]>(`/dashboard/check-ins?dateFrom=${dateFrom}&dateTo=${dateTo}`).subscribe({
+      next: (checkIns) => {
+        this.upcomingCheckIns = checkIns;
+        this.loadingCheckIns = false;
+      },
+      error: (err) => {
+        console.error('Error loading check-ins:', err);
+        this.loadingCheckIns = false;
+      }
+    });
+  }
+
+  private loadCheckOuts(dateFrom: string, dateTo: string): void {
+    this.loadingCheckOuts = true;
+    this.apiService.get<CheckInOutItem[]>(`/dashboard/check-outs?dateFrom=${dateFrom}&dateTo=${dateTo}`).subscribe({
+      next: (checkOuts) => {
+        this.upcomingCheckOuts = checkOuts;
+        this.loadingCheckOuts = false;
+      },
+      error: (err) => {
+        console.error('Error loading check-outs:', err);
+        this.loadingCheckOuts = false;
+      }
+    });
+  }
+
   onCheckInDateRangeChange(range: DateRange): void {
-    console.log('Check-in date range:', range);
+    this.checkInDateRange = range;
+    if (range.from && range.to) {
+      const dateFrom = this.formatDateForApi(range.from);
+      const dateTo = this.formatDateForApi(range.to);
+      this.loadCheckIns(dateFrom, dateTo);
+    }
   }
 
   onCheckOutDateRangeChange(range: DateRange): void {
-    console.log('Check-out date range:', range);
+    this.checkOutDateRange = range;
+    if (range.from && range.to) {
+      const dateFrom = this.formatDateForApi(range.from);
+      const dateTo = this.formatDateForApi(range.to);
+      this.loadCheckOuts(dateFrom, dateTo);
+    }
   }
 }

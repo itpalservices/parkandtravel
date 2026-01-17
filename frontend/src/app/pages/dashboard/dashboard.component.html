@@ -180,17 +180,29 @@
           ></app-date-range-picker>
         </div>
         <div class="checkinout-list">
-          @for (item of upcomingCheckIns; track item.licensePlate + item.time) {
-            <div class="checkinout-item">
-              <div class="item-left">
-                <span class="license-plate">{{ item.licensePlate }}</span>
-                <span class="customer-name">{{ item.customerName }}</span>
-              </div>
-              <div class="item-right">
-                <span class="time">{{ item.time }}</span>
-                <span class="flight-badge green">{{ item.flightNumber }}</span>
-              </div>
+          @if (loadingCheckIns) {
+            <div class="list-loader">
+              <div class="list-item-placeholder"></div>
+              <div class="list-item-placeholder"></div>
+              <div class="list-item-placeholder"></div>
             </div>
+          } @else if (upcomingCheckIns.length === 0) {
+            <div class="empty-list">No check-ins found</div>
+          } @else {
+            @for (item of upcomingCheckIns; track item.id) {
+              <div class="checkinout-item">
+                <div class="item-left">
+                  <span class="license-plate">{{ item.plateNo }}</span>
+                  <span class="customer-name">{{ item.customerName }}</span>
+                </div>
+                <div class="item-right">
+                  <span class="datetime">{{ item.date }} {{ item.time }}</span>
+                  @if (item.flightNumber) {
+                    <span class="flight-badge green">{{ item.flightNumber }}</span>
+                  }
+                </div>
+              </div>
+            }
           }
         </div>
       </div>
@@ -224,17 +236,29 @@
           ></app-date-range-picker>
         </div>
         <div class="checkinout-list">
-          @for (item of upcomingCheckOuts; track item.licensePlate + item.time) {
-            <div class="checkinout-item">
-              <div class="item-left">
-                <span class="license-plate">{{ item.licensePlate }}</span>
-                <span class="customer-name">{{ item.customerName }}</span>
-              </div>
-              <div class="item-right">
-                <span class="time">{{ item.time }}</span>
-                <span class="flight-badge orange">{{ item.flightNumber }}</span>
-              </div>
+          @if (loadingCheckOuts) {
+            <div class="list-loader">
+              <div class="list-item-placeholder"></div>
+              <div class="list-item-placeholder"></div>
+              <div class="list-item-placeholder"></div>
             </div>
+          } @else if (upcomingCheckOuts.length === 0) {
+            <div class="empty-list">No check-outs found</div>
+          } @else {
+            @for (item of upcomingCheckOuts; track item.id) {
+              <div class="checkinout-item">
+                <div class="item-left">
+                  <span class="license-plate">{{ item.plateNo }}</span>
+                  <span class="customer-name">{{ item.customerName }}</span>
+                </div>
+                <div class="item-right">
+                  <span class="datetime">{{ item.date }} {{ item.time }}</span>
+                  @if (item.flightNumber) {
+                    <span class="flight-badge orange">{{ item.flightNumber }}</span>
+                  }
+                </div>
+              </div>
+            }
           }
         </div>
       </div>
