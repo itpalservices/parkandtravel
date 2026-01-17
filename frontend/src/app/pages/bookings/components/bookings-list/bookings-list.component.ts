@@ -15,6 +15,11 @@ import {
 import { RouterModule } from '@angular/router';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
 
+interface DateRangeFilter {
+  dateFrom: string | null;
+  dateTo: string | null;
+}
+
 @Component({
   selector: 'app-bookings-list',
   standalone: true,
@@ -30,6 +35,7 @@ export class BookingsListComponent {
   @Input() pageNumbers: number[] = [];
   @Input() isAdmin: boolean = false;
   @Input() isDriver: boolean = false;
+  @Input() dateRangeFilter: DateRangeFilter | null = null;
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
@@ -157,5 +163,49 @@ export class BookingsListComponent {
     const checkInDate = new Date(booking.dateFrom);
     checkInDate.setHours(0, 0, 0, 0);
     return checkInDate < today;
+  }
+
+  isCheckInHighlighted(booking: Booking): boolean {
+    if (!this.dateRangeFilter?.dateFrom && !this.dateRangeFilter?.dateTo) {
+      return false;
+    }
+    const checkInDate = this.normalizeDate(booking.dateFrom);
+    const filterFrom = this.dateRangeFilter.dateFrom ? this.normalizeDate(this.dateRangeFilter.dateFrom) : null;
+    const filterTo = this.dateRangeFilter.dateTo ? this.normalizeDate(this.dateRangeFilter.dateTo) : null;
+
+    if (filterFrom && filterTo) {
+      return checkInDate >= filterFrom && checkInDate <= filterTo;
+    } else if (filterFrom) {
+      return checkInDate === filterFrom;
+    } else if (filterTo) {
+      return checkInDate === filterTo;
+    }
+    return false;
+  }
+
+  isCheckOutHighlighted(booking: Booking): boolean {
+    if (!this.dateRangeFilter?.dateFrom && !this.dateRangeFilter?.dateTo) {
+      return false;
+    }
+    const checkOutDate = this.normalizeDate(booking.dateTo);
+    const filterFrom = this.dateRangeFilter.dateFrom ? this.normalizeDate(this.dateRangeFilter.dateFrom) : null;
+    const filterTo = this.dateRangeFilter.dateTo ? this.normalizeDate(this.dateRangeFilter.dateTo) : null;
+
+    if (filterFrom && filterTo) {
+      return checkOutDate >= filterFrom && checkOutDate <= filterTo;
+    } else if (filterFrom) {
+      return checkOutDate === filterFrom;
+    } else if (filterTo) {
+      return checkOutDate === filterTo;
+    }
+    return false;
+  }
+
+  private normalizeDate(dateString: string): string {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

@@ -53,9 +53,9 @@
               </td>
               <td>{{ formatVehicle(booking) }}</td>
               <td>{{ booking.carColor }}</td>
-              <td>{{ formatCheckIn(booking) }}</td>
+              <td [class.fw-bold]="isCheckInHighlighted(booking)">{{ formatCheckIn(booking) }}</td>
               <td>{{ formatDropOff(booking.dropOffOption) }}</td>
-              <td>{{ formatArrival(booking) }}</td>
+              <td [class.fw-bold]="isCheckOutHighlighted(booking)">{{ formatArrival(booking) }}</td>
               <td>{{ formatPickUp(booking.pickUpOption) }}</td>
               <td>{{ booking.returnFlight || '-' }}</td>
               <td>
@@ -228,13 +228,13 @@
             </div>
             <div class="detail-row">
               <span class="detail-label text-start my-auto">Check In:</span>
-              <span class="detail-value"
+              <span class="detail-value" [class.fw-bold]="isCheckInHighlighted(booking)"
                 >{{ formatCheckIn(booking) }} ({{ formatDropOff(booking.dropOffOption) }})</span
               >
             </div>
             <div class="detail-row">
               <span class="detail-label text-start my-auto">Check Out:</span>
-              <span class="detail-value"
+              <span class="detail-value" [class.fw-bold]="isCheckOutHighlighted(booking)"
                 >{{ formatArrival(booking) }} ({{ formatPickUp(booking.pickUpOption) }})</span
               >
             </div>

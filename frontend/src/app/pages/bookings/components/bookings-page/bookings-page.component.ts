@@ -188,6 +188,13 @@ export class BookingsPageComponent implements OnInit {
     this.applySearchFilter();
   }
 
+  get dateRangeFilterForList(): { dateFrom: string | null; dateTo: string | null } {
+    return {
+      dateFrom: this.dateFilter.from ? this.formatDateForApi(this.dateFilter.from) : null,
+      dateTo: this.dateFilter.to ? this.formatDateForApi(this.dateFilter.to) : null,
+    };
+  }
+
   private checkUserRole(): void {
     this.roleService.getUserRole().subscribe({
       next: (roleInfo: UserRoleInfo) => {
