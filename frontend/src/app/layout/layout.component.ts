@@ -5,13 +5,14 @@ import { AuthService } from '@auth0/auth0-angular';
 import { filter, take } from 'rxjs';
 import { HeaderComponent } from './components/header/header.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { SessionExpiredModalComponent } from '../shared/components/session-expired-modal/session-expired-modal.component';
 import { environment } from '../../environments/environment';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent, SessionExpiredModalComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })

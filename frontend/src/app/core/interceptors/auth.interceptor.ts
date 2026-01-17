@@ -1,9 +1,10 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '@auth0/auth0-angular';
 import { switchMap, catchError, take } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SessionService } from '../services/session.service';
 
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const isBookingsEndpoint = req.url.includes('/api/bookings');
@@ -25,6 +26,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 
   try {
     const authService = inject(AuthService);
+    const sessionService = inject(SessionService);
     
     return authService.getAccessTokenSilently({
       authorizationParams: {
@@ -38,11 +40,20 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
             Authorization: `Bearer ${token}`
           }
         });
-        return next(authReq);
+        return next(authReq).pipe(
+          catchError((error: HttpErrorResponse) => {
+            if (error.status === 401) {
+              sessionService.setSessionExpired();
+            }
+            return throwError(() => error);
+          })
+        );
       }),
       catchError((error) => {
-        console.error('Failed to get access token:', error);
-        throw error;
+        if (error?.error === 'login_required' || error?.error === 'consent_required' || error?.message?.includes('Login required')) {
+          sessionService.setSessionExpired();
+        }
+        return throwError(() => error);
       })
     );
   } catch (error) {
