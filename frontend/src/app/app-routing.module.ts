@@ -39,8 +39,8 @@ export const appRoutes: Routes = [
       {
         path: 'reports',
         canActivate: [adminOnlyGuard],
-        loadComponent: () =>
-          import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
+        loadChildren: () =>
+          import('./pages/reports/reports.routes').then((m) => m.reportsRoutes),
       },
       {
         path: 'user-profile',
