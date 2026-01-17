@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { DateRangePickerComponent, DateRange } from '../../shared/components/date-range-picker/date-range-picker.component';
 import { ApiService } from '../../core/services/api.service';
 
@@ -23,7 +24,7 @@ interface DashboardStats {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DateRangePickerComponent],
+  imports: [CommonModule, RouterLink, DateRangePickerComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
