@@ -184,16 +184,32 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadParkingTypes();
-    this.loadPhoneCodes();
-    this.setupCheckInDateListener();
-    this.initCarForm();
-    
-    if (this.isEditMode && this.bookingId) {
-      this.loadBookingDetails();
-    } else {
-      this.checkUserRole();
-    }
+    this.roleService.getUserRole().pipe(take(1)).subscribe(roleInfo => {
+      if (roleInfo.isDriver) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: 'Drivers cannot create or edit bookings',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+        this.router.navigate(['/admin/bookings']);
+        return;
+      }
+      
+      this.loadParkingTypes();
+      this.loadPhoneCodes();
+      this.setupCheckInDateListener();
+      this.initCarForm();
+      
+      if (this.isEditMode && this.bookingId) {
+        this.loadBookingDetails();
+      } else {
+        this.checkUserRole();
+      }
+    });
   }
 
   get isEditMode(): boolean {

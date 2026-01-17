@@ -249,6 +249,13 @@ export async function createBooking(
   res: Response,
 ): Promise<void> {
   try {
+    const authUser = req.authUser as AuthUser | undefined;
+    
+    if (authUser?.role === "driver") {
+      res.status(403).json({ message: "Drivers are not allowed to create bookings" });
+      return;
+    }
+
     const {
       fullName,
       email,
@@ -290,11 +297,10 @@ export async function createBooking(
       return;
     }
 
-    const authUser = req.authUser as AuthUser | undefined;
-    const isAdminOrDriver = authUser?.role === "admin" || authUser?.role === "driver";
+    const isAdmin = authUser?.role === "admin";
     
     let userId: string | null;
-    if (isAdminOrDriver) {
+    if (isAdmin) {
       userId = requestUserId !== undefined ? requestUserId : null;
     } else {
       userId = authUser?.sub || null;
@@ -336,6 +342,13 @@ export async function updateBooking(
   res: Response,
 ): Promise<void> {
   try {
+    const authUser = req.authUser as AuthUser | undefined;
+    
+    if (authUser?.role === "driver") {
+      res.status(403).json({ message: "Drivers are not allowed to update bookings" });
+      return;
+    }
+
     const { id } = req.params;
 
     if (!isValidUUID(id)) {
@@ -389,11 +402,10 @@ export async function updateBooking(
       }
     }
 
-    const authUser = req.authUser as AuthUser | undefined;
-    const isAdminOrDriver = authUser?.role === "admin" || authUser?.role === "driver";
+    const isAdmin = authUser?.role === "admin";
 
     let userId: string | null | undefined;
-    if (isAdminOrDriver && requestUserId !== undefined) {
+    if (isAdmin && requestUserId !== undefined) {
       userId = requestUserId;
     }
 
