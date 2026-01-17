@@ -274,10 +274,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.bookingForm.get('email')?.disable();
     this.bookingForm.get('phone')?.disable();
     this.bookingForm.get('phoneCodeId')?.disable();
-    this.bookingForm.get('vehicleBrand')?.disable();
-    this.bookingForm.get('vehicleModel')?.disable();
-    this.bookingForm.get('vehicleColor')?.disable();
-    this.bookingForm.get('licensePlate')?.disable();
   }
 
   private parseApiDate(dateStr: string): NgbDateStruct | null {
