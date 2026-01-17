@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking } from '../../../../shared/models/booking.model';
@@ -27,7 +27,7 @@ interface DateRangeFilter {
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss'],
 })
-export class BookingsListComponent {
+export class BookingsListComponent implements OnChanges {
   FormAction = FormAction;
   @Input() bookings: Booking[] = [];
   @Input() currentPage = 1;
@@ -40,6 +40,12 @@ export class BookingsListComponent {
   @Output() bookingDeleted = new EventEmitter<void>();
 
   constructor(private bookingsService: BookingsService) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['dateRangeFilter']) {
+      console.log('dateRangeFilter input changed:', this.dateRangeFilter);
+    }
+  }
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -166,14 +172,18 @@ export class BookingsListComponent {
   }
 
   isCheckInHighlighted(booking: Booking): boolean {
+    console.log('isCheckInHighlighted called, dateRangeFilter:', this.dateRangeFilter);
     if (!this.dateRangeFilter?.dateFrom || !this.dateRangeFilter?.dateTo) {
+      console.log('No valid filter, returning false');
       return false;
     }
     const checkInDate = this.extractDatePart(booking.dateFrom);
     const filterFrom = this.dateRangeFilter.dateFrom;
     const filterTo = this.dateRangeFilter.dateTo;
 
-    return checkInDate >= filterFrom && checkInDate <= filterTo;
+    const result = checkInDate >= filterFrom && checkInDate <= filterTo;
+    console.log('Check-in comparison:', { checkInDate, filterFrom, filterTo, result });
+    return result;
   }
 
   isCheckOutHighlighted(booking: Booking): boolean {
