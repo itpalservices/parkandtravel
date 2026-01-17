@@ -8,6 +8,7 @@ import {
   isValidUUID,
   createGuestBooking as createGuestBookingService,
   createBooking as createBookingService,
+  updateBooking as updateBookingService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 
@@ -326,6 +327,108 @@ export async function createBooking(
     });
   } catch (error) {
     console.error("Error creating booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function updateBooking(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({ error: "Invalid booking ID format" });
+      return;
+    }
+
+    const {
+      fullName,
+      email,
+      phone,
+      phoneCodeId,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      parkingTypeId,
+      washService,
+      dropOffOption,
+      pickUpOption,
+      userId: requestUserId,
+    } = req.body;
+
+    if (checkInDate && !isValidDateFormat(checkInDate)) {
+      res.status(400).json({
+        error: "checkInDate must be a valid date in YYYY-MM-DD format",
+      });
+      return;
+    }
+
+    if (checkOutDate && !isValidDateFormat(checkOutDate)) {
+      res.status(400).json({
+        error: "checkOutDate must be a valid date in YYYY-MM-DD format",
+      });
+      return;
+    }
+
+    if (checkInDate && checkOutDate) {
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
+      if (checkIn >= checkOut) {
+        res
+          .status(400)
+          .json({ error: "Check-out date must be after check-in date" });
+        return;
+      }
+    }
+
+    const authUser = req.authUser as AuthUser | undefined;
+    const isAdminOrDriver = authUser?.role === "admin" || authUser?.role === "driver";
+
+    let userId: string | null | undefined;
+    if (isAdminOrDriver && requestUserId !== undefined) {
+      userId = requestUserId;
+    }
+
+    const result = await updateBookingService(id, {
+      fullName,
+      email,
+      phone,
+      phoneCodeId: phoneCodeId ?? undefined,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      parkingTypeId,
+      washService,
+      dropOffOption,
+      pickUpOption,
+      userId,
+    });
+
+    if (!result) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error updating booking:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

@@ -18,8 +18,14 @@
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
         </button>
-        <h2>Create Booking</h2>
+        <h2>{{ isEditMode ? 'Edit Booking' : 'Create Booking' }}</h2>
       </div>
+
+      @if (loadingBooking) {
+        <div class="loading-section">
+          <div class="loading-placeholder">Loading booking details...</div>
+        </div>
+      }
 
       <div class="booking-section">
         <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()">
@@ -488,12 +494,12 @@
             </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn-submit" [disabled]="submitting">
+            <button type="submit" class="btn-submit" [disabled]="submitting || loadingBooking">
               @if (submitting) {
                 <span class="spinner"></span>
                 Processing...
               } @else {
-                Create Booking
+                {{ isEditMode ? 'Update Booking' : 'Create Booking' }}
               }
             </button>
           </div>

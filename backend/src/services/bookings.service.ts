@@ -20,11 +20,13 @@ interface BookingResponse {
   dateTo: string;
   timeTo: string | null;
   mobile: string | null;
+  phoneCodeId: string | null;
   plateNo: string | null;
   carBrand: string | null;
   carModel: string | null;
   carColor: string | null;
   parkingType: string | null;
+  parkingTypeId: string | null;
   adults: number | null;
   washService: boolean;
   finalPrice: number | null;
@@ -124,6 +126,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."dateTo",
       b."timeTo",
       b.mobile,
+      b."phoneCodeId",
       b."plateNo",
       b."carBrand",
       b."carModel",
@@ -156,11 +159,13 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     dateTo: formatDate(b.dateTo),
     timeTo: formatTime(b.timeTo),
     mobile: b.mobile,
+    phoneCodeId: b.phoneCodeId || null,
     plateNo: b.plateNo,
     carBrand: b.carBrand,
     carModel: b.carModel,
     carColor: b.carColor,
     parkingType: b.parkingTypeName,
+    parkingTypeId: b.parkingTypeId || null,
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
@@ -199,11 +204,13 @@ export async function getBookingById(
     dateTo: formatDate(booking.dateTo),
     timeTo: formatTime(booking.timeTo),
     mobile: booking.mobile,
+    phoneCodeId: booking.phoneCodeId || null,
     plateNo: booking.plateNo,
     carBrand: booking.carBrand,
     carModel: booking.carModel,
     carColor: booking.carColor,
     parkingType: booking.parkingType?.name || null,
+    parkingTypeId: booking.parkingTypeId || null,
     adults: booking.adults,
     washService: booking.washService ?? false,
     finalPrice: booking.finalPrice !== null ? parseFloat(booking.finalPrice.toString()) : null,
@@ -417,6 +424,106 @@ export async function createBooking(
   return { id: booking.id, finalPrice };
 }
 
+export interface UpdateBookingParams {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  phoneCodeId?: string | null;
+  licensePlate?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehicleColor?: string;
+  flightNumber?: string | null;
+  checkInDate?: string;
+  checkInTime?: string;
+  checkOutDate?: string;
+  checkOutTime?: string;
+  parkingTypeId?: string;
+  washService?: boolean;
+  dropOffOption?: string | null;
+  pickUpOption?: string | null;
+  userId?: string | null;
+}
+
+export async function updateBooking(
+  id: string,
+  params: UpdateBookingParams,
+): Promise<{ id: string; finalPrice: number | null } | null> {
+  if (!isValidUUID(id)) return null;
+
+  const existingBooking = await prisma.booking.findUnique({
+    where: { id },
+  });
+
+  if (!existingBooking) return null;
+
+  const updateData: Record<string, unknown> = {};
+
+  if (params.fullName !== undefined) {
+    const nameParts = params.fullName.trim().split(" ");
+    updateData.name = nameParts[0] || "";
+    updateData.surname = nameParts.slice(1).join(" ") || "";
+  }
+
+  if (params.email !== undefined) updateData.email = params.email;
+  if (params.phone !== undefined) updateData.mobile = params.phone;
+  if (params.phoneCodeId !== undefined) updateData.phoneCodeId = params.phoneCodeId;
+  if (params.licensePlate !== undefined) updateData.plateNo = params.licensePlate;
+  if (params.vehicleBrand !== undefined) updateData.carBrand = params.vehicleBrand;
+  if (params.vehicleModel !== undefined) updateData.carModel = params.vehicleModel;
+  if (params.vehicleColor !== undefined) updateData.carColor = params.vehicleColor;
+  if (params.flightNumber !== undefined) updateData.returnFlight = params.flightNumber;
+  if (params.dropOffOption !== undefined) updateData.dropOffOption = params.dropOffOption;
+  if (params.pickUpOption !== undefined) updateData.pickUpOption = params.pickUpOption;
+  if (params.userId !== undefined) updateData.userId = params.userId;
+  if (params.washService !== undefined) updateData.washService = params.washService;
+  if (params.parkingTypeId !== undefined) updateData.parkingTypeId = params.parkingTypeId;
+
+  if (params.checkInDate !== undefined) {
+    updateData.dateFrom = new Date(params.checkInDate + "T12:00:00Z");
+  }
+  if (params.checkInTime !== undefined) {
+    updateData.timeFrom = parseTimeToDate(params.checkInTime);
+  }
+  if (params.checkOutDate !== undefined) {
+    updateData.dateTo = new Date(params.checkOutDate + "T12:00:00Z");
+  }
+  if (params.checkOutTime !== undefined) {
+    updateData.timeTo = parseTimeToDate(params.checkOutTime);
+  }
+
+  const checkInDate = updateData.dateFrom as Date || existingBooking.dateFrom;
+  const checkOutDate = updateData.dateTo as Date || existingBooking.dateTo;
+  const parkingTypeId = (updateData.parkingTypeId as string) || existingBooking.parkingTypeId;
+  const washService = (updateData.washService as boolean) ?? existingBooking.washService;
+
+  const days = calculateDays(checkInDate, checkOutDate);
+  const priceSettings = await getPriceSettings();
+
+  let parkingPricePerDay: number | null = null;
+  if (parkingTypeId === 'parkingType_uncovered') {
+    parkingPricePerDay = priceSettings.priceUncovered;
+  } else if (parkingTypeId === 'parkingType_covered') {
+    parkingPricePerDay = priceSettings.priceCovered;
+  }
+
+  let finalPrice: number | null = null;
+  if (parkingPricePerDay !== null) {
+    finalPrice = days * parkingPricePerDay;
+    if (washService && priceSettings.priceWash !== null) {
+      finalPrice += priceSettings.priceWash;
+    }
+  }
+  updateData.finalPrice = finalPrice;
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id },
+    data: updateData,
+  });
+
+  return { id: updatedBooking.id, finalPrice };
+}
+
 export interface ParkingTypesResponse {
   parkingTypes: { id: string; name: string; pricePerDay: number | null }[];
   washAvailable: boolean;
@@ -508,6 +615,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."dateTo",
       b."timeTo",
       b.mobile,
+      b."phoneCodeId",
       b."plateNo",
       b."carBrand",
       b."carModel",
@@ -538,11 +646,13 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     dateTo: formatDate(b.dateTo),
     timeTo: formatTime(b.timeTo),
     mobile: b.mobile,
+    phoneCodeId: b.phoneCodeId || null,
     plateNo: b.plateNo,
     carBrand: b.carBrand,
     carModel: b.carModel,
     carColor: b.carColor,
     parkingType: b.parkingTypeName,
+    parkingTypeId: b.parkingTypeId || null,
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,

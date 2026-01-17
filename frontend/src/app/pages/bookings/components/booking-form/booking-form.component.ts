@@ -33,6 +33,31 @@ enum FormType {
   ExistingBooking
 }
 
+interface BookingDetails {
+  id: string;
+  name: string;
+  surname: string;
+  email: string | null;
+  returnFlight: string | null;
+  dateFrom: string;
+  timeFrom: string | null;
+  dateTo: string;
+  timeTo: string | null;
+  mobile: string | null;
+  phoneCodeId: string | null;
+  plateNo: string | null;
+  carBrand: string | null;
+  carModel: string | null;
+  carColor: string | null;
+  parkingType: string | null;
+  parkingTypeId: string | null;
+  washService: boolean;
+  finalPrice: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
+  userId: string | null;
+}
+
 @Component({
   selector: 'app-booking-form',
   standalone: true,
@@ -89,11 +114,18 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   pendingFoundUserData: { fullName?: string; phone?: string; phoneCode?: string } | null = null;
 
   readonly formType: FormType;
+  bookingId: string | null = null;
+  loadingBooking = false;
+  existingBooking: BookingDetails | null = null;
 
   constructor(private authService: AuthService, private _activatedRoute: ActivatedRoute) {
     const [{path}] = this._activatedRoute.snapshot.url;
 
     this.formType = path === FormAction.Add ? FormType.NewBooking : FormType.ExistingBooking;
+    
+    if (this.formType === FormType.ExistingBooking) {
+      this.bookingId = this._activatedRoute.snapshot.paramMap.get('id');
+    }
 
     this.authService.user$.pipe(take(1)).subscribe(user => {
       if (user) {
@@ -125,8 +157,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const today = this.calendar.getToday();
     const tomorrow = this.calendar.getNext(today, 'd', 1);
     const dayAfterTomorrow = this.calendar.getNext(tomorrow, 'd', 1);
-    this.minDate = tomorrow;
-    this.checkOutMinDate = dayAfterTomorrow;
+    this.minDate = today;
+    this.checkOutMinDate = this.calendar.getNext(today, 'd', 1);
     this.initForm(tomorrow, dayAfterTomorrow);
   }
 
@@ -157,6 +189,106 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.setupCheckInDateListener();
     this.checkUserRole();
     this.initCarForm();
+    
+    if (this.isEditMode && this.bookingId) {
+      this.loadBookingDetails();
+    }
+  }
+
+  get isEditMode(): boolean {
+    return this.formType === FormType.ExistingBooking;
+  }
+
+  private loadBookingDetails(): void {
+    if (!this.bookingId) return;
+    
+    this.loadingBooking = true;
+    this.apiService.get<BookingDetails>(`/bookings/${this.bookingId}`).subscribe({
+      next: (booking) => {
+        this.existingBooking = booking;
+        this.populateFormWithBookingData(booking);
+        this.loadingBooking = false;
+      },
+      error: (err) => {
+        console.error('Error loading booking:', err);
+        this.loadingBooking = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Failed to load booking details',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+        this.router.navigate(['/admin/bookings']);
+      },
+    });
+  }
+
+  private populateFormWithBookingData(booking: BookingDetails): void {
+    const fullName = `${booking.name} ${booking.surname}`.trim();
+    
+    const checkInDate = this.parseApiDate(booking.dateFrom);
+    const checkOutDate = this.parseApiDate(booking.dateTo);
+    const checkInTime = booking.timeFrom ? booking.timeFrom.substring(0, 5) : '10:00';
+    const checkOutTime = booking.timeTo ? booking.timeTo.substring(0, 5) : '10:00';
+
+    this.bookingForm.patchValue({
+      fullName: fullName,
+      email: booking.email || '',
+      phone: booking.mobile || '',
+      licensePlate: booking.plateNo || '',
+      vehicleBrand: booking.carBrand || '',
+      vehicleModel: booking.carModel || '',
+      vehicleColor: booking.carColor || '',
+      flightNumber: booking.returnFlight || '',
+      checkInDate: checkInDate,
+      checkInTime: checkInTime,
+      dropOffOption: booking.dropOffOption || 'self_drive',
+      checkOutDate: checkOutDate,
+      checkOutTime: checkOutTime,
+      pickUpOption: booking.pickUpOption || 'self_pickup',
+      parkingType: booking.parkingTypeId || '',
+    });
+
+    if (checkInDate) {
+      const checkInNgbDate = new NgbDate(checkInDate.year, checkInDate.month, checkInDate.day);
+      this.checkOutMinDate = this.calendar.getNext(checkInNgbDate, 'd', 1);
+    }
+
+    this.washServiceEnabled = booking.washService;
+
+    if (booking.phoneCodeId && this.phoneCodes.length > 0) {
+      const matchingCode = this.phoneCodes.find(c => c.id === booking.phoneCodeId);
+      if (matchingCode) {
+        this.selectPhoneCode(matchingCode, false);
+      }
+    }
+
+    if (booking.userId) {
+      this.foundUserId = booking.userId;
+    }
+
+    this.bookingForm.get('fullName')?.disable();
+    this.bookingForm.get('email')?.disable();
+    this.bookingForm.get('phone')?.disable();
+    this.bookingForm.get('phoneCodeId')?.disable();
+    this.bookingForm.get('vehicleBrand')?.disable();
+    this.bookingForm.get('vehicleModel')?.disable();
+    this.bookingForm.get('vehicleColor')?.disable();
+    this.bookingForm.get('licensePlate')?.disable();
+  }
+
+  private parseApiDate(dateStr: string): NgbDateStruct | null {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    return {
+      year: parseInt(parts[0], 10),
+      month: parseInt(parts[1], 10),
+      day: parseInt(parts[2], 10),
+    };
   }
 
   private initCarForm(): void {
@@ -440,7 +572,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.parkingTypes = response.parkingTypes;
         this.washAvailable = response.washAvailable;
         this.washPrice = response.washPrice;
-        if (response.parkingTypes.length > 0) {
+        
+        if (this.existingBooking?.parkingTypeId) {
+          this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
+        } else if (!this.isEditMode && response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
         }
       },
@@ -451,7 +586,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         ];
         this.washAvailable = false;
         this.washPrice = null;
-        this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
+        if (!this.isEditMode) {
+          this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
+        }
       },
     });
   }
@@ -492,6 +629,14 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       next: (codes) => {
         this.phoneCodes = codes;
         
+        if (this.existingBooking?.phoneCodeId) {
+          const matchingCode = codes.find(c => c.id === this.existingBooking!.phoneCodeId);
+          if (matchingCode) {
+            this.selectPhoneCode(matchingCode, true);
+          }
+          return;
+        }
+        
         if (this.pendingFoundUserData?.phoneCode) {
           const matchingCode = codes.find(c => c.phoneCode === this.pendingFoundUserData!.phoneCode);
           if (matchingCode) {
@@ -509,16 +654,20 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           }
         }
         
-        const cyprusCode = codes.find((c) => c.isoCode === 'CY');
-        if (cyprusCode) {
-          this.selectPhoneCode(cyprusCode);
-        } else if (codes.length > 0) {
-          this.selectPhoneCode(codes[0]);
+        if (!this.isEditMode) {
+          const cyprusCode = codes.find((c) => c.isoCode === 'CY');
+          if (cyprusCode) {
+            this.selectPhoneCode(cyprusCode);
+          } else if (codes.length > 0) {
+            this.selectPhoneCode(codes[0]);
+          }
         }
       },
       error: () => {
         this.phoneCodes = [{ id: 'default', isoCode: 'CY', phoneCode: '+357' }];
-        this.selectPhoneCode(this.phoneCodes[0]);
+        if (!this.isEditMode) {
+          this.selectPhoneCode(this.phoneCodes[0]);
+        }
       },
     });
   }
@@ -616,33 +765,63 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       booking['userId'] = this.foundUserId;
     }
 
-    this.apiService.post('/bookings', booking).subscribe({
-      next: () => {
-        this.submitting = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Booking created successfully',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
-        this.router.navigate(['/admin/bookings']);
-      },
-      error: (err) => {
-        this.submitting = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'error',
-          title: err.error?.message || 'Failed to create booking. Please try again.',
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true,
-        });
-      },
-    });
+    if (this.isEditMode && this.bookingId) {
+      this.apiService.put(`/bookings/${this.bookingId}`, booking).subscribe({
+        next: () => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Booking updated successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+        },
+        error: (err) => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: err.error?.message || 'Failed to update booking. Please try again.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+        },
+      });
+    } else {
+      this.apiService.post('/bookings', booking).subscribe({
+        next: () => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Booking created successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+        },
+        error: (err) => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: err.error?.message || 'Failed to create booking. Please try again.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+        },
+      });
+    }
   }
 
   private formatDateForApi(date: NgbDateStruct): string {
