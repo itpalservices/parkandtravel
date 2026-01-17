@@ -6,6 +6,7 @@ import bookingsRoutes from "./routes/bookings.routes";
 import userRoutes from "./routes/user.routes";
 import carsRoutes from "./routes/cars.routes";
 import settingsRoutes from "./routes/settings.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
 import { getParkingTypes, getPhoneCodes } from "./services/bookings.service";
 
 dotenv.config();
@@ -43,6 +44,7 @@ app.use("/api/bookings", bookingsRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/cars", carsRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 if (process.env.NODE_ENV !== "production") {
   const frontendProxy = createProxyMiddleware({

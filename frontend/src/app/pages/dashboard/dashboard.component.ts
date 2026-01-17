@@ -1,12 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DateRangePickerComponent, DateRange } from '../../shared/components/date-range-picker/date-range-picker.component';
+import { ApiService } from '../../core/services/api.service';
 
 interface CheckInOutItem {
   licensePlate: string;
   customerName: string;
   time: string;
   flightNumber: string;
+}
+
+interface DashboardStats {
+  totalCars: number;
+  todayCheckIns: number;
+  todayCheckOuts: number;
+  carsForWashToday: number;
+  carsForWashTomorrow: number;
 }
 
 @Component({
@@ -16,14 +25,18 @@ interface CheckInOutItem {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent {
-  stats = {
-    totalCars: 127,
-    todayCheckIn: 15,
-    todayCheckOut: 12,
-    carsForWashToday: 8,
-    carsForWashTomorrow: 5
+export class DashboardComponent implements OnInit {
+  private apiService = inject(ApiService);
+
+  stats: DashboardStats = {
+    totalCars: 0,
+    todayCheckIns: 0,
+    todayCheckOuts: 0,
+    carsForWashToday: 0,
+    carsForWashTomorrow: 0
   };
+
+  loading = true;
 
   upcomingCheckIns: CheckInOutItem[] = [
     { licensePlate: 'ABC-1234', customerName: 'John Doe', time: '14:30', flightNumber: 'FR123' },
@@ -41,6 +54,24 @@ export class DashboardComponent {
     { licensePlate: 'MNO-2345', customerName: 'Christina T.', time: '15:20', flightNumber: 'TK890' },
     { licensePlate: 'PQR-6789', customerName: 'George P.', time: '17:45', flightNumber: 'AZ123' },
   ];
+
+  ngOnInit(): void {
+    this.loadDashboardStats();
+  }
+
+  private loadDashboardStats(): void {
+    this.loading = true;
+    this.apiService.get<DashboardStats>('/dashboard/stats').subscribe({
+      next: (stats) => {
+        this.stats = stats;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading dashboard stats:', err);
+        this.loading = false;
+      }
+    });
+  }
 
   onCheckInDateRangeChange(range: DateRange): void {
     console.log('Check-in date range:', range);
