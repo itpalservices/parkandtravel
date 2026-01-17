@@ -12,6 +12,11 @@ export const reportsRoutes: Routes = [
       import('./wash-service-report/wash-service-report.component').then((m) => m.WashServiceReportComponent),
   },
   {
+    path: 'daily-in-out',
+    loadComponent: () =>
+      import('./daily-in-out-report/daily-in-out-report.component').then((m) => m.DailyInOutReportComponent),
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./report-detail/report-detail.component').then((m) => m.ReportDetailComponent),

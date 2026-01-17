@@ -38,6 +38,94 @@ interface WashServiceRow {
   timeTo: Date | null;
 }
 
+export interface DailyInOutReportItem {
+  id: string;
+  fullName: string;
+  plateNo: string;
+  vehicleModel: string;
+  vehicleColor: string;
+  checkInDate: string;
+  checkInTime: string;
+  carDropOff: string;
+  checkOutDate: string;
+  checkOutTime: string;
+  carPickup: string;
+  flightNo: string;
+  parkingType: string;
+  bookingType: string;
+}
+
+interface DailyInOutRow {
+  id: string;
+  name: string;
+  surname: string;
+  plateNo: string | null;
+  carBrand: string | null;
+  carModel: string | null;
+  carColor: string | null;
+  dateFrom: Date;
+  timeFrom: Date | null;
+  dropOffOption: string | null;
+  dateTo: Date;
+  timeTo: Date | null;
+  pickUpOption: string | null;
+  returnFlight: string | null;
+  parkingTypeName: string | null;
+}
+
+export async function getDailyInOutReport(
+  date: string
+): Promise<DailyInOutReportItem[]> {
+  const bookings = await prisma.$queryRawUnsafe<DailyInOutRow[]>(`
+    SELECT b.id, b.name, b.surname, b."plateNo", b."carBrand", b."carModel", b."carColor",
+           b."dateFrom", b."timeFrom", b."dropOffOption",
+           b."dateTo", b."timeTo", b."pickUpOption",
+           b."returnFlight", pt.name as "parkingTypeName"
+    FROM bookings b
+    LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    WHERE b.deleteflag = 0 
+      AND (b."dateFrom" = '${date}'::date OR b."dateTo" = '${date}'::date)
+    ORDER BY b."dateFrom" ASC, b."timeFrom" ASC NULLS LAST, b.name ASC
+  `);
+
+  const selectedDate = new Date(date);
+
+  return bookings.map((b) => {
+    const vehicleParts = [b.carBrand, b.carModel].filter(Boolean);
+    const dateFrom = new Date(b.dateFrom);
+    const dateTo = new Date(b.dateTo);
+    
+    const isCheckIn = dateFrom.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
+    const isCheckOut = dateTo.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
+    
+    let bookingType = '';
+    if (isCheckIn && isCheckOut) {
+      bookingType = 'In/Out';
+    } else if (isCheckIn) {
+      bookingType = 'In';
+    } else if (isCheckOut) {
+      bookingType = 'Out';
+    }
+
+    return {
+      id: b.id,
+      fullName: `${b.name} ${b.surname}`.trim(),
+      plateNo: b.plateNo || "",
+      vehicleModel: vehicleParts.join(" ") || "-",
+      vehicleColor: b.carColor || "-",
+      checkInDate: formatDisplayDate(new Date(b.dateFrom)),
+      checkInTime: formatTime(b.timeFrom),
+      carDropOff: b.dropOffOption || "-",
+      checkOutDate: formatDisplayDate(new Date(b.dateTo)),
+      checkOutTime: formatTime(b.timeTo),
+      carPickup: b.pickUpOption || "-",
+      flightNo: b.returnFlight || "-",
+      parkingType: b.parkingTypeName || "-",
+      bookingType,
+    };
+  });
+}
+
 export async function getWashServiceReport(
   date: string
 ): Promise<WashServiceReportItem[]> {

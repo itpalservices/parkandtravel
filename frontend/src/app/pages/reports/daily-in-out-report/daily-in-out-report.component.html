@@ -1,0 +1,209 @@
+<div class="page-container">
+  <div class="page-header">
+    <a routerLink="/admin/reports" class="back-link">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>Back to Reports</span>
+    </a>
+    <div class="title-row">
+      <h1 class="page-title">Daily In/Out Report</h1>
+      <div class="date-picker-wrapper" (click)="$event.stopPropagation()">
+        <div class="date-input-container">
+          <input
+            class="form-control date-input"
+            [value]="formatDisplayDate(selectedDate)"
+            readonly
+            (click)="toggleDatepicker()"
+          />
+          <button class="date-picker-btn" type="button" (click)="toggleDatepicker()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </button>
+          @if (isDatepickerOpen) {
+            <div class="dropdown-datepicker" (click)="$event.stopPropagation()">
+              <ngb-datepicker
+                [(ngModel)]="selectedDate"
+                [minDate]="minDate"
+                (dateSelect)="onDateSelect($event)"
+              ></ngb-datepicker>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="report-content">
+    @if (loading) {
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <span>Loading report...</span>
+      </div>
+    } @else if (reportData.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <h3>No bookings for this date</h3>
+        <p>There are no check-ins or check-outs scheduled on {{ formatDisplayDate(selectedDate) }}</p>
+      </div>
+    } @else {
+      <div class="results-summary">
+        <div class="summary-left">
+          <span class="count-badge">{{ reportData.length }} booking{{ reportData.length !== 1 ? 's' : '' }}</span>
+          scheduled for today
+        </div>
+        <button class="export-btn" (click)="exportPDF()" [disabled]="exporting">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          {{ exporting ? 'Exporting...' : 'Export PDF' }}
+        </button>
+      </div>
+
+      <div class="desktop-table">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Plate No.</th>
+              <th>Vehicle / Model</th>
+              <th>Vehicle Color</th>
+              <th>Check In</th>
+              <th>Car Drop-off</th>
+              <th>Check Out</th>
+              <th>Car Pick-up</th>
+              <th>Flight No.</th>
+              <th>Parking Type</th>
+              <th>Booking Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of reportData; track item.id) {
+              <tr>
+                <td>{{ item.fullName }}</td>
+                <td><span class="plate-badge">{{ item.plateNo }}</span></td>
+                <td>{{ item.vehicleModel }}</td>
+                <td>{{ item.vehicleColor }}</td>
+                <td>{{ item.checkInDate }} {{ item.checkInTime }}</td>
+                <td>{{ formatDropOff(item.carDropOff) }}</td>
+                <td>{{ item.checkOutDate }} {{ item.checkOutTime }}</td>
+                <td>{{ formatPickUp(item.carPickup) }}</td>
+                <td>{{ item.flightNo }}</td>
+                <td>{{ item.parkingType }}</td>
+                <td>
+                  <span class="type-badge" [class.type-in]="item.bookingType === 'In'" [class.type-out]="item.bookingType === 'Out'" [class.type-both]="item.bookingType === 'In/Out'">
+                    {{ item.bookingType }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-cards">
+        @for (item of reportData; track item.id) {
+          <div class="report-card">
+            <div class="card-header">
+              <span class="customer-name">{{ item.fullName }}</span>
+              <span class="type-badge" [class.type-in]="item.bookingType === 'In'" [class.type-out]="item.bookingType === 'Out'" [class.type-both]="item.bookingType === 'In/Out'">
+                {{ item.bookingType }}
+              </span>
+            </div>
+            <div class="card-body">
+              <div class="card-row">
+                <span class="label">Plate No.</span>
+                <span class="value"><span class="plate-badge">{{ item.plateNo }}</span></span>
+              </div>
+              <div class="card-row">
+                <span class="label">Vehicle</span>
+                <span class="value">{{ item.vehicleModel }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Color</span>
+                <span class="value">{{ item.vehicleColor }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Check In</span>
+                <span class="value">{{ item.checkInDate }} {{ item.checkInTime }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Car Drop-off</span>
+                <span class="value">{{ formatDropOff(item.carDropOff) }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Check Out</span>
+                <span class="value">{{ item.checkOutDate }} {{ item.checkOutTime }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Car Pick-up</span>
+                <span class="value">{{ formatPickUp(item.carPickup) }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Flight No.</span>
+                <span class="value">{{ item.flightNo }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Parking Type</span>
+                <span class="value">{{ item.parkingType }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
