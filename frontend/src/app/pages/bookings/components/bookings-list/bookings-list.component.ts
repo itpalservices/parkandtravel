@@ -35,14 +35,7 @@ export class BookingsListComponent {
   @Input() pageNumbers: number[] = [];
   @Input() isAdmin: boolean = false;
   @Input() isDriver: boolean = false;
-  @Input() set dateRangeFilter(value: DateRangeFilter | null) {
-    console.log('dateRangeFilter received:', value);
-    this._dateRangeFilter = value;
-  }
-  get dateRangeFilter(): DateRangeFilter | null {
-    return this._dateRangeFilter;
-  }
-  private _dateRangeFilter: DateRangeFilter | null = null;
+  @Input() dateRangeFilter: DateRangeFilter | null = null;
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
@@ -173,16 +166,29 @@ export class BookingsListComponent {
   }
 
   isCheckInHighlighted(booking: Booking): boolean {
-    // Temporary test - always return true to verify class binding works
-    return true;
+    if (!this.dateRangeFilter?.dateFrom || !this.dateRangeFilter?.dateTo) {
+      return false;
+    }
+    const checkInDate = this.extractDatePart(booking.dateFrom);
+    const filterFrom = this.dateRangeFilter.dateFrom;
+    const filterTo = this.dateRangeFilter.dateTo;
+
+    return checkInDate >= filterFrom && checkInDate <= filterTo;
   }
 
   isCheckOutHighlighted(booking: Booking): boolean {
-    // Temporary test - always return true to verify class binding works
-    return true;
+    if (!this.dateRangeFilter?.dateFrom || !this.dateRangeFilter?.dateTo) {
+      return false;
+    }
+    const checkOutDate = this.extractDatePart(booking.dateTo);
+    const filterFrom = this.dateRangeFilter.dateFrom;
+    const filterTo = this.dateRangeFilter.dateTo;
+
+    return checkOutDate >= filterFrom && checkOutDate <= filterTo;
   }
 
   private extractDatePart(dateString: string): string {
+    if (!dateString) return '';
     if (dateString.includes('T')) {
       return dateString.split('T')[0];
     }
