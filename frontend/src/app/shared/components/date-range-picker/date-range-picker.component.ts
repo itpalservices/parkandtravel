@@ -27,6 +27,7 @@ export interface DateRange {
 export class DateRangePickerComponent implements OnInit {
   @Input() selectedPreset: string | null = null;
   @Input() enablePastDates: boolean = false;
+  @Input() enableCustomRange: boolean = true;
 
   @Output() dateRangeChange = new EventEmitter<DateRange>();
 
@@ -144,10 +145,7 @@ export class DateRangePickerComponent implements OnInit {
 
     if (this.fromDate) {
       const today = this.calendar.getToday();
-      this.toMinDate =
-        this.compareDates(this.fromDate, today) >= 0
-          ? { ...this.fromDate }
-          : today;
+      this.toMinDate = this.compareDates(this.fromDate, today) >= 0 ? { ...this.fromDate } : today;
     } else {
       this.toMinDate = this.calendar.getToday();
     }

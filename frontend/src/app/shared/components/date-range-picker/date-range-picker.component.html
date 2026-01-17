@@ -23,13 +23,25 @@
     <div class="dropdown-panel" [class.expanded]="showCustomRange">
       <div class="presets-list" [class.with-border]="showCustomRange">
         @for (preset of presets; track preset.id) {
-          <button
-            class="preset-btn"
-            [class.active]="activePreset === preset.id"
-            (click)="selectPreset(preset.id)"
-          >
-            {{ preset.label }}
-          </button>
+          @if (preset.id === 'custom') {
+            @if (enableCustomRange) {
+              <button
+                class="preset-btn"
+                [class.active]="activePreset === preset.id"
+                (click)="selectPreset(preset.id)"
+              >
+                {{ preset.label }}
+              </button>
+            }
+          } @else {
+            <button
+              class="preset-btn"
+              [class.active]="activePreset === preset.id"
+              (click)="selectPreset(preset.id)"
+            >
+              {{ preset.label }}
+            </button>
+          }
         }
       </div>
 
