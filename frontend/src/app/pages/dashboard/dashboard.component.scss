@@ -15,77 +15,276 @@
   gap: 1.5rem;
 }
 
-.welcome-card {
-  background: white;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-  h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
-  }
-
-  p {
-    color: #6b7280;
-    margin: 0;
-  }
-}
-
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-card {
   background: white;
   border-radius: 0.5rem;
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &.bookings {
-    background-color: #e6f3f7;
-    color: #006B8F;
-  }
-
-  &.customers {
-    background-color: #d1fae5;
-    color: #059669;
-  }
-
-  &.active {
-    background-color: #fef3c7;
-    color: #d97706;
-  }
-}
-
-.stat-info {
+  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .stat-label {
   font-size: 0.875rem;
   color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.cars, &.checkin {
+    background-color: #dcfce7;
+    color: #16a34a;
+  }
+
+  &.checkout {
+    background-color: #dcfce7;
+    color: #16a34a;
+  }
+
+  &.wash {
+    background-color: #fef3c7;
+    color: #d97706;
+  }
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+
+  &.green {
+    color: #16a34a;
+  }
+
+  &.orange {
+    color: #f97316;
+  }
+}
+
+.checkinout-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkinout-card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.checkinout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1f2937;
+
+  .header-icon {
+    &.checkin {
+      color: #f97316;
+    }
+
+    &.checkout {
+      color: #16a34a;
+    }
+  }
+}
+
+.header-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.active {
+    background-color: #3b82f6;
+    color: white;
+  }
+}
+
+.checkinout-list {
+  max-height: 280px;
+  overflow-y: auto;
+  flex: 1;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+  }
+}
+
+.checkinout-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.license-plate {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9375rem;
+}
+
+.customer-name {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.time {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9375rem;
+}
+
+.flight-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.reports-section {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 1.25rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+
+  svg {
+    color: #6b7280;
+  }
+}
+
+.reports-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #006B8F;
+    box-shadow: 0 2px 8px rgba(0, 107, 143, 0.1);
+  }
+}
+
+.report-icon {
+  color: #9ca3af;
+}
+
+.report-label {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  text-align: center;
 }
