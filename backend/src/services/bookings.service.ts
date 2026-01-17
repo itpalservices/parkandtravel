@@ -72,13 +72,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 }> {
   const { dateFrom, dateTo, search, page, limit, userId } = params;
 
-  const now = new Date();
-  const nowTime = now.toTimeString().split(" ")[0];
-  const nowDate = formatDate(now);
-
   const whereConditions: string[] = [
     `b.deleteflag = 0`,
-    `(b."dateTo" > '${nowDate}'::date OR (b."dateTo" = '${nowDate}'::date AND COALESCE(b."timeTo"::time, '23:59:59'::time) > '${nowTime}'::time))`,
   ];
 
   if (userId) {
