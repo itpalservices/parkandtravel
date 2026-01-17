@@ -187,11 +187,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.loadParkingTypes();
     this.loadPhoneCodes();
     this.setupCheckInDateListener();
-    this.checkUserRole();
     this.initCarForm();
     
     if (this.isEditMode && this.bookingId) {
       this.loadBookingDetails();
+    } else {
+      this.checkUserRole();
     }
   }
 
@@ -208,6 +209,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.existingBooking = booking;
         this.populateFormWithBookingData(booking);
         this.loadingBooking = false;
+        this.checkUserRole();
       },
       error: (err) => {
         console.error('Error loading booking:', err);
@@ -447,7 +449,18 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         if (response.success) {
           this.cars = response.data;
           if (this.cars.length > 0) {
-            this.selectCar(this.cars[0]);
+            if (this.isEditMode && this.existingBooking) {
+              const matchingCar = this.cars.find(car => 
+                car.plateNo === this.existingBooking!.plateNo
+              );
+              if (matchingCar) {
+                this.selectCar(matchingCar);
+              } else {
+                this.selectCar(this.cars[0]);
+              }
+            } else {
+              this.selectCar(this.cars[0]);
+            }
           }
         }
         this.carsLoading = false;
