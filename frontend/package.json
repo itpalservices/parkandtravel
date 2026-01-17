@@ -35,6 +35,8 @@
     "@popperjs/core": "^2.11.8",
     "@swimlane/ngx-datatable": "^22.0.0",
     "bootstrap": "^5.3.8",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
     "rxjs": "~7.8.0",
     "sweetalert2": "^11.26.4",
     "tslib": "^2.3.0",
