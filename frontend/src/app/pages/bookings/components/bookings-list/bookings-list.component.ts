@@ -35,7 +35,14 @@ export class BookingsListComponent {
   @Input() pageNumbers: number[] = [];
   @Input() isAdmin: boolean = false;
   @Input() isDriver: boolean = false;
-  @Input() dateRangeFilter: DateRangeFilter | null = null;
+  @Input() set dateRangeFilter(value: DateRangeFilter | null) {
+    console.log('dateRangeFilter received:', value);
+    this._dateRangeFilter = value;
+  }
+  get dateRangeFilter(): DateRangeFilter | null {
+    return this._dateRangeFilter;
+  }
+  private _dateRangeFilter: DateRangeFilter | null = null;
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
 
@@ -166,39 +173,13 @@ export class BookingsListComponent {
   }
 
   isCheckInHighlighted(booking: Booking): boolean {
-    if (!this.dateRangeFilter?.dateFrom && !this.dateRangeFilter?.dateTo) {
-      return false;
-    }
-    const checkInDate = this.extractDatePart(booking.dateFrom);
-    const filterFrom = this.dateRangeFilter.dateFrom;
-    const filterTo = this.dateRangeFilter.dateTo;
-
-    if (filterFrom && filterTo) {
-      return checkInDate >= filterFrom && checkInDate <= filterTo;
-    } else if (filterFrom) {
-      return checkInDate === filterFrom;
-    } else if (filterTo) {
-      return checkInDate === filterTo;
-    }
-    return false;
+    // Temporary test - always return true to verify class binding works
+    return true;
   }
 
   isCheckOutHighlighted(booking: Booking): boolean {
-    if (!this.dateRangeFilter?.dateFrom && !this.dateRangeFilter?.dateTo) {
-      return false;
-    }
-    const checkOutDate = this.extractDatePart(booking.dateTo);
-    const filterFrom = this.dateRangeFilter.dateFrom;
-    const filterTo = this.dateRangeFilter.dateTo;
-
-    if (filterFrom && filterTo) {
-      return checkOutDate >= filterFrom && checkOutDate <= filterTo;
-    } else if (filterFrom) {
-      return checkOutDate === filterFrom;
-    } else if (filterTo) {
-      return checkOutDate === filterTo;
-    }
-    return false;
+    // Temporary test - always return true to verify class binding works
+    return true;
   }
 
   private extractDatePart(dateString: string): string {
