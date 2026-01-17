@@ -222,6 +222,20 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.loadingBooking = true;
     this.apiService.get<BookingDetails>(`/bookings/${this.bookingId}`).subscribe({
       next: (booking) => {
+        if (this.isCheckInPast(booking.dateFrom)) {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'Cannot edit bookings with past check-in dates',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+          return;
+        }
+        
         this.existingBooking = booking;
         this.populateFormWithBookingData(booking);
         this.loadingBooking = false;
@@ -242,6 +256,14 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.router.navigate(['/admin/bookings']);
       },
     });
+  }
+
+  private isCheckInPast(dateFrom: string): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkInDate = new Date(dateFrom);
+    checkInDate.setHours(0, 0, 0, 0);
+    return checkInDate < today;
   }
 
   private populateFormWithBookingData(booking: BookingDetails): void {

@@ -150,4 +150,12 @@ export class BookingsListComponent {
       this.pageChange.emit(page);
     }
   }
+
+  isCheckInPast(booking: Booking): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkInDate = new Date(booking.dateFrom);
+    checkInDate.setHours(0, 0, 0, 0);
+    return checkInDate < today;
+  }
 }

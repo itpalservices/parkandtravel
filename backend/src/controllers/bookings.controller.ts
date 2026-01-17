@@ -356,6 +356,21 @@ export async function updateBooking(
       return;
     }
 
+    const existingBooking = await getBookingById(id);
+    if (!existingBooking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const existingCheckInDate = new Date(existingBooking.dateFrom);
+    existingCheckInDate.setHours(0, 0, 0, 0);
+    if (existingCheckInDate < today) {
+      res.status(403).json({ message: "Cannot edit bookings with past check-in dates" });
+      return;
+    }
+
     const {
       fullName,
       email,
