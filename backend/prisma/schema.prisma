@@ -49,6 +49,8 @@ model Booking {
   pickUpOption  String?     @db.VarChar(20)
   bookingStatusId String?   @default("bookingStatus_created") @db.VarChar(50)
   parkPlace    String?      @db.VarChar(50)
+  actualCheckOut DateTime?  @db.Timestamptz(6)
+  extraFee     Decimal?     @db.Decimal(10, 2)
   deleteflag   Int          @default(0)
   createdAt    DateTime     @default(now())
 

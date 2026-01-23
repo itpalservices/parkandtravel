@@ -23,6 +23,8 @@ export interface Booking {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  actualCheckOut: string | null;
+  extraFee: number | null;
   deleteflag: number;
   userId: string | null;
   createdAt: string;

@@ -36,6 +36,8 @@ interface BookingResponse {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  actualCheckOut: string | null;
+  extraFee: number | null;
   deleteflag: number;
 }
 
@@ -140,7 +142,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."userId",
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
-      b."parkPlace"
+      b."parkPlace",
+      b."actualCheckOut",
+      b."extraFee"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -177,6 +181,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
     parkPlace: b.parkPlace || null,
+    actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
+    extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
   }));
 
@@ -219,6 +225,8 @@ export async function getBookingById(
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
       b."parkPlace",
+      b."actualCheckOut",
+      b."extraFee",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -256,6 +264,8 @@ export async function getBookingById(
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
     parkPlace: b.parkPlace || null,
+    actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
+    extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
   };
 }
@@ -670,6 +680,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
       b."parkPlace",
+      b."actualCheckOut",
+      b."extraFee",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -705,6 +717,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
     parkPlace: b.parkPlace || null,
+    actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
+    extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
   }));
 }
@@ -713,7 +727,7 @@ export async function updateBookingStatus(
   id: string,
   bookingStatusId: string,
   parkPlace?: string,
-): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string } | null> {
+): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } | null> {
   if (!isValidUUID(id)) return null;
 
   const statusLabels: Record<string, string> = {
@@ -732,9 +746,47 @@ export async function updateBookingStatus(
 
   if (!existingBooking) return null;
 
-  const updateData: { bookingStatusId: string; parkPlace?: string } = { bookingStatusId };
+  const updateData: { bookingStatusId: string; parkPlace?: string; actualCheckOut?: Date; extraFee?: number } = { bookingStatusId };
+  
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
+  }
+
+  let calculatedExtraFee: number | undefined = undefined;
+  let actualCheckOutDate: Date | undefined = undefined;
+
+  if (bookingStatusId === 'bookingStatus_completed') {
+    actualCheckOutDate = new Date();
+    updateData.actualCheckOut = actualCheckOutDate;
+
+    const checkOutDate = new Date(existingBooking.dateTo);
+    checkOutDate.setHours(23, 59, 59, 999);
+
+    if (actualCheckOutDate > checkOutDate) {
+      const actualCheckOutDay = new Date(actualCheckOutDate);
+      actualCheckOutDay.setHours(0, 0, 0, 0);
+      const checkOutDay = new Date(existingBooking.dateTo);
+      checkOutDay.setHours(0, 0, 0, 0);
+
+      const diffTime = actualCheckOutDay.getTime() - checkOutDay.getTime();
+      const extraDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (extraDays > 0 && existingBooking.parkingTypeId) {
+        const priceSettings = await getPriceSettings();
+        let pricePerDay: number | null = null;
+        
+        if (existingBooking.parkingTypeId === 'parkingType_uncovered') {
+          pricePerDay = priceSettings.priceUncovered;
+        } else if (existingBooking.parkingTypeId === 'parkingType_covered') {
+          pricePerDay = priceSettings.priceCovered;
+        }
+
+        if (pricePerDay !== null) {
+          calculatedExtraFee = extraDays * pricePerDay;
+          updateData.extraFee = calculatedExtraFee;
+        }
+      }
+    }
   }
 
   await prisma.booking.update({
@@ -747,6 +799,8 @@ export async function updateBookingStatus(
     bookingStatusId,
     bookingStatus: statusLabels[bookingStatusId],
     parkPlace: parkPlace || undefined,
+    actualCheckOut: actualCheckOutDate?.toISOString(),
+    extraFee: calculatedExtraFee,
   };
 }
 
