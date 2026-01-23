@@ -354,3 +354,29 @@
 [ngbDropdownToggle]::after {
   display: none !important;
 }
+
+.status-badge-small {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.park-place-info {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mobile-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.park-place-mobile {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}

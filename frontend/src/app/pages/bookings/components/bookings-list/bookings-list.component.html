@@ -54,6 +54,9 @@
                     </div>
                   </div>
                 }
+                @if (booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
+                  <div class="park-place-info">{{ booking.parkPlace }}</div>
+                }
               </td>
               <td>
                 <div class="name-cell">
@@ -199,6 +202,36 @@
       @for (booking of bookings; track booking.id) {
         <div class="booking-item">
           <div class="booking-left m-auto">
+            <div class="mobile-status-row mb-2">
+              @if (booking.bookingStatusId === 'bookingStatus_completed') {
+                <span class="badge status-badge-small" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                  {{ booking.bookingStatus || '-' }}
+                </span>
+              } @else {
+                <div ngbDropdown placement="bottom-start" container="body" class="d-inline-block">
+                  <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
+                    <span class="badge status-badge-small status-clickable" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                      {{ booking.bookingStatus || '-' }} <span class="status-arrow">▼</span>
+                    </span>
+                  </button>
+                  <div ngbDropdownMenu>
+                    @if (booking.bookingStatusId === 'bookingStatus_created') {
+                      <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_parked')">
+                        <span class="badge bg-info me-2">Parked</span> Mark as Parked
+                      </button>
+                    }
+                    @if (booking.bookingStatusId === 'bookingStatus_parked') {
+                      <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_completed')">
+                        <span class="badge bg-success me-2">Completed</span> Mark as Completed
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+              @if (booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
+                <span class="park-place-mobile ms-2">{{ booking.parkPlace }}</span>
+              }
+            </div>
             <div class="avatar m-auto">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -218,33 +251,6 @@
             <div class="customer-info">
               <span class="customer-name">{{ booking.name }} {{ booking.surname }}</span>
               <span class="flight-info">License: {{ booking.plateNo || 'N/A' }}</span>
-              <span class="status-badge mb-1">
-                @if (booking.bookingStatusId === 'bookingStatus_completed') {
-                  <span class="badge status-badge-large" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
-                    {{ booking.bookingStatus || '-' }}
-                  </span>
-                } @else {
-                  <div ngbDropdown placement="bottom-start" container="body" class="d-inline-block">
-                    <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
-                      <span class="badge status-badge-large status-clickable" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
-                        {{ booking.bookingStatus || '-' }} <span class="status-arrow">▼</span>
-                      </span>
-                    </button>
-                    <div ngbDropdownMenu>
-                      @if (booking.bookingStatusId === 'bookingStatus_created') {
-                        <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_parked')">
-                          <span class="badge bg-info me-2">Parked</span> Mark as Parked
-                        </button>
-                      }
-                      @if (booking.bookingStatusId === 'bookingStatus_parked') {
-                        <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_completed')">
-                          <span class="badge bg-success me-2">Completed</span> Mark as Completed
-                        </button>
-                      }
-                    </div>
-                  </div>
-                }
-              </span>
               <span class="wash-service-badge">
                 <span
                   class="badge"
