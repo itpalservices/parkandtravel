@@ -106,7 +106,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     );
   }
 
-  const whereClause = whereConditions.join(" AND ");
+  let whereClause = whereConditions.join(" AND ");
+
+  whereClause += ` OR (b."bookingStatusId" = 'bookingStatus_parked')`;
 
   const countQuery = `SELECT COUNT(*) as count FROM bookings b WHERE ${whereClause}`;
   const countResult =
