@@ -26,7 +26,7 @@ Preferred communication style: Simple, everyday language.
 - **Type**: PostgreSQL.
 - **ORM**: Drizzle ORM for type-safe SQL queries.
 - **Schema**: Managed in `backend/src/db/index.ts`.
-- **Tables**: Includes `bookings`, `cars`, `configuration_settings`, `phone_codes`.
+- **Tables**: Includes `bookings`, `booking_statuses`, `cars`, `configuration_settings`, `phone_codes`, `parking_types`.
 
 ### Authentication & Authorization
 - **Provider**: Auth0 for user authentication.
@@ -39,6 +39,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Features
 - **Booking Management**: Guest and authenticated user booking creation, listing with filters, soft deletion. Includes options for car wash service and car transport (self-drive, airport pickup/delivery).
+- **Booking Statuses**: Each booking has a status (Created, Parked, Completed) stored in the `booking_statuses` table. New bookings default to "Created" status. Status is displayed as the first column in the bookings list with color-coded badges (yellow for Created, blue for Parked, green for Completed).
 - **User Profile**: Users can view and update their name, surname, and phone number. Email is displayed but not editable.
 - **Car Management**: Regular users can add, edit, and delete their cars.
 - **Configuration Settings**: Admin users can manage parking availability, prices per day, and car wash service options.
