@@ -22,6 +22,7 @@ export interface Booking {
   pickUpOption: string | null;
   bookingStatusId: string | null;
   bookingStatus: string | null;
+  parkPlace: string | null;
   deleteflag: number;
   userId: string | null;
   createdAt: string;

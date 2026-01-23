@@ -35,6 +35,7 @@ interface BookingResponse {
   userId: string | null;
   bookingStatusId: string | null;
   bookingStatus: string | null;
+  parkPlace: string | null;
   deleteflag: number;
 }
 
@@ -138,7 +139,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b.deleteflag,
       b."userId",
       b."bookingStatusId",
-      bs.value as "bookingStatusValue"
+      bs.value as "bookingStatusValue",
+      b."parkPlace"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -174,6 +176,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     userId: b.userId || null,
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
+    parkPlace: b.parkPlace || null,
     deleteflag: b.deleteflag,
   }));
 
@@ -215,6 +218,7 @@ export async function getBookingById(
       b."userId",
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
+      b."parkPlace",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -251,6 +255,7 @@ export async function getBookingById(
     userId: b.userId || null,
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
+    parkPlace: b.parkPlace || null,
     deleteflag: b.deleteflag,
   };
 }
@@ -664,6 +669,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."userId",
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
+      b."parkPlace",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -698,6 +704,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     userId: b.userId || null,
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
+    parkPlace: b.parkPlace || null,
     deleteflag: b.deleteflag,
   }));
 }
