@@ -18,6 +18,16 @@ async function main() {
   });
   console.log(`Created ${parkingTypes.count} parking types`);
 
+  const bookingStatuses = await prisma.bookingStatus.createMany({
+    data: [
+      { id: "bookingStatus_created", value: "Created" },
+      { id: "bookingStatus_parked", value: "Parked" },
+      { id: "bookingStatus_completed", value: "Completed" },
+    ],
+    skipDuplicates: true,
+  });
+  console.log(`Created ${bookingStatuses.count} booking statuses`);
+
   const phoneCodes = await prisma.phoneCode.createMany({
     data: [
       { isoCode: "CY", phoneCode: "+357" },
