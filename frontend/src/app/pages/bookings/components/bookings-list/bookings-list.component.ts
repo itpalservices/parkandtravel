@@ -73,6 +73,21 @@ export class BookingsListComponent {
     return `${dateStr} ${time}`;
   }
 
+  formatActualCheckOut(booking: Booking): string {
+    if (!booking.actualCheckOut) return '';
+    const date = new Date(booking.actualCheckOut);
+    const dateStr = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const timeStr = date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return `${dateStr} ${timeStr}`;
+  }
+
   formatVehicle(booking: Booking): string {
     const parts = [booking.carBrand, booking.carModel].filter(Boolean);
     return parts.length > 0 ? parts.join(' ') : 'N/A';

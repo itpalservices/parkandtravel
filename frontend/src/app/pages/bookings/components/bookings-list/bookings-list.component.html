@@ -98,7 +98,14 @@
               <td>{{ booking.carColor }}</td>
               <td [class.fw-bold]="isCheckInHighlighted(booking)">{{ formatCheckIn(booking) }}</td>
               <td>{{ formatDropOff(booking.dropOffOption) }}</td>
-              <td [class.fw-bold]="isCheckOutHighlighted(booking)">{{ formatArrival(booking) }}</td>
+              <td [class.fw-bold]="isCheckOutHighlighted(booking)">
+                @if (booking.actualCheckOut) {
+                  <span class="text-decoration-line-through text-muted me-1">{{ formatArrival(booking) }}</span>
+                  <span class="text-danger fw-bold">{{ formatActualCheckOut(booking) }}</span>
+                } @else {
+                  {{ formatArrival(booking) }}
+                }
+              </td>
               <td>{{ formatPickUp(booking.pickUpOption) }}</td>
               <td>{{ booking.returnFlight || '-' }}</td>
               <td>
@@ -288,9 +295,14 @@
               </div>
               <div class="mobile-info-item">
                 <span class="mobile-label">Check Out</span>
-                <span class="mobile-value" [class.fw-bold]="isCheckOutHighlighted(booking)">{{
-                  formatArrival(booking)
-                }}</span>
+                <span class="mobile-value" [class.fw-bold]="isCheckOutHighlighted(booking)">
+                  @if (booking.actualCheckOut) {
+                    <span class="text-decoration-line-through text-muted me-1" style="font-size: 0.75rem;">{{ formatArrival(booking) }}</span>
+                    <span class="text-danger fw-bold">{{ formatActualCheckOut(booking) }}</span>
+                  } @else {
+                    {{ formatArrival(booking) }}
+                  }
+                </span>
               </div>
               <div class="mobile-info-item">
                 <span class="mobile-label">Drop-off</span>
