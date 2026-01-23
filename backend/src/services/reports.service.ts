@@ -73,18 +73,25 @@ interface DailyInOutRow {
   parkingTypeName: string | null;
 }
 
+interface DailyInOutRowWithStatus extends DailyInOutRow {
+  bookingStatusId: string | null;
+}
+
 export async function getDailyInOutReport(
   date: string
 ): Promise<DailyInOutReportItem[]> {
-  const bookings = await prisma.$queryRawUnsafe<DailyInOutRow[]>(`
+  const bookings = await prisma.$queryRawUnsafe<DailyInOutRowWithStatus[]>(`
     SELECT b.id, b.name, b.surname, b."plateNo", b."carBrand", b."carModel", b."carColor",
            b."dateFrom", b."timeFrom", b."dropOffOption",
            b."dateTo", b."timeTo", b."pickUpOption",
-           b."returnFlight", pt.name as "parkingTypeName"
+           b."returnFlight", pt.name as "parkingTypeName", b."bookingStatusId"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     WHERE b.deleteflag = 0 
-      AND (b."dateFrom" = '${date}'::date OR b."dateTo" = '${date}'::date)
+      AND (
+        (b."dateFrom" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_created')
+        OR (b."dateTo" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_parked')
+      )
     ORDER BY b."dateFrom" ASC, b."timeFrom" ASC NULLS LAST, b.name ASC
   `);
 
@@ -95,16 +102,15 @@ export async function getDailyInOutReport(
     const dateFrom = new Date(b.dateFrom);
     const dateTo = new Date(b.dateTo);
     
-    const isCheckIn = dateFrom.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
-    const isCheckOut = dateTo.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
+    const isCheckInDate = dateFrom.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
+    const isCheckOutDate = dateTo.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
     
     let bookingType = '';
-    if (isCheckIn && isCheckOut) {
-      bookingType = 'In/Out';
-    } else if (isCheckIn) {
+    if (isCheckInDate && b.bookingStatusId === 'bookingStatus_created') {
       bookingType = 'In';
-    } else if (isCheckOut) {
-      bookingType = 'Out';
+    }
+    if (isCheckOutDate && b.bookingStatusId === 'bookingStatus_parked') {
+      bookingType = bookingType === 'In' ? 'In/Out' : 'Out';
     }
 
     return {
@@ -135,6 +141,7 @@ export async function getWashServiceReport(
     WHERE deleteflag = 0 
       AND "dateTo" = '${date}'::date
       AND "washService" = true
+      AND "bookingStatusId" = 'bookingStatus_parked'
     ORDER BY "timeTo" ASC NULLS LAST, name ASC
   `);
 
