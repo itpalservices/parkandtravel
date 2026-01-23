@@ -37,7 +37,7 @@
                   <div ngbDropdown placement="bottom-start" container="body">
                     <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
                       <span class="badge status-badge-large status-clickable" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
-                        {{ booking.bookingStatus || '-' }}
+                        {{ booking.bookingStatus || '-' }} <span class="status-arrow">▼</span>
                       </span>
                     </button>
                     <div ngbDropdownMenu>
@@ -227,7 +227,7 @@
                   <div ngbDropdown placement="bottom-start" container="body" class="d-inline-block">
                     <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
                       <span class="badge status-badge-large status-clickable" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
-                        {{ booking.bookingStatus || '-' }}
+                        {{ booking.bookingStatus || '-' }} <span class="status-arrow">▼</span>
                       </span>
                     </button>
                     <div ngbDropdownMenu>
