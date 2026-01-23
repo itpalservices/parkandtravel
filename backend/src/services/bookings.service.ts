@@ -108,7 +108,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   let whereClause = whereConditions.join(" AND ");
 
-  whereClause += ` OR (b."bookingStatusId" = 'bookingStatus_parked' AND b.deleteflag = 0)`;
+  if (dateFrom) {
+    whereClause += ` OR (b."bookingStatusId" = 'bookingStatus_parked' AND b."dateTo" < '${dateFrom}'::date AND b.deleteflag = 0)`;
+  }
 
   if (dateFrom && dateTo) {
     whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b."actualCheckOut"::date <= '${dateTo}'::date AND b.deleteflag = 0)`;
