@@ -74,4 +74,8 @@ export interface HistoryBooking {
   finalPrice: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
+  bookingStatusId: string | null;
+  bookingStatus: string | null;
+  actualCheckOut: string | null;
+  extraFee: number | null;
 }

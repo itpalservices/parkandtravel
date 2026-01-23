@@ -314,6 +314,7 @@
         <table class="table history-table">
           <thead>
             <tr>
+              <th>Status</th>
               <th>Plate No.</th>
               <th>Vehicle / Model</th>
               <th>Vehicle Color</th>
@@ -329,12 +330,27 @@
           <tbody>
             @for (booking of paginatedHistoryBookings; track booking.id) {
               <tr>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
+                  >
+                    {{ booking.bookingStatus || '-' }}
+                  </span>
+                </td>
                 <td>{{ booking.plateNo || '-' }}</td>
                 <td>{{ booking.carBrand }} {{ booking.carModel }}</td>
                 <td>{{ booking.carColor || '-' }}</td>
                 <td>{{ formatDate(booking.dateFrom) }} {{ formatTime(booking.timeFrom) }}</td>
                 <td>{{ getDropOffLabel(booking.dropOffOption) }}</td>
-                <td>{{ formatDate(booking.dateTo) }} {{ formatTime(booking.timeTo) }}</td>
+                <td>
+                  @if (booking.actualCheckOut) {
+                    <span class="text-decoration-line-through text-muted me-1">{{ formatDate(booking.dateTo) }} {{ formatTime(booking.timeTo) }}</span>
+                    <span class="text-danger">{{ formatActualCheckOut(booking) }}</span>
+                  } @else {
+                    {{ formatDate(booking.dateTo) }} {{ formatTime(booking.timeTo) }}
+                  }
+                </td>
                 <td>{{ getPickUpLabel(booking.pickUpOption) }}</td>
                 <td>
                   <span
@@ -351,7 +367,14 @@
                     <span class="badge bg-secondary">No</span>
                   }
                 </td>
-                <td>{{ formatPrice(booking.finalPrice) }}</td>
+                <td>
+                  @if (booking.extraFee && booking.extraFee > 0) {
+                    <span class="text-decoration-line-through text-muted me-1">{{ formatPrice(booking.finalPrice) }}</span>
+                    <span class="text-danger fw-bold">{{ formatPrice(getTotalPrice(booking)) }}</span>
+                  } @else {
+                    {{ formatPrice(booking.finalPrice) }}
+                  }
+                </td>
               </tr>
             }
           </tbody>

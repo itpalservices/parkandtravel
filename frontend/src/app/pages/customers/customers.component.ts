@@ -327,4 +327,30 @@ export class CustomersComponent implements OnInit {
       default: return option;
     }
   }
+
+  getStatusBadgeClass(status: string | null): string {
+    switch (status?.toLowerCase()) {
+      case 'created':
+        return 'bg-warning text-dark';
+      case 'parked':
+        return 'bg-info';
+      case 'completed':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  }
+
+  formatActualCheckOut(booking: HistoryBooking): string {
+    if (!booking.actualCheckOut) return '-';
+    const date = new Date(booking.actualCheckOut);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+           date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getTotalPrice(booking: HistoryBooking): number {
+    const base = booking.finalPrice || 0;
+    const extra = booking.extraFee || 0;
+    return base + extra;
+  }
 }
