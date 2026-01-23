@@ -125,11 +125,20 @@
                 </td>
               }
               <td>
-                {{
-                  booking.finalPrice !== null
-                    ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
-                    : '-'
-                }}
+                @if (booking.extraFee) {
+                  <span class="text-decoration-line-through text-muted me-1">{{
+                    booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2'
+                  }}</span>
+                  <span class="text-danger fw-bold">{{
+                    (booking.finalPrice ?? 0) + booking.extraFee | currency: 'EUR' : 'symbol' : '1.2-2'
+                  }}</span>
+                } @else {
+                  {{
+                    booking.finalPrice !== null
+                      ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
+                      : '-'
+                  }}
+                }
               </td>
               @if (!isDriver) {
                 <td class="actions-col">
@@ -323,11 +332,22 @@
             </div>
           </div>
           <div class="mobile-card-footer">
-            <span class="mobile-price">{{
-              booking.finalPrice !== null
-                ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
-                : '-'
-            }}</span>
+            <div class="mobile-price">
+              @if (booking.extraFee) {
+                <span class="text-decoration-line-through text-muted me-1" style="font-size: 0.85rem;">{{
+                  booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2'
+                }}</span>
+                <span class="text-danger fw-bold">{{
+                  (booking.finalPrice ?? 0) + booking.extraFee | currency: 'EUR' : 'symbol' : '1.2-2'
+                }}</span>
+              } @else {
+                {{
+                  booking.finalPrice !== null
+                    ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
+                    : '-'
+                }}
+              }
+            </div>
             @if (!isDriver) {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                 <button class="btn btn-icon" ngbDropdownToggle>
