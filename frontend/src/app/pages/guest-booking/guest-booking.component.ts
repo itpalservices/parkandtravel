@@ -20,6 +20,8 @@ import { FormFieldErrorComponent } from '../../shared/components/form-field-erro
 import { Subscription } from 'rxjs';
 import { ParkingType, ParkingTypesResponse } from '../../shared';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
+import { FlightService } from '../../core/services/flight.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-guest-booking',
@@ -40,6 +42,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   private calendar = inject(NgbCalendar);
   private apiService = inject(ApiService);
   private fb = inject(FormBuilder);
+  private flightService = inject(FlightService);
   private checkInDateSubscription?: Subscription;
 
   bookingForm!: FormGroup;
@@ -57,6 +60,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   submitting = false;
   submitSuccess = false;
   submitError = '';
+  flightValidated = false;
+  flightValidating = false;
 
   constructor() {
     const today = this.calendar.getToday();
@@ -247,10 +252,75 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
+  validateFlight(): void {
+    const flightNumber = this.bookingForm.get('flightNumber')?.value?.trim();
+    if (!flightNumber) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Please enter a flight number',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+      return;
+    }
+
+    this.flightValidating = true;
+    this.flightService.validateFlightNumber(flightNumber).subscribe({
+      next: (response) => {
+        this.flightValidating = false;
+        if (response.success) {
+          this.flightValidated = true;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Flight ${response.data?.flightNumber} verified (${response.data?.airline})`,
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        }
+      },
+      error: (err) => {
+        this.flightValidating = false;
+        this.flightValidated = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.error || 'Flight not found. Please check the flight number.',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
+  }
+
+  onFlightNumberChange(): void {
+    this.flightValidated = false;
+  }
+
   submitBooking(): void {
     if (this.bookingForm.invalid) {
       Object.keys(this.bookingForm.controls).forEach((key) => {
         this.bookingForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    if (!this.flightValidated) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Please validate the flight number before submitting',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
       });
       return;
     }
