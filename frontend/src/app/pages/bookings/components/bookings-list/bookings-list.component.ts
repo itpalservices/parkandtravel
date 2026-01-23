@@ -241,6 +241,37 @@ export class BookingsListComponent {
 
     if (newStatusId === 'bookingStatus_parked') {
       this.showParkPlaceModal(booking, newStatusId, newStatusLabel);
+    } else if (newStatusId === 'bookingStatus_completed') {
+      this.handleCompletedStatus(booking, newStatusId, newStatusLabel);
+    } else {
+      this.performStatusUpdate(booking, newStatusId, newStatusLabel);
+    }
+  }
+
+  private handleCompletedStatus(booking: Booking, newStatusId: string, newStatusLabel: string): void {
+    const checkOutDate = new Date(booking.dateTo);
+    checkOutDate.setHours(23, 59, 59, 999);
+    const now = new Date();
+
+    if (now > checkOutDate) {
+      Swal.fire({
+        title: 'Late Check-out Detected',
+        text: 'The actual check-out is later than the scheduled date. Do you want to apply an extra fee?',
+        icon: 'question',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Yes, apply extra fee',
+        denyButtonText: 'No, skip extra fee',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#006B8F',
+        denyButtonColor: '#6c757d',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.performStatusUpdate(booking, newStatusId, newStatusLabel, undefined, true);
+        } else if (result.isDenied) {
+          this.performStatusUpdate(booking, newStatusId, newStatusLabel, undefined, false);
+        }
+      });
     } else {
       this.performStatusUpdate(booking, newStatusId, newStatusLabel);
     }
@@ -274,8 +305,9 @@ export class BookingsListComponent {
     newStatusId: string,
     newStatusLabel: string,
     parkPlace?: string,
+    applyExtraFee?: boolean,
   ): void {
-    this.bookingsService.updateBookingStatus(booking.id, newStatusId, parkPlace).subscribe({
+    this.bookingsService.updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee).subscribe({
       next: (response) => {
         if (response.success) {
           booking.bookingStatusId = response.data.bookingStatusId;

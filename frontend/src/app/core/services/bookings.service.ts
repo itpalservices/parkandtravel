@@ -55,12 +55,15 @@ export class BookingsService {
     );
   }
 
-  updateBookingStatus(id: string, bookingStatusId: string, parkPlace?: string): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string } }> {
-    const body: { bookingStatusId: string; parkPlace?: string } = { bookingStatusId };
+  updateBookingStatus(id: string, bookingStatusId: string, parkPlace?: string, applyExtraFee?: boolean): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } }> {
+    const body: { bookingStatusId: string; parkPlace?: string; applyExtraFee?: boolean } = { bookingStatusId };
     if (parkPlace) {
       body.parkPlace = parkPlace;
     }
-    return this.http.patch<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string } }>(
+    if (applyExtraFee !== undefined) {
+      body.applyExtraFee = applyExtraFee;
+    }
+    return this.http.patch<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } }>(
       `${this.baseUrl}/${id}/status`,
       body
     );

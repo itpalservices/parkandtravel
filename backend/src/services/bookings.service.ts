@@ -727,6 +727,7 @@ export async function updateBookingStatus(
   id: string,
   bookingStatusId: string,
   parkPlace?: string,
+  applyExtraFee?: boolean,
 ): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } | null> {
   if (!isValidUUID(id)) return null;
 
@@ -746,7 +747,7 @@ export async function updateBookingStatus(
 
   if (!existingBooking) return null;
 
-  const updateData: { bookingStatusId: string; parkPlace?: string; actualCheckOut?: Date; extraFee?: number } = { bookingStatusId };
+  const updateData: { bookingStatusId: string; parkPlace?: string; actualCheckOut?: Date; extraFee?: number | null } = { bookingStatusId };
   
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
@@ -762,7 +763,7 @@ export async function updateBookingStatus(
     const checkOutDate = new Date(existingBooking.dateTo);
     checkOutDate.setHours(23, 59, 59, 999);
 
-    if (actualCheckOutDate > checkOutDate) {
+    if (actualCheckOutDate > checkOutDate && applyExtraFee === true) {
       const actualCheckOutDay = new Date(actualCheckOutDate);
       actualCheckOutDay.setHours(0, 0, 0, 0);
       const checkOutDay = new Date(existingBooking.dateTo);
@@ -786,6 +787,8 @@ export async function updateBookingStatus(
           updateData.extraFee = calculatedExtraFee;
         }
       }
+    } else if (applyExtraFee === false) {
+      updateData.extraFee = null;
     }
   }
 
