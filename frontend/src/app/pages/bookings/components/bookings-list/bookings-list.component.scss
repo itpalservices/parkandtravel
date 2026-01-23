@@ -350,3 +350,7 @@
   font-size: 0.6rem;
   margin-left: 0.25rem;
 }
+
+[ngbDropdownToggle]::after {
+  display: none !important;
+}
