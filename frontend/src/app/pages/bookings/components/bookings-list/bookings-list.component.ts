@@ -42,7 +42,6 @@ export class BookingsListComponent {
 
   constructor(private bookingsService: BookingsService) {}
 
-
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', {
@@ -219,9 +218,9 @@ export class BookingsListComponent {
 
   onStatusChange(booking: Booking, newStatusId: string): void {
     const statusLabels: Record<string, string> = {
-      'bookingStatus_created': 'Created',
-      'bookingStatus_parked': 'Parked',
-      'bookingStatus_completed': 'Completed',
+      bookingStatus_created: 'Created',
+      bookingStatus_parked: 'Parked',
+      bookingStatus_completed: 'Completed',
     };
     const newStatusLabel = statusLabels[newStatusId] || newStatusId;
 
@@ -237,7 +236,7 @@ export class BookingsListComponent {
       title: 'Set Parking Place',
       text: 'Please enter the parking place for this vehicle:',
       input: 'text',
-      inputPlaceholder: 'e.g., A-15, B-22',
+      inputPlaceholder: 'e.g., A15, B22',
       showCancelButton: true,
       confirmButtonText: 'Submit',
       cancelButtonText: 'Cancel',
@@ -255,7 +254,12 @@ export class BookingsListComponent {
     });
   }
 
-  private performStatusUpdate(booking: Booking, newStatusId: string, newStatusLabel: string, parkPlace?: string): void {
+  private performStatusUpdate(
+    booking: Booking,
+    newStatusId: string,
+    newStatusLabel: string,
+    parkPlace?: string,
+  ): void {
     this.bookingsService.updateBookingStatus(booking.id, newStatusId, parkPlace).subscribe({
       next: (response) => {
         if (response.success) {
