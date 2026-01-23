@@ -55,10 +55,14 @@ export class BookingsService {
     );
   }
 
-  updateBookingStatus(id: string, bookingStatusId: string): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string } }> {
-    return this.http.patch<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string } }>(
+  updateBookingStatus(id: string, bookingStatusId: string, parkPlace?: string): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string } }> {
+    const body: { bookingStatusId: string; parkPlace?: string } = { bookingStatusId };
+    if (parkPlace) {
+      body.parkPlace = parkPlace;
+    }
+    return this.http.patch<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string } }>(
       `${this.baseUrl}/${id}/status`,
-      { bookingStatusId }
+      body
     );
   }
 }

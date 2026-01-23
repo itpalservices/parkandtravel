@@ -225,7 +225,38 @@ export class BookingsListComponent {
     };
     const newStatusLabel = statusLabels[newStatusId] || newStatusId;
 
-    this.bookingsService.updateBookingStatus(booking.id, newStatusId).subscribe({
+    if (newStatusId === 'bookingStatus_parked') {
+      this.showParkPlaceModal(booking, newStatusId, newStatusLabel);
+    } else {
+      this.performStatusUpdate(booking, newStatusId, newStatusLabel);
+    }
+  }
+
+  private showParkPlaceModal(booking: Booking, newStatusId: string, newStatusLabel: string): void {
+    Swal.fire({
+      title: 'Set Parking Place',
+      text: 'Please enter the parking place for this vehicle:',
+      input: 'text',
+      inputPlaceholder: 'e.g., A-15, B-22',
+      showCancelButton: true,
+      confirmButtonText: 'Submit',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#006B8F',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'Parking place is required';
+        }
+        return null;
+      },
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.performStatusUpdate(booking, newStatusId, newStatusLabel, result.value.trim());
+      }
+    });
+  }
+
+  private performStatusUpdate(booking: Booking, newStatusId: string, newStatusLabel: string, parkPlace?: string): void {
+    this.bookingsService.updateBookingStatus(booking.id, newStatusId, parkPlace).subscribe({
       next: (response) => {
         if (response.success) {
           booking.bookingStatusId = response.data.bookingStatusId;
