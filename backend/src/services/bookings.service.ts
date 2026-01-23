@@ -705,7 +705,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
 export async function updateBookingStatus(
   id: string,
   bookingStatusId: string,
-): Promise<{ id: string; bookingStatusId: string; bookingStatus: string } | null> {
+  parkPlace?: string,
+): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string } | null> {
   if (!isValidUUID(id)) return null;
 
   const statusLabels: Record<string, string> = {
@@ -724,15 +725,21 @@ export async function updateBookingStatus(
 
   if (!existingBooking) return null;
 
+  const updateData: { bookingStatusId: string; parkPlace?: string } = { bookingStatusId };
+  if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
+    updateData.parkPlace = parkPlace;
+  }
+
   await prisma.booking.update({
     where: { id },
-    data: { bookingStatusId },
+    data: updateData,
   });
 
   return {
     id,
     bookingStatusId,
     bookingStatus: statusLabels[bookingStatusId],
+    parkPlace: parkPlace || undefined,
   };
 }
 

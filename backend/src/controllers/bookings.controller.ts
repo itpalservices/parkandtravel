@@ -474,7 +474,7 @@ export async function updateBookingStatus(
     }
 
     const { id } = req.params;
-    const { bookingStatusId } = req.body;
+    const { bookingStatusId, parkPlace } = req.body;
 
     if (!isValidUUID(id)) {
       res.status(400).json({ error: "Invalid booking ID format" });
@@ -486,7 +486,12 @@ export async function updateBookingStatus(
       return;
     }
 
-    const result = await updateBookingStatusService(id, bookingStatusId);
+    if (bookingStatusId === 'bookingStatus_parked' && !parkPlace) {
+      res.status(400).json({ error: "parkPlace is required when changing status to Parked" });
+      return;
+    }
+
+    const result = await updateBookingStatusService(id, bookingStatusId, parkPlace);
 
     if (!result) {
       res.status(404).json({ error: "Booking not found or invalid status" });
