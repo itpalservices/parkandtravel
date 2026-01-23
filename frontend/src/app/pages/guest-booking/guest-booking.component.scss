@@ -103,40 +103,23 @@
   }
 }
 
-.flight-input-group {
+.flight-input-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  
   .form-control {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-right: none;
-    
-    &:focus {
-      border-right: none;
-    }
-    
-    &.is-valid {
-      border-color: #198754;
-      background-image: none;
-      padding-right: 1rem;
-    }
+    flex: 1;
   }
   
   .flight-validate-btn {
-    display: flex;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 48px;
-    min-width: 48px;
-    padding: 0;
-    border: 1px solid #e5e7eb;
-    border-left: none;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-    background: #f8f9fa;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    border-color: #006B8F;
+    color: #006B8F;
     
     &:hover:not(:disabled) {
       background: #006B8F;
@@ -145,35 +128,7 @@
     }
     
     &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    &.validating {
-      background: #f0f4f8;
-      border-color: #e5e7eb;
-      color: #006B8F;
-    }
-    
-    &.validated {
-      background: #198754;
-      border-color: #198754;
-      color: white;
-      
-      &:hover:not(:disabled) {
-        background: #157347;
-        border-color: #157347;
-      }
-    }
-    
-    .spinner-border-sm {
-      width: 16px;
-      height: 16px;
-      border-width: 2px;
-    }
-    
-    svg {
-      flex-shrink: 0;
+      opacity: 0.65;
     }
   }
 }
