@@ -200,9 +200,9 @@
   <div class="mobile-view d-block d-md-none">
     <div class="bookings-cards">
       @for (booking of bookings; track booking.id) {
-        <div class="booking-item">
-          <div class="booking-left m-auto">
-            <div class="mobile-status-row mb-2">
+        <div class="booking-card-mobile">
+          <div class="mobile-card-header">
+            <div class="mobile-status-section">
               @if (booking.bookingStatusId === 'bookingStatus_completed') {
                 <span class="badge status-badge-small" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
                   {{ booking.bookingStatus || '-' }}
@@ -229,97 +229,60 @@
                 </div>
               }
               @if (booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
-                <span class="park-place-mobile ms-2">{{ booking.parkPlace }}</span>
+                <span class="park-place-badge ms-2">{{ booking.parkPlace }}</span>
               }
             </div>
-            <div class="avatar m-auto">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+            <div class="mobile-customer-name">{{ booking.name }} {{ booking.surname }}</div>
+          </div>
+          <div class="mobile-card-body">
+            <div class="mobile-info-grid">
+              <div class="mobile-info-item">
+                <span class="mobile-label">Plate No.</span>
+                <span class="mobile-value plate-badge">{{ booking.plateNo || 'N/A' }}</span>
+              </div>
+              <div class="mobile-info-item">
+                <span class="mobile-label">Flight</span>
+                <span class="mobile-value">{{ booking.returnFlight || '-' }}</span>
+              </div>
+              <div class="mobile-info-item">
+                <span class="mobile-label">Check In</span>
+                <span class="mobile-value" [class.fw-bold]="isCheckInHighlighted(booking)">{{ formatCheckIn(booking) }}</span>
+              </div>
+              <div class="mobile-info-item">
+                <span class="mobile-label">Check Out</span>
+                <span class="mobile-value" [class.fw-bold]="isCheckOutHighlighted(booking)">{{ formatArrival(booking) }}</span>
+              </div>
+              <div class="mobile-info-item">
+                <span class="mobile-label">Drop-off</span>
+                <span class="mobile-value">{{ formatDropOff(booking.dropOffOption) }}</span>
+              </div>
+              <div class="mobile-info-item">
+                <span class="mobile-label">Pick-up</span>
+                <span class="mobile-value">{{ formatPickUp(booking.pickUpOption) }}</span>
+              </div>
             </div>
-            <div class="customer-info">
-              <span class="customer-name">{{ booking.name }} {{ booking.surname }}</span>
-              <span class="flight-info">License: {{ booking.plateNo || 'N/A' }}</span>
-              <span class="wash-service-badge">
-                <span
-                  class="badge"
-                  [ngClass]="booking.parkingType === 'Covered' ? 'bg-primary' : 'bg-secondary'"
-                >
-                  {{ booking.parkingType }}
-                </span>
+            <div class="mobile-tags-row">
+              <span class="badge" [ngClass]="booking.parkingType === 'Covered' ? 'bg-primary' : 'bg-secondary'">
+                {{ booking.parkingType }}
               </span>
               @if (booking.washService) {
-                <span class="wash-service-badge">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M12 2l1.8 4.6L18 8.4l-4.2 1.8L12 15l-1.8-4.8L6 8.4l4.2-1.8L12 2z" />
-                    <path d="M19 14l.9 2.3L22 17l-2.1.7L19 20l-.9-2.3L16 17l2.1-.7L19 14z" />
-                    <path d="M5 14l.9 2.3L8 17l-2.1.7L5 20l-.9-2.3L2 17l2.1-.7L5 14z" />
-                  </svg>
-
-                  Wash Service
+                <span class="badge bg-warning text-dark ms-1">Wash</span>
+              }
+              @if (isAdmin) {
+                <span class="badge ms-1" [ngClass]="booking.userId ? 'bg-info' : 'bg-dark'">
+                  {{ booking.userId ? 'User' : 'Guest' }}
                 </span>
               }
             </div>
           </div>
-          <div class="booking-right">
-            <div class="detail-row">
-              <span class="detail-label text-start">Flight:</span>
-              <span class="detail-value">{{ booking.returnFlight }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label text-start my-auto">Check In:</span>
-              <span class="detail-value" [class.fw-bold]="isCheckInHighlighted(booking)"
-                >{{ formatCheckIn(booking) }} ({{ formatDropOff(booking.dropOffOption) }})</span
-              >
-            </div>
-            <div class="detail-row">
-              <span class="detail-label text-start my-auto">Check Out:</span>
-              <span class="detail-value" [class.fw-bold]="isCheckOutHighlighted(booking)"
-                >{{ formatArrival(booking) }} ({{ formatPickUp(booking.pickUpOption) }})</span
-              >
-            </div>
-            @if (isAdmin) {
-              <div class="detail-row">
-                <span class="detail-label text-start my-auto">Source:</span>
-                <span class="detail-value">
-                  <span class="badge" [ngClass]="booking.userId ? 'bg-info' : 'bg-black'">
-                    {{ booking.userId ? 'Registered User' : 'Guest' }}
-                  </span>
-                </span>
-              </div>
-            }
-            <div class="detail-row">
-              <span class="detail-label"></span>
-              <span class="detail-value">{{
-                booking.finalPrice !== null
-                  ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
-                  : '-'
-              }}</span>
-            </div>
-          </div>
-          @if (!isDriver) {
-            <div class="actions-wrapper m-auto" ngbDropdown placement="bottom-end" container="body">
+          <div class="mobile-card-footer">
+            <span class="mobile-price">{{
+              booking.finalPrice !== null
+                ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
+                : '-'
+            }}</span>
+            @if (!isDriver) {
+              <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
               <button class="btn btn-icon" ngbDropdownToggle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -381,8 +344,8 @@
                   Delete
                 </button>
               </div>
-            </div>
-          }
+            }
+          </div>
         </div>
       }
     </div>
