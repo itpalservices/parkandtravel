@@ -64,6 +64,12 @@
                         >
                           <span class="badge bg-success me-2">Completed</span> Mark as Completed
                         </button>
+                        <button
+                          ngbDropdownItem
+                          (click)="onRevertToCreated(booking)"
+                        >
+                          <span class="badge bg-warning text-dark me-2">Created</span> Revert to Created
+                        </button>
                       }
                     </div>
                   </div>
@@ -277,6 +283,12 @@
                         (click)="onStatusChange(booking, 'bookingStatus_completed')"
                       >
                         <span class="badge bg-success me-2">Completed</span> Mark as Completed
+                      </button>
+                      <button
+                        ngbDropdownItem
+                        (click)="onRevertToCreated(booking)"
+                      >
+                        <span class="badge bg-warning text-dark me-2">Created</span> Revert to Created
                       </button>
                     }
                   </div>

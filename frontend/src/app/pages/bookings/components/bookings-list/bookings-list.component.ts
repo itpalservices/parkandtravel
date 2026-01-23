@@ -303,6 +303,23 @@ export class BookingsListComponent {
     });
   }
 
+  onRevertToCreated(booking: Booking): void {
+    Swal.fire({
+      title: 'Revert to Created',
+      text: 'By making this change, you will lose the parking place details associated with this status. Do you want to continue?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, revert',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#006B8F',
+      cancelButtonColor: '#6c757d',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performStatusUpdate(booking, 'bookingStatus_created', 'Created');
+      }
+    });
+  }
+
   private performStatusUpdate(
     booking: Booking,
     newStatusId: string,

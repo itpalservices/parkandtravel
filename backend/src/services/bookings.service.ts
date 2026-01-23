@@ -757,10 +757,14 @@ export async function updateBookingStatus(
 
   if (!existingBooking) return null;
 
-  const updateData: { bookingStatusId: string; parkPlace?: string; actualCheckOut?: Date; extraFee?: number | null } = { bookingStatusId };
+  const updateData: { bookingStatusId: string; parkPlace?: string | null; actualCheckOut?: Date; extraFee?: number | null } = { bookingStatusId };
   
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
+  }
+
+  if (bookingStatusId === 'bookingStatus_created') {
+    updateData.parkPlace = null;
   }
 
   let calculatedExtraFee: number | undefined = undefined;
