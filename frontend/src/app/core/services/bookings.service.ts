@@ -54,4 +54,11 @@ export class BookingsService {
       {}
     );
   }
+
+  updateBookingStatus(id: string, bookingStatusId: string): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string } }> {
+    return this.http.patch<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string } }>(
+      `${this.baseUrl}/${id}/status`,
+      { bookingStatusId }
+    );
+  }
 }

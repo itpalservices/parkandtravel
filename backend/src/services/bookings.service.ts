@@ -702,4 +702,38 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
   }));
 }
 
+export async function updateBookingStatus(
+  id: string,
+  bookingStatusId: string,
+): Promise<{ id: string; bookingStatusId: string; bookingStatus: string } | null> {
+  if (!isValidUUID(id)) return null;
+
+  const statusLabels: Record<string, string> = {
+    'bookingStatus_created': 'Created',
+    'bookingStatus_parked': 'Parked',
+    'bookingStatus_completed': 'Completed',
+  };
+
+  if (!statusLabels[bookingStatusId]) {
+    return null;
+  }
+
+  const existingBooking = await prisma.booking.findUnique({
+    where: { id },
+  });
+
+  if (!existingBooking) return null;
+
+  await prisma.booking.update({
+    where: { id },
+    data: { bookingStatusId },
+  });
+
+  return {
+    id,
+    bookingStatusId,
+    bookingStatus: statusLabels[bookingStatusId],
+  };
+}
+
 export { isValidDateFormat, isDateInPast, isValidUUID };

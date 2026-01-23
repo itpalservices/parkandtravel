@@ -29,9 +29,34 @@
           @for (booking of bookings; track booking.id) {
             <tr>
               <td>
-                <span class="badge" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
-                  {{ booking.bookingStatus || '-' }}
-                </span>
+                @if (booking.bookingStatusId === 'bookingStatus_completed') {
+                  <span class="badge status-badge-large" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                    {{ booking.bookingStatus || '-' }}
+                  </span>
+                } @else {
+                  <div ngbDropdown placement="bottom-start" container="body">
+                    <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
+                      <span class="badge status-badge-large status-clickable" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                        {{ booking.bookingStatus || '-' }}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-1">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </span>
+                    </button>
+                    <div ngbDropdownMenu>
+                      @if (booking.bookingStatusId === 'bookingStatus_created') {
+                        <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_parked')">
+                          <span class="badge bg-info me-2">Parked</span> Mark as Parked
+                        </button>
+                      }
+                      @if (booking.bookingStatusId === 'bookingStatus_parked') {
+                        <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_completed')">
+                          <span class="badge bg-success me-2">Completed</span> Mark as Completed
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               </td>
               <td>
                 <div class="name-cell">
@@ -115,7 +140,7 @@
                       </svg>
                     </button>
                     <div ngbDropdownMenu class="dropdown-menu-end">
-                      @if (!isCheckInPast(booking)) {
+                      @if (!isCheckInPast(booking) && booking.bookingStatusId !== 'bookingStatus_parked') {
                         <a ngbDropdownItem [routerLink]="[FormAction.Edit, booking.id]">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -197,9 +222,34 @@
               <span class="customer-name">{{ booking.name }} {{ booking.surname }}</span>
               <span class="flight-info">License: {{ booking.plateNo || 'N/A' }}</span>
               <span class="status-badge mb-1">
-                <span class="badge" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
-                  {{ booking.bookingStatus || '-' }}
-                </span>
+                @if (booking.bookingStatusId === 'bookingStatus_completed') {
+                  <span class="badge status-badge-large" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                    {{ booking.bookingStatus || '-' }}
+                  </span>
+                } @else {
+                  <div ngbDropdown placement="bottom-start" container="body" class="d-inline-block">
+                    <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
+                      <span class="badge status-badge-large status-clickable" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                        {{ booking.bookingStatus || '-' }}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-1">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </span>
+                    </button>
+                    <div ngbDropdownMenu>
+                      @if (booking.bookingStatusId === 'bookingStatus_created') {
+                        <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_parked')">
+                          <span class="badge bg-info me-2">Parked</span> Mark as Parked
+                        </button>
+                      }
+                      @if (booking.bookingStatusId === 'bookingStatus_parked') {
+                        <button ngbDropdownItem (click)="onStatusChange(booking, 'bookingStatus_completed')">
+                          <span class="badge bg-success me-2">Completed</span> Mark as Completed
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               </span>
               <span class="wash-service-badge">
                 <span
@@ -288,7 +338,7 @@
                 </svg>
               </button>
               <div ngbDropdownMenu class="dropdown-menu-end">
-                @if (!isCheckInPast(booking)) {
+                @if (!isCheckInPast(booking) && booking.bookingStatusId !== 'bookingStatus_parked') {
                   <a ngbDropdownItem [routerLink]="[FormAction.Edit, booking.id]">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

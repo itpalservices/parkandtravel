@@ -38,6 +38,7 @@ export class BookingsListComponent {
   @Input() dateRangeFilter: DateRangeFilter | null = null;
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
+  @Output() bookingUpdated = new EventEmitter<void>();
 
   constructor(private bookingsService: BookingsService) {}
 
@@ -214,5 +215,47 @@ export class BookingsListComponent {
       default:
         return 'bg-secondary';
     }
+  }
+
+  onStatusChange(booking: Booking, newStatusId: string): void {
+    const statusLabels: Record<string, string> = {
+      'bookingStatus_created': 'Created',
+      'bookingStatus_parked': 'Parked',
+      'bookingStatus_completed': 'Completed',
+    };
+    const newStatusLabel = statusLabels[newStatusId] || newStatusId;
+
+    this.bookingsService.updateBookingStatus(booking.id, newStatusId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          booking.bookingStatusId = response.data.bookingStatusId;
+          booking.bookingStatus = response.data.bookingStatus;
+          Swal.fire({
+            icon: 'success',
+            title: 'Status Updated',
+            text: `Booking status changed to "${newStatusLabel}"`,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.bookingUpdated.emit();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating booking status:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to update booking status. Please try again.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      },
+    });
   }
 }

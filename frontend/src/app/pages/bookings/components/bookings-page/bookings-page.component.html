@@ -173,6 +173,7 @@
         [dateRangeFilter]="dateRangeFilterForList"
         (pageChange)="onPageChange($event)"
         (bookingDeleted)="loadBookings()"
+        (bookingUpdated)="loadBookings()"
       ></app-bookings-list>
     }
   </div>

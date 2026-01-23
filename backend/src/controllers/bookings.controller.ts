@@ -9,6 +9,7 @@ import {
   createGuestBooking as createGuestBookingService,
   createBooking as createBookingService,
   updateBooking as updateBookingService,
+  updateBookingStatus as updateBookingStatusService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 
@@ -456,6 +457,48 @@ export async function updateBooking(
     });
   } catch (error) {
     console.error("Error updating booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function updateBookingStatus(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    
+    if (authUser?.role === "user") {
+      res.status(403).json({ message: "Regular users are not allowed to update booking status" });
+      return;
+    }
+
+    const { id } = req.params;
+    const { bookingStatusId } = req.body;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({ error: "Invalid booking ID format" });
+      return;
+    }
+
+    if (!bookingStatusId) {
+      res.status(400).json({ error: "bookingStatusId is required" });
+      return;
+    }
+
+    const result = await updateBookingStatusService(id, bookingStatusId);
+
+    if (!result) {
+      res.status(404).json({ error: "Booking not found or invalid status" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error updating booking status:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
