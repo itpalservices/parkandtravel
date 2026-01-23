@@ -237,12 +237,12 @@
           <div class="mobile-card-body">
             <div class="mobile-info-grid">
               <div class="mobile-info-item">
-                <span class="mobile-label">Plate No.</span>
-                <span class="mobile-value plate-badge">{{ booking.plateNo || 'N/A' }}</span>
-              </div>
-              <div class="mobile-info-item">
                 <span class="mobile-label">Flight</span>
                 <span class="mobile-value">{{ booking.returnFlight || '-' }}</span>
+              </div>
+              <div class="mobile-info-item">
+                <span class="mobile-label">Plate No.</span>
+                <span class="mobile-value plate-badge">{{ booking.plateNo || 'N/A' }}</span>
               </div>
               <div class="mobile-info-item">
                 <span class="mobile-label">Check In</span>
@@ -266,11 +266,18 @@
                 {{ booking.parkingType }}
               </span>
               @if (booking.washService) {
-                <span class="badge bg-warning text-dark ms-1">Wash</span>
-              }
-              @if (isAdmin) {
-                <span class="badge ms-1" [ngClass]="booking.userId ? 'bg-info' : 'bg-dark'">
-                  {{ booking.userId ? 'User' : 'Guest' }}
+                <span class="badge bg-info ms-1 wash-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <path d="M12 2v4"></path>
+                    <path d="M6.343 6.343L3.515 3.515"></path>
+                    <path d="M2 12h4"></path>
+                    <path d="M6.343 17.657l-2.828 2.828"></path>
+                    <path d="M12 18v4"></path>
+                    <path d="M17.657 17.657l2.828 2.828"></path>
+                    <path d="M18 12h4"></path>
+                    <path d="M17.657 6.343l2.828-2.828"></path>
+                  </svg>
+                  Wash Service
                 </span>
               }
             </div>

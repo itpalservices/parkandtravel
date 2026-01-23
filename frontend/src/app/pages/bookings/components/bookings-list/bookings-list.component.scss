@@ -455,3 +455,12 @@
   font-size: 1.1rem;
   color: #006B8F;
 }
+
+.wash-badge {
+  display: inline-flex;
+  align-items: center;
+  
+  svg {
+    vertical-align: middle;
+  }
+}
