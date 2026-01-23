@@ -29,7 +29,9 @@
           @for (booking of bookings; track booking.id) {
             <tr>
               <td>
-                @if (booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)) {
+                @if (
+                  booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)
+                ) {
                   <span
                     class="badge status-badge-large"
                     [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
@@ -100,7 +102,9 @@
               <td>{{ formatDropOff(booking.dropOffOption) }}</td>
               <td [class.fw-bold]="isCheckOutHighlighted(booking)">
                 @if (booking.actualCheckOut) {
-                  <span class="text-decoration-line-through text-muted me-1">{{ formatArrival(booking) }}</span>
+                  <span class="text-decoration-line-through text-muted me-1">{{
+                    formatArrival(booking)
+                  }}</span>
                   <span class="text-danger fw-bold">{{ formatActualCheckOut(booking) }}</span>
                 } @else {
                   {{ formatArrival(booking) }}
@@ -137,7 +141,8 @@
                     booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2'
                   }}</span>
                   <span class="text-danger fw-bold">{{
-                    (booking.finalPrice ?? 0) + booking.extraFee | currency: 'EUR' : 'symbol' : '1.2-2'
+                    (booking.finalPrice ?? 0) + booking.extraFee
+                      | currency: 'EUR' : 'symbol' : '1.2-2'
                   }}</span>
                 } @else {
                   {{
@@ -149,30 +154,56 @@
               </td>
               @if (!isDriver) {
                 <td class="actions-col">
-                  <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
-                    <button class="btn btn-icon" ngbDropdownToggle>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
-                      </svg>
-                    </button>
-                    <div ngbDropdownMenu class="dropdown-menu-end">
-                      @if (
-                        !isCheckInPast(booking) &&
-                        booking.bookingStatusId !== 'bookingStatus_parked'
-                      ) {
-                        <a ngbDropdownItem [routerLink]="[FormAction.Edit, booking.id]">
+                  @if (booking.bookingStatusId == 'bookingStatus_created') {
+                    <div
+                      class="actions-wrapper"
+                      ngbDropdown
+                      placement="bottom-end"
+                      container="body"
+                    >
+                      <button class="btn btn-icon" ngbDropdownToggle>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="1"></circle>
+                          <circle cx="12" cy="5" r="1"></circle>
+                          <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                      </button>
+                      <div ngbDropdownMenu class="dropdown-menu-end">
+                        @if (!isCheckInPast(booking)) {
+                          <a ngbDropdownItem [routerLink]="[FormAction.Edit, booking.id]">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="me-2"
+                            >
+                              <path
+                                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                              ></path>
+                              <path
+                                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                              ></path>
+                            </svg>
+                            Edit
+                          </a>
+                        }
+                        <button ngbDropdownItem class="text-danger" (click)="onDelete(booking)">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="14"
@@ -185,40 +216,18 @@
                             stroke-linejoin="round"
                             class="me-2"
                           >
+                            <polyline points="3 6 5 6 21 6"></polyline>
                             <path
-                              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
                             ></path>
-                            <path
-                              d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                            ></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
                           </svg>
-                          Edit
-                        </a>
-                      }
-                      <button ngbDropdownItem class="text-danger" (click)="onDelete(booking)">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="me-2"
-                        >
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path
-                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                          ></path>
-                          <line x1="10" y1="11" x2="10" y2="17"></line>
-                          <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
-                        Delete
-                      </button>
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  }
                 </td>
               }
             </tr>
@@ -234,7 +243,9 @@
         <div class="booking-card-mobile">
           <div class="mobile-card-header">
             <div class="mobile-status-section">
-              @if (booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)) {
+              @if (
+                booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)
+              ) {
                 <span
                   class="badge status-badge-small"
                   [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
@@ -297,7 +308,11 @@
                 <span class="mobile-label">Check Out</span>
                 <span class="mobile-value" [class.fw-bold]="isCheckOutHighlighted(booking)">
                   @if (booking.actualCheckOut) {
-                    <span class="text-decoration-line-through text-muted me-1" style="font-size: 0.75rem;">{{ formatArrival(booking) }}</span>
+                    <span
+                      class="text-decoration-line-through text-muted me-1"
+                      style="font-size: 0.75rem"
+                      >{{ formatArrival(booking) }}</span
+                    >
                     <span class="text-danger fw-bold">{{ formatActualCheckOut(booking) }}</span>
                   } @else {
                     {{ formatArrival(booking) }}
@@ -346,11 +361,14 @@
           <div class="mobile-card-footer">
             <div class="mobile-price">
               @if (booking.extraFee) {
-                <span class="text-decoration-line-through text-muted me-1" style="font-size: 0.85rem;">{{
-                  booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2'
-                }}</span>
+                <span
+                  class="text-decoration-line-through text-muted me-1"
+                  style="font-size: 0.85rem"
+                  >{{ booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}</span
+                >
                 <span class="text-danger fw-bold">{{
-                  (booking.finalPrice ?? 0) + booking.extraFee | currency: 'EUR' : 'symbol' : '1.2-2'
+                  (booking.finalPrice ?? 0) + booking.extraFee
+                    | currency: 'EUR' : 'symbol' : '1.2-2'
                 }}</span>
               } @else {
                 {{
