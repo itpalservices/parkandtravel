@@ -61,6 +61,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     FROM bookings 
     WHERE deleteflag = 0 
       AND "dateFrom" = '${todayStr}'::date
+      AND "bookingStatusId" = 'bookingStatus_created'
   `);
 
   const todayCheckOutsResult = await prisma.$queryRawUnsafe<{ count: bigint }[]>(`
@@ -68,7 +69,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     FROM bookings 
     WHERE deleteflag = 0 
       AND "dateTo" = '${todayStr}'::date
-      AND "bookingStatusId" != 'bookingStatus_created'
+      AND "bookingStatusId" = 'bookingStatus_parked'
   `);
 
   const carsForWashTodayResult = await prisma.$queryRawUnsafe<{ count: bigint }[]>(`
@@ -120,6 +121,7 @@ export async function getCheckIns(
     WHERE deleteflag = 0 
       AND "dateFrom" >= '${dateFrom}'::date 
       AND "dateFrom" <= '${dateTo}'::date
+      AND "bookingStatusId" = 'bookingStatus_created'
     ORDER BY "dateFrom" ASC, "timeFrom" ASC
   `);
 
@@ -143,6 +145,7 @@ export async function getCheckOuts(
     WHERE deleteflag = 0 
       AND "dateTo" >= '${dateFrom}'::date 
       AND "dateTo" <= '${dateTo}'::date
+      AND "bookingStatusId" = 'bookingStatus_parked'
     ORDER BY "dateTo" ASC, "timeTo" ASC
   `);
 
