@@ -833,7 +833,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             toast: true,
             position: 'top-end',
             icon: 'error',
-            title: err.error?.message || 'Failed to update booking. Please try again.',
+            title: err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
             showConfirmButton: false,
             timer: 4000,
             timerProgressBar: true,

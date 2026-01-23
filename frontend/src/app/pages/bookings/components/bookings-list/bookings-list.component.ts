@@ -145,7 +145,7 @@ export class BookingsListComponent {
           error: (err) => {
             Swal.fire({
               title: 'Error',
-              text: err.error?.message || 'Failed to delete booking. Please try again.',
+              text: err.error?.error || err.error?.message || 'Failed to delete booking. Please try again.',
               icon: 'error',
               confirmButtonColor: '#006B8F',
             });
