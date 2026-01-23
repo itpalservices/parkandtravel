@@ -33,6 +33,8 @@ interface BookingResponse {
   dropOffOption: string | null;
   pickUpOption: string | null;
   userId: string | null;
+  bookingStatusId: string | null;
+  bookingStatus: string | null;
   deleteflag: number;
 }
 
@@ -134,9 +136,12 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."dropOffOption",
       b."pickUpOption",
       b.deleteflag,
-      b."userId"
+      b."userId",
+      b."bookingStatusId",
+      bs.value as "bookingStatusValue"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
     WHERE ${whereClause}
     ORDER BY b."dateTo" ASC, COALESCE(b."timeTo"::time, '23:59:59'::time) ASC
   `;
@@ -167,6 +172,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
     userId: b.userId || null,
+    bookingStatusId: b.bookingStatusId || null,
+    bookingStatus: b.bookingStatusValue || null,
     deleteflag: b.deleteflag,
   }));
 
@@ -181,38 +188,70 @@ export async function getBookingById(
 ): Promise<BookingResponse | null> {
   if (!isValidUUID(id)) return null;
 
-  const booking = await prisma.booking.findUnique({
-    where: { id },
-    include: { parkingType: true },
-  });
+  const bookings = await prisma.$queryRawUnsafe<any[]>(`
+    SELECT 
+      b.id,
+      b.name,
+      b.surname,
+      b.email,
+      b."returnFlight",
+      b."dateFrom",
+      b."timeFrom",
+      b."dateTo",
+      b."timeTo",
+      b.mobile,
+      b."phoneCodeId",
+      b."plateNo",
+      b."carBrand",
+      b."carModel",
+      b."carColor",
+      b."parkingTypeId",
+      pt.name as "parkingTypeName",
+      b.adults,
+      b."washService",
+      b."finalPrice",
+      b."dropOffOption",
+      b."pickUpOption",
+      b."userId",
+      b."bookingStatusId",
+      bs.value as "bookingStatusValue",
+      b.deleteflag
+    FROM bookings b
+    LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
+    WHERE b.id = $1
+  `, id);
 
-  if (!booking) return null;
+  if (bookings.length === 0) return null;
+  const b = bookings[0];
 
   return {
-    id: booking.id,
-    name: booking.name,
-    surname: booking.surname,
-    email: booking.email,
-    returnFlight: booking.returnFlight,
-    dateFrom: formatDate(booking.dateFrom),
-    timeFrom: formatTime(booking.timeFrom),
-    dateTo: formatDate(booking.dateTo),
-    timeTo: formatTime(booking.timeTo),
-    mobile: booking.mobile,
-    phoneCodeId: booking.phoneCodeId || null,
-    plateNo: booking.plateNo,
-    carBrand: booking.carBrand,
-    carModel: booking.carModel,
-    carColor: booking.carColor,
-    parkingType: booking.parkingType?.name || null,
-    parkingTypeId: booking.parkingTypeId || null,
-    adults: booking.adults,
-    washService: booking.washService ?? false,
-    finalPrice: booking.finalPrice !== null ? parseFloat(booking.finalPrice.toString()) : null,
-    dropOffOption: booking.dropOffOption || null,
-    pickUpOption: booking.pickUpOption || null,
-    userId: booking.userId || null,
-    deleteflag: booking.deleteflag,
+    id: b.id,
+    name: b.name,
+    surname: b.surname,
+    email: b.email,
+    returnFlight: b.returnFlight,
+    dateFrom: formatDate(b.dateFrom),
+    timeFrom: formatTime(b.timeFrom),
+    dateTo: formatDate(b.dateTo),
+    timeTo: formatTime(b.timeTo),
+    mobile: b.mobile,
+    phoneCodeId: b.phoneCodeId || null,
+    plateNo: b.plateNo,
+    carBrand: b.carBrand,
+    carModel: b.carModel,
+    carColor: b.carColor,
+    parkingType: b.parkingTypeName || null,
+    parkingTypeId: b.parkingTypeId || null,
+    adults: b.adults,
+    washService: b.washService ?? false,
+    finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    dropOffOption: b.dropOffOption || null,
+    pickUpOption: b.pickUpOption || null,
+    userId: b.userId || null,
+    bookingStatusId: b.bookingStatusId || null,
+    bookingStatus: b.bookingStatusValue || null,
+    deleteflag: b.deleteflag,
   };
 }
 
@@ -623,9 +662,12 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."dropOffOption",
       b."pickUpOption",
       b."userId",
+      b."bookingStatusId",
+      bs.value as "bookingStatusValue",
       b.deleteflag
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
     WHERE b."userId" = $1 AND b.deleteflag = 0
     ORDER BY b."dateFrom" DESC, COALESCE(b."timeFrom"::time, '00:00:00'::time) DESC
   `, userId);
@@ -654,6 +696,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
     userId: b.userId || null,
+    bookingStatusId: b.bookingStatusId || null,
+    bookingStatus: b.bookingStatusValue || null,
     deleteflag: b.deleteflag,
   }));
 }

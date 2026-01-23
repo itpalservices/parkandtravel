@@ -202,4 +202,17 @@ export class BookingsListComponent {
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
+
+  getStatusBadgeClass(status: string | null): string {
+    switch (status) {
+      case 'Created':
+        return 'bg-warning text-dark';
+      case 'Parked':
+        return 'bg-info';
+      case 'Completed':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  }
 }

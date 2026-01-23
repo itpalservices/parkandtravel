@@ -4,6 +4,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th>Status</th>
             <th>Full Name</th>
             <th>Plate No.</th>
             <th>Vehicle / Model</th>
@@ -27,6 +28,11 @@
         <tbody>
           @for (booking of bookings; track booking.id) {
             <tr>
+              <td>
+                <span class="badge" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                  {{ booking.bookingStatus || '-' }}
+                </span>
+              </td>
               <td>
                 <div class="name-cell">
                   <div class="avatar">
@@ -190,6 +196,11 @@
             <div class="customer-info">
               <span class="customer-name">{{ booking.name }} {{ booking.surname }}</span>
               <span class="flight-info">License: {{ booking.plateNo || 'N/A' }}</span>
+              <span class="status-badge mb-1">
+                <span class="badge" [ngClass]="getStatusBadgeClass(booking.bookingStatus)">
+                  {{ booking.bookingStatus || '-' }}
+                </span>
+              </span>
               <span class="wash-service-badge">
                 <span
                   class="badge"

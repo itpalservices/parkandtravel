@@ -20,6 +20,8 @@ export interface Booking {
   finalPrice: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
+  bookingStatusId: string | null;
+  bookingStatus: string | null;
   deleteflag: number;
   userId: string | null;
   createdAt: string;

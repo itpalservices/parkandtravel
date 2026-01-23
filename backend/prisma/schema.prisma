@@ -47,11 +47,13 @@ model Booking {
   finalPrice   Decimal?     @db.Decimal(10, 2)
   dropOffOption String?     @db.VarChar(20)
   pickUpOption  String?     @db.VarChar(20)
+  bookingStatusId String?   @default("bookingStatus_created") @db.VarChar(50)
   deleteflag   Int          @default(0)
   createdAt    DateTime     @default(now())
 
   parkingType  ParkingType? @relation(fields: [parkingTypeId], references: [id])
   phoneCode    PhoneCode?   @relation(fields: [phoneCodeId], references: [id])
+  bookingStatus BookingStatus? @relation(fields: [bookingStatusId], references: [id])
 
   @@map("bookings")
 }
@@ -61,6 +63,14 @@ model ConfigurationSetting {
   value String? @db.VarChar(500)
 
   @@map("configuration_settings")
+}
+
+model BookingStatus {
+  id       String    @id @db.VarChar(50)
+  value    String    @db.VarChar(100)
+  bookings Booking[]
+
+  @@map("booking_statuses")
 }
 
 model Car {
