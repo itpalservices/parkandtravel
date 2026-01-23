@@ -29,7 +29,7 @@
           @for (booking of bookings; track booking.id) {
             <tr>
               <td>
-                @if (booking.bookingStatusId === 'bookingStatus_completed') {
+                @if (booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)) {
                   <span
                     class="badge status-badge-large"
                     [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
@@ -234,7 +234,7 @@
         <div class="booking-card-mobile">
           <div class="mobile-card-header">
             <div class="mobile-status-section">
-              @if (booking.bookingStatusId === 'bookingStatus_completed') {
+              @if (booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)) {
                 <span
                   class="badge status-badge-small"
                   [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
