@@ -137,20 +137,26 @@ export async function deleteBooking(
     const authUser = req.authUser as AuthUser | undefined;
     const isRegularUser = authUser?.role === "user";
 
+    const booking = await getBookingById(id);
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
     if (isRegularUser) {
       if (!authUser?.email) {
         res.status(403).json({ error: "Email claim required for user access" });
-        return;
-      }
-      const booking = await getBookingById(id);
-      if (!booking) {
-        res.status(404).json({ error: "Booking not found" });
         return;
       }
       if (booking.email?.toLowerCase() !== authUser.email.toLowerCase()) {
         res.status(403).json({ error: "Access denied" });
         return;
       }
+    }
+
+    if (booking.bookingStatusId !== 'bookingStatus_created') {
+      res.status(400).json({ error: "Cannot delete booking. Only bookings with 'Created' status can be deleted." });
+      return;
     }
 
     const result = await softDeleteBooking(id);
@@ -360,6 +366,11 @@ export async function updateBooking(
     const existingBooking = await getBookingById(id);
     if (!existingBooking) {
       res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (existingBooking.bookingStatusId !== 'bookingStatus_created') {
+      res.status(400).json({ error: "Cannot update booking. Only bookings with 'Created' status can be edited." });
       return;
     }
 
