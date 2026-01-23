@@ -144,10 +144,13 @@ export class BookingsListComponent {
           },
           error: (err) => {
             Swal.fire({
-              title: 'Error',
-              text: err.error?.error || err.error?.message || 'Failed to delete booking. Please try again.',
+              toast: true,
+              position: 'top-end',
               icon: 'error',
-              confirmButtonColor: '#006B8F',
+              title: err.error?.error || err.error?.message || 'Failed to delete booking. Please try again.',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true,
             });
           },
         });
