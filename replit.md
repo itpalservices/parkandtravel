@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Features
 - **Booking Management**: Guest and authenticated user booking creation, listing with filters, soft deletion. Includes options for car wash service and car transport (self-drive, airport pickup/delivery).
-- **Booking Statuses**: Each booking has a status (Created, Parked, Completed) stored in the `booking_statuses` table. New bookings default to "Created" status. Status is displayed as the first column in the bookings list with color-coded badges (yellow for Created, blue for Parked, green for Completed).
+- **Booking Statuses**: Each booking has a status (Created, Parked, Completed) stored in the `booking_statuses` table. New bookings default to "Created" status. Status is displayed as the first column in the bookings list with color-coded badges (yellow for Created, blue for Parked, green for Completed). Admins and drivers can click the status badge to see a dropdown menu for updating the status. Status transitions are one-way: Created → Parked → Completed. When a booking status is "Parked", the edit option is hidden. API endpoint: PATCH /api/bookings/:id/status.
 - **User Profile**: Users can view and update their name, surname, and phone number. Email is displayed but not editable.
 - **Car Management**: Regular users can add, edit, and delete their cars.
 - **Configuration Settings**: Admin users can manage parking availability, prices per day, and car wash service options.
