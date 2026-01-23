@@ -58,7 +58,7 @@
           [selectedFromDate]="dateFilter.from"
           [selectedToDate]="dateFilter.to"
           (dateRangeChange)="onDateRangeChange($event)"
-          [enablePastDates]="true"
+          [enablePastDates]="!isDriver"
         ></app-date-range-picker>
       </div>
     </div>
@@ -139,7 +139,7 @@
         [selectedFromDate]="dateFilter.from"
         [selectedToDate]="dateFilter.to"
         (dateRangeChange)="onDateRangeChange($event)"
-        [enablePastDates]="true"
+        [enablePastDates]="!isDriver"
       ></app-date-range-picker>
     </div>
   </div>
