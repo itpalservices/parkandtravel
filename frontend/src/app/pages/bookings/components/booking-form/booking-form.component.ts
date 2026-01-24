@@ -235,12 +235,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.loadingBooking = true;
     this.apiService.get<BookingDetails>(`/bookings/${this.bookingId}`).subscribe({
       next: (booking) => {
-        if (this.isCheckInPast(booking.dateFrom)) {
+        if (booking.bookingStatusId === 'bookingStatus_completed') {
           Swal.fire({
             toast: true,
             position: 'top-end',
             icon: 'warning',
-            title: 'Cannot edit bookings with past check-in dates',
+            title: 'This booking is completed and cannot be edited',
             showConfirmButton: false,
             timer: 4000,
             timerProgressBar: true,
@@ -272,14 +272,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.router.navigate(['/admin/bookings']);
       },
     });
-  }
-
-  private isCheckInPast(dateFrom: string): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const checkInDate = new Date(dateFrom);
-    checkInDate.setHours(0, 0, 0, 0);
-    return checkInDate < today;
   }
 
   private populateFormWithBookingData(booking: BookingDetails): void {

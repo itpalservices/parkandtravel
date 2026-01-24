@@ -158,7 +158,7 @@
                   }}
                 }
               </td>
-              @if (!isDriver) {
+              @if (!isDriver && booking.bookingStatusId !== 'bookingStatus_completed') {
                 <td class="actions-col">
                   <div
                     class="actions-wrapper"
@@ -184,7 +184,7 @@
                       </svg>
                     </button>
                     <div ngbDropdownMenu class="dropdown-menu-end">
-                      @if (!isCheckInPast(booking)) {
+                      @if (booking.bookingStatusId !== 'bookingStatus_parked') {
                         <a ngbDropdownItem [routerLink]="[FormAction.Edit, booking.id]">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -235,6 +235,8 @@
                     </div>
                   </div>
                 </td>
+              } @else if (!isDriver) {
+                <td class="actions-col"></td>
               }
             </tr>
           }
@@ -390,7 +392,7 @@
                 }}
               }
             </div>
-            @if (!isDriver) {
+            @if (!isDriver && booking.bookingStatusId !== 'bookingStatus_completed') {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                 <button class="btn btn-icon" ngbDropdownToggle>
                   <svg
@@ -410,9 +412,7 @@
                   </svg>
                 </button>
                 <div ngbDropdownMenu class="dropdown-menu-end">
-                  @if (
-                    !isCheckInPast(booking) && booking.bookingStatusId !== 'bookingStatus_parked'
-                  ) {
+                  @if (booking.bookingStatusId !== 'bookingStatus_parked') {
                     <a ngbDropdownItem [routerLink]="[FormAction.Edit, booking.id]">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
