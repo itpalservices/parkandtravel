@@ -57,6 +57,9 @@ interface BookingDetails {
   dropOffOption: string | null;
   pickUpOption: string | null;
   userId: string | null;
+  bookingStatusId: string | null;
+  bookingStatus: string | null;
+  parkPlace: string | null;
 }
 
 @Component({
@@ -121,6 +124,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   bookingId: string | null = null;
   loadingBooking = false;
   existingBooking: BookingDetails | null = null;
+
+  currentStatusId: string | null = null;
+  currentStatusLabel: string | null = null;
+  parkPlace: string = '';
+  updatingStatus = false;
+  isBookingParked = false;
 
   constructor(private authService: AuthService, private _activatedRoute: ActivatedRoute) {
     const [{path}] = this._activatedRoute.snapshot.url;
@@ -317,10 +326,198 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.foundUserId = booking.userId;
     }
 
+    this.currentStatusId = booking.bookingStatusId;
+    this.currentStatusLabel = booking.bookingStatus;
+    this.parkPlace = booking.parkPlace || '';
+    this.isBookingParked = booking.bookingStatusId === 'bookingStatus_parked';
+
     this.bookingForm.get('fullName')?.disable();
     this.bookingForm.get('email')?.disable();
     this.bookingForm.get('phone')?.disable();
     this.bookingForm.get('phoneCodeId')?.disable();
+
+    if (this.isBookingParked) {
+      this.disableFieldsForParkedBooking();
+    }
+  }
+
+  private disableFieldsForParkedBooking(): void {
+    const allFormFields = Object.keys(this.bookingForm.controls);
+    const fieldsToKeepEnabled = ['pickUpOption'];
+    
+    allFormFields.forEach(field => {
+      if (!fieldsToKeepEnabled.includes(field)) {
+        this.bookingForm.get(field)?.disable();
+      } else {
+        this.bookingForm.get(field)?.enable();
+      }
+    });
+  }
+
+  private enableFieldsForNonParkedBooking(): void {
+    const fieldsAlwaysDisabled = ['fullName', 'email', 'phone', 'phoneCodeId'];
+    const allFormFields = Object.keys(this.bookingForm.controls);
+    
+    allFormFields.forEach(field => {
+      if (!fieldsAlwaysDisabled.includes(field)) {
+        this.bookingForm.get(field)?.enable();
+      }
+    });
+  }
+
+  getStatusBadgeClass(status: string | null): string {
+    switch (status) {
+      case 'Created':
+        return 'bg-warning text-dark';
+      case 'Parked':
+        return 'bg-info';
+      case 'Completed':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  }
+
+  onStatusChange(newStatusId: string): void {
+    if (!this.bookingId) return;
+    
+    const statusLabels: Record<string, string> = {
+      bookingStatus_created: 'Created',
+      bookingStatus_parked: 'Parked',
+      bookingStatus_completed: 'Completed',
+    };
+    const newStatusLabel = statusLabels[newStatusId] || newStatusId;
+
+    if (newStatusId === 'bookingStatus_parked') {
+      this.showParkPlaceModal(newStatusId, newStatusLabel);
+    } else if (newStatusId === 'bookingStatus_completed') {
+      this.handleCompletedStatus(newStatusId, newStatusLabel);
+    } else {
+      this.performStatusUpdate(newStatusId, newStatusLabel);
+    }
+  }
+
+  private showParkPlaceModal(newStatusId: string, newStatusLabel: string): void {
+    Swal.fire({
+      title: 'Set Parking Place',
+      text: 'Please enter the parking place for this vehicle:',
+      input: 'text',
+      inputPlaceholder: 'e.g., A15, B22',
+      showCancelButton: true,
+      confirmButtonText: 'Submit',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#006B8F',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'Parking place is required';
+        }
+        return null;
+      },
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.performStatusUpdate(newStatusId, newStatusLabel, result.value.trim());
+      }
+    });
+  }
+
+  private handleCompletedStatus(newStatusId: string, newStatusLabel: string): void {
+    if (!this.existingBooking) return;
+    
+    const checkOutDate = new Date(this.existingBooking.dateTo);
+    checkOutDate.setHours(23, 59, 59, 999);
+    const now = new Date();
+
+    if (now > checkOutDate) {
+      Swal.fire({
+        title: 'Late Check-out Detected',
+        text: 'The actual check-out is later than the scheduled date. Do you want to apply an extra fee?',
+        icon: 'question',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Yes, apply extra fee',
+        denyButtonText: 'No, skip extra fee',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#006B8F',
+        denyButtonColor: '#6c757d',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.performStatusUpdate(newStatusId, newStatusLabel, undefined, true);
+        } else if (result.isDenied) {
+          this.performStatusUpdate(newStatusId, newStatusLabel, undefined, false);
+        }
+      });
+    } else {
+      this.performStatusUpdate(newStatusId, newStatusLabel);
+    }
+  }
+
+  private performStatusUpdate(newStatusId: string, newStatusLabel: string, parkPlace?: string, applyExtraFee?: boolean): void {
+    if (!this.bookingId) return;
+    
+    this.updatingStatus = true;
+    const body: { bookingStatusId: string; parkPlace?: string; applyExtraFee?: boolean } = { bookingStatusId: newStatusId };
+    if (parkPlace) body.parkPlace = parkPlace;
+    if (applyExtraFee !== undefined) body.applyExtraFee = applyExtraFee;
+
+    this.apiService.patch(`/bookings/${this.bookingId}/status`, body).subscribe({
+      next: () => {
+        this.updatingStatus = false;
+        this.currentStatusId = newStatusId;
+        this.currentStatusLabel = newStatusLabel;
+        if (parkPlace) this.parkPlace = parkPlace;
+        
+        this.isBookingParked = newStatusId === 'bookingStatus_parked';
+        
+        if (newStatusId === 'bookingStatus_parked') {
+          this.disableFieldsForParkedBooking();
+        } else if (newStatusId === 'bookingStatus_created') {
+          this.parkPlace = '';
+          this.enableFieldsForNonParkedBooking();
+        } else if (newStatusId === 'bookingStatus_completed') {
+          this.disableFieldsForParkedBooking();
+        }
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Status updated to ${newStatusLabel}`,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      },
+      error: (err) => {
+        this.updatingStatus = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.error || err.error?.message || 'Failed to update status',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
+  }
+
+  onRevertToCreated(): void {
+    if (!this.bookingId) return;
+    
+    Swal.fire({
+      title: 'Revert to Created?',
+      html: 'This will change the booking status back to <strong>Created</strong>.<br><br><small class="text-muted">Note: The parking place information will be cleared.</small>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, revert',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#006B8F',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performStatusUpdate('bookingStatus_created', 'Created');
+      }
+    });
   }
 
   private parseApiDate(dateStr: string): NgbDateStruct | null {
@@ -941,6 +1138,46 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         },
       });
     }
+  }
+
+  saveParkedBooking(): void {
+    if (!this.bookingId || !this.isBookingParked) return;
+
+    this.submitting = true;
+    const formValue = this.bookingForm.getRawValue();
+    
+    const updateData = {
+      parkPlace: this.parkPlace.trim(),
+      pickUpOption: formValue.pickUpOption,
+    };
+
+    this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({
+      next: () => {
+        this.submitting = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Booking updated successfully',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+        this.router.navigate(['/admin/bookings']);
+      },
+      error: (err) => {
+        this.submitting = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
   }
 
   private formatDateForApi(date: NgbDateStruct): string {

@@ -7,6 +7,7 @@ import {
   createBooking,
   updateBooking,
   updateBookingStatus,
+  updateParkedBooking,
 } from "../controllers/bookings.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -17,6 +18,7 @@ router.post("/", checkJwt, createBooking);
 router.get("/:id", checkJwt, getBooking);
 router.put("/:id", checkJwt, updateBooking);
 router.patch("/:id/status", checkJwt, updateBookingStatus);
+router.patch("/:id/parked", checkJwt, updateParkedBooking);
 router.put("/:id/delete", checkJwt, deleteBooking);
 router.post("/guest", createGuestBooking);
 

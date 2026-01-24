@@ -28,7 +28,71 @@
       }
 
       <div class="booking-section">
-        <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()">
+        @if (isEditMode && currentStatusId) {
+          <div class="status-section">
+            <div class="status-header">
+              <span class="status-label">Booking Status:</span>
+              @if (currentStatusId === 'bookingStatus_completed' || isRegularUser) {
+                <span
+                  class="badge status-badge-large"
+                  [ngClass]="getStatusBadgeClass(currentStatusLabel)"
+                >
+                  {{ currentStatusLabel || '-' }}
+                </span>
+              } @else {
+                <div ngbDropdown placement="bottom-start">
+                  <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle [disabled]="updatingStatus">
+                    <span
+                      class="badge status-badge-large status-clickable"
+                      [ngClass]="getStatusBadgeClass(currentStatusLabel)"
+                    >
+                      {{ currentStatusLabel || '-' }} <span class="status-arrow">▼</span>
+                    </span>
+                  </button>
+                  <div ngbDropdownMenu>
+                    @if (currentStatusId === 'bookingStatus_created') {
+                      <button
+                        ngbDropdownItem
+                        (click)="onStatusChange('bookingStatus_parked')"
+                      >
+                        <span class="badge bg-info me-2">Parked</span> Mark as Parked
+                      </button>
+                    }
+                    @if (currentStatusId === 'bookingStatus_parked') {
+                      <button
+                        ngbDropdownItem
+                        (click)="onStatusChange('bookingStatus_completed')"
+                      >
+                        <span class="badge bg-success me-2">Completed</span> Mark as Completed
+                      </button>
+                      <button
+                        ngbDropdownItem
+                        (click)="onRevertToCreated()"
+                      >
+                        <span class="badge bg-warning text-dark me-2">Created</span> Revert to Created
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+            @if (isBookingParked) {
+              <div class="park-place-section">
+                <label for="parkPlace">Parking Place</label>
+                <input
+                  type="text"
+                  id="parkPlace"
+                  class="form-control park-place-input"
+                  [(ngModel)]="parkPlace"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="e.g., A15, B22"
+                />
+              </div>
+            }
+          </div>
+        }
+
+        <form [formGroup]="bookingForm" (ngSubmit)="isBookingParked ? saveParkedBooking() : submitBooking()">
           <div class="form-section">
               <h3>Personal Information</h3>
 
@@ -516,14 +580,18 @@
             </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn-submit" [disabled]="submitting || loadingBooking">
-              @if (submitting) {
-                <span class="spinner"></span>
-                Processing...
-              } @else {
-                {{ isEditMode ? 'Update Booking' : 'Create Booking' }}
-              }
-            </button>
+            @if (currentStatusId !== 'bookingStatus_completed') {
+              <button type="submit" class="btn-submit" [disabled]="submitting || loadingBooking">
+                @if (submitting) {
+                  <span class="spinner"></span>
+                  Processing...
+                } @else if (isBookingParked) {
+                  Save Changes
+                } @else {
+                  {{ isEditMode ? 'Update Booking' : 'Create Booking' }}
+                }
+              </button>
+            }
           </div>
         </form>
       </div>

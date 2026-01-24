@@ -472,6 +472,50 @@ export async function updateBooking(
   }
 }
 
+export async function updateParkedBooking(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    
+    if (authUser?.role === "user") {
+      res.status(403).json({ message: "Regular users are not allowed to update parked bookings" });
+      return;
+    }
+
+    const { id } = req.params;
+    const { parkPlace, pickUpOption } = req.body;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({ error: "Invalid booking ID format" });
+      return;
+    }
+
+    const existingBooking = await getBookingById(id);
+    if (!existingBooking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (existingBooking.bookingStatusId !== 'bookingStatus_parked') {
+      res.status(400).json({ error: "Only parked bookings can be updated through this endpoint" });
+      return;
+    }
+
+    const { updateParkedBooking: updateParkedBookingService } = await import("../services/bookings.service");
+    const result = await updateParkedBookingService(id, { parkPlace, pickUpOption });
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error updating parked booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 export async function updateBookingStatus(
   req: Request,
   res: Response,

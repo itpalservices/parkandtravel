@@ -823,4 +823,47 @@ export async function updateBookingStatus(
   };
 }
 
+interface UpdateParkedBookingParams {
+  parkPlace?: string;
+  pickUpOption?: string;
+}
+
+export async function updateParkedBooking(
+  id: string,
+  params: UpdateParkedBookingParams,
+): Promise<{ id: string; parkPlace: string | null; pickUpOption: string | null } | null> {
+  if (!isValidUUID(id)) return null;
+
+  const existingBooking = await prisma.booking.findUnique({
+    where: { id },
+  });
+
+  if (!existingBooking) return null;
+
+  if (existingBooking.bookingStatusId !== 'bookingStatus_parked') {
+    return null;
+  }
+
+  const updateData: { parkPlace?: string; pickUpOption?: string } = {};
+  
+  if (params.parkPlace !== undefined) {
+    updateData.parkPlace = params.parkPlace;
+  }
+  
+  if (params.pickUpOption !== undefined) {
+    updateData.pickUpOption = params.pickUpOption;
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id },
+    data: updateData,
+  });
+
+  return {
+    id: updatedBooking.id,
+    parkPlace: updatedBooking.parkPlace,
+    pickUpOption: updatedBooking.pickUpOption,
+  };
+}
+
 export { isValidDateFormat, isDateInPast, isValidUUID };
