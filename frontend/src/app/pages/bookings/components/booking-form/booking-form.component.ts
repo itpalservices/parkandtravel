@@ -354,6 +354,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  canToggleWashService(): boolean {
+    return this.washAvailable && (!this.isBookingParked || (this.isBookingParked && this.washAvailable));
+  }
+
   private enableFieldsForNonParkedBooking(): void {
     const fieldsAlwaysDisabled = ['fullName', 'email', 'phone', 'phoneCodeId'];
     const allFormFields = Object.keys(this.bookingForm.controls);
@@ -1146,10 +1150,14 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.submitting = true;
     const formValue = this.bookingForm.getRawValue();
     
-    const updateData = {
+    const updateData: { parkPlace: string; pickUpOption: string; washService?: boolean } = {
       parkPlace: this.parkPlace.trim(),
       pickUpOption: formValue.pickUpOption,
     };
+    
+    if (this.washAvailable) {
+      updateData.washService = this.washServiceEnabled;
+    }
 
     this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({
       next: () => {

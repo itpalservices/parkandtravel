@@ -343,7 +343,7 @@
                       type="button"
                       class="btn btn-outline-primary flight-validate-btn"
                       (click)="validateFlight()"
-                      [disabled]="flightValidating"
+                      [disabled]="flightValidating || flightValidated || isBookingParked"
                     >
                       @if (flightValidating) {
                         <span class="spinner-border spinner-border-sm me-1"></span>

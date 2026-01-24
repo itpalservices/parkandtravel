@@ -826,12 +826,13 @@ export async function updateBookingStatus(
 interface UpdateParkedBookingParams {
   parkPlace?: string;
   pickUpOption?: string;
+  washService?: boolean;
 }
 
 export async function updateParkedBooking(
   id: string,
   params: UpdateParkedBookingParams,
-): Promise<{ id: string; parkPlace: string | null; pickUpOption: string | null } | null> {
+): Promise<{ id: string; parkPlace: string | null; pickUpOption: string | null; washService: boolean } | null> {
   if (!isValidUUID(id)) return null;
 
   const existingBooking = await prisma.booking.findUnique({
@@ -844,7 +845,7 @@ export async function updateParkedBooking(
     return null;
   }
 
-  const updateData: { parkPlace?: string; pickUpOption?: string } = {};
+  const updateData: { parkPlace?: string; pickUpOption?: string; washService?: boolean } = {};
   
   if (params.parkPlace !== undefined) {
     updateData.parkPlace = params.parkPlace;
@@ -852,6 +853,10 @@ export async function updateParkedBooking(
   
   if (params.pickUpOption !== undefined) {
     updateData.pickUpOption = params.pickUpOption;
+  }
+  
+  if (params.washService !== undefined) {
+    updateData.washService = params.washService;
   }
 
   const updatedBooking = await prisma.booking.update({
@@ -863,6 +868,7 @@ export async function updateParkedBooking(
     id: updatedBooking.id,
     parkPlace: updatedBooking.parkPlace,
     pickUpOption: updatedBooking.pickUpOption,
+    washService: updatedBooking.washService,
   };
 }
 

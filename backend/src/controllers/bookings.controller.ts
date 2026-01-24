@@ -485,7 +485,7 @@ export async function updateParkedBooking(
     }
 
     const { id } = req.params;
-    const { parkPlace, pickUpOption } = req.body;
+    const { parkPlace, pickUpOption, washService } = req.body;
 
     if (!isValidUUID(id)) {
       res.status(400).json({ error: "Invalid booking ID format" });
@@ -504,7 +504,7 @@ export async function updateParkedBooking(
     }
 
     const { updateParkedBooking: updateParkedBookingService } = await import("../services/bookings.service");
-    const result = await updateParkedBookingService(id, { parkPlace, pickUpOption });
+    const result = await updateParkedBookingService(id, { parkPlace, pickUpOption, washService });
 
     res.json({
       success: true,
