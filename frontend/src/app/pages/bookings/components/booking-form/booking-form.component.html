@@ -377,13 +377,15 @@
                       [minDate]="minDate"
                       [markDisabled]="isDateDisabled"
                       (dateSelect)="onCheckInDateSelect($event)"
-                      (click)="dpCheckIn.toggle()"
+                      (click)="!isBookingParked && dpCheckIn.toggle()"
+                      [disabled]="isBookingParked"
                       readonly
                     />
                     <button
                       class="btn btn-outline-secondary calendar-btn"
                       type="button"
                       (click)="dpCheckIn.toggle()"
+                      [disabled]="isBookingParked"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -450,13 +452,15 @@
                       [minDate]="checkOutMinDate"
                       [markDisabled]="isCheckOutDateDisabled"
                       (dateSelect)="onCheckOutDateSelect($event)"
-                      (click)="dpCheckOut.toggle()"
+                      (click)="!isBookingParked && dpCheckOut.toggle()"
+                      [disabled]="isBookingParked"
                       readonly
                     />
                     <button
                       class="btn btn-outline-secondary calendar-btn"
                       type="button"
                       (click)="dpCheckOut.toggle()"
+                      [disabled]="isBookingParked"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

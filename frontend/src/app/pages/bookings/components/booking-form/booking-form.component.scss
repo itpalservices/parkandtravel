@@ -97,6 +97,10 @@
       }
     }
 
+    [ngbDropdownToggle]::after {
+      display: none !important;
+    }
+
     .park-place-section {
       margin-top: 1rem;
       max-width: 250px;
