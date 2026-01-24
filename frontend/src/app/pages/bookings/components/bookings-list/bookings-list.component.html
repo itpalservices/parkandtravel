@@ -74,7 +74,7 @@
                     </div>
                   </div>
                 }
-                @if (booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
+                @if ((isAdmin || isDriver) && booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
                   <div class="park-place-info">{{ booking.parkPlace }}</div>
                 }
               </td>
@@ -158,7 +158,7 @@
                   }}
                 }
               </td>
-              @if (!isDriver && booking.bookingStatusId !== 'bookingStatus_completed') {
+              @if (!isDriver && ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') || (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))) {
                 <td class="actions-col">
                   <div
                     class="actions-wrapper"
@@ -294,7 +294,7 @@
                   </div>
                 </div>
               }
-              @if (booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
+              @if ((isAdmin || isDriver) && booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
                 <span class="park-place-badge ms-2">{{ booking.parkPlace }}</span>
               }
             </div>
@@ -390,7 +390,7 @@
                 }}
               }
             </div>
-            @if (!isDriver && booking.bookingStatusId !== 'bookingStatus_completed') {
+            @if (!isDriver && ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') || (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))) {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                 <button class="btn btn-icon" ngbDropdownToggle>
                   <svg
