@@ -470,7 +470,17 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.parkPlace = '';
           this.enableFieldsForNonParkedBooking();
         } else if (newStatusId === 'bookingStatus_completed') {
-          this.disableFieldsForParkedBooking();
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Booking completed successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+          return;
         }
 
         Swal.fire({
