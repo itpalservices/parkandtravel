@@ -52,7 +52,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     FROM bookings 
     WHERE deleteflag = 0 
       AND "dateFrom" <= '${todayStr}'::date 
-      AND "dateTo" >= '${todayStr}'::date
       AND "bookingStatusId" = 'bookingStatus_parked'
   `);
 
