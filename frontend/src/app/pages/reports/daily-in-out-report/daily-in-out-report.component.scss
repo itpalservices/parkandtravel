@@ -37,32 +37,30 @@
 
 .filter-pills {
   display: flex;
-  gap: 0.25rem;
-  background: #f3f4f6;
-  padding: 0.25rem;
-  border-radius: 8px;
+  gap: 0.5rem;
 }
 
 .filter-pill {
-  padding: 0.375rem 0.75rem;
-  border: none;
-  background: transparent;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
   color: #6b7280;
-  font-size: 0.8125rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 
-  &:hover:not(.active) {
-    color: #374151;
-    background: rgba(255, 255, 255, 0.5);
+  &:hover {
+    border-color: #006B8F;
+    color: #006B8F;
   }
 
   &.active {
-    background: #006B8F;
-    color: white;
+    background-color: #006B8F;
+    border-color: #006B8F;
+    color: #ffffff;
   }
 }
 
@@ -397,14 +395,8 @@
   }
 
   .filter-pills {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .filter-pill {
-    flex: 1;
-    text-align: center;
-    padding: 0.5rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .date-input {
