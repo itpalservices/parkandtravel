@@ -41,6 +41,7 @@ export class BookingsPageComponent implements OnInit {
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
   dateRangeFilterForList: { dateFrom: string | null; dateTo: string | null } = { dateFrom: null, dateTo: null };
+  filterBy: 'check-ins' | 'check-outs' | 'both' = 'both';
 
   currentPage = 1;
   pageSize = 10;
@@ -91,7 +92,7 @@ export class BookingsPageComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    const params: { dateFrom?: string; dateTo?: string } = {};
+    const params: { dateFrom?: string; dateTo?: string; filterBy?: 'check-ins' | 'check-outs' | 'both' } = {};
 
     if (this.dateFilter.from) {
       params.dateFrom = this.formatDateForApi(this.dateFilter.from);
@@ -99,6 +100,7 @@ export class BookingsPageComponent implements OnInit {
     if (this.dateFilter.to) {
       params.dateTo = this.formatDateForApi(this.dateFilter.to);
     }
+    params.filterBy = this.filterBy;
 
     this.bookingsService.getBookings(params).subscribe({
       next: (response) => {
@@ -196,6 +198,13 @@ export class BookingsPageComponent implements OnInit {
 
   onSearchChange(): void {
     this.applySearchFilter();
+  }
+
+  onFilterByChange(filter: 'check-ins' | 'check-outs' | 'both'): void {
+    if (this.filterBy !== filter) {
+      this.filterBy = filter;
+      this.loadBookings();
+    }
   }
 
   private checkUserRole(): void {

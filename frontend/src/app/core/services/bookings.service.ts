@@ -10,6 +10,7 @@ export interface BookingsQueryParams {
   search?: string;
   page?: number;
   limit?: number;
+  filterBy?: 'check-ins' | 'check-outs' | 'both';
 }
 
 @Injectable({
@@ -38,6 +39,9 @@ export class BookingsService {
       }
       if (params.limit) {
         httpParams = httpParams.set('limit', params.limit.toString());
+      }
+      if (params.filterBy) {
+        httpParams = httpParams.set('filterBy', params.filterBy);
       }
     }
 

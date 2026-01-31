@@ -15,10 +15,11 @@ import { AuthUser } from "../middleware/auth.middleware";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
   try {
-    const { dateFrom, dateTo, search, page, limit } = req.query;
+    const { dateFrom, dateTo, search, page, limit, filterBy } = req.query;
 
     const pageNum = parseInt(page as string, 10) || 1;
     const limitNum = parseInt(limit as string, 10) || 20;
+    const filterByValue = (filterBy as string) || 'both';
 
     if (dateFrom !== undefined) {
       if (!isValidDateFormat(dateFrom as string)) {
@@ -76,6 +77,7 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
       page: pageNum,
       limit: limitNum,
       userId,
+      filterBy: filterByValue as 'check-ins' | 'check-outs' | 'both',
     });
 
     res.json(result);

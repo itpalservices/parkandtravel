@@ -226,6 +226,41 @@
   }
 }
 
+.filter-pills {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-pill {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  color: #6b7280;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: #006B8F;
+    color: #006B8F;
+  }
+
+  &.active {
+    background-color: #006B8F;
+    border-color: #006B8F;
+    color: #ffffff;
+  }
+}
+
+.filter-pills-row {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
 .bookings-content {
   background: #ffffff;
   border-radius: 8px;
