@@ -11,6 +11,7 @@ export interface DashboardDetailItem {
   vehicleModel: string;
   checkIn: string;
   checkOut: string;
+  parkPlace?: string;
 }
 
 export type CardType = 'total-cars' | 'today-check-ins' | 'today-check-outs' | 'wash-today' | 'wash-tomorrow';
@@ -39,6 +40,7 @@ export class DashboardDetailsComponent implements OnInit {
   pageSize = 20;
   totalPages = 1;
   pageNumbers: number[] = [];
+  showParkPlace = true;
 
   private cardTitles: Record<CardType, string> = {
     'total-cars': 'Total Cars',
@@ -52,6 +54,7 @@ export class DashboardDetailsComponent implements OnInit {
     if (!this.cardTitle) {
       this.cardTitle = this.cardTitles[this.cardType] || 'Details';
     }
+    this.showParkPlace = this.cardType !== 'today-check-ins';
     this.loadDetails();
   }
 
