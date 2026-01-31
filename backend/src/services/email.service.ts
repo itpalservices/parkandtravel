@@ -385,7 +385,8 @@ export async function sendBookingConfirmationEmail(
       messageId: result.body?.messageId 
     };
   } catch (error: any) {
-    console.error("Failed to send email:", error.body || error.message || error);
+    console.error("Failed to send email. Full error:", JSON.stringify(error.body || error.response?.body || error, null, 2));
+    console.error("Sender email used:", process.env.BREVO_SENDER_EMAIL || "noreply@parkandtravel.com");
     return { 
       success: false, 
       error: error.body?.message || error.message || "Failed to send email" 
