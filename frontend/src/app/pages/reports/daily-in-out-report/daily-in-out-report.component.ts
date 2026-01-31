@@ -14,23 +14,7 @@ import {
   CAR_PICK_UP_OPTIONS,
   CAR_PICK_UP_OPTIONS_LABELS,
 } from '../../../shared/statics/car-pick-up.model';
-
-interface DailyInOutReportItem {
-  id: string;
-  fullName: string;
-  plateNo: string;
-  vehicleModel: string;
-  vehicleColor: string;
-  checkInDate: string;
-  checkInTime: string;
-  carDropOff: string;
-  checkOutDate: string;
-  checkOutTime: string;
-  carPickup: string;
-  flightNo: string;
-  parkingType: string;
-  bookingType: string;
-}
+import { DailyInOutReportItem } from '../../../shared/models/reports.model';
 
 @Component({
   selector: 'app-daily-in-out-report',

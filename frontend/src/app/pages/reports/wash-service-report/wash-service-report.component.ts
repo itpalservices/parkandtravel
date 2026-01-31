@@ -7,24 +7,10 @@ import { ApiService } from '../../../core/services/api.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
-  CAR_DROP_OFF_OPTIONS,
-  CAR_DROP_OFF_OPTIONS_LABELS,
-} from '../../../shared/statics/car-drop-off.model';
-import {
   CAR_PICK_UP_OPTIONS,
   CAR_PICK_UP_OPTIONS_LABELS,
 } from '../../../shared/statics/car-pick-up.model';
-
-interface WashServiceReportItem {
-  id: string;
-  fullName: string;
-  plateNo: string;
-  vehicleModel: string;
-  vehicleColor: string;
-  carPickup: string;
-  checkOutDate: string;
-  checkOutTime: string;
-}
+import { WashServiceReportItem } from '../../../shared/models/reports.model';
 
 @Component({
   selector: 'app-wash-service-report',
