@@ -6,14 +6,15 @@ export async function dailyInOutReport(
   res: Response
 ): Promise<void> {
   try {
-    const { date } = req.query;
+    const { date, filterBy } = req.query;
 
     if (!date || typeof date !== "string") {
       res.status(400).json({ error: "Date parameter is required" });
       return;
     }
 
-    const report = await getDailyInOutReport(date);
+    const filterByValue = (filterBy as string) || "both";
+    const report = await getDailyInOutReport(date, filterByValue);
     res.json(report);
   } catch (error) {
     console.error("Error fetching daily in/out report:", error);

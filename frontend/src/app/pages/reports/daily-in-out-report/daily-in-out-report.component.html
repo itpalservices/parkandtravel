@@ -18,41 +18,66 @@
     </a>
     <div class="title-row">
       <h1 class="page-title">Daily In/Out Report</h1>
-      <div class="date-picker-wrapper" (click)="$event.stopPropagation()">
-        <div class="date-input-container">
-          <input
-            class="form-control date-input"
-            [value]="formatDisplayDate(selectedDate)"
-            readonly
-            (click)="toggleDatepicker()"
-          />
-          <button class="date-picker-btn" type="button" (click)="toggleDatepicker()">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
+      <div class="filters-right">
+        <div class="filter-pills">
+          <button
+            class="filter-pill"
+            [class.active]="filterBy === 'check-ins'"
+            (click)="onFilterByChange('check-ins')"
+          >
+            Check-Ins
           </button>
-          @if (isDatepickerOpen) {
-            <div class="dropdown-datepicker" (click)="$event.stopPropagation()">
-              <ngb-datepicker
-                [(ngModel)]="selectedDate"
-                [minDate]="minDate"
-                (dateSelect)="onDateSelect($event)"
-              ></ngb-datepicker>
-            </div>
-          }
+          <button
+            class="filter-pill"
+            [class.active]="filterBy === 'check-outs'"
+            (click)="onFilterByChange('check-outs')"
+          >
+            Check-Outs
+          </button>
+          <button
+            class="filter-pill"
+            [class.active]="filterBy === 'both'"
+            (click)="onFilterByChange('both')"
+          >
+            Both
+          </button>
+        </div>
+        <div class="date-picker-wrapper" (click)="$event.stopPropagation()">
+          <div class="date-input-container">
+            <input
+              class="form-control date-input"
+              [value]="formatDisplayDate(selectedDate)"
+              readonly
+              (click)="toggleDatepicker()"
+            />
+            <button class="date-picker-btn" type="button" (click)="toggleDatepicker()">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+            @if (isDatepickerOpen) {
+              <div class="dropdown-datepicker" (click)="$event.stopPropagation()">
+                <ngb-datepicker
+                  [(ngModel)]="selectedDate"
+                  [minDate]="minDate"
+                  (dateSelect)="onDateSelect($event)"
+                ></ngb-datepicker>
+              </div>
+            }
+          </div>
         </div>
       </div>
     </div>

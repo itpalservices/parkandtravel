@@ -47,6 +47,7 @@ export class DailyInOutReportComponent implements OnInit {
   selectedDate: NgbDateStruct;
   minDate: NgbDateStruct;
   isDatepickerOpen = false;
+  filterBy: 'check-ins' | 'check-outs' | 'both' = 'check-ins';
 
   reportData: DailyInOutReportItem[] = [];
   loading = false;
@@ -82,12 +83,17 @@ export class DailyInOutReportComponent implements OnInit {
     this.loadReport();
   }
 
+  onFilterByChange(filter: 'check-ins' | 'check-outs' | 'both'): void {
+    this.filterBy = filter;
+    this.loadReport();
+  }
+
   private loadReport(): void {
     this.loading = true;
     const dateStr = this.formatDateForApi(this.selectedDate);
 
     this.apiService
-      .get<DailyInOutReportItem[]>(`/reports/daily-in-out?date=${dateStr}`)
+      .get<DailyInOutReportItem[]>(`/reports/daily-in-out?date=${dateStr}&filterBy=${this.filterBy}`)
       .subscribe({
         next: (data) => {
           this.reportData = data;

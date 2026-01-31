@@ -78,8 +78,22 @@ interface DailyInOutRowWithStatus extends DailyInOutRow {
 }
 
 export async function getDailyInOutReport(
-  date: string
+  date: string,
+  filterBy: string = "both"
 ): Promise<DailyInOutReportItem[]> {
+  let whereClause = "";
+  
+  if (filterBy === "check-ins") {
+    whereClause = `b."dateFrom" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_created'`;
+  } else if (filterBy === "check-outs") {
+    whereClause = `b."dateTo" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_parked'`;
+  } else {
+    whereClause = `(
+        (b."dateFrom" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_created')
+        OR (b."dateTo" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_parked')
+      )`;
+  }
+
   const bookings = await prisma.$queryRawUnsafe<DailyInOutRowWithStatus[]>(`
     SELECT b.id, b.name, b.surname, b."plateNo", b."carBrand", b."carModel", b."carColor",
            b."dateFrom", b."timeFrom", b."dropOffOption",
@@ -88,10 +102,7 @@ export async function getDailyInOutReport(
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     WHERE b.deleteflag = 0 
-      AND (
-        (b."dateFrom" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_created')
-        OR (b."dateTo" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_parked')
-      )
+      AND ${whereClause}
     ORDER BY b."dateFrom" ASC, b."timeFrom" ASC NULLS LAST, b.name ASC
   `);
 
