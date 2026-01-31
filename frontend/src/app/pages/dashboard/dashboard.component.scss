@@ -42,6 +42,21 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  &.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #006B8F;
+      box-shadow: 0 2px 8px rgba(0, 107, 143, 0.15);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }
 
 .stat-header {

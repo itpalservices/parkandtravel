@@ -157,3 +157,102 @@ export async function getCheckOuts(
     flightNumber: b.returnFlight || "",
   }));
 }
+
+export interface DashboardDetailItem {
+  id: string;
+  plateNo: string;
+  vehicleModel: string;
+  checkIn: string;
+  checkOut: string;
+}
+
+interface DetailBookingRow {
+  id: string;
+  plateNo: string | null;
+  carModel: string | null;
+  dateFrom: Date;
+  dateTo: Date;
+  timeFrom: Date | null;
+  timeTo: Date | null;
+}
+
+export async function getCardDetails(
+  cardType: string
+): Promise<DashboardDetailItem[]> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = formatDate(today);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = formatDate(tomorrow);
+
+  let query = "";
+
+  switch (cardType) {
+    case "total-cars":
+      query = `
+        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        FROM bookings 
+        WHERE deleteflag = 0 
+          AND "dateFrom" <= '${todayStr}'::date 
+          AND "bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY "dateFrom" DESC
+      `;
+      break;
+    case "today-check-ins":
+      query = `
+        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        FROM bookings 
+        WHERE deleteflag = 0 
+          AND "dateFrom" = '${todayStr}'::date
+          AND "bookingStatusId" = 'bookingStatus_created'
+        ORDER BY "timeFrom" ASC
+      `;
+      break;
+    case "today-check-outs":
+      query = `
+        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        FROM bookings 
+        WHERE deleteflag = 0 
+          AND "dateTo" = '${todayStr}'::date
+          AND "bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY "timeTo" ASC
+      `;
+      break;
+    case "wash-today":
+      query = `
+        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        FROM bookings 
+        WHERE deleteflag = 0 
+          AND "dateTo" = '${todayStr}'::date
+          AND "washService" = true
+          AND "bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY "timeTo" ASC
+      `;
+      break;
+    case "wash-tomorrow":
+      query = `
+        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        FROM bookings 
+        WHERE deleteflag = 0 
+          AND "dateTo" = '${tomorrowStr}'::date
+          AND "washService" = true
+          AND "bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY "timeTo" ASC
+      `;
+      break;
+    default:
+      return [];
+  }
+
+  const bookings = await prisma.$queryRawUnsafe<DetailBookingRow[]>(query);
+
+  return bookings.map((b) => ({
+    id: b.id,
+    plateNo: b.plateNo || "",
+    vehicleModel: b.carModel || "",
+    checkIn: `${formatDisplayDate(new Date(b.dateFrom))} ${formatTime(b.timeFrom)}`,
+    checkOut: `${formatDisplayDate(new Date(b.dateTo))} ${formatTime(b.timeTo)}`,
+  }));
+}

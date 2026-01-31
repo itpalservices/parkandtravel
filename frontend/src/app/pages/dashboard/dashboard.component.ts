@@ -1,9 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DateRangePickerComponent, DateRange } from '../../shared/components/date-range-picker/date-range-picker.component';
 import { ApiService } from '../../core/services/api.service';
 import { CheckInOutItem, DashboardStats } from '../../shared/models/dashboard.model';
+import { DashboardDetailsComponent, CardType } from './dashboard-details/dashboard-details.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +16,7 @@ import { CheckInOutItem, DashboardStats } from '../../shared/models/dashboard.mo
 })
 export class DashboardComponent implements OnInit {
   private apiService = inject(ApiService);
+  private modalService = inject(NgbModal);
 
   stats: DashboardStats = {
     totalCars: 0,
@@ -106,5 +109,13 @@ export class DashboardComponent implements OnInit {
       const dateTo = this.formatDateForApi(range.to);
       this.loadCheckOuts(dateFrom, dateTo);
     }
+  }
+
+  openCardDetails(cardType: CardType): void {
+    const modalRef = this.modalService.open(DashboardDetailsComponent, {
+      size: 'lg',
+      centered: true
+    });
+    modalRef.componentInstance.cardType = cardType;
   }
 }

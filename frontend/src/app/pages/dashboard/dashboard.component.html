@@ -3,7 +3,7 @@
 
   <div class="dashboard-content">
     <div class="stats-row">
-      <div class="stat-card">
+      <div class="stat-card clickable" (click)="openCardDetails('total-cars')">
         <div class="stat-header">
           <span class="stat-label">Total Cars</span>
           <div class="stat-icon blue">
@@ -33,7 +33,7 @@
         }
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card clickable" (click)="openCardDetails('today-check-ins')">
         <div class="stat-header">
           <span class="stat-label">Today Check-In</span>
           <div class="stat-icon green">
@@ -63,7 +63,7 @@
         }
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card clickable" (click)="openCardDetails('today-check-outs')">
         <div class="stat-header">
           <span class="stat-label">Today Check-Out</span>
           <div class="stat-icon orange">
@@ -93,7 +93,7 @@
         }
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card clickable" (click)="openCardDetails('wash-today')">
         <div class="stat-header">
           <span class="stat-label">Cars for Wash Today</span>
           <div class="stat-icon green">
@@ -127,7 +127,7 @@
         }
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card clickable" (click)="openCardDetails('wash-tomorrow')">
         <div class="stat-header">
           <span class="stat-label">Cars for Wash Tomorrow</span>
           <div class="stat-icon orange">

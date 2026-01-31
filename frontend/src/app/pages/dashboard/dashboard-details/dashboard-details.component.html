@@ -1,0 +1,98 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ cardTitle }}</h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="search-container">
+    <input
+      type="text"
+      class="form-control search-input"
+      placeholder="Search..."
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchChange()"
+    />
+    <svg
+      class="search-icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (filteredItems.length === 0) {
+    <div class="empty-state">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H6.3a2 2 0 0 0-1.6.6L2 10l-2.5 1.1C.7 11.3 0 12.1 0 13v3c0 .6.4 1 1 1h2"></path>
+        <circle cx="7" cy="17" r="2"></circle>
+        <circle cx="17" cy="17" r="2"></circle>
+      </svg>
+      <p>No records found</p>
+    </div>
+  } @else {
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Plate No.</th>
+            <th>Vehicle / Model</th>
+            <th>Check In</th>
+            <th>Check Out</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of displayedItems; track item.id) {
+            <tr>
+              <td><span class="plate-badge">{{ item.plateNo }}</span></td>
+              <td>{{ item.vehicleModel || '-' }}</td>
+              <td>{{ item.checkIn }}</td>
+              <td>{{ item.checkOut }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (filteredItems.length > pageSize) {
+      <div class="pagination-container">
+        <ngb-pagination
+          [collectionSize]="filteredItems.length"
+          [(page)]="page"
+          [pageSize]="pageSize"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="onPageChange()"
+        ></ngb-pagination>
+        <span class="results-info">
+          Showing {{ (page - 1) * pageSize + 1 }} - {{ Math.min(page * pageSize, filteredItems.length) }} of {{ filteredItems.length }}
+        </span>
+      </div>
+    }
+  }
+</div>
