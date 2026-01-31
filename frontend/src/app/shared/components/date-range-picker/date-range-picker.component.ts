@@ -41,6 +41,7 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
   presets = [
     { id: 'today', label: 'Today' },
     { id: 'tomorrow', label: 'Tomorrow' },
+    { id: 'next2days', label: 'Next 2 Days' },
     { id: 'next7days', label: 'Next 7 Days' },
     { id: 'next30days', label: 'Next 30 Days' },
     { id: 'custom', label: 'Custom Range' },
@@ -218,6 +219,10 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
         return { from: tomorrow, to: tomorrow };
+      case 'next2days':
+        const next2 = new Date(today);
+        next2.setDate(next2.getDate() + 2);
+        return { from: today, to: next2 };
       case 'next7days':
         const next7 = new Date(today);
         next7.setDate(next7.getDate() + 7);
