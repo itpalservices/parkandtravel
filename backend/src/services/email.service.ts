@@ -46,12 +46,14 @@ function formatTime(timeStr: string): string {
 
 function getTransportLabel(option: string): string {
   switch (option) {
-    case "self":
-      return "Self-drive";
-    case "airportPickup":
-      return "Airport pickup";
-    case "airportDelivery":
-      return "Airport delivery";
+    case "self_drive":
+      return "Self Drop-Off";
+    case "airport_pickup":
+      return "Airport Pick-Up";
+    case "self_pickup":
+      return "Self Pick-Up";
+    case "airport_delivery":
+      return "Delivery to airport";
     default:
       return option;
   }
@@ -97,22 +99,6 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                   </td>
                 </tr>
               </table>
-            </td>
-          </tr>
-          
-          <!-- Success Badge -->
-          <tr>
-            <td align="center" style="padding: 30px 30px 20px 30px;">
-              <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; padding: 20px;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" fill="#4caf50"/>
-                  <path d="M8 12l2.5 2.5L16 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <h2 style="color: #2e7d32; margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">Booking Confirmed!</h2>
-              <p style="color: #666666; margin: 0; font-size: 16px; line-height: 1.6;">
-                Thank you, <strong style="color: #333333;">${data.fullName}</strong>! Your parking reservation has been successfully created.
-              </p>
             </td>
           </tr>
           
@@ -176,7 +162,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                   <td style="padding: 15px 25px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
                     <p style="margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Car Wash</p>
                     <p style="margin: 0; color: ${data.washService ? "#2e7d32" : "#64748b"}; font-size: 15px; font-weight: 600;">
-                      ${data.washService ? "✓ Included" : "Not selected"}
+                      ${data.washService ? "✓ Included" : "No"}
                     </p>
                   </td>
                 </tr>
@@ -328,22 +314,9 @@ Car Wash: ${data.washService ? "Included" : "Not selected"}
     text += `
 TOTAL AMOUNT
 ------------
-€${data.finalPrice.toFixed(2)} (Payment due upon arrival)
+€${data.finalPrice.toFixed(2)}
 `;
   }
-
-  text += `
-IMPORTANT INFORMATION
----------------------
-- Please arrive 10-15 minutes before your scheduled check-in time
-- Bring a copy of this confirmation email
-- Have your vehicle keys ready for handover
-- Contact us if your flight is delayed or plans change
-
----
-© ${new Date().getFullYear()} Park & Travel. All rights reserved.
-Secure Airport Parking Services
-`;
 
   return text;
 }
