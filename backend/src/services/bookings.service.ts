@@ -546,6 +546,7 @@ export async function createBooking(
   });
 
   if (params.email) {
+    console.log(`Sending booking confirmation email to: ${params.email}`);
     sendBookingConfirmationEmail({
       email: params.email,
       fullName: params.fullName,
@@ -563,9 +564,17 @@ export async function createBooking(
       dropOffOption: params.dropOffOption || undefined,
       pickUpOption: params.pickUpOption || undefined,
       finalPrice: finalPrice,
+    }).then((result) => {
+      if (result.success) {
+        console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
+      } else {
+        console.error(`Failed to send email to ${params.email}: ${result.error}`);
+      }
     }).catch((err) => {
       console.error("Failed to send booking confirmation email:", err);
     });
+  } else {
+    console.log("No email provided, skipping confirmation email");
   }
 
   return { id: booking.id, finalPrice };
