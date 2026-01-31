@@ -247,7 +247,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 Have questions? We're here to help!
               </p>
               <p style="margin: 0 0 20px 0; color: #006B8F; font-size: 16px; font-weight: 600;">
-                📞 Contact Park & Travel Support
+                📞 Contact Park & Travel
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 © ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
@@ -338,7 +338,7 @@ export async function sendBookingConfirmationEmail(
     ];
     sendSmtpEmail.replyTo = {
       email: process.env.BREVO_REPLY_TO_EMAIL || "support@parkandtravel.com",
-      name: "Park & Travel Support",
+      name: "Park & Travel",
     };
 
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
