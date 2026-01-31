@@ -1,21 +1,13 @@
 .modal-header {
-  background-color: #006B8F;
-  color: white;
+  background-color: white;
   padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
 
   .modal-title {
     font-weight: 600;
     font-size: 1.1rem;
+    color: #1f2937;
     margin: 0;
-  }
-
-  .btn-close {
-    filter: brightness(0) invert(1);
-    opacity: 0.8;
-
-    &:hover {
-      opacity: 1;
-    }
   }
 }
 

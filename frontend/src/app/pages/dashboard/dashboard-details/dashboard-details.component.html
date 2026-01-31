@@ -59,6 +59,7 @@
       <table class="table table-hover">
         <thead>
           <tr>
+            <th>Customer</th>
             <th>Plate No.</th>
             <th>Vehicle / Model</th>
             <th>Check In</th>
@@ -68,6 +69,7 @@
         <tbody>
           @for (item of displayedItems; track item.id) {
             <tr>
+              <td>{{ item.customerName || '-' }}</td>
               <td><span class="plate-badge">{{ item.plateNo }}</span></td>
               <td>{{ item.vehicleModel || '-' }}</td>
               <td>{{ item.checkIn }}</td>

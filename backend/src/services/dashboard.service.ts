@@ -160,6 +160,7 @@ export async function getCheckOuts(
 
 export interface DashboardDetailItem {
   id: string;
+  customerName: string;
   plateNo: string;
   vehicleModel: string;
   checkIn: string;
@@ -168,6 +169,8 @@ export interface DashboardDetailItem {
 
 interface DetailBookingRow {
   id: string;
+  name: string | null;
+  surname: string | null;
   plateNo: string | null;
   carModel: string | null;
   dateFrom: Date;
@@ -192,7 +195,7 @@ export async function getCardDetails(
   switch (cardType) {
     case "total-cars":
       query = `
-        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateFrom" <= '${todayStr}'::date 
@@ -202,7 +205,7 @@ export async function getCardDetails(
       break;
     case "today-check-ins":
       query = `
-        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateFrom" = '${todayStr}'::date
@@ -212,7 +215,7 @@ export async function getCardDetails(
       break;
     case "today-check-outs":
       query = `
-        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateTo" = '${todayStr}'::date
@@ -222,7 +225,7 @@ export async function getCardDetails(
       break;
     case "wash-today":
       query = `
-        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateTo" = '${todayStr}'::date
@@ -233,7 +236,7 @@ export async function getCardDetails(
       break;
     case "wash-tomorrow":
       query = `
-        SELECT id, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateTo" = '${tomorrowStr}'::date
@@ -250,6 +253,7 @@ export async function getCardDetails(
 
   return bookings.map((b) => ({
     id: b.id,
+    customerName: `${b.name || ""} ${b.surname || ""}`.trim(),
     plateNo: b.plateNo || "",
     vehicleModel: b.carModel || "",
     checkIn: `${formatDisplayDate(new Date(b.dateFrom))} ${formatTime(b.timeFrom)}`,

@@ -6,6 +6,7 @@ import { ApiService } from '../../../core/services/api.service';
 
 export interface DashboardDetailItem {
   id: string;
+  customerName: string;
   plateNo: string;
   vehicleModel: string;
   checkIn: string;
@@ -82,6 +83,7 @@ export class DashboardDetailsComponent implements OnInit {
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase();
       this.filteredItems = this.allItems.filter(item =>
+        item.customerName.toLowerCase().includes(term) ||
         item.plateNo.toLowerCase().includes(term) ||
         item.vehicleModel.toLowerCase().includes(term) ||
         item.checkIn.toLowerCase().includes(term) ||
