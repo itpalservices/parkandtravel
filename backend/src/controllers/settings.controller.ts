@@ -113,6 +113,9 @@ export async function updateSettingsHandler(
       priceWash: data.priceWash !== null && data.priceWash !== undefined
         ? Number(data.priceWash)
         : null,
+      dayEnd: data.dayEnd !== null && data.dayEnd !== undefined
+        ? Math.floor(Number(data.dayEnd))
+        : null,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {
