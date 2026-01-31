@@ -364,7 +364,7 @@ export async function sendBookingConfirmationEmail(
     sendSmtpEmail.textContent = generateBookingConfirmationText(data);
     sendSmtpEmail.sender = {
       name: "Park & Travel",
-      email: process.env.BREVO_SENDER_EMAIL || "noreply@parkandtravel.com",
+      email: process.env.BREVO_SENDER_EMAIL || "it.pal.service@gmail.com",
     };
     sendSmtpEmail.to = [
       {
@@ -387,7 +387,7 @@ export async function sendBookingConfirmationEmail(
   } catch (error: any) {
     const errorDetails = error.body || error.response?.data || { message: error.message };
     console.error("Failed to send email. Error details:", errorDetails);
-    console.error("Sender email used:", process.env.BREVO_SENDER_EMAIL || "noreply@parkandtravel.com");
+    console.error("Sender email used:", process.env.BREVO_SENDER_EMAIL || "it.pal.service@gmail.com");
     return { 
       success: false, 
       error: errorDetails?.message || error.message || "Failed to send email" 
