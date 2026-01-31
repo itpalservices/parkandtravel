@@ -121,7 +121,7 @@
                         class="phone-search-input"
                         placeholder="Search country or code..."
                         [(ngModel)]="phoneCodeSearch"
-                        [ngModelOptions]="{standalone: true}"
+                        [ngModelOptions]="{ standalone: true }"
                         (click)="$event.stopPropagation()"
                       />
                     </div>
@@ -182,7 +182,7 @@
               </app-form-field-error>
             </div>
             <div class="form-group">
-              <label for="vehicleModel">Vehicle Model *</label>
+              <label for="vehicleModel">Vehicle Model</label>
               <input
                 type="text"
                 id="vehicleModel"
@@ -211,7 +211,7 @@
               </app-form-field-error>
             </div>
             <div class="form-group">
-              <label for="vehicleColor">Vehicle Color *</label>
+              <label for="vehicleColor">Vehicle Color</label>
               <input
                 type="text"
                 id="vehicleColor"
@@ -253,8 +253,17 @@
                     <span class="spinner-border spinner-border-sm me-1"></span>
                     Validating...
                   } @else if (flightValidated) {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
-                      <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      class="me-1"
+                      viewBox="0 0 16 16"
+                    >
+                      <path
+                        d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"
+                      />
                     </svg>
                     Verified
                   } @else {
@@ -444,7 +453,9 @@
                 <span class="toggle-label">
                   Add Car Wash Service
                   @if (washPrice !== null) {
-                    <span class="wash-price">(+{{ washPrice | currency:'EUR':'symbol':'1.2-2' }})</span>
+                    <span class="wash-price"
+                      >(+{{ washPrice | currency: 'EUR' : 'symbol' : '1.2-2' }})</span
+                    >
                   }
                 </span>
               </div>
@@ -455,19 +466,27 @@
             <div class="price-summary">
               <div class="price-breakdown">
                 <div class="price-row">
-                  <span>Parking ({{ calculateDays() }} {{ calculateDays() === 1 ? 'day' : 'days' }})</span>
-                  <span>{{ (getSelectedParkingType()?.pricePerDay || 0) * calculateDays() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                  <span
+                    >Parking ({{ calculateDays() }}
+                    {{ calculateDays() === 1 ? 'day' : 'days' }})</span
+                  >
+                  <span>{{
+                    (getSelectedParkingType()?.pricePerDay || 0) * calculateDays()
+                      | currency: 'EUR' : 'symbol' : '1.2-2'
+                  }}</span>
                 </div>
                 @if (washServiceEnabled && washPrice !== null) {
                   <div class="price-row">
                     <span>Car Wash Service</span>
-                    <span>{{ washPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                    <span>{{ washPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
                   </div>
                 }
               </div>
               <div class="price-total">
                 <span>Total</span>
-                <span class="total-amount">{{ calculateTotalPrice() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                <span class="total-amount">{{
+                  calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
+                }}</span>
               </div>
             </div>
           }
