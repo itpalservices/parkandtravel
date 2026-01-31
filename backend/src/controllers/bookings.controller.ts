@@ -206,13 +206,11 @@ export async function createGuestBooking(
       !email ||
       !phone ||
       !licensePlate ||
-      !vehicleModel ||
       !checkInDate ||
       !checkInTime ||
       !checkOutDate ||
       !checkOutTime ||
       !parkingTypeId ||
-      !vehicleColor ||
       !vehicleBrand ||
       !dropOffOption ||
       !pickUpOption
@@ -228,9 +226,9 @@ export async function createGuestBooking(
       phoneCodeId: phoneCodeId || null,
       licensePlate,
       vehicleBrand,
-      vehicleModel,
-      vehicleColor,
-      flightNumber,
+      vehicleModel: vehicleModel || null,
+      vehicleColor: vehicleColor || null,
+      flightNumber: flightNumber || null,
       checkInDate,
       checkInTime,
       checkOutDate,
@@ -289,13 +287,11 @@ export async function createBooking(
       !email ||
       !phone ||
       !licensePlate ||
-      !vehicleModel ||
       !checkInDate ||
       !checkInTime ||
       !checkOutDate ||
       !checkOutTime ||
       !parkingTypeId ||
-      !vehicleColor ||
       !vehicleBrand ||
       !dropOffOption ||
       !pickUpOption
@@ -320,9 +316,9 @@ export async function createBooking(
       phoneCodeId: phoneCodeId || null,
       licensePlate,
       vehicleBrand,
-      vehicleModel,
-      vehicleColor,
-      flightNumber,
+      vehicleModel: vehicleModel || null,
+      vehicleColor: vehicleColor || null,
+      flightNumber: flightNumber || null,
       checkInDate,
       checkInTime,
       checkOutDate,

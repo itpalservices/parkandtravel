@@ -183,9 +183,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       phone: ['', [Validators.required, Validators.pattern(/^[0-9]{6,15}$/)]],
       licensePlate: ['', [Validators.required, Validators.minLength(2)]],
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
-      vehicleModel: ['', [Validators.required, Validators.minLength(2)]],
-      vehicleColor: ['', [Validators.required, Validators.minLength(2)]],
-      flightNumber: ['', [Validators.required]],
+      vehicleModel: [''],
+      vehicleColor: [''],
+      flightNumber: [''],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
@@ -1047,7 +1047,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.flightValidated) {
+    const flightNumber = this.bookingForm.get('flightNumber')?.value?.trim();
+    if (flightNumber && !this.flightValidated) {
       Swal.fire({
         toast: true,
         position: 'top-end',
