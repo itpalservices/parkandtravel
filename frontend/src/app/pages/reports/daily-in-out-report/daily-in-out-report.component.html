@@ -110,7 +110,15 @@
           </svg>
         </div>
         <h3>No bookings for this date</h3>
-        <p>There are no check-ins or check-outs scheduled on {{ formatDisplayDate(selectedDate) }}</p>
+        <p>
+          @if (filterBy === 'check-ins') {
+            There are no check-ins scheduled on {{ formatDisplayDate(selectedDate) }}
+          } @else if (filterBy === 'check-outs') {
+            There are no check-outs scheduled on {{ formatDisplayDate(selectedDate) }}
+          } @else {
+            There are no check-ins or check-outs scheduled on {{ formatDisplayDate(selectedDate) }}
+          }
+        </p>
       </div>
     } @else {
       <div class="results-summary">
