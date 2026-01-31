@@ -147,7 +147,10 @@ export class BookingsListComponent {
               toast: true,
               position: 'top-end',
               icon: 'error',
-              title: err.error?.error || err.error?.message || 'Failed to delete booking. Please try again.',
+              title:
+                err.error?.error ||
+                err.error?.message ||
+                'Failed to delete booking. Please try again.',
               showConfirmButton: false,
               timer: 4000,
               timerProgressBar: true,
@@ -182,28 +185,6 @@ export class BookingsListComponent {
     const checkInDate = new Date(booking.dateFrom);
     checkInDate.setHours(0, 0, 0, 0);
     return checkInDate < today;
-  }
-
-  isCheckInHighlighted(booking: Booking): boolean {
-    if (!this.dateRangeFilter?.dateFrom || !this.dateRangeFilter?.dateTo) {
-      return false;
-    }
-    const checkInDate = this.extractDatePart(booking.dateFrom);
-    const filterFrom = this.dateRangeFilter.dateFrom;
-    const filterTo = this.dateRangeFilter.dateTo;
-
-    return checkInDate >= filterFrom && checkInDate <= filterTo;
-  }
-
-  isCheckOutHighlighted(booking: Booking): boolean {
-    if (!this.dateRangeFilter?.dateFrom || !this.dateRangeFilter?.dateTo) {
-      return false;
-    }
-    const checkOutDate = this.extractDatePart(booking.dateTo);
-    const filterFrom = this.dateRangeFilter.dateFrom;
-    const filterTo = this.dateRangeFilter.dateTo;
-
-    return checkOutDate >= filterFrom && checkOutDate <= filterTo;
   }
 
   private extractDatePart(dateString: string): string {
@@ -251,7 +232,11 @@ export class BookingsListComponent {
     }
   }
 
-  private handleCompletedStatus(booking: Booking, newStatusId: string, newStatusLabel: string): void {
+  private handleCompletedStatus(
+    booking: Booking,
+    newStatusId: string,
+    newStatusLabel: string,
+  ): void {
     const checkOutDate = new Date(booking.dateTo);
     checkOutDate.setHours(23, 59, 59, 999);
     const now = new Date();
@@ -327,37 +312,39 @@ export class BookingsListComponent {
     parkPlace?: string,
     applyExtraFee?: boolean,
   ): void {
-    this.bookingsService.updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee).subscribe({
-      next: (response) => {
-        if (response.success) {
-          booking.bookingStatusId = response.data.bookingStatusId;
-          booking.bookingStatus = response.data.bookingStatus;
+    this.bookingsService
+      .updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee)
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            booking.bookingStatusId = response.data.bookingStatusId;
+            booking.bookingStatus = response.data.bookingStatus;
+            Swal.fire({
+              icon: 'success',
+              title: 'Status Updated',
+              text: `Booking status changed to "${newStatusLabel}"`,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            this.bookingUpdated.emit();
+          }
+        },
+        error: (error) => {
+          console.error('Error updating booking status:', error);
           Swal.fire({
-            icon: 'success',
-            title: 'Status Updated',
-            text: `Booking status changed to "${newStatusLabel}"`,
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to update booking status. Please try again.',
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
           });
-          this.bookingUpdated.emit();
-        }
-      },
-      error: (error) => {
-        console.error('Error updating booking status:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to update booking status. Please try again.',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
-      },
-    });
+        },
+      });
   }
 }

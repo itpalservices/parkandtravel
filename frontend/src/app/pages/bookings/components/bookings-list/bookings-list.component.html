@@ -28,14 +28,13 @@
         <tbody>
           @for (booking of bookings; track booking.id) {
             <tr>
-              @if (!isDriver && ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') || (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))) {
+              @if (
+                !isDriver &&
+                ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') ||
+                  (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))
+              ) {
                 <td class="actions-col">
-                  <div
-                    class="actions-wrapper"
-                    ngbDropdown
-                    placement="bottom-end"
-                    container="body"
-                  >
+                  <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                     <button class="btn btn-icon" ngbDropdownToggle>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -70,13 +69,11 @@
                           <path
                             d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
                           ></path>
-                          <path
-                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                          ></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                         Edit
                       </a>
-                    @if (booking.bookingStatusId == 'bookingStatus_created') {
+                      @if (booking.bookingStatusId == 'bookingStatus_created') {
                         <button ngbDropdownItem class="text-danger" (click)="onDelete(booking)">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -142,17 +139,19 @@
                         >
                           <span class="badge bg-success me-2">Completed</span> Mark as Completed
                         </button>
-                        <button
-                          ngbDropdownItem
-                          (click)="onRevertToCreated(booking)"
-                        >
-                          <span class="badge bg-warning text-dark me-2">Created</span> Revert to Created
+                        <button ngbDropdownItem (click)="onRevertToCreated(booking)">
+                          <span class="badge bg-warning text-dark me-2">Created</span> Revert to
+                          Created
                         </button>
                       }
                     </div>
                   </div>
                 }
-                @if ((isAdmin || isDriver) && booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
+                @if (
+                  (isAdmin || isDriver) &&
+                  booking.bookingStatusId === 'bookingStatus_parked' &&
+                  booking.parkPlace
+                ) {
                   <div class="park-place-info">{{ booking.parkPlace }}</div>
                 }
               </td>
@@ -182,9 +181,9 @@
               </td>
               <td>{{ formatVehicle(booking) }}</td>
               <td>{{ booking.carColor }}</td>
-              <td [class.fw-bold]="isCheckInHighlighted(booking)">{{ formatCheckIn(booking) }}</td>
+              <td>{{ formatCheckIn(booking) }}</td>
               <td>{{ formatDropOff(booking.dropOffOption) }}</td>
-              <td [class.fw-bold]="isCheckOutHighlighted(booking)">
+              <td>
                 @if (booking.actualCheckOut) {
                   <span class="text-decoration-line-through text-muted me-1">{{
                     formatArrival(booking)
@@ -284,17 +283,19 @@
                       >
                         <span class="badge bg-success me-2">Completed</span> Mark as Completed
                       </button>
-                      <button
-                        ngbDropdownItem
-                        (click)="onRevertToCreated(booking)"
-                      >
-                        <span class="badge bg-warning text-dark me-2">Created</span> Revert to Created
+                      <button ngbDropdownItem (click)="onRevertToCreated(booking)">
+                        <span class="badge bg-warning text-dark me-2">Created</span> Revert to
+                        Created
                       </button>
                     }
                   </div>
                 </div>
               }
-              @if ((isAdmin || isDriver) && booking.bookingStatusId === 'bookingStatus_parked' && booking.parkPlace) {
+              @if (
+                (isAdmin || isDriver) &&
+                booking.bookingStatusId === 'bookingStatus_parked' &&
+                booking.parkPlace
+              ) {
                 <span class="park-place-badge ms-2">{{ booking.parkPlace }}</span>
               }
             </div>
@@ -312,13 +313,11 @@
               </div>
               <div class="mobile-info-item">
                 <span class="mobile-label">Check In</span>
-                <span class="mobile-value" [class.fw-bold]="isCheckInHighlighted(booking)">{{
-                  formatCheckIn(booking)
-                }}</span>
+                <span class="mobile-value">{{ formatCheckIn(booking) }}</span>
               </div>
               <div class="mobile-info-item">
                 <span class="mobile-label">Check Out</span>
-                <span class="mobile-value" [class.fw-bold]="isCheckOutHighlighted(booking)">
+                <span class="mobile-value">
                   @if (booking.actualCheckOut) {
                     <span
                       class="text-decoration-line-through text-muted me-1"
@@ -390,7 +389,11 @@
                 }}
               }
             </div>
-            @if (!isDriver && ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') || (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))) {
+            @if (
+              !isDriver &&
+              ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') ||
+                (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))
+            ) {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                 <button class="btn btn-icon" ngbDropdownToggle>
                   <svg
