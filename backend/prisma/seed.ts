@@ -70,6 +70,19 @@ async function main() {
   });
   console.log(`Created ${phoneCodes.count} phone codes`);
 
+  const configurationSettings = await prisma.configurationSetting.createMany({
+    data: [
+      { id: "configurationSetting_availableCovered", value: null },
+      { id: "configurationSetting_availableUncovered", value: null },
+      { id: "configurationSetting_priceCovered", value: null },
+      { id: "configurationSetting_priceUncovered", value: null },
+      { id: "configurationSetting_priceWash", value: null },
+      { id: "configurationSetting_dayEnd", value: null },
+    ],
+    skipDuplicates: true,
+  });
+  console.log(`Created ${configurationSettings.count} configuration settings`);
+
   console.log("Seeding completed!");
 }
 
