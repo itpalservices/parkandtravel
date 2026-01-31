@@ -9,20 +9,21 @@
 .header-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.header-row-title {
+  margin-bottom: 1rem;
 }
 
-.header-right {
-  display: flex;
-  align-items: flex-start;
+.header-row-filters {
   gap: 1rem;
-  padding-top: 0.25rem;
+}
+
+.filters-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .btn-add-booking {

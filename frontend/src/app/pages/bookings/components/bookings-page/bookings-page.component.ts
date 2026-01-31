@@ -41,7 +41,7 @@ export class BookingsPageComponent implements OnInit {
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
   dateRangeFilterForList: { dateFrom: string | null; dateTo: string | null } = { dateFrom: null, dateTo: null };
-  filterBy: 'check-ins' | 'check-outs' | 'both' = 'both';
+  filterBy: 'check-ins' | 'check-outs' | 'both' = 'check-ins';
 
   currentPage = 1;
   pageSize = 10;
