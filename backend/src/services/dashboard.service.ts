@@ -172,6 +172,7 @@ interface DetailBookingRow {
   name: string | null;
   surname: string | null;
   plateNo: string | null;
+  carBrand: string | null;
   carModel: string | null;
   dateFrom: Date;
   dateTo: Date;
@@ -195,7 +196,7 @@ export async function getCardDetails(
   switch (cardType) {
     case "total-cars":
       query = `
-        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateFrom" <= '${todayStr}'::date 
@@ -205,7 +206,7 @@ export async function getCardDetails(
       break;
     case "today-check-ins":
       query = `
-        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateFrom" = '${todayStr}'::date
@@ -215,7 +216,7 @@ export async function getCardDetails(
       break;
     case "today-check-outs":
       query = `
-        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateTo" = '${todayStr}'::date
@@ -225,7 +226,7 @@ export async function getCardDetails(
       break;
     case "wash-today":
       query = `
-        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateTo" = '${todayStr}'::date
@@ -236,7 +237,7 @@ export async function getCardDetails(
       break;
     case "wash-tomorrow":
       query = `
-        SELECT id, name, surname, "plateNo", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
+        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateTo" = '${tomorrowStr}'::date
@@ -255,7 +256,7 @@ export async function getCardDetails(
     id: b.id,
     customerName: `${b.name || ""} ${b.surname || ""}`.trim(),
     plateNo: b.plateNo || "",
-    vehicleModel: b.carModel || "",
+    vehicleModel: `${b.carBrand || ""} ${b.carModel || ""}`.trim(),
     checkIn: `${formatDisplayDate(new Date(b.dateFrom))} ${formatTime(b.timeFrom)}`,
     checkOut: `${formatDisplayDate(new Date(b.dateTo))} ${formatTime(b.timeTo)}`,
   }));
