@@ -385,11 +385,12 @@ export async function sendBookingConfirmationEmail(
       messageId: result.body?.messageId 
     };
   } catch (error: any) {
-    console.error("Failed to send email. Full error:", JSON.stringify(error.body || error.response?.body || error, null, 2));
+    const errorDetails = error.body || error.response?.data || { message: error.message };
+    console.error("Failed to send email. Error details:", errorDetails);
     console.error("Sender email used:", process.env.BREVO_SENDER_EMAIL || "noreply@parkandtravel.com");
     return { 
       success: false, 
-      error: error.body?.message || error.message || "Failed to send email" 
+      error: errorDetails?.message || error.message || "Failed to send email" 
     };
   }
 }
