@@ -7,6 +7,7 @@ import {
   getNextDay,
   formatMinutesToTime,
 } from "../utils/dayEnd.utils";
+import { sendBookingConfirmationEmail } from "./email.service";
 
 interface GetBookingsParams {
   dateFrom?: string;
@@ -538,6 +539,34 @@ export async function createBooking(
       deleteflag: 0,
     },
   });
+
+  const parkingType = await prisma.parkingType.findUnique({
+    where: { id: params.parkingTypeId },
+    select: { name: true },
+  });
+
+  if (params.email) {
+    sendBookingConfirmationEmail({
+      email: params.email,
+      fullName: params.fullName,
+      checkInDate: params.checkInDate,
+      checkInTime: params.checkInTime,
+      checkOutDate: params.checkOutDate,
+      checkOutTime: params.checkOutTime,
+      licensePlate: params.licensePlate,
+      vehicleBrand: params.vehicleBrand,
+      vehicleModel: params.vehicleModel,
+      vehicleColor: params.vehicleColor,
+      parkingType: parkingType?.name || params.parkingTypeId,
+      washService: params.washService || false,
+      flightNumber: params.flightNumber || undefined,
+      dropOffOption: params.dropOffOption || undefined,
+      pickUpOption: params.pickUpOption || undefined,
+      finalPrice: finalPrice,
+    }).catch((err) => {
+      console.error("Failed to send booking confirmation email:", err);
+    });
+  }
 
   return { id: booking.id, finalPrice };
 }

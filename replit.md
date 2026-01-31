@@ -78,3 +78,17 @@ Preferred communication style: Simple, everyday language.
 ### Services
 - **Auth0**: Identity management platform for authentication and authorization.
 - **flagcdn.com**: For country flag icons used in phone code selection.
+- **Brevo**: Transactional email service for booking confirmation emails.
+
+### Email Integration
+- **Provider**: Brevo (formerly Sendinblue) for transactional emails.
+- **Library**: `@getbrevo/brevo` SDK.
+- **Endpoints**:
+  - `POST /api/email/send-booking-confirmation` - Send booking confirmation email manually.
+  - `GET /api/email/test` - Test Brevo connection.
+- **Auto-trigger**: Booking confirmation emails are sent automatically on every booking creation (guest and authenticated).
+- **Template**: Professional HTML email with Park & Travel branding, reservation details, pricing, and important information.
+- **Required Secrets**:
+  - `BREVO_API_KEY` - Brevo API key (required).
+  - `BREVO_SENDER_EMAIL` - Verified sender email address (optional, defaults to noreply@parkandtravel.com).
+  - `BREVO_REPLY_TO_EMAIL` - Reply-to email address (optional, defaults to support@parkandtravel.com).
