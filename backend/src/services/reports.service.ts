@@ -1,4 +1,8 @@
 import { prisma } from "../lib/prisma";
+import {
+  getDayEndMinutes,
+  buildSingleDateCondition,
+} from "../utils/dayEnd.utils";
 
 export interface WashServiceReportItem {
   id: string;
@@ -81,16 +85,20 @@ export async function getDailyInOutReport(
   date: string,
   filterBy: string = "both"
 ): Promise<DailyInOutReportItem[]> {
+  const dayEndMinutes = await getDayEndMinutes();
+  const checkInCondition = buildSingleDateCondition(date, "dateFrom", dayEndMinutes, "b");
+  const checkOutCondition = buildSingleDateCondition(date, "dateTo", dayEndMinutes, "b");
+  
   let whereClause = "";
   
   if (filterBy === "check-ins") {
-    whereClause = `b."dateFrom" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_created'`;
+    whereClause = `${checkInCondition} AND b."bookingStatusId" = 'bookingStatus_created'`;
   } else if (filterBy === "check-outs") {
-    whereClause = `b."dateTo" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_parked'`;
+    whereClause = `${checkOutCondition} AND b."bookingStatusId" = 'bookingStatus_parked'`;
   } else {
     whereClause = `(
-        (b."dateFrom" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_created')
-        OR (b."dateTo" = '${date}'::date AND b."bookingStatusId" = 'bookingStatus_parked')
+        (${checkInCondition} AND b."bookingStatusId" = 'bookingStatus_created')
+        OR (${checkOutCondition} AND b."bookingStatusId" = 'bookingStatus_parked')
       )`;
   }
 
@@ -146,11 +154,14 @@ export async function getDailyInOutReport(
 export async function getWashServiceReport(
   date: string
 ): Promise<WashServiceReportItem[]> {
+  const dayEndMinutes = await getDayEndMinutes();
+  const checkOutCondition = buildSingleDateCondition(date, "dateTo", dayEndMinutes, "");
+  
   const bookings = await prisma.$queryRawUnsafe<WashServiceRow[]>(`
     SELECT id, name, surname, "plateNo", "carBrand", "carModel", "carColor", "pickUpOption", "dateTo", "timeTo"
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateTo" = '${date}'::date
+      AND ${checkOutCondition}
       AND "washService" = true
       AND "bookingStatusId" = 'bookingStatus_parked'
     ORDER BY "timeTo" ASC NULLS LAST, name ASC

@@ -1,4 +1,12 @@
 import { prisma } from "../lib/prisma";
+import {
+  getDayEndMinutes,
+  buildDateFromCondition,
+  buildDateToCondition,
+  buildBothDatesCondition,
+  getNextDay,
+  formatMinutesToTime,
+} from "../utils/dayEnd.utils";
 
 interface GetBookingsParams {
   dateFrom?: string;
@@ -77,6 +85,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   meta: { total: number; page: number };
 }> {
   const { dateFrom, dateTo, search, page, limit, userId, filterBy = 'both' } = params;
+  const dayEndMinutes = await getDayEndMinutes();
 
   const whereConditions: string[] = [
     `b.deleteflag = 0`,
@@ -88,17 +97,14 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   if (dateFrom && dateTo) {
     if (filterBy === 'check-ins') {
-      whereConditions.push(
-        `(b."dateFrom" >= '${dateFrom}'::date AND b."dateFrom" <= '${dateTo}'::date)`,
-      );
+      whereConditions.push(buildDateFromCondition(dateFrom, dateTo, dayEndMinutes, "b"));
     } else if (filterBy === 'check-outs') {
+      const dateToCondition = buildDateToCondition(dateFrom, dateTo, dayEndMinutes, "b");
       whereConditions.push(
-        `((b."dateTo" >= '${dateFrom}'::date AND b."dateTo" <= '${dateTo}'::date) OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b."actualCheckOut"::date <= '${dateTo}'::date))`,
+        `(${dateToCondition} OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b."actualCheckOut"::date <= '${dateTo}'::date))`,
       );
     } else {
-      whereConditions.push(
-        `((b."dateFrom" >= '${dateFrom}'::date AND b."dateFrom" <= '${dateTo}'::date) OR (b."dateTo" >= '${dateFrom}'::date AND b."dateTo" <= '${dateTo}'::date))`,
-      );
+      whereConditions.push(buildBothDatesCondition(dateFrom, dateTo, dayEndMinutes, "b"));
     }
   } else if (dateFrom) {
     if (filterBy === 'check-ins') {
@@ -115,18 +121,36 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       );
     }
   } else if (dateTo) {
-    if (filterBy === 'check-ins') {
-      whereConditions.push(
-        `(b."dateFrom" <= '${dateTo}'::date)`,
-      );
-    } else if (filterBy === 'check-outs') {
-      whereConditions.push(
-        `((b."dateTo" <= '${dateTo}'::date) OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date <= '${dateTo}'::date))`,
-      );
+    if (dayEndMinutes > 0) {
+      const extendedDate = getNextDay(dateTo);
+      const timeLimit = formatMinutesToTime(dayEndMinutes);
+      if (filterBy === 'check-ins') {
+        whereConditions.push(
+          `(b."dateFrom" < '${extendedDate}'::date OR (b."dateFrom" = '${extendedDate}'::date AND b."timeFrom" IS NOT NULL AND b."timeFrom" <= '${timeLimit}'::time))`,
+        );
+      } else if (filterBy === 'check-outs') {
+        whereConditions.push(
+          `((b."dateTo" < '${extendedDate}'::date OR (b."dateTo" = '${extendedDate}'::date AND b."timeTo" IS NOT NULL AND b."timeTo" <= '${timeLimit}'::time)) OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date <= '${dateTo}'::date))`,
+        );
+      } else {
+        whereConditions.push(
+          `((b."dateFrom" < '${extendedDate}'::date OR (b."dateFrom" = '${extendedDate}'::date AND b."timeFrom" IS NOT NULL AND b."timeFrom" <= '${timeLimit}'::time)) OR (b."dateTo" < '${extendedDate}'::date OR (b."dateTo" = '${extendedDate}'::date AND b."timeTo" IS NOT NULL AND b."timeTo" <= '${timeLimit}'::time)))`,
+        );
+      }
     } else {
-      whereConditions.push(
-        `(b."dateFrom" <= '${dateTo}'::date OR b."dateTo" <= '${dateTo}'::date)`,
-      );
+      if (filterBy === 'check-ins') {
+        whereConditions.push(
+          `(b."dateFrom" <= '${dateTo}'::date)`,
+        );
+      } else if (filterBy === 'check-outs') {
+        whereConditions.push(
+          `((b."dateTo" <= '${dateTo}'::date) OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date <= '${dateTo}'::date))`,
+        );
+      } else {
+        whereConditions.push(
+          `(b."dateFrom" <= '${dateTo}'::date OR b."dateTo" <= '${dateTo}'::date)`,
+        );
+      }
     }
   }
 

@@ -1,4 +1,10 @@
 import { prisma } from "../lib/prisma";
+import {
+  getDayEndMinutes,
+  buildSingleDateCondition,
+  getNextDay,
+  formatMinutesToTime,
+} from "../utils/dayEnd.utils";
 
 export interface DashboardStats {
   totalCars: number;
@@ -47,6 +53,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = formatDate(tomorrow);
 
+  const dayEndMinutes = await getDayEndMinutes();
+  
+  const todayCheckInCondition = buildSingleDateCondition(todayStr, "dateFrom", dayEndMinutes, "");
+  const todayCheckOutCondition = buildSingleDateCondition(todayStr, "dateTo", dayEndMinutes, "");
+  const tomorrowCheckOutCondition = buildSingleDateCondition(tomorrowStr, "dateTo", dayEndMinutes, "");
+
   const totalCarsResult = await prisma.$queryRawUnsafe<{ count: bigint }[]>(`
     SELECT COUNT(*) as count 
     FROM bookings 
@@ -59,7 +71,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     SELECT COUNT(*) as count 
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateFrom" = '${todayStr}'::date
+      AND ${todayCheckInCondition}
       AND "bookingStatusId" = 'bookingStatus_created'
   `);
 
@@ -67,7 +79,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     SELECT COUNT(*) as count 
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateTo" = '${todayStr}'::date
+      AND ${todayCheckOutCondition}
       AND "bookingStatusId" = 'bookingStatus_parked'
   `);
 
@@ -75,7 +87,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     SELECT COUNT(*) as count 
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateTo" = '${todayStr}'::date
+      AND ${todayCheckOutCondition}
       AND "washService" = true
       AND "bookingStatusId" = 'bookingStatus_parked'
   `);
@@ -84,7 +96,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     SELECT COUNT(*) as count 
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateTo" = '${tomorrowStr}'::date
+      AND ${tomorrowCheckOutCondition}
       AND "washService" = true
       AND "bookingStatusId" = 'bookingStatus_parked'
   `);
@@ -114,12 +126,23 @@ export async function getCheckIns(
   dateFrom: string,
   dateTo: string
 ): Promise<CheckInOutItem[]> {
+  const dayEndMinutes = await getDayEndMinutes();
+  let dateCondition = `"dateFrom" >= '${dateFrom}'::date AND "dateFrom" <= '${dateTo}'::date`;
+  
+  if (dayEndMinutes > 0) {
+    const extendedDate = getNextDay(dateTo);
+    const timeLimit = formatMinutesToTime(dayEndMinutes);
+    dateCondition = `(
+      ("dateFrom" >= '${dateFrom}'::date AND "dateFrom" < '${extendedDate}'::date)
+      OR ("dateFrom" = '${extendedDate}'::date AND "timeFrom" IS NOT NULL AND "timeFrom" <= '${timeLimit}'::time)
+    )`;
+  }
+
   const bookings = await prisma.$queryRawUnsafe<BookingRow[]>(`
     SELECT id, "plateNo", name, surname, "dateFrom", "timeFrom", "returnFlight"
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateFrom" >= '${dateFrom}'::date 
-      AND "dateFrom" <= '${dateTo}'::date
+      AND ${dateCondition}
       AND "bookingStatusId" = 'bookingStatus_created'
     ORDER BY "dateFrom" ASC, "timeFrom" ASC
   `);
@@ -138,12 +161,23 @@ export async function getCheckOuts(
   dateFrom: string,
   dateTo: string
 ): Promise<CheckInOutItem[]> {
+  const dayEndMinutes = await getDayEndMinutes();
+  let dateCondition = `"dateTo" >= '${dateFrom}'::date AND "dateTo" <= '${dateTo}'::date`;
+  
+  if (dayEndMinutes > 0) {
+    const extendedDate = getNextDay(dateTo);
+    const timeLimit = formatMinutesToTime(dayEndMinutes);
+    dateCondition = `(
+      ("dateTo" >= '${dateFrom}'::date AND "dateTo" < '${extendedDate}'::date)
+      OR ("dateTo" = '${extendedDate}'::date AND "timeTo" IS NOT NULL AND "timeTo" <= '${timeLimit}'::time)
+    )`;
+  }
+
   const bookings = await prisma.$queryRawUnsafe<BookingRow[]>(`
     SELECT id, "plateNo", name, surname, "dateTo", "timeTo", "returnFlight"
     FROM bookings 
     WHERE deleteflag = 0 
-      AND "dateTo" >= '${dateFrom}'::date 
-      AND "dateTo" <= '${dateTo}'::date
+      AND ${dateCondition}
       AND "bookingStatusId" = 'bookingStatus_parked'
     ORDER BY "dateTo" ASC, "timeTo" ASC
   `);
@@ -193,6 +227,11 @@ export async function getCardDetails(
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = formatDate(tomorrow);
 
+  const dayEndMinutes = await getDayEndMinutes();
+  const todayCheckInCondition = buildSingleDateCondition(todayStr, "dateFrom", dayEndMinutes, "");
+  const todayCheckOutCondition = buildSingleDateCondition(todayStr, "dateTo", dayEndMinutes, "");
+  const tomorrowCheckOutCondition = buildSingleDateCondition(tomorrowStr, "dateTo", dayEndMinutes, "");
+
   let query = "";
 
   switch (cardType) {
@@ -211,7 +250,7 @@ export async function getCardDetails(
         SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", NULL as "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
-          AND "dateFrom" = '${todayStr}'::date
+          AND ${todayCheckInCondition}
           AND "bookingStatusId" = 'bookingStatus_created'
         ORDER BY "timeFrom" ASC
       `;
@@ -221,7 +260,7 @@ export async function getCardDetails(
         SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
-          AND "dateTo" = '${todayStr}'::date
+          AND ${todayCheckOutCondition}
           AND "bookingStatusId" = 'bookingStatus_parked'
         ORDER BY "timeTo" ASC
       `;
@@ -231,7 +270,7 @@ export async function getCardDetails(
         SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
-          AND "dateTo" = '${todayStr}'::date
+          AND ${todayCheckOutCondition}
           AND "washService" = true
           AND "bookingStatusId" = 'bookingStatus_parked'
         ORDER BY "timeTo" ASC
@@ -242,7 +281,7 @@ export async function getCardDetails(
         SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
-          AND "dateTo" = '${tomorrowStr}'::date
+          AND ${tomorrowCheckOutCondition}
           AND "washService" = true
           AND "bookingStatusId" = 'bookingStatus_parked'
         ORDER BY "timeTo" ASC
