@@ -481,6 +481,41 @@ export async function createGuestBooking(
     },
   });
 
+  const parkingType = await prisma.parkingType.findUnique({
+    where: { id: params.parkingTypeId },
+    select: { name: true },
+  });
+
+  if (params.email) {
+    console.log(`Sending guest booking confirmation email to: ${params.email}`);
+    sendBookingConfirmationEmail({
+      email: params.email,
+      fullName: params.fullName,
+      checkInDate: params.checkInDate,
+      checkInTime: params.checkInTime,
+      checkOutDate: params.checkOutDate,
+      checkOutTime: params.checkOutTime,
+      licensePlate: params.licensePlate,
+      vehicleBrand: params.vehicleBrand,
+      vehicleModel: params.vehicleModel || undefined,
+      vehicleColor: params.vehicleColor || undefined,
+      parkingType: parkingType?.name || params.parkingTypeId,
+      washService: params.washService || false,
+      flightNumber: params.flightNumber || undefined,
+      dropOffOption: params.dropOffOption || undefined,
+      pickUpOption: params.pickUpOption || undefined,
+      finalPrice: finalPrice,
+    }).then((result) => {
+      if (result.success) {
+        console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
+      } else {
+        console.error(`Failed to send email to ${params.email}: ${result.error}`);
+      }
+    }).catch((err) => {
+      console.error("Failed to send guest booking confirmation email:", err);
+    });
+  }
+
   return { id: booking.id, finalPrice };
 }
 
