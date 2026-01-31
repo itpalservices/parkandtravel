@@ -1,12 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-
-interface ReportCard {
-  id: string;
-  title: string;
-  description: string;
-}
+import { ReportCard } from '../../shared/models/reports.model';
 
 @Component({
   selector: 'app-reports',

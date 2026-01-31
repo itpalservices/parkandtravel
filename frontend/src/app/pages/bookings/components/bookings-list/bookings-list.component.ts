@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { Booking } from '../../../../shared/models/booking.model';
+import { Booking, DateRangeFilter } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import Swal from 'sweetalert2';
 import {
@@ -14,11 +14,6 @@ import {
 } from '../../../../shared/statics/car-drop-off.model';
 import { RouterModule } from '@angular/router';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
-
-interface DateRangeFilter {
-  dateFrom: string | null;
-  dateTo: string | null;
-}
 
 @Component({
   selector: 'app-bookings-list',

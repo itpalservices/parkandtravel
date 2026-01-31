@@ -3,23 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DateRangePickerComponent, DateRange } from '../../shared/components/date-range-picker/date-range-picker.component';
 import { ApiService } from '../../core/services/api.service';
-
-interface CheckInOutItem {
-  id: string;
-  plateNo: string;
-  customerName: string;
-  date: string;
-  time: string;
-  flightNumber: string;
-}
-
-interface DashboardStats {
-  totalCars: number;
-  todayCheckIns: number;
-  todayCheckOuts: number;
-  carsForWashToday: number;
-  carsForWashTomorrow: number;
-}
+import { CheckInOutItem, DashboardStats } from '../../shared/models/dashboard.model';
 
 @Component({
   selector: 'app-dashboard',

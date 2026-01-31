@@ -20,7 +20,7 @@ import {
 import { ApiService } from '../../../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../../../shared/components/form-field-error/form-field-error.component';
 import { Subscription, take } from 'rxjs';
-import { ParkingType, ParkingTypesResponse } from '../../../../shared';
+import { BookingDetails, ParkingType, ParkingTypesResponse } from '../../../../shared';
 import { PhoneCode } from '../../../../shared/models/phone-codes.model';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
 import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
@@ -32,34 +32,6 @@ import { FlightService } from '../../../../core/services/flight.service';
 enum FormType {
   NewBooking,
   ExistingBooking
-}
-
-interface BookingDetails {
-  id: string;
-  name: string;
-  surname: string;
-  email: string | null;
-  returnFlight: string | null;
-  dateFrom: string;
-  timeFrom: string | null;
-  dateTo: string;
-  timeTo: string | null;
-  mobile: string | null;
-  phoneCodeId: string | null;
-  plateNo: string | null;
-  carBrand: string | null;
-  carModel: string | null;
-  carColor: string | null;
-  parkingType: string | null;
-  parkingTypeId: string | null;
-  washService: boolean;
-  finalPrice: number | null;
-  dropOffOption: string | null;
-  pickUpOption: string | null;
-  userId: string | null;
-  bookingStatusId: string | null;
-  bookingStatus: string | null;
-  parkPlace: string | null;
 }
 
 @Component({

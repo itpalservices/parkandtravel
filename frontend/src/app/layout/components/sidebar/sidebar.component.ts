@@ -4,13 +4,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { RoleService, UserRoleInfo } from '../../../core/services/role.service';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-interface NavItem {
-  label: string;
-  route: string;
-  icon: string;
-  adminOnly?: boolean;
-}
+import { NavItem } from '../../../shared/models/nav.model';
 
 @Component({
   selector: 'app-sidebar',

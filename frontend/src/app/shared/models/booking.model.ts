@@ -79,3 +79,36 @@ export interface HistoryBooking {
   actualCheckOut: string | null;
   extraFee: number | null;
 }
+
+export interface BookingDetails {
+  id: string;
+  name: string;
+  surname: string;
+  email: string | null;
+  returnFlight: string | null;
+  dateFrom: string;
+  timeFrom: string | null;
+  dateTo: string;
+  timeTo: string | null;
+  mobile: string | null;
+  phoneCodeId: string | null;
+  plateNo: string | null;
+  carBrand: string | null;
+  carModel: string | null;
+  carColor: string | null;
+  parkingType: string | null;
+  parkingTypeId: string | null;
+  washService: boolean;
+  finalPrice: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
+  userId: string | null;
+  bookingStatusId: string | null;
+  bookingStatus: string | null;
+  parkPlace: string | null;
+}
+
+export interface DateRangeFilter {
+  dateFrom: string | null;
+  dateTo: string | null;
+}
