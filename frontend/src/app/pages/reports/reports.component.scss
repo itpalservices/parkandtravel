@@ -56,10 +56,6 @@
   border-radius: 0.75rem;
   color: #006B8F;
   transition: all 0.2s ease;
-
-  &.wash-glow svg {
-    filter: drop-shadow(0 0 3px rgba(0, 107, 143, 0.5)) drop-shadow(0 0 6px rgba(0, 107, 143, 0.3));
-  }
 }
 
 .report-content {
