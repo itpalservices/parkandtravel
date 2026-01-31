@@ -230,25 +230,6 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
           </tr>
           ` : ""}
           
-          <!-- Important Info -->
-          <tr>
-            <td style="padding: 0 30px 30px 30px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fff8e1; border-radius: 10px; border: 1px solid #ffe082;">
-                <tr>
-                  <td style="padding: 20px 25px;">
-                    <h4 style="margin: 0 0 15px 0; color: #f57c00; font-size: 16px; font-weight: 600;">📌 Important Information</h4>
-                    <ul style="margin: 0; padding-left: 20px; color: #5d4037; font-size: 14px; line-height: 1.8;">
-                      <li>Please arrive 10-15 minutes before your scheduled check-in time</li>
-                      <li>Bring a copy of this confirmation email</li>
-                      <li>Have your vehicle keys ready for handover</li>
-                      <li>Contact us if your flight is delayed or plans change</li>
-                    </ul>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
           <!-- Footer -->
           <tr>
             <td style="background-color: #f1f5f9; padding: 30px; border-radius: 0 0 12px 12px; text-align: center;">
@@ -256,7 +237,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 Have questions? We're here to help!
               </p>
               <p style="margin: 0 0 20px 0; color: #006B8F; font-size: 16px; font-weight: 600;">
-                📞 Contact Park & Travel Support
+                📞 Contact Park & Travel
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 © ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
