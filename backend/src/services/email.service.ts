@@ -102,6 +102,16 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
             </td>
           </tr>
           
+          <!-- Success Badge -->
+          <tr>
+            <td align="center" style="padding: 30px 30px 20px 30px;">
+              <h2 style="color: #2e7d32; margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">Booking Confirmed!</h2>
+              <p style="color: #666666; margin: 0; font-size: 16px; line-height: 1.6;">
+                Thank you, <strong style="color: #333333;">${data.fullName}</strong>! Your parking reservation has been successfully created.
+              </p>
+            </td>
+          </tr>
+          
           <!-- Booking Details Card -->
           <tr>
             <td style="padding: 0 30px 30px 30px;">
@@ -237,7 +247,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 Have questions? We're here to help!
               </p>
               <p style="margin: 0 0 20px 0; color: #006B8F; font-size: 16px; font-weight: 600;">
-                📞 Contact Park & Travel
+                📞 Contact Park & Travel Support
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 © ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
