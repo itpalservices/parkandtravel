@@ -86,25 +86,29 @@ Preferred communication style: Simple, everyday language.
 - **Endpoints**:
   - `POST /api/email/send-booking-confirmation` - Send booking confirmation email manually.
   - `GET /api/email/test` - Test Brevo connection.
-- **Auto-trigger**: Booking confirmation emails are sent automatically on every booking creation (guest and authenticated).
-- **Template**: Professional HTML email with Park & Travel branding, reservation details, pricing, and important information.
+- **Auto-trigger**: Booking confirmation emails are sent automatically on every booking creation and update (guest and authenticated).
+- **Templates**:
+  - **New Booking**: Green header with "Booking Confirmed!" title, subject "Booking Confirmed - Park & Travel".
+  - **Updated Booking**: Blue header with "Booking Updated!" title, subject "Booking Updated - Park & Travel".
 - **Required Secrets**:
   - `BREVO_API_KEY` - Brevo API key (required).
   - `BREVO_SENDER_EMAIL` - Verified sender email address (optional, defaults to it.pal.service@gmail.com).
   - `BREVO_REPLY_TO_EMAIL` - Reply-to email address (optional, defaults to support@parkandtravel.com).
 
 ### Parking Availability Check
-- **Real-time Validation**: When creating a new booking (guest or authenticated), the system checks parking availability for the selected dates and parking type.
+- **Real-time Validation**: When creating or updating a booking (guest or authenticated), the system checks parking availability for the selected dates and parking type.
 - **Backend Service**: `backend/src/services/availability.service.ts` provides `checkAvailability()` function that:
   - Counts existing active bookings (deleteflag=0) that overlap with the requested date range
+  - Supports optional `excludeBookingId` parameter to exclude current booking from count when editing
   - Compares against configured availability (availableCovered or availableUncovered from configuration_settings)
   - Returns availability status, unavailable dates, and remaining spots
 - **API Endpoints**:
-  - `GET /api/availability/check?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&parkingTypeId=parkingType_covered|parkingType_uncovered` - Check availability for specific parking type
+  - `GET /api/availability/check?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&parkingTypeId=parkingType_covered|parkingType_uncovered&excludeBookingId=id` - Check availability for specific parking type
   - `GET /api/availability/both?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD` - Check availability for both parking types
 - **Frontend Integration**:
-  - Availability is checked automatically when dates or parking type change in booking forms
+  - Availability is checked automatically when dates or parking type change in booking forms (both create and edit modes)
+  - In edit mode, the current booking is excluded from availability count using excludeBookingId
   - Visual feedback shows: "Checking availability...", "Parking available (X spots remaining)", or error message with unavailable dates
   - Submit button is disabled when parking is not available
-  - Backend validation also prevents booking creation if no spots available
-- **Booking Validation**: Both `createBooking` and `createGuestBooking` services validate availability before inserting new bookings
+  - Backend validation also prevents booking creation/update if no spots available
+- **Booking Validation**: `createBooking`, `createGuestBooking`, and `updateBooking` services validate availability before inserting/updating bookings
