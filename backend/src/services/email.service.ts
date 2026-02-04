@@ -232,7 +232,6 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                   <td style="padding: 25px; text-align: center;">
                     <p style="margin: 0 0 5px 0; color: rgba(255, 255, 255, 0.8); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Total Amount</p>
                     <p style="margin: 0; color: #ffffff; font-size: 36px; font-weight: 700;">€${data.finalPrice.toFixed(2)}</p>
-                    <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.7); font-size: 13px;">Payment due upon arrival</p>
                   </td>
                 </tr>
               </table>
