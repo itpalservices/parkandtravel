@@ -23,6 +23,16 @@ function normalizeParkingType(parkingTypeId: string): "covered" | "uncovered" {
   return "uncovered";
 }
 
+function getParkingTypeDisplayName(parkingTypeId: string): string {
+  const normalizedType = normalizeParkingType(parkingTypeId);
+  return normalizedType === "covered" ? "Covered" : "Un Covered";
+}
+
+function formatDateDDMMYYYY(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 export async function checkAvailability(
   dateFrom: string,
   dateTo: string,
@@ -40,7 +50,7 @@ export async function checkAvailability(
     return {
       available: false,
       unavailableDates: [],
-      message: `${normalizedType === "covered" ? "Covered" : "Uncovered"} parking is not available`,
+      message: `${getParkingTypeDisplayName(parkingTypeId)} parking is not available`,
       totalSpots: 0,
     };
   }
@@ -57,10 +67,11 @@ export async function checkAvailability(
     .map((d) => d.date);
 
   if (unavailableDates.length > 0) {
+    const formattedDates = unavailableDates.map(formatDateDDMMYYYY);
     return {
       available: false,
       unavailableDates,
-      message: `No ${parkingTypeId} parking spots available for: ${unavailableDates.join(", ")}`,
+      message: `No ${getParkingTypeDisplayName(parkingTypeId)} parking spots available for: ${formattedDates.join(", ")}`,
       totalSpots,
     };
   }
