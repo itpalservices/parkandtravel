@@ -24,11 +24,15 @@ export class AvailabilityService {
 
   constructor(private http: HttpClient) {}
 
-  checkAvailability(dateFrom: string, dateTo: string, parkingTypeId: string): Observable<AvailabilityResult> {
-    const params = new HttpParams()
+  checkAvailability(dateFrom: string, dateTo: string, parkingTypeId: string, excludeBookingId?: string): Observable<AvailabilityResult> {
+    let params = new HttpParams()
       .set('dateFrom', dateFrom)
       .set('dateTo', dateTo)
       .set('parkingTypeId', parkingTypeId);
+    
+    if (excludeBookingId) {
+      params = params.set('excludeBookingId', excludeBookingId);
+    }
     
     return this.http.get<AvailabilityResult>(`${this.baseUrl}/check`, { params });
   }

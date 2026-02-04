@@ -235,6 +235,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.flightValidated = true;
         }
         this.checkUserRole();
+        this.checkAvailability();
       },
       error: (err) => {
         console.error('Error loading booking:', err);
@@ -792,9 +793,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           if (checkOutDate && this.compareDates(checkOutDate, nextDay) < 0) {
             this.bookingForm.patchValue({ checkOutDate: nextDay });
           }
-          if (!this.isEditMode) {
-            this.checkAvailability();
-          }
+          this.checkAvailability();
         }
       });
   }
@@ -816,8 +815,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.availabilityError = '';
     this.availabilitySubscription?.unsubscribe();
 
+    const excludeBookingId = this.isEditMode && this.bookingId ? this.bookingId : undefined;
+
     this.availabilitySubscription = this.availabilityService
-      .checkAvailability(dateFrom, dateTo, parkingType)
+      .checkAvailability(dateFrom, dateTo, parkingType, excludeBookingId)
       .subscribe({
         next: (result) => {
           this.checkingAvailability = false;
@@ -835,15 +836,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   onCheckOutDateChange(): void {
-    if (!this.isEditMode) {
-      this.checkAvailability();
-    }
+    this.checkAvailability();
   }
 
   onParkingTypeChange(): void {
-    if (!this.isEditMode) {
-      this.checkAvailability();
-    }
+    this.checkAvailability();
   }
 
   formatDate(date: NgbDateStruct | null): string {
@@ -1079,7 +1076,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.isEditMode && this.availabilityResult && !this.availabilityResult.available) {
+    if (this.availabilityResult && !this.availabilityResult.available) {
       Swal.fire({
         toast: true,
         position: 'top-end',

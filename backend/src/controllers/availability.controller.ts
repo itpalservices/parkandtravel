@@ -9,7 +9,7 @@ export async function checkParkingAvailability(
   res: Response
 ): Promise<void> {
   try {
-    const { dateFrom, dateTo, parkingTypeId } = req.query;
+    const { dateFrom, dateTo, parkingTypeId, excludeBookingId } = req.query;
 
     if (!dateFrom || !dateTo || !parkingTypeId) {
       res.status(400).json({
@@ -21,7 +21,8 @@ export async function checkParkingAvailability(
     const result = await checkAvailability(
       dateFrom as string,
       dateTo as string,
-      parkingTypeId as string
+      parkingTypeId as string,
+      excludeBookingId as string | undefined
     );
 
     res.json(result);

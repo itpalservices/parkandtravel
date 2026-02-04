@@ -669,6 +669,23 @@ export async function updateBooking(
 
   if (!existingBooking) return null;
 
+  const checkInDateStr = params.checkInDate || existingBooking.dateFrom.toISOString().split("T")[0];
+  const checkOutDateStr = params.checkOutDate || existingBooking.dateTo.toISOString().split("T")[0];
+  const parkingTypeIdForCheck = params.parkingTypeId || existingBooking.parkingTypeId;
+
+  if (parkingTypeIdForCheck) {
+    const availability = await checkAvailability(
+      checkInDateStr,
+      checkOutDateStr,
+      parkingTypeIdForCheck,
+      id
+    );
+
+    if (!availability.available) {
+      throw new Error(availability.message || "No parking spots available for the selected dates");
+    }
+  }
+
   const updateData: Record<string, unknown> = {};
 
   if (params.fullName !== undefined) {
@@ -732,6 +749,54 @@ export async function updateBooking(
     where: { id },
     data: updateData,
   });
+
+  const emailToSend = params.email || existingBooking.email;
+  if (emailToSend) {
+    const fullName = params.fullName || `${existingBooking.name} ${existingBooking.surname}`.trim();
+    const checkInTime = params.checkInTime || (existingBooking.timeFrom ? existingBooking.timeFrom.toISOString().split("T")[1].substring(0, 5) : "12:00");
+    const checkOutTime = params.checkOutTime || (existingBooking.timeTo ? existingBooking.timeTo.toISOString().split("T")[1].substring(0, 5) : "12:00");
+    const licensePlate = params.licensePlate || existingBooking.plateNo || "";
+    const vehicleBrand = params.vehicleBrand || existingBooking.carBrand || "";
+    const vehicleModel = params.vehicleModel || existingBooking.carModel || undefined;
+    const vehicleColor = params.vehicleColor || existingBooking.carColor || undefined;
+    const flightNumber = params.flightNumber !== undefined ? params.flightNumber : existingBooking.returnFlight;
+    const dropOffOption = params.dropOffOption !== undefined ? params.dropOffOption : existingBooking.dropOffOption;
+    const pickUpOption = params.pickUpOption !== undefined ? params.pickUpOption : existingBooking.pickUpOption;
+
+    const parkingType = await prisma.parkingType.findUnique({
+      where: { id: parkingTypeId || "" },
+      select: { name: true },
+    });
+
+    console.log(`Sending booking update confirmation email to: ${emailToSend}`);
+    sendBookingConfirmationEmail({
+      email: emailToSend,
+      fullName,
+      checkInDate: checkInDateStr,
+      checkInTime,
+      checkOutDate: checkOutDateStr,
+      checkOutTime,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      parkingType: parkingType?.name || parkingTypeId || "",
+      washService: washService || false,
+      flightNumber: flightNumber || undefined,
+      dropOffOption: dropOffOption || undefined,
+      pickUpOption: pickUpOption || undefined,
+      finalPrice,
+      isUpdate: true,
+    }).then((result) => {
+      if (result.success) {
+        console.log(`Update email sent successfully to ${emailToSend}, messageId: ${result.messageId}`);
+      } else {
+        console.error(`Failed to send update email to ${emailToSend}: ${result.error}`);
+      }
+    }).catch((err) => {
+      console.error("Failed to send booking update confirmation email:", err);
+    });
+  }
 
   return { id: updatedBooking.id, finalPrice };
 }

@@ -36,7 +36,8 @@ function formatDateDDMMYYYY(dateStr: string): string {
 export async function checkAvailability(
   dateFrom: string,
   dateTo: string,
-  parkingTypeId: string
+  parkingTypeId: string,
+  excludeBookingId?: string
 ): Promise<AvailabilityResult> {
   const settings = await getSettings();
   const normalizedType = normalizeParkingType(parkingTypeId);
@@ -59,7 +60,8 @@ export async function checkAvailability(
   const dailyAvailability = await getDailyBookingCounts(
     dates,
     parkingTypeId,
-    totalSpots
+    totalSpots,
+    excludeBookingId
   );
 
   const unavailableDates = dailyAvailability
@@ -105,7 +107,8 @@ function getDateRange(dateFrom: string, dateTo: string): string[] {
 async function getDailyBookingCounts(
   dates: string[],
   parkingTypeId: string,
-  totalSpots: number
+  totalSpots: number,
+  excludeBookingId?: string
 ): Promise<DailyAvailability[]> {
   if (dates.length === 0) {
     return [];
@@ -114,18 +117,22 @@ async function getDailyBookingCounts(
   const firstDate = dates[0];
   const lastDate = dates[dates.length - 1];
 
-  const bookings = await prisma.$queryRawUnsafe<
-    { dateFrom: Date; dateTo: Date }[]
-  >(
-    `SELECT "dateFrom", "dateTo" FROM bookings 
+  let query = `SELECT "dateFrom", "dateTo" FROM bookings 
      WHERE "parkingTypeId" = $1 
      AND "deleteflag" = 0 
      AND "dateFrom" <= $2::date 
-     AND "dateTo" >= $3::date`,
-    parkingTypeId,
-    lastDate,
-    firstDate
-  );
+     AND "dateTo" >= $3::date`;
+  
+  const queryParams: any[] = [parkingTypeId, lastDate, firstDate];
+  
+  if (excludeBookingId) {
+    query += ` AND id != $4`;
+    queryParams.push(excludeBookingId);
+  }
+
+  const bookings = await prisma.$queryRawUnsafe<
+    { dateFrom: Date; dateTo: Date }[]
+  >(query, ...queryParams);
 
   return dates.map((date) => {
     const dateObj = new Date(date);

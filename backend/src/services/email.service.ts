@@ -24,6 +24,7 @@ interface BookingEmailData {
   dropOffOption?: string;
   pickUpOption?: string;
   finalPrice: number | null;
+  isUpdate?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -105,9 +106,12 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
           <!-- Success Badge -->
           <tr>
             <td align="center" style="padding: 30px 30px 20px 30px;">
-              <h2 style="color: #2e7d32; margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">Booking Confirmed!</h2>
+              <h2 style="color: ${data.isUpdate ? '#1565c0' : '#2e7d32'}; margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">${data.isUpdate ? 'Booking Updated!' : 'Booking Confirmed!'}</h2>
               <p style="color: #666666; margin: 0; font-size: 16px; line-height: 1.6;">
-                Thank you, <strong style="color: #333333;">${data.fullName}</strong>! Your parking reservation has been successfully created.
+                ${data.isUpdate 
+                  ? `Dear <strong style="color: #333333;">${data.fullName}</strong>, your parking reservation has been successfully updated. Please review your updated booking details below.`
+                  : `Thank you, <strong style="color: #333333;">${data.fullName}</strong>! Your parking reservation has been successfully created.`
+                }
               </p>
             </td>
           </tr>
@@ -269,11 +273,16 @@ function generateBookingConfirmationText(data: BookingEmailData): string {
     ? `${data.vehicleBrand} ${data.vehicleModel}`
     : data.vehicleBrand;
 
+  const title = data.isUpdate ? 'BOOKING UPDATED' : 'BOOKING CONFIRMATION';
+  const message = data.isUpdate 
+    ? `Dear ${data.fullName}, your parking reservation has been successfully updated.`
+    : `Thank you, ${data.fullName}! Your parking reservation has been successfully created.`;
+
   let text = `
-BOOKING CONFIRMATION - Park & Travel
+${title} - Park & Travel
 =====================================
 
-Thank you, ${data.fullName}! Your parking reservation has been successfully created.
+${message}
 
 RESERVATION DETAILS
 -------------------
@@ -322,7 +331,9 @@ export async function sendBookingConfirmationEmail(
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     
-    sendSmtpEmail.subject = "✅ Booking Confirmed - Park & Travel";
+    sendSmtpEmail.subject = data.isUpdate 
+      ? "📝 Booking Updated - Park & Travel" 
+      : "✅ Booking Confirmed - Park & Travel";
     sendSmtpEmail.htmlContent = generateBookingConfirmationHtml(data);
     sendSmtpEmail.textContent = generateBookingConfirmationText(data);
     sendSmtpEmail.sender = {
