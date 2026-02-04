@@ -90,5 +90,21 @@ Preferred communication style: Simple, everyday language.
 - **Template**: Professional HTML email with Park & Travel branding, reservation details, pricing, and important information.
 - **Required Secrets**:
   - `BREVO_API_KEY` - Brevo API key (required).
-  - `BREVO_SENDER_EMAIL` - Verified sender email address (optional, defaults to noreply@parkandtravel.com).
+  - `BREVO_SENDER_EMAIL` - Verified sender email address (optional, defaults to it.pal.service@gmail.com).
   - `BREVO_REPLY_TO_EMAIL` - Reply-to email address (optional, defaults to support@parkandtravel.com).
+
+### Parking Availability Check
+- **Real-time Validation**: When creating a new booking (guest or authenticated), the system checks parking availability for the selected dates and parking type.
+- **Backend Service**: `backend/src/services/availability.service.ts` provides `checkAvailability()` function that:
+  - Counts existing active bookings (deleteflag=0) that overlap with the requested date range
+  - Compares against configured availability (availableCovered or availableUncovered from configuration_settings)
+  - Returns availability status, unavailable dates, and remaining spots
+- **API Endpoints**:
+  - `GET /api/availability/check?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&parkingTypeId=parkingType_covered|parkingType_uncovered` - Check availability for specific parking type
+  - `GET /api/availability/both?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD` - Check availability for both parking types
+- **Frontend Integration**:
+  - Availability is checked automatically when dates or parking type change in booking forms
+  - Visual feedback shows: "Checking availability...", "Parking available (X spots remaining)", or error message with unavailable dates
+  - Submit button is disabled when parking is not available
+  - Backend validation also prevents booking creation if no spots available
+- **Booking Validation**: Both `createBooking` and `createGuestBooking` services validate availability before inserting new bookings

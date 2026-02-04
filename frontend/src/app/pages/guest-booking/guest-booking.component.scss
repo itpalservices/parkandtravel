@@ -591,3 +591,37 @@ input[type="time"].form-control {
     padding: 0.75rem 0.75rem;
   }
 }
+
+.availability-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+
+  &.checking {
+    background-color: #f0f4f8;
+    color: #64748b;
+  }
+
+  &.available {
+    background-color: #dcfce7;
+    color: #166534;
+
+    svg {
+      color: #22c55e;
+    }
+  }
+
+  &.unavailable {
+    background-color: #fee2e2;
+    color: #991b1b;
+
+    svg {
+      color: #ef4444;
+    }
+  }
+}

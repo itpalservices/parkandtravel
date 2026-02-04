@@ -28,6 +28,7 @@ import Swal from 'sweetalert2';
 import { AuthService } from '@auth0/auth0-angular';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
 import { FlightService } from '../../../../core/services/flight.service';
+import { AvailabilityService, AvailabilityResult } from '../../../../core/services/availability.service';
 
 enum FormType {
   NewBooking,
@@ -76,6 +77,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   flightValidated = false;
   flightValidating = false;
   private flightService = inject(FlightService);
+  private availabilityService = inject(AvailabilityService);
+  private availabilitySubscription?: Subscription;
+  
+  checkingAvailability = false;
+  availabilityResult: AvailabilityResult | null = null;
+  availabilityError = '';
   
   isRegularUser = false;
   isAdminOrDriver = false;
@@ -770,6 +777,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.checkInDateSubscription?.unsubscribe();
+    this.availabilitySubscription?.unsubscribe();
   }
 
   private setupCheckInDateListener(): void {
@@ -784,8 +792,58 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           if (checkOutDate && this.compareDates(checkOutDate, nextDay) < 0) {
             this.bookingForm.patchValue({ checkOutDate: nextDay });
           }
+          if (!this.isEditMode) {
+            this.checkAvailability();
+          }
         }
       });
+  }
+
+  checkAvailability(): void {
+    const checkInDate = this.bookingForm.get('checkInDate')?.value;
+    const checkOutDate = this.bookingForm.get('checkOutDate')?.value;
+    const parkingType = this.bookingForm.get('parkingType')?.value;
+
+    if (!checkInDate || !checkOutDate || !parkingType) {
+      this.availabilityResult = null;
+      return;
+    }
+
+    const dateFrom = this.formatDateForApi(checkInDate);
+    const dateTo = this.formatDateForApi(checkOutDate);
+
+    this.checkingAvailability = true;
+    this.availabilityError = '';
+    this.availabilitySubscription?.unsubscribe();
+
+    this.availabilitySubscription = this.availabilityService
+      .checkAvailability(dateFrom, dateTo, parkingType)
+      .subscribe({
+        next: (result) => {
+          this.checkingAvailability = false;
+          this.availabilityResult = result;
+          if (!result.available) {
+            this.availabilityError = result.message || 'No parking spots available for the selected dates';
+          }
+        },
+        error: () => {
+          this.checkingAvailability = false;
+          this.availabilityResult = null;
+          this.availabilityError = 'Failed to check availability';
+        },
+      });
+  }
+
+  onCheckOutDateChange(): void {
+    if (!this.isEditMode) {
+      this.checkAvailability();
+    }
+  }
+
+  onParkingTypeChange(): void {
+    if (!this.isEditMode) {
+      this.checkAvailability();
+    }
   }
 
   formatDate(date: NgbDateStruct | null): string {
@@ -806,6 +864,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
         } else if (!this.isEditMode && response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
+          this.checkAvailability();
         }
       },
       error: () => {
@@ -817,6 +876,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.washPrice = null;
         if (!this.isEditMode) {
           this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
+          this.checkAvailability();
         }
       },
     });
@@ -1015,6 +1075,19 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     if (this.bookingForm.invalid) {
       Object.keys(this.bookingForm.controls).forEach((key) => {
         this.bookingForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    if (!this.isEditMode && this.availabilityResult && !this.availabilityResult.available) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: this.availabilityError || 'No parking spots available for the selected dates',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
       });
       return;
     }

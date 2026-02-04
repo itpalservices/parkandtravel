@@ -17,10 +17,11 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 import { FormFieldErrorComponent } from '../../shared/components/form-field-error/form-field-error.component';
-import { Subscription } from 'rxjs';
+import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ParkingType, ParkingTypesResponse } from '../../shared';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
 import { FlightService } from '../../core/services/flight.service';
+import { AvailabilityService, AvailabilityResult } from '../../core/services/availability.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -43,7 +44,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
   private fb = inject(FormBuilder);
   private flightService = inject(FlightService);
+  private availabilityService = inject(AvailabilityService);
   private checkInDateSubscription?: Subscription;
+  private availabilitySubscription?: Subscription;
 
   bookingForm!: FormGroup;
   parkingTypes: ParkingType[] = [];
@@ -62,6 +65,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   submitError = '';
   flightValidated = false;
   flightValidating = false;
+  
+  checkingAvailability = false;
+  availabilityResult: AvailabilityResult | null = null;
+  availabilityError = '';
 
   constructor() {
     const today = this.calendar.getToday();
@@ -101,6 +108,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.checkInDateSubscription?.unsubscribe();
+    this.availabilitySubscription?.unsubscribe();
   }
 
   private setupCheckInDateListener(): void {
@@ -115,8 +123,52 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
           if (checkOutDate && this.compareDates(checkOutDate, nextDay) < 0) {
             this.bookingForm.patchValue({ checkOutDate: nextDay });
           }
+          this.checkAvailability();
         }
       });
+  }
+
+  checkAvailability(): void {
+    const checkInDate = this.bookingForm.get('checkInDate')?.value;
+    const checkOutDate = this.bookingForm.get('checkOutDate')?.value;
+    const parkingType = this.bookingForm.get('parkingType')?.value;
+
+    if (!checkInDate || !checkOutDate || !parkingType) {
+      this.availabilityResult = null;
+      return;
+    }
+
+    const dateFrom = this.formatDateForApi(checkInDate);
+    const dateTo = this.formatDateForApi(checkOutDate);
+
+    this.checkingAvailability = true;
+    this.availabilityError = '';
+    this.availabilitySubscription?.unsubscribe();
+
+    this.availabilitySubscription = this.availabilityService
+      .checkAvailability(dateFrom, dateTo, parkingType)
+      .subscribe({
+        next: (result) => {
+          this.checkingAvailability = false;
+          this.availabilityResult = result;
+          if (!result.available) {
+            this.availabilityError = result.message || 'No parking spots available for the selected dates';
+          }
+        },
+        error: (err) => {
+          this.checkingAvailability = false;
+          this.availabilityResult = null;
+          this.availabilityError = 'Failed to check availability';
+        },
+      });
+  }
+
+  onCheckOutDateChange(): void {
+    this.checkAvailability();
+  }
+
+  onParkingTypeChange(): void {
+    this.checkAvailability();
   }
 
   formatDate(date: NgbDateStruct | null): string {
@@ -134,6 +186,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.washPrice = response.washPrice;
         if (response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
+          this.checkAvailability();
         }
       },
       error: () => {
@@ -144,6 +197,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.washAvailable = false;
         this.washPrice = null;
         this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
+        this.checkAvailability();
       },
     });
   }
@@ -308,6 +362,19 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     if (this.bookingForm.invalid) {
       Object.keys(this.bookingForm.controls).forEach((key) => {
         this.bookingForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    if (this.availabilityResult && !this.availabilityResult.available) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: this.availabilityError || 'No parking spots available for the selected dates',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
       });
       return;
     }

@@ -8,6 +8,7 @@ import {
   formatMinutesToTime,
 } from "../utils/dayEnd.utils";
 import { sendBookingConfirmationEmail } from "./email.service";
+import { checkAvailability } from "./availability.service";
 
 interface GetBookingsParams {
   dateFrom?: string;
@@ -428,6 +429,16 @@ async function getPriceSettings(): Promise<{
 export async function createGuestBooking(
   params: CreateGuestBookingParams,
 ): Promise<{ id: string; finalPrice: number | null }> {
+  const availability = await checkAvailability(
+    params.checkInDate,
+    params.checkOutDate,
+    params.parkingTypeId
+  );
+
+  if (!availability.available) {
+    throw new Error(availability.message || "No parking spots available for the selected dates");
+  }
+
   const nameParts = params.fullName.trim().split(" ");
   const name = nameParts[0] || "";
   const surname = nameParts.slice(1).join(" ") || "";
@@ -522,6 +533,16 @@ export async function createGuestBooking(
 export async function createBooking(
   params: CreateBookingParams,
 ): Promise<{ id: string; finalPrice: number | null }> {
+  const availability = await checkAvailability(
+    params.checkInDate,
+    params.checkOutDate,
+    params.parkingTypeId
+  );
+
+  if (!availability.available) {
+    throw new Error(availability.message || "No parking spots available for the selected dates");
+  }
+
   const nameParts = params.fullName.trim().split(" ");
   const name = nameParts[0] || "";
   const surname = nameParts.slice(1).join(" ") || "";
