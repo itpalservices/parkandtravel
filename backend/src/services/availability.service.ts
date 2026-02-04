@@ -96,7 +96,7 @@ function getDateRange(dateFrom: string, dateTo: string): string[] {
   const end = new Date(dateTo);
 
   const current = new Date(start);
-  while (current <= end) {
+  while (current < end) {
     dates.push(current.toISOString().split("T")[0]);
     current.setDate(current.getDate() + 1);
   }
@@ -121,7 +121,7 @@ async function getDailyBookingCounts(
      WHERE "parkingTypeId" = $1 
      AND "deleteflag" = 0 
      AND "dateFrom" <= $2::date 
-     AND "dateTo" >= $3::date`;
+     AND "dateTo" > $3::date`;
   
   const queryParams: any[] = [parkingTypeId, lastDate, firstDate];
   
