@@ -27,7 +27,6 @@ import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
 import Swal from 'sweetalert2';
 import { AuthService } from '@auth0/auth0-angular';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
-import { FlightService } from '../../../../core/services/flight.service';
 import { AvailabilityService, AvailabilityResult } from '../../../../core/services/availability.service';
 
 enum FormType {
@@ -74,9 +73,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   checkOutMinDate: NgbDateStruct;
 
   submitting = false;
-  flightValidated = false;
-  flightValidating = false;
-  private flightService = inject(FlightService);
   private availabilityService = inject(AvailabilityService);
   private availabilitySubscription?: Subscription;
   
@@ -164,7 +160,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: [''],
       vehicleColor: [''],
-      flightNumber: [''],
+      flightNumber: ['', Validators.required],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
@@ -231,9 +227,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.existingBooking = booking;
         this.populateFormWithBookingData(booking);
         this.loadingBooking = false;
-        if (booking.returnFlight) {
-          this.flightValidated = true;
-        }
         this.checkUserRole();
         this.checkAvailability();
       },
@@ -1016,58 +1009,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
-  validateFlight(): void {
-    const flightNumber = this.bookingForm.get('flightNumber')?.value?.trim();
-    if (!flightNumber) {
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'error',
-        title: 'Please enter a flight number',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
-      return;
-    }
-
-    this.flightValidating = true;
-    this.flightService.validateFlightNumber(flightNumber).subscribe({
-      next: (response) => {
-        this.flightValidating = false;
-        if (response.success) {
-          this.flightValidated = true;
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: `Flight ${response.data?.flightNumber} verified (${response.data?.airline})`,
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-        }
-      },
-      error: (err) => {
-        this.flightValidating = false;
-        this.flightValidated = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'error',
-          title: err.error?.error || 'Flight not found. Please check the flight number.',
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true,
-        });
-      },
-    });
-  }
-
-  onFlightNumberChange(): void {
-    this.flightValidated = false;
-  }
-
   submitBooking(): void {
     if (this.bookingForm.invalid) {
       Object.keys(this.bookingForm.controls).forEach((key) => {
@@ -1082,20 +1023,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         position: 'top-end',
         icon: 'error',
         title: this.availabilityError || 'No parking spots available for the selected dates',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-      });
-      return;
-    }
-
-    const flightNumber = this.bookingForm.get('flightNumber')?.value?.trim();
-    if (flightNumber && !this.flightValidated) {
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'error',
-        title: 'Please validate the flight number before submitting',
         showConfirmButton: false,
         timer: 4000,
         timerProgressBar: true,
