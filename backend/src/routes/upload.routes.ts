@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import { checkJwt } from "../middleware/auth.middleware";
-import { uploadMultipleImages } from "../services/upload.service";
+import { uploadMultipleImages, listImagesForBooking } from "../services/upload.service";
 import { isValidUUID, getBookingById } from "../services/bookings.service";
 
 const upload = multer({
@@ -80,6 +80,37 @@ router.post(
         return;
       }
       res.status(500).json({ error: "Failed to upload images" });
+    }
+  },
+);
+
+router.get(
+  "/:bookingId/images",
+  checkJwt,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { bookingId } = req.params;
+
+      if (!isValidUUID(bookingId)) {
+        res.status(400).json({ error: "Invalid booking ID format" });
+        return;
+      }
+
+      const booking = await getBookingById(bookingId);
+      if (!booking) {
+        res.status(404).json({ error: "Booking not found" });
+        return;
+      }
+
+      const urls = await listImagesForBooking(bookingId);
+
+      res.json({
+        success: true,
+        data: { urls },
+      });
+    } catch (error: any) {
+      console.error("Error listing images:", error);
+      res.status(500).json({ error: "Failed to list images" });
     }
   },
 );

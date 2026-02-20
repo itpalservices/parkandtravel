@@ -81,4 +81,10 @@ export class BookingsService {
       formData
     );
   }
+
+  getBookingImages(bookingId: string): Observable<{ success: boolean; data: { urls: string[] } }> {
+    return this.http.get<{ success: boolean; data: { urls: string[] } }>(
+      `${getApiBaseUrl()}/upload/${bookingId}/images`
+    );
+  }
 }

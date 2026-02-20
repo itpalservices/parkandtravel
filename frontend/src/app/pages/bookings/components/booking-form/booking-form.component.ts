@@ -109,6 +109,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   parkPlace: string = '';
   updatingStatus = false;
   isBookingParked = false;
+  bookingImages: string[] = [];
 
   private bookingsService = inject(BookingsService);
 
@@ -241,6 +242,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.loadingBooking = false;
         this.checkUserRole();
         this.checkAvailability();
+        this.loadBookingImages();
       },
       error: (err) => {
         console.error('Error loading booking:', err);
@@ -466,6 +468,20 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadBookingImages(): void {
+    if (!this.bookingId) return;
+    this.bookingsService.getBookingImages(this.bookingId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.bookingImages = response.data.urls;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading booking images:', error);
+      },
+    });
+  }
+
   private uploadBookingImages(bookingId: string, files: File[]): void {
     this.bookingsService.uploadImages(bookingId, files).subscribe({
       next: (response) => {
@@ -486,6 +502,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             timer: 3000,
             timerProgressBar: true,
           });
+          this.loadBookingImages();
         }
       },
       error: (error) => {

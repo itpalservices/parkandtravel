@@ -1,4 +1,4 @@
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { s3Client, S3_BUCKET } from "../config/s3.config";
 import path from "path";
 
@@ -75,6 +75,27 @@ export async function uploadMultipleImages(
   }
 
   return { urls, errors };
+}
+
+export async function listImagesForBooking(bookingId: string): Promise<string[]> {
+  const prefix = `bookings/${bookingId}/`;
+  const command = new ListObjectsV2Command({
+    Bucket: S3_BUCKET,
+    Prefix: prefix,
+  });
+
+  const response = await s3Client.send(command);
+  const urls: string[] = [];
+
+  if (response.Contents) {
+    for (const obj of response.Contents) {
+      if (obj.Key) {
+        urls.push(buildPublicUrl(obj.Key));
+      }
+    }
+  }
+
+  return urls;
 }
 
 export async function deleteImageFromS3(imageUrl: string): Promise<void> {

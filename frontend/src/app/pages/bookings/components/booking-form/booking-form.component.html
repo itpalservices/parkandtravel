@@ -88,6 +88,21 @@
           </div>
         }
 
+        @if (isEditMode && bookingImages.length > 0) {
+          <div class="form-section vehicle-photos-section">
+            <h3>Vehicle Photos</h3>
+            <div class="photos-grid">
+              @for (img of bookingImages; track img) {
+                <div class="photo-item">
+                  <a [href]="img" target="_blank" rel="noopener noreferrer">
+                    <img [src]="img" alt="Vehicle photo" loading="lazy" />
+                  </a>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         <form
           [formGroup]="bookingForm"
           (ngSubmit)="isBookingParked ? saveParkedBooking() : submitBooking()"
