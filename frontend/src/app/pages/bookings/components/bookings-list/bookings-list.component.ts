@@ -219,7 +219,7 @@ export class BookingsListComponent {
     const newStatusLabel = statusLabels[newStatusId] || newStatusId;
 
     if (newStatusId === 'bookingStatus_parked') {
-      this.showParkPlaceModal(booking, newStatusId, newStatusLabel);
+      this.showParkPlaceAndImagesModal(booking, newStatusId, newStatusLabel);
     } else if (newStatusId === 'bookingStatus_completed') {
       this.handleCompletedStatus(booking, newStatusId, newStatusLabel);
     } else {
@@ -260,26 +260,117 @@ export class BookingsListComponent {
     }
   }
 
-  private showParkPlaceModal(booking: Booking, newStatusId: string, newStatusLabel: string): void {
+  private showParkPlaceAndImagesModal(booking: Booking, newStatusId: string, newStatusLabel: string): void {
     Swal.fire({
       title: 'Set Parking Place',
-      text: 'Please enter the parking place for this vehicle:',
-      input: 'text',
-      inputPlaceholder: 'e.g., A15, B22',
+      html: `
+        <div style="text-align: left;">
+          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
+          <input id="swal-park-place" class="swal2-input" placeholder="e.g., A15, B22" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box;" />
+          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Vehicle Photos</label>
+          <div id="swal-image-upload-area" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: #f9fafb;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 8px;">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <p style="margin: 0 0 4px; color: #6b7280; font-size: 14px;">Click or drag & drop to upload</p>
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">JPG, PNG or WEBP (max 10MB each)</p>
+          </div>
+          <input type="file" id="swal-image-input" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" />
+          <div id="swal-image-preview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
+        </div>
+      `,
       showCancelButton: true,
       confirmButtonText: 'Submit',
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#006B8F',
-      inputValidator: (value) => {
-        if (!value || !value.trim()) {
-          return 'Parking place is required';
+      width: 480,
+      didOpen: () => {
+        const uploadArea = document.getElementById('swal-image-upload-area')!;
+        const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
+        const previewContainer = document.getElementById('swal-image-preview')!;
+        let selectedFiles: File[] = [];
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = '#006B8F';
+          uploadArea.style.background = '#f0f9ff';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+          uploadArea.style.borderColor = '#d1d5db';
+          uploadArea.style.background = '#f9fafb';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = '#d1d5db';
+          uploadArea.style.background = '#f9fafb';
+          if (e.dataTransfer?.files) {
+            this.handleImageFiles(Array.from(e.dataTransfer.files), selectedFiles, previewContainer);
+          }
+        });
+
+        fileInput.addEventListener('change', () => {
+          if (fileInput.files) {
+            this.handleImageFiles(Array.from(fileInput.files), selectedFiles, previewContainer);
+            fileInput.value = '';
+          }
+        });
+      },
+      preConfirm: () => {
+        const parkPlace = (document.getElementById('swal-park-place') as HTMLInputElement).value.trim();
+        if (!parkPlace) {
+          Swal.showValidationMessage('Parking place is required');
+          return false;
         }
-        return null;
+        return { parkPlace };
       },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
-        this.performStatusUpdate(booking, newStatusId, newStatusLabel, result.value.trim());
+        this.performStatusUpdate(booking, newStatusId, newStatusLabel, result.value.parkPlace);
       }
+    });
+  }
+
+  private handleImageFiles(newFiles: File[], selectedFiles: File[], previewContainer: HTMLElement): void {
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024;
+
+    newFiles.forEach((file) => {
+      if (!validTypes.includes(file.type)) return;
+      if (file.size > maxSize) return;
+      if (selectedFiles.some((f) => f.name === file.name && f.size === file.size)) return;
+      selectedFiles.push(file);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;';
+
+        const img = document.createElement('img');
+        img.src = e.target?.result as string;
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;';
+        removeBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const idx = selectedFiles.indexOf(file);
+          if (idx > -1) selectedFiles.splice(idx, 1);
+          wrapper.remove();
+        });
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        previewContainer.appendChild(wrapper);
+      };
+      reader.readAsDataURL(file);
     });
   }
 
