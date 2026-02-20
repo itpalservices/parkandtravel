@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking, DateRangeFilter } from '../../../../shared/models/booking.model';
@@ -23,7 +23,7 @@ import { ImageCarouselComponent } from '../../../../shared/components/image-caro
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss'],
 })
-export class BookingsListComponent implements OnChanges {
+export class BookingsListComponent {
   FormAction = FormAction;
   @Input() bookings: Booking[] = [];
   @Input() currentPage = 1;
@@ -36,54 +36,27 @@ export class BookingsListComponent implements OnChanges {
   @Output() bookingDeleted = new EventEmitter<void>();
   @Output() bookingUpdated = new EventEmitter<void>();
 
-  bookingHasImages: Map<string, boolean> = new Map();
   showCarousel = false;
   carouselImages: string[] = [];
   carouselStartIndex = 0;
-  loadingCarouselImages = false;
 
   constructor(private bookingsService: BookingsService) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['bookings'] && this.bookings.length > 0) {
-      this.checkBookingsForImages();
-    }
-  }
-
-  private checkBookingsForImages(): void {
-    for (const booking of this.bookings) {
-      if (!this.bookingHasImages.has(booking.id)) {
-        this.bookingsService.getBookingImages(booking.id).subscribe({
-          next: (response) => {
-            this.bookingHasImages.set(booking.id, response.success && response.data.urls.length > 0);
-          },
-          error: () => {
-            this.bookingHasImages.set(booking.id, false);
-          },
-        });
-      }
-    }
-  }
-
-  hasImages(bookingId: string): boolean {
-    return this.bookingHasImages.get(bookingId) === true;
+  canHaveImages(booking: Booking): boolean {
+    return booking.bookingStatusId === 'bookingStatus_parked' || booking.bookingStatusId === 'bookingStatus_completed';
   }
 
   openCarouselForBooking(bookingId: string, event: MouseEvent): void {
     event.stopPropagation();
-    this.loadingCarouselImages = true;
     this.bookingsService.getBookingImages(bookingId).subscribe({
       next: (response) => {
-        this.loadingCarouselImages = false;
         if (response.success && response.data.urls.length > 0) {
           this.carouselImages = response.data.urls;
           this.carouselStartIndex = 0;
           this.showCarousel = true;
         }
       },
-      error: () => {
-        this.loadingCarouselImages = false;
-      },
+      error: () => {},
     });
   }
 
