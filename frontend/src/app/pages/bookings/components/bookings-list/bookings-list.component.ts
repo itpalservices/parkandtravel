@@ -54,9 +54,29 @@ export class BookingsListComponent {
           this.carouselImages = response.data.urls;
           this.carouselStartIndex = 0;
           this.showCarousel = true;
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'No photos uploaded for this booking',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
         }
       },
-      error: () => {},
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to load photos',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      },
     });
   }
 
