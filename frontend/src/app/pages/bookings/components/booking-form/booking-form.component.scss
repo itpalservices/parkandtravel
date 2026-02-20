@@ -892,12 +892,7 @@ input[type="time"].form-control {
     overflow: hidden;
     border: 1px solid #e5e7eb;
     aspect-ratio: 1;
-
-    a {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
+    cursor: pointer;
 
     img {
       width: 100%;

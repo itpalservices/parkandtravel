@@ -32,6 +32,7 @@ import {
   AvailabilityService,
   AvailabilityResult,
 } from '../../../../core/services/availability.service';
+import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 
 enum FormType {
   NewBooking,
@@ -48,6 +49,7 @@ enum FormType {
     NgbDatepickerModule,
     NgbDropdownModule,
     FormFieldErrorComponent,
+    ImageCarouselComponent,
   ],
   templateUrl: './booking-form.component.html',
   styleUrls: ['./booking-form.component.scss'],
@@ -110,6 +112,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   updatingStatus = false;
   isBookingParked = false;
   bookingImages: string[] = [];
+  showCarousel = false;
+  carouselStartIndex = 0;
 
   private bookingsService = inject(BookingsService);
 
@@ -466,6 +470,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  openCarousel(index: number): void {
+    this.carouselStartIndex = index;
+    this.showCarousel = true;
+  }
+
+  closeCarousel(): void {
+    this.showCarousel = false;
   }
 
   private loadBookingImages(): void {

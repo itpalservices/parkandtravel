@@ -92,15 +92,21 @@
           <div class="form-section vehicle-photos-section">
             <h3>Vehicle Photos</h3>
             <div class="photos-grid">
-              @for (img of bookingImages; track img) {
-                <div class="photo-item">
-                  <a [href]="img" target="_blank" rel="noopener noreferrer">
-                    <img [src]="img" alt="Vehicle photo" loading="lazy" />
-                  </a>
+              @for (img of bookingImages; track img; let i = $index) {
+                <div class="photo-item" (click)="openCarousel(i)">
+                  <img [src]="img" alt="Vehicle photo" loading="lazy" />
                 </div>
               }
             </div>
           </div>
+        }
+
+        @if (showCarousel) {
+          <app-image-carousel
+            [images]="bookingImages"
+            [startIndex]="carouselStartIndex"
+            (closed)="closeCarousel()"
+          />
         }
 
         <form
