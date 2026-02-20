@@ -362,11 +362,18 @@
   align-items: center;
 }
 
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
 .park-place-info {
   font-size: 0.75rem;
   color: #666;
-  margin-top: 0.25rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .booking-card-mobile {
@@ -475,8 +482,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  vertical-align: middle;
-  margin-left: 6px;
   transition: all 0.2s;
 
   &:hover {
