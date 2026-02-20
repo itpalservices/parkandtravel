@@ -265,6 +265,8 @@ export class BookingsListComponent {
     newStatusId: string,
     newStatusLabel: string,
   ): void {
+    const modalSelectedFiles: File[] = [];
+
     Swal.fire({
       title: 'Parked Details',
       html: `
@@ -294,7 +296,6 @@ export class BookingsListComponent {
         const uploadArea = document.getElementById('swal-image-upload-area')!;
         const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
         const previewContainer = document.getElementById('swal-image-preview')!;
-        let selectedFiles: File[] = [];
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -316,7 +317,7 @@ export class BookingsListComponent {
           if (e.dataTransfer?.files) {
             this.handleImageFiles(
               Array.from(e.dataTransfer.files),
-              selectedFiles,
+              modalSelectedFiles,
               previewContainer,
             );
           }
@@ -324,7 +325,7 @@ export class BookingsListComponent {
 
         fileInput.addEventListener('change', () => {
           if (fileInput.files) {
-            this.handleImageFiles(Array.from(fileInput.files), selectedFiles, previewContainer);
+            this.handleImageFiles(Array.from(fileInput.files), modalSelectedFiles, previewContainer);
             fileInput.value = '';
           }
         });
@@ -337,12 +338,53 @@ export class BookingsListComponent {
           Swal.showValidationMessage('Parking place is required');
           return false;
         }
-        return { parkPlace };
+        return { parkPlace, files: [...modalSelectedFiles] };
       },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
         this.performStatusUpdate(booking, newStatusId, newStatusLabel, result.value.parkPlace);
+        if (result.value.files.length > 0) {
+          this.uploadBookingImages(booking.id, result.value.files);
+        }
       }
+    });
+  }
+
+  private uploadBookingImages(bookingId: string, files: File[]): void {
+    this.bookingsService.uploadImages(bookingId, files).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const uploadedCount = response.data.urls.length;
+          const failedCount = response.data.errors.length;
+          let message = `${uploadedCount} photo${uploadedCount !== 1 ? 's' : ''} uploaded successfully`;
+          if (failedCount > 0) {
+            message += `, ${failedCount} failed`;
+          }
+          Swal.fire({
+            icon: failedCount > 0 ? 'warning' : 'success',
+            title: 'Photos Uploaded',
+            text: message,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error uploading images:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Upload Failed',
+          text: 'Failed to upload vehicle photos. The parking place was saved successfully.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
     });
   }
 

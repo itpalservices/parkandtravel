@@ -112,3 +112,13 @@ Preferred communication style: Simple, everyday language.
   - Submit button is disabled when parking is not available
   - Backend validation also prevents booking creation/update if no spots available
 - **Booking Validation**: `createBooking`, `createGuestBooking`, and `updateBooking` services validate availability before inserting/updating bookings
+
+### Vehicle Photo Upload (S3)
+- **Storage**: DigitalOcean Spaces (S3-compatible) for vehicle photo storage.
+- **Backend Service**: `backend/src/services/upload.service.ts` handles upload/delete operations.
+- **S3 Config**: `backend/src/config/s3.config.ts` - S3 client configuration with virtual-host style URLs.
+- **API Endpoint**: `POST /api/upload/:bookingId/images` - Multipart upload (multer), max 10 files, 10MB each, JPG/PNG/WEBP only.
+- **Public URL Format**: `https://{bucket}.{region}.digitaloceanspaces.com/bookings/{bookingId}/{uniqueId}.{ext}`
+- **Authorization**: Only admin and driver roles can upload images. Booking must exist.
+- **Frontend Integration**: When changing booking status to "Parked", the modal includes a drag-and-drop image upload area. Images are uploaded after the status update succeeds. Upload failures show a toast error but don't block the status change.
+- **Required Secrets**: `DO_SPACE_ENDPOINT`, `DO_SPACE_REGION`, `DO_SPACE_KEY`, `DO_SPACE_SECRET`, `DO_SPACE_BUCKET`.

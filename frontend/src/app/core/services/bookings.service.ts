@@ -72,4 +72,13 @@ export class BookingsService {
       body
     );
   }
+
+  uploadImages(bookingId: string, files: File[]): Observable<{ success: boolean; data: { urls: string[]; errors: string[] } }> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+    return this.http.post<{ success: boolean; data: { urls: string[]; errors: string[] } }>(
+      `${getApiBaseUrl()}/upload/${bookingId}/images`,
+      formData
+    );
+  }
 }
