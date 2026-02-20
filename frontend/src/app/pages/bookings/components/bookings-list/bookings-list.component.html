@@ -105,49 +105,58 @@
               }
               <td>
                 <div class="status-cell">
-                  @if (
-                    booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)
-                  ) {
-                    <span
-                      class="badge status-badge-large"
-                      [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
-                    >
-                      {{ booking.bookingStatus || '-' }}
-                    </span>
-                  } @else {
-                    <div ngbDropdown placement="bottom-start" container="body" class="d-inline-block">
-                      <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
-                        <span
-                          class="badge status-badge-large status-clickable"
-                          [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
-                        >
-                          {{ booking.bookingStatus || '-' }} <span class="status-arrow">▼</span>
-                        </span>
-                      </button>
-                      <div ngbDropdownMenu>
-                        @if (booking.bookingStatusId === 'bookingStatus_created') {
-                          <button
-                            ngbDropdownItem
-                            (click)="onStatusChange(booking, 'bookingStatus_parked')"
+                  <div class="status-left">
+                    @if (
+                      booking.bookingStatusId === 'bookingStatus_completed' || (!isAdmin && !isDriver)
+                    ) {
+                      <span
+                        class="badge status-badge-large"
+                        [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
+                      >
+                        {{ booking.bookingStatus || '-' }}
+                      </span>
+                    } @else {
+                      <div ngbDropdown placement="bottom-start" container="body" class="d-inline-block">
+                        <button class="btn p-0 border-0 bg-transparent" ngbDropdownToggle>
+                          <span
+                            class="badge status-badge-large status-clickable"
+                            [ngClass]="getStatusBadgeClass(booking.bookingStatus)"
                           >
-                            <span class="badge bg-info me-2">Parked</span> Mark as Parked
-                          </button>
-                        }
-                        @if (booking.bookingStatusId === 'bookingStatus_parked') {
-                          <button
-                            ngbDropdownItem
-                            (click)="onStatusChange(booking, 'bookingStatus_completed')"
-                          >
-                            <span class="badge bg-success me-2">Completed</span> Mark as Completed
-                          </button>
-                          <button ngbDropdownItem (click)="onRevertToCreated(booking)">
-                            <span class="badge bg-warning text-dark me-2">Created</span> Revert to
-                            Created
-                          </button>
-                        }
+                            {{ booking.bookingStatus || '-' }} <span class="status-arrow">▼</span>
+                          </span>
+                        </button>
+                        <div ngbDropdownMenu>
+                          @if (booking.bookingStatusId === 'bookingStatus_created') {
+                            <button
+                              ngbDropdownItem
+                              (click)="onStatusChange(booking, 'bookingStatus_parked')"
+                            >
+                              <span class="badge bg-info me-2">Parked</span> Mark as Parked
+                            </button>
+                          }
+                          @if (booking.bookingStatusId === 'bookingStatus_parked') {
+                            <button
+                              ngbDropdownItem
+                              (click)="onStatusChange(booking, 'bookingStatus_completed')"
+                            >
+                              <span class="badge bg-success me-2">Completed</span> Mark as Completed
+                            </button>
+                            <button ngbDropdownItem (click)="onRevertToCreated(booking)">
+                              <span class="badge bg-warning text-dark me-2">Created</span> Revert to
+                              Created
+                            </button>
+                          }
+                        </div>
                       </div>
-                    </div>
-                  }
+                    }
+                    @if (
+                      (isAdmin || isDriver) &&
+                      booking.bookingStatusId === 'bookingStatus_parked' &&
+                      booking.parkPlace
+                    ) {
+                      <div class="park-place-info">{{ booking.parkPlace }}</div>
+                    }
+                  </div>
                   @if ((isAdmin || isDriver) && canHaveImages(booking)) {
                     <button class="btn-photo-icon" (click)="openCarouselForBooking(booking.id, $event)" title="View vehicle photos">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -156,13 +165,6 @@
                         <polyline points="21 15 16 10 5 21"></polyline>
                       </svg>
                     </button>
-                  }
-                  @if (
-                    (isAdmin || isDriver) &&
-                    booking.bookingStatusId === 'bookingStatus_parked' &&
-                    booking.parkPlace
-                  ) {
-                    <span class="park-place-info">{{ booking.parkPlace }}</span>
                   }
                 </div>
               </td>

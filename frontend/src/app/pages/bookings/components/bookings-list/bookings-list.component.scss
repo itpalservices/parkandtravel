@@ -365,8 +365,13 @@
 .status-cell {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: nowrap;
+}
+
+.status-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .park-place-info {
@@ -374,6 +379,7 @@
   color: #666;
   font-weight: 500;
   white-space: nowrap;
+  margin-top: 2px;
 }
 
 .booking-card-mobile {
