@@ -27,11 +27,14 @@ import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
 import Swal from 'sweetalert2';
 import { AuthService } from '@auth0/auth0-angular';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
-import { AvailabilityService, AvailabilityResult } from '../../../../core/services/availability.service';
+import {
+  AvailabilityService,
+  AvailabilityResult,
+} from '../../../../core/services/availability.service';
 
 enum FormType {
   NewBooking,
-  ExistingBooking
+  ExistingBooking,
 }
 
 @Component({
@@ -75,11 +78,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   submitting = false;
   private availabilityService = inject(AvailabilityService);
   private availabilitySubscription?: Subscription;
-  
+
   checkingAvailability = false;
   availabilityResult: AvailabilityResult | null = null;
   availabilityError = '';
-  
+
   isRegularUser = false;
   isAdminOrDriver = false;
   userProfile: UserProfile | null = null;
@@ -106,16 +109,19 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   updatingStatus = false;
   isBookingParked = false;
 
-  constructor(private authService: AuthService, private _activatedRoute: ActivatedRoute) {
-    const [{path}] = this._activatedRoute.snapshot.url;
+  constructor(
+    private authService: AuthService,
+    private _activatedRoute: ActivatedRoute,
+  ) {
+    const [{ path }] = this._activatedRoute.snapshot.url;
 
     this.formType = path === FormAction.Add ? FormType.NewBooking : FormType.ExistingBooking;
-    
+
     if (this.formType === FormType.ExistingBooking) {
       this.bookingId = this._activatedRoute.snapshot.paramMap.get('id');
     }
 
-    this.authService.user$.pipe(take(1)).subscribe(user => {
+    this.authService.user$.pipe(take(1)).subscribe((user) => {
       if (user) {
         if (!user.email_verified) {
           Swal.fire({
@@ -135,13 +141,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
                   this.router.navigate(['/admin/user-profile']);
                 });
               }
-            }
+            },
           });
           this.router.navigate(['/bookings']);
         }
       }
     });
-    
+
     const today = this.calendar.getToday();
     const tomorrow = this.calendar.getNext(today, 'd', 1);
     const dayAfterTomorrow = this.calendar.getNext(tomorrow, 'd', 1);
@@ -172,32 +178,35 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.roleService.getUserRole().pipe(take(1)).subscribe(roleInfo => {
-      if (roleInfo.isDriver) {
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'warning',
-          title: 'Drivers cannot create or edit bookings',
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true,
-        });
-        this.router.navigate(['/admin/bookings']);
-        return;
-      }
-      
-      this.loadParkingTypes();
-      this.loadPhoneCodes();
-      this.setupCheckInDateListener();
-      this.initCarForm();
-      
-      if (this.isEditMode && this.bookingId) {
-        this.loadBookingDetails();
-      } else {
-        this.checkUserRole();
-      }
-    });
+    this.roleService
+      .getUserRole()
+      .pipe(take(1))
+      .subscribe((roleInfo) => {
+        if (roleInfo.isDriver) {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'Drivers cannot create or edit bookings',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+          return;
+        }
+
+        this.loadParkingTypes();
+        this.loadPhoneCodes();
+        this.setupCheckInDateListener();
+        this.initCarForm();
+
+        if (this.isEditMode && this.bookingId) {
+          this.loadBookingDetails();
+        } else {
+          this.checkUserRole();
+        }
+      });
   }
 
   get isEditMode(): boolean {
@@ -206,7 +215,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private loadBookingDetails(): void {
     if (!this.bookingId) return;
-    
+
     this.loadingBooking = true;
     this.apiService.get<BookingDetails>(`/bookings/${this.bookingId}`).subscribe({
       next: (booking) => {
@@ -223,7 +232,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.router.navigate(['/admin/bookings']);
           return;
         }
-        
+
         this.existingBooking = booking;
         this.populateFormWithBookingData(booking);
         this.loadingBooking = false;
@@ -249,7 +258,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private populateFormWithBookingData(booking: BookingDetails): void {
     const fullName = `${booking.name} ${booking.surname}`.trim();
-    
+
     const checkInDate = this.parseApiDate(booking.dateFrom);
     const checkOutDate = this.parseApiDate(booking.dateTo);
     const checkInTime = booking.timeFrom ? booking.timeFrom.substring(0, 5) : '10:00';
@@ -281,7 +290,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.washServiceEnabled = booking.washService;
 
     if (booking.phoneCodeId && this.phoneCodes.length > 0) {
-      const matchingCode = this.phoneCodes.find(c => c.id === booking.phoneCodeId);
+      const matchingCode = this.phoneCodes.find((c) => c.id === booking.phoneCodeId);
       if (matchingCode) {
         this.selectPhoneCode(matchingCode, false);
       }
@@ -309,8 +318,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   private disableFieldsForParkedBooking(): void {
     const allFormFields = Object.keys(this.bookingForm.controls);
     const fieldsToKeepEnabled = ['pickUpOption'];
-    
-    allFormFields.forEach(field => {
+
+    allFormFields.forEach((field) => {
       if (!fieldsToKeepEnabled.includes(field)) {
         this.bookingForm.get(field)?.disable();
       } else {
@@ -320,14 +329,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   canToggleWashService(): boolean {
-    return this.washAvailable && (!this.isBookingParked || (this.isBookingParked && this.washAvailable));
+    return (
+      this.washAvailable && (!this.isBookingParked || (this.isBookingParked && this.washAvailable))
+    );
   }
 
   private enableFieldsForNonParkedBooking(): void {
     const fieldsAlwaysDisabled = ['fullName', 'email', 'phone', 'phoneCodeId'];
     const allFormFields = Object.keys(this.bookingForm.controls);
-    
-    allFormFields.forEach(field => {
+
+    allFormFields.forEach((field) => {
       if (!fieldsAlwaysDisabled.includes(field)) {
         this.bookingForm.get(field)?.enable();
       }
@@ -349,7 +360,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   onStatusChange(newStatusId: string): void {
     if (!this.bookingId) return;
-    
+
     const statusLabels: Record<string, string> = {
       bookingStatus_created: 'Created',
       bookingStatus_parked: 'Parked',
@@ -368,7 +379,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private showParkPlaceAndImagesModal(newStatusId: string, newStatusLabel: string): void {
     Swal.fire({
-      title: 'Set Parking Place',
+      title: 'Parked Details',
       html: `
         <div style="text-align: left;">
           <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
@@ -416,7 +427,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           uploadArea.style.borderColor = '#d1d5db';
           uploadArea.style.background = '#f9fafb';
           if (e.dataTransfer?.files) {
-            this.handleImageFiles(Array.from(e.dataTransfer.files), selectedFiles, previewContainer);
+            this.handleImageFiles(
+              Array.from(e.dataTransfer.files),
+              selectedFiles,
+              previewContainer,
+            );
           }
         });
 
@@ -428,7 +443,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         });
       },
       preConfirm: () => {
-        const parkPlace = (document.getElementById('swal-park-place') as HTMLInputElement).value.trim();
+        const parkPlace = (
+          document.getElementById('swal-park-place') as HTMLInputElement
+        ).value.trim();
         if (!parkPlace) {
           Swal.showValidationMessage('Parking place is required');
           return false;
@@ -442,7 +459,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  private handleImageFiles(newFiles: File[], selectedFiles: File[], previewContainer: HTMLElement): void {
+  private handleImageFiles(
+    newFiles: File[],
+    selectedFiles: File[],
+    previewContainer: HTMLElement,
+  ): void {
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     const maxSize = 10 * 1024 * 1024;
 
@@ -455,7 +476,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = (e) => {
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;';
+        wrapper.style.cssText =
+          'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;';
 
         const img = document.createElement('img');
         img.src = e.target?.result as string;
@@ -464,7 +486,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.innerHTML = '&times;';
-        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;';
+        removeBtn.style.cssText =
+          'position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;';
         removeBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
           const idx = selectedFiles.indexOf(file);
@@ -482,7 +505,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private handleCompletedStatus(newStatusId: string, newStatusLabel: string): void {
     if (!this.existingBooking) return;
-    
+
     const checkOutDate = new Date(this.existingBooking.dateTo);
     checkOutDate.setHours(23, 59, 59, 999);
     const now = new Date();
@@ -511,11 +534,18 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  private performStatusUpdate(newStatusId: string, newStatusLabel: string, parkPlace?: string, applyExtraFee?: boolean): void {
+  private performStatusUpdate(
+    newStatusId: string,
+    newStatusLabel: string,
+    parkPlace?: string,
+    applyExtraFee?: boolean,
+  ): void {
     if (!this.bookingId) return;
-    
+
     this.updatingStatus = true;
-    const body: { bookingStatusId: string; parkPlace?: string; applyExtraFee?: boolean } = { bookingStatusId: newStatusId };
+    const body: { bookingStatusId: string; parkPlace?: string; applyExtraFee?: boolean } = {
+      bookingStatusId: newStatusId,
+    };
     if (parkPlace) body.parkPlace = parkPlace;
     if (applyExtraFee !== undefined) body.applyExtraFee = applyExtraFee;
 
@@ -525,9 +555,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.currentStatusId = newStatusId;
         this.currentStatusLabel = newStatusLabel;
         if (parkPlace) this.parkPlace = parkPlace;
-        
+
         this.isBookingParked = newStatusId === 'bookingStatus_parked';
-        
+
         if (newStatusId === 'bookingStatus_parked') {
           this.disableFieldsForParkedBooking();
         } else if (newStatusId === 'bookingStatus_created') {
@@ -574,7 +604,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   onRevertToCreated(): void {
     if (!this.bookingId) return;
-    
+
     Swal.fire({
       title: 'Revert to Created?',
       html: 'This will change the booking status back to <strong>Created</strong>.<br><br><small class="text-muted">Note: The parking place information will be cleared.</small>',
@@ -615,7 +645,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       next: (roleInfo: UserRoleInfo) => {
         this.isRegularUser = roleInfo.isUser;
         this.isAdminOrDriver = roleInfo.isAdmin || roleInfo.isDriver;
-        
+
         if (this.isRegularUser) {
           this.loadUserProfile();
           this.loadUserCars();
@@ -632,7 +662,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.bookingForm.get('fullName')?.disable();
   }
 
-  private applyFoundUserData(data: { fullName?: string; phone?: string; phoneCode?: string }): void {
+  private applyFoundUserData(data: {
+    fullName?: string;
+    phone?: string;
+    phoneCode?: string;
+  }): void {
     if (data.fullName) {
       this.bookingForm.patchValue({ fullName: data.fullName });
       this.bookingForm.get('fullName')?.disable();
@@ -649,7 +683,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     if (data.phoneCode) {
       if (this.phoneCodes.length > 0) {
-        const matchingCode = this.phoneCodes.find(c => c.phoneCode === data.phoneCode);
+        const matchingCode = this.phoneCodes.find((c) => c.phoneCode === data.phoneCode);
         if (matchingCode) {
           this.selectPhoneCode(matchingCode, true);
         } else {
@@ -681,9 +715,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.userSearched = false;
 
     this.apiService
-      .get<{ success: boolean; data: { found: boolean; userId?: string; fullName?: string; phone?: string; phoneCode?: string } }>(
-        `/user/search?email=${encodeURIComponent(email)}`
-      )
+      .get<{
+        success: boolean;
+        data: {
+          found: boolean;
+          userId?: string;
+          fullName?: string;
+          phone?: string;
+          phoneCode?: string;
+        };
+      }>(`/user/search?email=${encodeURIComponent(email)}`)
       .subscribe({
         next: (response) => {
           this.searchingUser = false;
@@ -730,24 +771,24 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     if (!this.userProfile) return;
 
     const fullName = `${this.userProfile.name} ${this.userProfile.surname}`.trim();
-    
+
     if (fullName) {
       this.bookingForm.patchValue({ fullName });
       this.bookingForm.get('fullName')?.disable();
     }
-    
+
     if (this.userProfile.email) {
       this.bookingForm.patchValue({ email: this.userProfile.email });
       this.bookingForm.get('email')?.disable();
     }
-    
+
     if (this.userProfile.phone) {
       this.bookingForm.patchValue({ phone: this.userProfile.phone });
       this.bookingForm.get('phone')?.disable();
     }
 
     if (this.userProfile.phoneCode && this.phoneCodes.length > 0) {
-      const matchingCode = this.phoneCodes.find(c => c.phoneCode === this.userProfile!.phoneCode);
+      const matchingCode = this.phoneCodes.find((c) => c.phoneCode === this.userProfile!.phoneCode);
       if (matchingCode) {
         this.selectPhoneCode(matchingCode, true);
       }
@@ -762,8 +803,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.cars = response.data;
           if (this.cars.length > 0) {
             if (this.isEditMode && this.existingBooking) {
-              const matchingCar = this.cars.find(car => 
-                car.plateNo === this.existingBooking!.plateNo
+              const matchingCar = this.cars.find(
+                (car) => car.plateNo === this.existingBooking!.plateNo,
               );
               if (matchingCar) {
                 this.selectCar(matchingCar);
@@ -908,7 +949,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.checkingAvailability = false;
           this.availabilityResult = result;
           if (!result.available) {
-            this.availabilityError = result.message || 'No parking spots available for the selected dates';
+            this.availabilityError =
+              result.message || 'No parking spots available for the selected dates';
           }
         },
         error: () => {
@@ -940,7 +982,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.parkingTypes = response.parkingTypes;
         this.washAvailable = response.washAvailable;
         this.washPrice = response.washPrice;
-        
+
         if (this.existingBooking?.parkingTypeId) {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
         } else if (!this.isEditMode && response.parkingTypes.length > 0) {
@@ -998,32 +1040,34 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.apiService.get<PhoneCode[]>('/phone-codes').subscribe({
       next: (codes) => {
         this.phoneCodes = codes;
-        
+
         if (this.existingBooking?.phoneCodeId) {
-          const matchingCode = codes.find(c => c.id === this.existingBooking!.phoneCodeId);
+          const matchingCode = codes.find((c) => c.id === this.existingBooking!.phoneCodeId);
           if (matchingCode) {
             this.selectPhoneCode(matchingCode, true);
           }
           return;
         }
-        
+
         if (this.pendingFoundUserData?.phoneCode) {
-          const matchingCode = codes.find(c => c.phoneCode === this.pendingFoundUserData!.phoneCode);
+          const matchingCode = codes.find(
+            (c) => c.phoneCode === this.pendingFoundUserData!.phoneCode,
+          );
           if (matchingCode) {
             this.selectPhoneCode(matchingCode, true);
           }
           this.pendingFoundUserData = null;
           return;
         }
-        
+
         if (this.userProfile?.phoneCode) {
-          const matchingCode = codes.find(c => c.phoneCode === this.userProfile!.phoneCode);
+          const matchingCode = codes.find((c) => c.phoneCode === this.userProfile!.phoneCode);
           if (matchingCode) {
             this.selectPhoneCode(matchingCode, true);
             return;
           }
         }
-        
+
         if (!this.isEditMode) {
           const cyprusCode = codes.find((c) => c.isoCode === 'CY');
           if (cyprusCode) {
@@ -1169,7 +1213,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             toast: true,
             position: 'top-end',
             icon: 'error',
-            title: err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
+            title:
+              err.error?.error ||
+              err.error?.message ||
+              'Failed to update booking. Please try again.',
             showConfirmButton: false,
             timer: 4000,
             timerProgressBar: true,
@@ -1212,12 +1259,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     this.submitting = true;
     const formValue = this.bookingForm.getRawValue();
-    
+
     const updateData: { parkPlace: string; pickUpOption: string; washService?: boolean } = {
       parkPlace: this.parkPlace.trim(),
       pickUpOption: formValue.pickUpOption,
     };
-    
+
     if (this.washAvailable) {
       updateData.washService = this.washServiceEnabled;
     }
@@ -1242,7 +1289,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           toast: true,
           position: 'top-end',
           icon: 'error',
-          title: err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
+          title:
+            err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
           showConfirmButton: false,
           timer: 4000,
           timerProgressBar: true,
@@ -1257,5 +1305,4 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const day = date.day.toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
-
 }

@@ -260,9 +260,13 @@ export class BookingsListComponent {
     }
   }
 
-  private showParkPlaceAndImagesModal(booking: Booking, newStatusId: string, newStatusLabel: string): void {
+  private showParkPlaceAndImagesModal(
+    booking: Booking,
+    newStatusId: string,
+    newStatusLabel: string,
+  ): void {
     Swal.fire({
-      title: 'Set Parking Place',
+      title: 'Parked Details',
       html: `
         <div style="text-align: left;">
           <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
@@ -310,7 +314,11 @@ export class BookingsListComponent {
           uploadArea.style.borderColor = '#d1d5db';
           uploadArea.style.background = '#f9fafb';
           if (e.dataTransfer?.files) {
-            this.handleImageFiles(Array.from(e.dataTransfer.files), selectedFiles, previewContainer);
+            this.handleImageFiles(
+              Array.from(e.dataTransfer.files),
+              selectedFiles,
+              previewContainer,
+            );
           }
         });
 
@@ -322,7 +330,9 @@ export class BookingsListComponent {
         });
       },
       preConfirm: () => {
-        const parkPlace = (document.getElementById('swal-park-place') as HTMLInputElement).value.trim();
+        const parkPlace = (
+          document.getElementById('swal-park-place') as HTMLInputElement
+        ).value.trim();
         if (!parkPlace) {
           Swal.showValidationMessage('Parking place is required');
           return false;
@@ -336,7 +346,11 @@ export class BookingsListComponent {
     });
   }
 
-  private handleImageFiles(newFiles: File[], selectedFiles: File[], previewContainer: HTMLElement): void {
+  private handleImageFiles(
+    newFiles: File[],
+    selectedFiles: File[],
+    previewContainer: HTMLElement,
+  ): void {
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     const maxSize = 10 * 1024 * 1024;
 
@@ -349,7 +363,8 @@ export class BookingsListComponent {
       const reader = new FileReader();
       reader.onload = (e) => {
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;';
+        wrapper.style.cssText =
+          'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;';
 
         const img = document.createElement('img');
         img.src = e.target?.result as string;
@@ -358,7 +373,8 @@ export class BookingsListComponent {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.innerHTML = '&times;';
-        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;';
+        removeBtn.style.cssText =
+          'position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;';
         removeBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
           const idx = selectedFiles.indexOf(file);
