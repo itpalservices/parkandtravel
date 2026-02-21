@@ -140,8 +140,9 @@ export class DailyInOutReportComponent implements OnInit {
     const tableData = this.reportData.map((item) => {
       let priceStr = '-';
       if (item.finalPrice !== null) {
-        const total = item.extraFee ? item.finalPrice + item.extraFee : item.finalPrice;
-        priceStr = `€${total.toFixed(2)}`;
+        const price = Number(item.finalPrice) || 0;
+        const extra = item.extraFee ? Number(item.extraFee) : 0;
+        priceStr = `€${(price + extra).toFixed(2)}`;
       }
       return [
         item.bookingStatus,
