@@ -103,7 +103,7 @@ export async function getDailyInOutReport(
            b."dateFrom", b."timeFrom",
            b."dateTo", b."timeTo",
            b."returnFlight", b."bookingStatusId",
-           bs.name as "bookingStatusName",
+           bs.value as "bookingStatusName",
            b.mobile, pc."phoneCode",
            b."parkPlace", b."finalPrice", b."extraFee", b.adults
     FROM bookings b
