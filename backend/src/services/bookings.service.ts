@@ -951,11 +951,21 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
   }));
 }
 
+interface ParkExtraFields {
+  keepKeys?: boolean;
+  mileageKm?: number;
+  parkingComments?: string;
+  plateNo?: string;
+  carModel?: string;
+  adults?: number;
+}
+
 export async function updateBookingStatus(
   id: string,
   bookingStatusId: string,
   parkPlace?: string,
   applyExtraFee?: boolean,
+  extraFields?: ParkExtraFields,
 ): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } | null> {
   if (!isValidUUID(id)) return null;
 
@@ -975,14 +985,25 @@ export async function updateBookingStatus(
 
   if (!existingBooking) return null;
 
-  const updateData: { bookingStatusId: string; parkPlace?: string | null; actualCheckOut?: Date; extraFee?: number | null } = { bookingStatusId };
+  const updateData: Record<string, any> = { bookingStatusId };
   
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
+    if (extraFields) {
+      if (extraFields.keepKeys !== undefined) updateData.keepKeys = extraFields.keepKeys;
+      if (extraFields.mileageKm !== undefined) updateData.mileageKm = extraFields.mileageKm;
+      if (extraFields.parkingComments !== undefined) updateData.parkingComments = extraFields.parkingComments;
+      if (extraFields.plateNo !== undefined) updateData.plateNo = extraFields.plateNo;
+      if (extraFields.carModel !== undefined) updateData.carModel = extraFields.carModel;
+      if (extraFields.adults !== undefined) updateData.adults = extraFields.adults;
+    }
   }
 
   if (bookingStatusId === 'bookingStatus_created') {
     updateData.parkPlace = null;
+    updateData.keepKeys = null;
+    updateData.mileageKm = null;
+    updateData.parkingComments = null;
   }
 
   let calculatedExtraFee: number | undefined = undefined;

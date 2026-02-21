@@ -23,6 +23,9 @@ export interface Booking {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  keepKeys: boolean | null;
+  mileageKm: number | null;
+  parkingComments: string | null;
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;

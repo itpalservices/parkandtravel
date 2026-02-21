@@ -59,13 +59,16 @@ export class BookingsService {
     );
   }
 
-  updateBookingStatus(id: string, bookingStatusId: string, parkPlace?: string, applyExtraFee?: boolean): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } }> {
-    const body: { bookingStatusId: string; parkPlace?: string; applyExtraFee?: boolean } = { bookingStatusId };
+  updateBookingStatus(id: string, bookingStatusId: string, parkPlace?: string, applyExtraFee?: boolean, extraFields?: { keepKeys?: boolean; mileageKm?: number; parkingComments?: string; plateNo?: string; carModel?: string; adults?: number }): Observable<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } }> {
+    const body: Record<string, any> = { bookingStatusId };
     if (parkPlace) {
-      body.parkPlace = parkPlace;
+      body['parkPlace'] = parkPlace;
     }
     if (applyExtraFee !== undefined) {
-      body.applyExtraFee = applyExtraFee;
+      body['applyExtraFee'] = applyExtraFee;
+    }
+    if (extraFields) {
+      Object.assign(body, extraFields);
     }
     return this.http.patch<{ success: boolean; data: { id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } }>(
       `${this.baseUrl}/${id}/status`,

@@ -318,8 +318,42 @@ export class BookingsListComponent {
       title: 'Parked Details',
       html: `
         <div style="text-align: left;">
-          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
-          <input id="swal-park-place" class="swal2-input" placeholder="e.g., A15, B22" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box;" />
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
+              <input id="swal-park-place" class="swal2-input" placeholder="e.g., A15, B22" style="margin: 0; width: 100%; box-sizing: border-box;" />
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Km</label>
+              <input id="swal-mileage" class="swal2-input" type="number" min="0" placeholder="Mileage" style="margin: 0; width: 100%; box-sizing: border-box;" />
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Plate No.</label>
+              <input id="swal-plate-no" class="swal2-input" placeholder="Plate number" value="${booking.plateNo || ''}" style="margin: 0; width: 100%; box-sizing: border-box;" />
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Car Model</label>
+              <input id="swal-car-model" class="swal2-input" placeholder="Car model" value="${booking.carModel || ''}" style="margin: 0; width: 100%; box-sizing: border-box;" />
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Adults <span style="color: #dc3545;">*</span></label>
+              <input id="swal-adults" class="swal2-input" type="number" min="1" max="20" value="${booking.adults || 1}" style="margin: 0; width: 100%; box-sizing: border-box;" />
+            </div>
+            <div style="flex: 1; display: flex; align-items: flex-end; padding-bottom: 4px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #374151; font-size: 14px; user-select: none;">
+                <input id="swal-keep-keys" type="checkbox" style="width: 18px; height: 18px; cursor: pointer;" />
+                Keep Keys
+              </label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Comments</label>
+            <textarea id="swal-comments" class="swal2-textarea" placeholder="Any notes about the vehicle..." style="margin: 0; width: 100%; box-sizing: border-box; min-height: 60px; resize: vertical;"></textarea>
+          </div>
           <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Vehicle Photos</label>
           <div id="swal-image-upload-area" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: #f9fafb;">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 8px;">
@@ -338,7 +372,7 @@ export class BookingsListComponent {
       confirmButtonText: 'Submit',
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#006B8F',
-      width: 480,
+      width: 520,
       didOpen: () => {
         const uploadArea = document.getElementById('swal-image-upload-area')!;
         const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
@@ -378,20 +412,31 @@ export class BookingsListComponent {
         });
       },
       preConfirm: () => {
-        const parkPlace = (
-          document.getElementById('swal-park-place') as HTMLInputElement
-        ).value.trim();
+        const parkPlace = (document.getElementById('swal-park-place') as HTMLInputElement).value.trim();
+        const adultsStr = (document.getElementById('swal-adults') as HTMLInputElement).value.trim();
+        const adults = parseInt(adultsStr, 10);
         if (!parkPlace) {
           Swal.showValidationMessage('Parking place is required');
           return false;
         }
-        return { parkPlace, files: [...modalSelectedFiles] };
+        if (!adultsStr || isNaN(adults) || adults < 1) {
+          Swal.showValidationMessage('Adults is required (minimum 1)');
+          return false;
+        }
+        const mileageStr = (document.getElementById('swal-mileage') as HTMLInputElement).value.trim();
+        const mileageKm = mileageStr ? parseInt(mileageStr, 10) : undefined;
+        const plateNo = (document.getElementById('swal-plate-no') as HTMLInputElement).value.trim() || undefined;
+        const carModel = (document.getElementById('swal-car-model') as HTMLInputElement).value.trim() || undefined;
+        const keepKeys = (document.getElementById('swal-keep-keys') as HTMLInputElement).checked;
+        const parkingComments = (document.getElementById('swal-comments') as HTMLTextAreaElement).value.trim() || undefined;
+        return { parkPlace, mileageKm, plateNo, carModel, adults, keepKeys, parkingComments, files: [...modalSelectedFiles] };
       },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
-        this.performStatusUpdate(booking, newStatusId, newStatusLabel, result.value.parkPlace);
-        if (result.value.files.length > 0) {
-          this.uploadBookingImages(booking.id, result.value.files);
+        const { parkPlace, files, ...extraFields } = result.value;
+        this.performStatusUpdate(booking, newStatusId, newStatusLabel, parkPlace, undefined, extraFields);
+        if (files.length > 0) {
+          this.uploadBookingImages(booking.id, files);
         }
       }
     });
@@ -502,9 +547,10 @@ export class BookingsListComponent {
     newStatusLabel: string,
     parkPlace?: string,
     applyExtraFee?: boolean,
+    extraFields?: { keepKeys?: boolean; mileageKm?: number; parkingComments?: string; plateNo?: string; carModel?: string; adults?: number },
   ): void {
     this.bookingsService
-      .updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee)
+      .updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee, extraFields)
       .subscribe({
         next: (response) => {
           if (response.success) {
