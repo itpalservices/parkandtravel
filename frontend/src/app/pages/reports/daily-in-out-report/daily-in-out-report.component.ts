@@ -151,6 +151,7 @@ export class DailyInOutReportComponent implements OnInit {
         item.flightNo,
         item.fullName,
         item.phone,
+        item.vehicle,
         item.plateNo,
         item.parkPlace,
         priceStr,
@@ -161,7 +162,7 @@ export class DailyInOutReportComponent implements OnInit {
     const typeColumnIndex = 1;
     autoTable(doc, {
       startY: yPos,
-      head: [['Status', 'Type', 'Time', 'Flight No.', 'Full Name', 'Phone', 'Plate No.', 'Park Place', 'Price', 'Adults']],
+      head: [['Status', 'Type', 'Time', 'Flight No.', 'Full Name', 'Phone', 'Vehicle', 'Plate No.', 'Park Place', 'Price', 'Adults']],
       body: tableData,
       theme: 'striped',
       headStyles: {

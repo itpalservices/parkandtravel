@@ -57,6 +57,7 @@ export interface DailyInOutReportItem {
   adults: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
+  vehicle: string;
 }
 
 interface DailyInOutRowWithStatus {
@@ -79,6 +80,8 @@ interface DailyInOutRowWithStatus {
   finalPrice: number | null;
   extraFee: number | null;
   adults: number | null;
+  carBrand: string | null;
+  carModel: string | null;
 }
 
 export async function getDailyInOutReport(
@@ -110,7 +113,8 @@ export async function getDailyInOutReport(
            bs.value as "bookingStatusName",
            b."dropOffOption", b."pickUpOption",
            b.mobile, pc."phoneCode",
-           b."parkPlace", b."finalPrice", b."extraFee", b.adults
+           b."parkPlace", b."finalPrice", b."extraFee", b.adults,
+           b."carBrand", b."carModel"
     FROM bookings b
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
     LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
@@ -129,6 +133,8 @@ export async function getDailyInOutReport(
     const isCheckOutDate = dateTo.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
 
     const phone = b.phoneCode && b.mobile ? `${b.phoneCode} ${b.mobile}` : b.mobile || "-";
+    const vehicleParts = [b.carBrand, b.carModel].filter(Boolean);
+    const vehicle = vehicleParts.length > 0 ? vehicleParts.join(' / ') : "-";
 
     if (isCheckInDate && b.bookingStatusId === 'bookingStatus_created') {
       results.push({
@@ -139,6 +145,7 @@ export async function getDailyInOutReport(
         flightNo: b.returnFlight || "-",
         fullName: `${b.name} ${b.surname}`.trim(),
         phone,
+        vehicle,
         plateNo: b.plateNo || "",
         parkPlace: b.parkPlace || "-",
         finalPrice: b.finalPrice,
@@ -158,6 +165,7 @@ export async function getDailyInOutReport(
         flightNo: b.returnFlight || "-",
         fullName: `${b.name} ${b.surname}`.trim(),
         phone,
+        vehicle,
         plateNo: b.plateNo || "",
         parkPlace: b.parkPlace || "-",
         finalPrice: b.finalPrice,

@@ -156,6 +156,7 @@
               <th>Flight No.</th>
               <th>Full Name</th>
               <th>Phone</th>
+              <th>Vehicle</th>
               <th>Plate No.</th>
               <th>Park Place</th>
               <th>Price</th>
@@ -179,6 +180,7 @@
                 <td>{{ item.flightNo }}</td>
                 <td>{{ item.fullName }}</td>
                 <td>{{ item.phone }}</td>
+                <td>{{ item.vehicle }}</td>
                 <td><span class="plate-badge">{{ item.plateNo }}</span></td>
                 <td>{{ item.parkPlace }}</td>
                 <td>
@@ -226,6 +228,10 @@
               <div class="card-row">
                 <span class="label">Phone</span>
                 <span class="value">{{ item.phone }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Vehicle</span>
+                <span class="value">{{ item.vehicle }}</span>
               </div>
               <div class="card-row">
                 <span class="label">Plate No.</span>

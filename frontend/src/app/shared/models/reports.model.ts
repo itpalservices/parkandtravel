@@ -12,6 +12,7 @@ export interface DailyInOutReportItem {
   flightNo: string;
   fullName: string;
   phone: string;
+  vehicle: string;
   plateNo: string;
   parkPlace: string;
   finalPrice: number | null;
