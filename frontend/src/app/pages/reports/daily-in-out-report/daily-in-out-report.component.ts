@@ -158,6 +158,7 @@ export class DailyInOutReportComponent implements OnInit {
       ];
     });
 
+    const typeColumnIndex = 1;
     autoTable(doc, {
       startY: yPos,
       head: [['Status', 'Type', 'Time', 'Flight No.', 'Full Name', 'Phone', 'Plate No.', 'Park Place', 'Price', 'Adults']],
@@ -177,6 +178,18 @@ export class DailyInOutReportComponent implements OnInit {
         fillColor: [249, 250, 251],
       },
       margin: { left: 10, right: 10 },
+      didParseCell: (data: any) => {
+        if (data.section === 'body' && data.column.index === typeColumnIndex) {
+          const cellText = data.cell.raw;
+          if (cellText === 'P') {
+            data.cell.styles.textColor = [220, 38, 38];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (cellText === 'Airport') {
+            data.cell.styles.textColor = [37, 99, 235];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      },
     });
 
     const fileName = `daily-in-out-report-${this.formatDateForApi(this.selectedDate)}.pdf`;
