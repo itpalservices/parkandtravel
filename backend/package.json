@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc && xcopy src\\generated dist\\generated /E /I /Y",
+    "build:windows": "tsc && xcopy src\\generated dist\\generated /E /I /Y",
+    "build:inux": "tsc && cp -r src/generated dist/generated",
     "start": "node dist/server.js",
     "seed": "ts-node prisma/seed.ts"
   },
