@@ -159,6 +159,7 @@
               <th>Vehicle</th>
               <th>Plate No.</th>
               <th>Park Place</th>
+              <th>Keys</th>
               <th>Price</th>
               <th>Adults</th>
             </tr>
@@ -183,6 +184,7 @@
                 <td>{{ item.vehicle }}</td>
                 <td><span class="plate-badge">{{ item.plateNo }}</span></td>
                 <td>{{ item.parkPlace }}</td>
+                <td>{{ getKeysText(item.keyOption) }}</td>
                 <td>
                   @if (item.finalPrice !== null) {
                     @if (item.extraFee) {

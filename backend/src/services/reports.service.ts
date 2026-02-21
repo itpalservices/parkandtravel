@@ -57,6 +57,7 @@ export interface DailyInOutReportItem {
   adults: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
+  keyOption: boolean;
   vehicle: string;
 }
 
@@ -82,6 +83,7 @@ interface DailyInOutRowWithStatus {
   adults: number | null;
   carBrand: string | null;
   carModel: string | null;
+  keepKeys: boolean;
 }
 
 export async function getDailyInOutReport(
@@ -114,7 +116,7 @@ export async function getDailyInOutReport(
            b."dropOffOption", b."pickUpOption",
            b.mobile, pc."phoneCode",
            b."parkPlace", b."finalPrice", b."extraFee", b.adults,
-           b."carBrand", b."carModel"
+           b."carBrand", b."carModel", b."keepKeys"
     FROM bookings b
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
     LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
@@ -152,6 +154,7 @@ export async function getDailyInOutReport(
         extraFee: b.extraFee,
         adults: b.adults,
         dropOffOption: b.dropOffOption,
+        keyOption: b.keepKeys,
         pickUpOption: b.pickUpOption,
       });
     }
@@ -172,6 +175,7 @@ export async function getDailyInOutReport(
         extraFee: b.extraFee,
         adults: b.adults,
         dropOffOption: b.dropOffOption,
+        keyOption: b.keepKeys,
         pickUpOption: b.pickUpOption,
       });
     }

@@ -59,6 +59,10 @@ export class DailyInOutReportComponent implements OnInit {
     this.loadReport();
   }
 
+  getKeysText(keysOption: boolean): string {
+    return keysOption ? 'Customer keeps keys' : 'P&T keeps keys';
+  }
+
   onFilterByChange(filter: 'check-ins' | 'check-outs' | 'both'): void {
     this.filterBy = filter;
     this.loadReport();

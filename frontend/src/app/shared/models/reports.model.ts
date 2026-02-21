@@ -20,6 +20,7 @@ export interface DailyInOutReportItem {
   adults: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
+  keyOption: boolean;
 }
 
 export interface WashServiceReportItem {

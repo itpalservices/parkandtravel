@@ -430,7 +430,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           </div>
           <div style="margin-bottom: 16px;">
             <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Comments</label>
-            <textarea id="swal-comments" class="swal2-textarea" placeholder="Any notes about the vehicle..." style="margin: 0; width: 100%; box-sizing: border-box; min-height: 60px; resize: vertical;"></textarea>
+            <textarea id="swal-comments" class="swal2-textarea" placeholder="Any notes..." style="resize: none; margin: 0; width: 100%; box-sizing: border-box; min-height: 60px; resize: vertical;"></textarea>
           </div>
           <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Vehicle Photos</label>
           <div id="swal-image-upload-area" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: #f9fafb;">
