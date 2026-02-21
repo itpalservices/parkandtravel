@@ -47,6 +47,9 @@ interface BookingResponse {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  keepKeys: boolean | null;
+  mileageKm: number | null;
+  parkingComments: string | null;
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;
@@ -214,6 +217,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
       b."parkPlace",
+      b."keepKeys",
+      b."mileageKm",
+      b."parkingComments",
       b."actualCheckOut",
       b."extraFee"
     FROM bookings b
@@ -252,6 +258,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
     parkPlace: b.parkPlace || null,
+    keepKeys: b.keepKeys ?? null,
+    mileageKm: b.mileageKm ?? null,
+    parkingComments: b.parkingComments || null,
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
@@ -296,6 +305,9 @@ export async function getBookingById(
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
       b."parkPlace",
+      b."keepKeys",
+      b."mileageKm",
+      b."parkingComments",
       b."actualCheckOut",
       b."extraFee",
       b.deleteflag
@@ -335,6 +347,9 @@ export async function getBookingById(
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
     parkPlace: b.parkPlace || null,
+    keepKeys: b.keepKeys ?? null,
+    mileageKm: b.mileageKm ?? null,
+    parkingComments: b.parkingComments || null,
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
@@ -908,6 +923,9 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."bookingStatusId",
       bs.value as "bookingStatusValue",
       b."parkPlace",
+      b."keepKeys",
+      b."mileageKm",
+      b."parkingComments",
       b."actualCheckOut",
       b."extraFee",
       b.deleteflag
@@ -945,6 +963,9 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     bookingStatusId: b.bookingStatusId || null,
     bookingStatus: b.bookingStatusValue || null,
     parkPlace: b.parkPlace || null,
+    keepKeys: b.keepKeys ?? null,
+    mileageKm: b.mileageKm ?? null,
+    parkingComments: b.parkingComments || null,
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
