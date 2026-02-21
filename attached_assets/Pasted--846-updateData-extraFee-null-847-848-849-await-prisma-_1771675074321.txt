@@ -1,0 +1,44 @@
+ 846         updateData.extraFee = null;
+  847     }
+  848 }
+→ 849 await prisma_1.prisma.booking.update({
+        where: {
+          id: "d78bde51-9e4e-4e51-87ea-fd12614fd367"
+        },
+        data: {
+          bookingStatusId: "bookingStatus_parked",
+          ~~~~~~~~~~~~~~~
+          parkPlace: "A80",
+          keepKeys: false,
+          mileageKm: 25000,
+          plateNo: "ABC010",
+          carModel: "Corolla",
+          adults: 1,
+      ?   id?: String | StringFieldUpdateOperationsInput,
+      ?   userId?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   name?: String | StringFieldUpdateOperationsInput,
+      ?   surname?: String | StringFieldUpdateOperationsInput,
+      ?   email?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   returnFlight?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   dateFrom?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   timeFrom?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,
+      ?   dateTo?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   timeTo?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,
+      ?   mobile?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   carBrand?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   carColor?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   washService?: Boolean | BoolFieldUpdateOperationsInput,
+      ?   finalPrice?: Decimal | NullableDecimalFieldUpdateOperationsInput | Null,
+      ?   dropOffOption?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   pickUpOption?: String | NullableStringFieldUpdateOperationsInput | Null,
+      ?   actualCheckOut?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,
+      ?   extraFee?: Decimal | NullableDecimalFieldUpdateOperationsInput | Null,
+      ?   deleteflag?: Int | IntFieldUpdateOperationsInput,
+      ?   createdAt?: DateTime | DateTimeFieldUpdateOperationsInput,
+      ?   parkingType?: ParkingTypeUpdateOneWithoutBookingsNestedInput,
+      ?   phoneCode?: PhoneCodeUpdateOneWithoutBookingsNestedInput,
+      ?   bookingStatus?: BookingStatusUpdateOneWithoutBookingsNestedInput
+        }
+      })
+
+Unknown argument `bookingStatusId`. Did you mean `bookingStatus`? Available options are marked with ?.

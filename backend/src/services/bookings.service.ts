@@ -1006,7 +1006,9 @@ export async function updateBookingStatus(
 
   if (!existingBooking) return null;
 
-  const updateData: Record<string, any> = { bookingStatusId };
+  const updateData: Record<string, any> = {
+    bookingStatus: { connect: { id: bookingStatusId } },
+  };
   
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
