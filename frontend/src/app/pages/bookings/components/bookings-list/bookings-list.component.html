@@ -304,6 +304,13 @@
                   </div>
                 </div>
               }
+              @if (
+                (isAdmin || isDriver) &&
+                booking.bookingStatusId === 'bookingStatus_parked' &&
+                booking.parkPlace
+              ) {
+                <span class="park-place-badge ms-2">{{ booking.parkPlace }}</span>
+              }
               @if ((isAdmin || isDriver) && canHaveImages(booking)) {
                 <button class="btn-photo-icon ms-1" (click)="openCarouselForBooking(booking.id, $event)" title="View vehicle photos">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -312,13 +319,6 @@
                     <polyline points="21 15 16 10 5 21"></polyline>
                   </svg>
                 </button>
-              }
-              @if (
-                (isAdmin || isDriver) &&
-                booking.bookingStatusId === 'bookingStatus_parked' &&
-                booking.parkPlace
-              ) {
-                <span class="park-place-badge ms-2">{{ booking.parkPlace }}</span>
               }
             </div>
             <div class="mobile-customer-name">{{ booking.name }} {{ booking.surname }}</div>
