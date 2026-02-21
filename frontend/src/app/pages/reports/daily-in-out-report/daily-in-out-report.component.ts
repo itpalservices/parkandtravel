@@ -1,25 +1,17 @@
 import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import {
-  CAR_DROP_OFF_OPTIONS,
-  CAR_DROP_OFF_OPTIONS_LABELS,
-} from '../../../shared/statics/car-drop-off.model';
-import {
-  CAR_PICK_UP_OPTIONS,
-  CAR_PICK_UP_OPTIONS_LABELS,
-} from '../../../shared/statics/car-pick-up.model';
 import { DailyInOutReportItem } from '../../../shared/models/reports.model';
 
 @Component({
   selector: 'app-daily-in-out-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule],
+  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule, CurrencyPipe],
   templateUrl: './daily-in-out-report.component.html',
   styleUrl: './daily-in-out-report.component.scss',
 })
@@ -145,23 +137,32 @@ export class DailyInOutReportComponent implements OnInit {
     doc.text(totalText, (pageWidth - totalWidth) / 2, yPos);
     yPos += 12;
 
-    const tableData = this.reportData.map((item) => [
-      item.fullName,
-      item.plateNo,
-      item.vehicleModel,
-      item.vehicleColor,
-      `${item.checkInDate} ${item.checkInTime}`,
-      this.formatDropOff(item.carDropOff),
-      `${item.checkOutDate} ${item.checkOutTime}`,
-      this.formatPickUp(item.carPickup),
-      item.flightNo,
-      item.parkingType,
-      item.bookingType,
-    ]);
+    const tableData = this.reportData.map((item) => {
+      let priceStr = '-';
+      if (item.finalPrice !== null) {
+        const price = Number(item.finalPrice) || 0;
+        const extra = item.extraFee ? Number(item.extraFee) : 0;
+        priceStr = `€${(price + extra).toFixed(2)}`;
+      }
+      return [
+        item.bookingStatus,
+        this.getTypeLabel(item),
+        item.time || '-',
+        item.flightNo,
+        item.fullName,
+        item.phone,
+        item.vehicle,
+        item.plateNo,
+        item.parkPlace,
+        priceStr,
+        item.adults !== null ? item.adults.toString() : '-',
+      ];
+    });
 
+    const typeColumnIndex = 1;
     autoTable(doc, {
       startY: yPos,
-      head: [['Full Name', 'Plate No.', 'Vehicle', 'Color', 'Check In', 'Drop-off', 'Check Out', 'Pick-up', 'Flight', 'Parking', 'Type']],
+      head: [['Status', 'Type', 'Time', 'Flight No.', 'Full Name', 'Phone', 'Vehicle', 'Plate No.', 'Park Place', 'Price', 'Adults']],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -178,6 +179,18 @@ export class DailyInOutReportComponent implements OnInit {
         fillColor: [249, 250, 251],
       },
       margin: { left: 10, right: 10 },
+      didParseCell: (data: any) => {
+        if (data.section === 'body' && data.column.index === typeColumnIndex) {
+          const cellText = data.cell.raw;
+          if (cellText === 'P') {
+            data.cell.styles.textColor = [220, 38, 38];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (cellText === 'Airport') {
+            data.cell.styles.textColor = [37, 99, 235];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      },
     });
 
     const fileName = `daily-in-out-report-${this.formatDateForApi(this.selectedDate)}.pdf`;
@@ -199,27 +212,32 @@ export class DailyInOutReportComponent implements OnInit {
     return `${day}/${month}/${date.year}`;
   }
 
-  formatDropOff(option: string | null): string {
-    if (!option || option === '-') return '-';
-    switch (option) {
-      case CAR_DROP_OFF_OPTIONS.selfDropOff:
-        return CAR_DROP_OFF_OPTIONS_LABELS.selfDropOff;
-      case CAR_DROP_OFF_OPTIONS.airportPickUp:
-        return CAR_DROP_OFF_OPTIONS_LABELS.airportPickUp;
-      default:
-        return '-';
+  getTypeLabel(item: DailyInOutReportItem): string {
+    if (item.bookingType === 'In') {
+      return item.dropOffOption === 'self_drive' ? 'P' : 'Airport';
+    } else {
+      return item.pickUpOption === 'self_pickup' ? 'P' : 'Airport';
     }
   }
 
-  formatPickUp(option: string | null): string {
-    if (!option || option === '-') return '-';
-    switch (option) {
-      case CAR_PICK_UP_OPTIONS.selfPickUp:
-        return CAR_PICK_UP_OPTIONS_LABELS.selfPickUp;
-      case CAR_PICK_UP_OPTIONS.deliveryToAirport:
-        return CAR_PICK_UP_OPTIONS_LABELS.deliveryToAirport;
+  isTypeSelfDrive(item: DailyInOutReportItem): boolean {
+    if (item.bookingType === 'In') {
+      return item.dropOffOption === 'self_drive';
+    } else {
+      return item.pickUpOption === 'self_pickup';
+    }
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'Created':
+        return 'bg-warning text-dark';
+      case 'Parked':
+        return 'bg-info';
+      case 'Completed':
+        return 'bg-success';
       default:
-        return '-';
+        return 'bg-secondary';
     }
   }
 }
