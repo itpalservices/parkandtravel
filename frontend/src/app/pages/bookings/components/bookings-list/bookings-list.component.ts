@@ -132,7 +132,11 @@ export class BookingsListComponent {
 
   formatVehicle(booking: Booking): string {
     const parts = [booking.carBrand, booking.carModel].filter(Boolean);
-    return parts.length > 0 ? parts.join(' ') : 'N/A';
+    let result = parts.length > 0 ? parts.join(' ') : 'N/A';
+    if (booking.bookingStatusId === 'bookingStatus_parked' && booking.mileageKm != null) {
+      result += ` (${booking.mileageKm} km)`;
+    }
+    return result;
   }
 
   formatDropOff(option: string | null): string {
