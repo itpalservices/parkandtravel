@@ -150,37 +150,52 @@
         <table class="report-table">
           <thead>
             <tr>
-              <th>Full Name</th>
-              <th>Plate No.</th>
-              <th>Vehicle / Model</th>
-              <th>Vehicle Color</th>
-              <th>Check In</th>
-              <th>Car Drop-off</th>
-              <th>Check Out</th>
-              <th>Car Pick-up</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Time</th>
               <th>Flight No.</th>
-              <th>Parking Type</th>
-              <th>Booking Type</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Plate No.</th>
+              <th>Park Place</th>
+              <th>Price</th>
+              <th>Adults</th>
             </tr>
           </thead>
           <tbody>
-            @for (item of reportData; track item.id) {
+            @for (item of reportData; track $index) {
               <tr>
-                <td>{{ item.fullName }}</td>
-                <td><span class="plate-badge">{{ item.plateNo }}</span></td>
-                <td>{{ item.vehicleModel }}</td>
-                <td>{{ item.vehicleColor }}</td>
-                <td>{{ item.checkInDate }} {{ item.checkInTime }}</td>
-                <td>{{ formatDropOff(item.carDropOff) }}</td>
-                <td>{{ item.checkOutDate }} {{ item.checkOutTime }}</td>
-                <td>{{ formatPickUp(item.carPickup) }}</td>
-                <td>{{ item.flightNo }}</td>
-                <td>{{ item.parkingType }}</td>
                 <td>
-                  <span class="type-badge" [class.type-in]="item.bookingType === 'In'" [class.type-out]="item.bookingType === 'Out'" [class.type-both]="item.bookingType === 'In/Out'">
-                    {{ item.bookingType }}
+                  <span class="badge" [ngClass]="getStatusBadgeClass(item.bookingStatus)">
+                    {{ item.bookingStatus }}
                   </span>
                 </td>
+                <td>
+                  @if (item.bookingType === 'In') {
+                    <span class="type-label type-in">P</span>
+                  } @else {
+                    <span class="type-label type-out">{{ item.flightNo }}</span>
+                  }
+                </td>
+                <td>{{ item.time || '-' }}</td>
+                <td>{{ item.flightNo }}</td>
+                <td>{{ item.fullName }}</td>
+                <td>{{ item.phone }}</td>
+                <td><span class="plate-badge">{{ item.plateNo }}</span></td>
+                <td>{{ item.parkPlace }}</td>
+                <td>
+                  @if (item.finalPrice !== null) {
+                    @if (item.extraFee) {
+                      <span class="text-decoration-line-through text-muted me-1">{{ item.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                      <span class="text-danger fw-bold">{{ (item.finalPrice ?? 0) + item.extraFee | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                    } @else {
+                      {{ item.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}
+                    }
+                  } @else {
+                    -
+                  }
+                </td>
+                <td>{{ item.adults ?? '-' }}</td>
               </tr>
             }
           </tbody>
@@ -188,50 +203,60 @@
       </div>
 
       <div class="mobile-cards">
-        @for (item of reportData; track item.id) {
+        @for (item of reportData; track $index) {
           <div class="report-card">
             <div class="card-header">
+              <div class="card-header-left">
+                <span class="badge" [ngClass]="getStatusBadgeClass(item.bookingStatus)">
+                  {{ item.bookingStatus }}
+                </span>
+                @if (item.bookingType === 'In') {
+                  <span class="type-label type-in">P</span>
+                } @else {
+                  <span class="type-label type-out">{{ item.flightNo }}</span>
+                }
+              </div>
               <span class="customer-name">{{ item.fullName }}</span>
-              <span class="type-badge" [class.type-in]="item.bookingType === 'In'" [class.type-out]="item.bookingType === 'Out'" [class.type-both]="item.bookingType === 'In/Out'">
-                {{ item.bookingType }}
-              </span>
             </div>
             <div class="card-body">
               <div class="card-row">
-                <span class="label">Plate No.</span>
-                <span class="value"><span class="plate-badge">{{ item.plateNo }}</span></span>
-              </div>
-              <div class="card-row">
-                <span class="label">Vehicle</span>
-                <span class="value">{{ item.vehicleModel }}</span>
-              </div>
-              <div class="card-row">
-                <span class="label">Color</span>
-                <span class="value">{{ item.vehicleColor }}</span>
-              </div>
-              <div class="card-row">
-                <span class="label">Check In</span>
-                <span class="value">{{ item.checkInDate }} {{ item.checkInTime }}</span>
-              </div>
-              <div class="card-row">
-                <span class="label">Car Drop-off</span>
-                <span class="value">{{ formatDropOff(item.carDropOff) }}</span>
-              </div>
-              <div class="card-row">
-                <span class="label">Check Out</span>
-                <span class="value">{{ item.checkOutDate }} {{ item.checkOutTime }}</span>
-              </div>
-              <div class="card-row">
-                <span class="label">Car Pick-up</span>
-                <span class="value">{{ formatPickUp(item.carPickup) }}</span>
+                <span class="label">Time</span>
+                <span class="value">{{ item.time || '-' }}</span>
               </div>
               <div class="card-row">
                 <span class="label">Flight No.</span>
                 <span class="value">{{ item.flightNo }}</span>
               </div>
               <div class="card-row">
-                <span class="label">Parking Type</span>
-                <span class="value">{{ item.parkingType }}</span>
+                <span class="label">Phone</span>
+                <span class="value">{{ item.phone }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Plate No.</span>
+                <span class="value"><span class="plate-badge">{{ item.plateNo }}</span></span>
+              </div>
+              <div class="card-row">
+                <span class="label">Park Place</span>
+                <span class="value">{{ item.parkPlace }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Price</span>
+                <span class="value">
+                  @if (item.finalPrice !== null) {
+                    @if (item.extraFee) {
+                      <span class="text-decoration-line-through text-muted me-1">{{ item.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                      <span class="text-danger fw-bold">{{ (item.finalPrice ?? 0) + item.extraFee | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                    } @else {
+                      {{ item.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}
+                    }
+                  } @else {
+                    -
+                  }
+                </span>
+              </div>
+              <div class="card-row">
+                <span class="label">Adults</span>
+                <span class="value">{{ item.adults ?? '-' }}</span>
               </div>
             </div>
           </div>

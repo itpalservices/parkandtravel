@@ -6,19 +6,17 @@ export interface ReportCard {
 
 export interface DailyInOutReportItem {
   id: string;
-  fullName: string;
-  plateNo: string;
-  vehicleModel: string;
-  vehicleColor: string;
-  checkInDate: string;
-  checkInTime: string;
-  carDropOff: string;
-  checkOutDate: string;
-  checkOutTime: string;
-  carPickup: string;
-  flightNo: string;
-  parkingType: string;
+  bookingStatus: string;
   bookingType: string;
+  time: string;
+  flightNo: string;
+  fullName: string;
+  phone: string;
+  plateNo: string;
+  parkPlace: string;
+  finalPrice: number | null;
+  extraFee: number | null;
+  adults: number | null;
 }
 
 export interface WashServiceReportItem {

@@ -44,41 +44,37 @@ interface WashServiceRow {
 
 export interface DailyInOutReportItem {
   id: string;
-  fullName: string;
-  plateNo: string;
-  vehicleModel: string;
-  vehicleColor: string;
-  checkInDate: string;
-  checkInTime: string;
-  carDropOff: string;
-  checkOutDate: string;
-  checkOutTime: string;
-  carPickup: string;
-  flightNo: string;
-  parkingType: string;
+  bookingStatus: string;
   bookingType: string;
+  time: string;
+  flightNo: string;
+  fullName: string;
+  phone: string;
+  plateNo: string;
+  parkPlace: string;
+  finalPrice: number | null;
+  extraFee: number | null;
+  adults: number | null;
 }
 
-interface DailyInOutRow {
+interface DailyInOutRowWithStatus {
   id: string;
   name: string;
   surname: string;
   plateNo: string | null;
-  carBrand: string | null;
-  carModel: string | null;
-  carColor: string | null;
   dateFrom: Date;
   timeFrom: Date | null;
-  dropOffOption: string | null;
   dateTo: Date;
   timeTo: Date | null;
-  pickUpOption: string | null;
   returnFlight: string | null;
-  parkingTypeName: string | null;
-}
-
-interface DailyInOutRowWithStatus extends DailyInOutRow {
   bookingStatusId: string | null;
+  bookingStatusName: string | null;
+  mobile: string | null;
+  phoneCode: string | null;
+  parkPlace: string | null;
+  finalPrice: number | null;
+  extraFee: number | null;
+  adults: number | null;
 }
 
 export async function getDailyInOutReport(
@@ -103,52 +99,75 @@ export async function getDailyInOutReport(
   }
 
   const bookings = await prisma.$queryRawUnsafe<DailyInOutRowWithStatus[]>(`
-    SELECT b.id, b.name, b.surname, b."plateNo", b."carBrand", b."carModel", b."carColor",
-           b."dateFrom", b."timeFrom", b."dropOffOption",
-           b."dateTo", b."timeTo", b."pickUpOption",
-           b."returnFlight", pt.name as "parkingTypeName", b."bookingStatusId"
+    SELECT b.id, b.name, b.surname, b."plateNo",
+           b."dateFrom", b."timeFrom",
+           b."dateTo", b."timeTo",
+           b."returnFlight", b."bookingStatusId",
+           bs.name as "bookingStatusName",
+           b.mobile, pc."phoneCode",
+           b."parkPlace", b."finalPrice", b."extraFee", b.adults
     FROM bookings b
-    LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
+    LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
     WHERE b.deleteflag = 0 
       AND ${whereClause}
-    ORDER BY b."dateFrom" ASC, b."timeFrom" ASC NULLS LAST, b.name ASC
   `);
 
   const selectedDate = new Date(date);
 
-  return bookings.map((b) => {
-    const vehicleParts = [b.carBrand, b.carModel].filter(Boolean);
+  const results: DailyInOutReportItem[] = [];
+
+  for (const b of bookings) {
     const dateFrom = new Date(b.dateFrom);
     const dateTo = new Date(b.dateTo);
-    
     const isCheckInDate = dateFrom.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
     const isCheckOutDate = dateTo.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
-    
-    let bookingType = '';
+
+    const phone = b.phoneCode && b.mobile ? `${b.phoneCode} ${b.mobile}` : b.mobile || "-";
+
     if (isCheckInDate && b.bookingStatusId === 'bookingStatus_created') {
-      bookingType = 'In';
-    }
-    if (isCheckOutDate && b.bookingStatusId === 'bookingStatus_parked') {
-      bookingType = bookingType === 'In' ? 'In/Out' : 'Out';
+      results.push({
+        id: b.id,
+        bookingStatus: b.bookingStatusName || "-",
+        bookingType: "In",
+        time: formatTime(b.timeFrom),
+        flightNo: b.returnFlight || "-",
+        fullName: `${b.name} ${b.surname}`.trim(),
+        phone,
+        plateNo: b.plateNo || "",
+        parkPlace: b.parkPlace || "-",
+        finalPrice: b.finalPrice,
+        extraFee: b.extraFee,
+        adults: b.adults,
+      });
     }
 
-    return {
-      id: b.id,
-      fullName: `${b.name} ${b.surname}`.trim(),
-      plateNo: b.plateNo || "",
-      vehicleModel: vehicleParts.join(" ") || "-",
-      vehicleColor: b.carColor || "-",
-      checkInDate: formatDisplayDate(new Date(b.dateFrom)),
-      checkInTime: formatTime(b.timeFrom),
-      carDropOff: b.dropOffOption || "-",
-      checkOutDate: formatDisplayDate(new Date(b.dateTo)),
-      checkOutTime: formatTime(b.timeTo),
-      carPickup: b.pickUpOption || "-",
-      flightNo: b.returnFlight || "-",
-      parkingType: b.parkingTypeName || "-",
-      bookingType,
-    };
+    if (isCheckOutDate && b.bookingStatusId === 'bookingStatus_parked') {
+      results.push({
+        id: b.id,
+        bookingStatus: b.bookingStatusName || "-",
+        bookingType: "Out",
+        time: formatTime(b.timeTo),
+        flightNo: b.returnFlight || "-",
+        fullName: `${b.name} ${b.surname}`.trim(),
+        phone,
+        plateNo: b.plateNo || "",
+        parkPlace: b.parkPlace || "-",
+        finalPrice: b.finalPrice,
+        extraFee: b.extraFee,
+        adults: b.adults,
+      });
+    }
+  }
+
+  results.sort((a, c) => {
+    if (!a.time && !c.time) return 0;
+    if (!a.time) return 1;
+    if (!c.time) return -1;
+    return a.time.localeCompare(c.time);
   });
+
+  return results;
 }
 
 export async function getWashServiceReport(
