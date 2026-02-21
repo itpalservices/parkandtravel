@@ -55,6 +55,8 @@ export interface DailyInOutReportItem {
   finalPrice: number | null;
   extraFee: number | null;
   adults: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
 }
 
 interface DailyInOutRowWithStatus {
@@ -69,6 +71,8 @@ interface DailyInOutRowWithStatus {
   returnFlight: string | null;
   bookingStatusId: string | null;
   bookingStatusName: string | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
   mobile: string | null;
   phoneCode: string | null;
   parkPlace: string | null;
@@ -104,6 +108,7 @@ export async function getDailyInOutReport(
            b."dateTo", b."timeTo",
            b."returnFlight", b."bookingStatusId",
            bs.value as "bookingStatusName",
+           b."dropOffOption", b."pickUpOption",
            b.mobile, pc."phoneCode",
            b."parkPlace", b."finalPrice", b."extraFee", b.adults
     FROM bookings b
@@ -139,6 +144,8 @@ export async function getDailyInOutReport(
         finalPrice: b.finalPrice,
         extraFee: b.extraFee,
         adults: b.adults,
+        dropOffOption: b.dropOffOption,
+        pickUpOption: b.pickUpOption,
       });
     }
 
@@ -156,6 +163,8 @@ export async function getDailyInOutReport(
         finalPrice: b.finalPrice,
         extraFee: b.extraFee,
         adults: b.adults,
+        dropOffOption: b.dropOffOption,
+        pickUpOption: b.pickUpOption,
       });
     }
   }

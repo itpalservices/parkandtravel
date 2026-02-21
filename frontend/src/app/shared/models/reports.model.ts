@@ -17,6 +17,8 @@ export interface DailyInOutReportItem {
   finalPrice: number | null;
   extraFee: number | null;
   adults: number | null;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
 }
 
 export interface WashServiceReportItem {

@@ -145,7 +145,7 @@ export class DailyInOutReportComponent implements OnInit {
       }
       return [
         item.bookingStatus,
-        item.bookingType === 'In' ? 'P' : item.flightNo,
+        this.getTypeLabel(item),
         item.time || '-',
         item.flightNo,
         item.fullName,
@@ -195,6 +195,22 @@ export class DailyInOutReportComponent implements OnInit {
     const day = date.day.toString().padStart(2, '0');
     const month = date.month.toString().padStart(2, '0');
     return `${day}/${month}/${date.year}`;
+  }
+
+  getTypeLabel(item: DailyInOutReportItem): string {
+    if (item.bookingType === 'In') {
+      return item.dropOffOption === 'self_drive' ? 'P' : 'Airport';
+    } else {
+      return item.pickUpOption === 'self_pickup' ? 'P' : 'Airport';
+    }
+  }
+
+  isTypeSelfDrive(item: DailyInOutReportItem): boolean {
+    if (item.bookingType === 'In') {
+      return item.dropOffOption === 'self_drive';
+    } else {
+      return item.pickUpOption === 'self_pickup';
+    }
   }
 
   getStatusBadgeClass(status: string): string {

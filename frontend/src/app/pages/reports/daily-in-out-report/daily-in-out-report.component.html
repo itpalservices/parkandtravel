@@ -171,11 +171,9 @@
                   </span>
                 </td>
                 <td>
-                  @if (item.bookingType === 'In') {
-                    <span class="type-label type-in">P</span>
-                  } @else {
-                    <span class="type-label type-out">{{ item.flightNo }}</span>
-                  }
+                  <span class="type-label" [class.type-in]="isTypeSelfDrive(item)" [class.type-out]="!isTypeSelfDrive(item)">
+                    {{ getTypeLabel(item) }}
+                  </span>
                 </td>
                 <td>{{ item.time || '-' }}</td>
                 <td>{{ item.flightNo }}</td>
@@ -210,11 +208,9 @@
                 <span class="badge" [ngClass]="getStatusBadgeClass(item.bookingStatus)">
                   {{ item.bookingStatus }}
                 </span>
-                @if (item.bookingType === 'In') {
-                  <span class="type-label type-in">P</span>
-                } @else {
-                  <span class="type-label type-out">{{ item.flightNo }}</span>
-                }
+                <span class="type-label" [class.type-in]="isTypeSelfDrive(item)" [class.type-out]="!isTypeSelfDrive(item)">
+                  {{ getTypeLabel(item) }}
+                </span>
               </div>
               <span class="customer-name">{{ item.fullName }}</span>
             </div>
