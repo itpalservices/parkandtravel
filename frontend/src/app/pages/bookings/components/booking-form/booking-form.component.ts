@@ -826,8 +826,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private initAdminDriverForm(): void {
-    this.bookingForm.get('phone')?.disable();
-    this.bookingForm.get('phoneCodeId')?.disable();
     this.bookingForm.get('fullName')?.disable();
   }
 
