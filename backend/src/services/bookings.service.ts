@@ -1094,7 +1094,7 @@ export async function updateBookingStatus(
 
 interface UpdateParkedBookingParams {
   parkPlace?: string;
-  pickUpOption?: string;
+  pickUpOption?: string | null;
   washService?: boolean;
   flightNumber?: string | null;
   checkOutDate?: string | null;

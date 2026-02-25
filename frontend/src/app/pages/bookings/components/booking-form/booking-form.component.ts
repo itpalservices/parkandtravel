@@ -1419,15 +1419,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     const updateData: Record<string, any> = {
       parkPlace: this.parkPlace.trim(),
-      pickUpOption: formValue.pickUpOption,
+      pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
       flightNumber: this.returnDetailsEnabled ? (formValue.flightNumber?.trim() || null) : null,
       checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
+      washService: this.washServiceEnabled,
     };
-
-    if (this.washAvailable) {
-      updateData['washService'] = this.washServiceEnabled;
-    }
 
     this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({
       next: () => {
