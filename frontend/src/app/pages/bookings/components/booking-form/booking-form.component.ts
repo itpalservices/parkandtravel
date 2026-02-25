@@ -333,9 +333,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     if (booking.userId) {
       this.foundUserId = booking.userId;
-      if (this.isAdminOrDriver) {
-        this.loadFoundUserCars(booking.plateNo || undefined);
-      }
     }
 
     this.currentStatusId = booking.bookingStatusId;
@@ -852,6 +849,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.loadUserCars();
         } else if (this.isAdminOrDriver) {
           this.initAdminDriverForm();
+          if (this.isEditMode && this.foundUserId) {
+            this.loadFoundUserCars(this.existingBooking?.plateNo || undefined);
+          }
         }
       },
     });
