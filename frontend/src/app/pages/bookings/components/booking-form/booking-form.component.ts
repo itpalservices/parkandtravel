@@ -999,7 +999,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.bookingForm.get('email')?.reset();
     this.bookingForm.get('phone')?.enable();
     this.bookingForm.get('phone')?.reset();
-    this.bookingForm.get('phoneCodeId')?.setValue(firstPhoneCode.id);
     this.bookingForm.get('fullName')?.enable();
     this.bookingForm.get('fullName')?.reset();
     this.enableVehicleFields();
