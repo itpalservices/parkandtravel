@@ -380,25 +380,6 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="flightNumber">Return Flight Number *</label>
-                <input
-                  type="text"
-                  id="flightNumber"
-                  class="form-control"
-                  formControlName="flightNumber"
-                  [class.is-invalid]="hasError('flightNumber')"
-                  placeholder="e.g. BA1234"
-                />
-                <app-form-field-error
-                  [control]="f['flightNumber']"
-                  fieldName="Return Flight Number"
-                >
-                </app-form-field-error>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
                 <label>Check-in Date *</label>
                 <div class="input-group">
                   <input
@@ -472,80 +453,116 @@
               </app-form-field-error>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>Check-out Date *</label>
-                <div class="input-group">
+            <div class="form-row mb-3">
+              <div class="wash-service-toggle">
+                <label class="toggle-switch">
                   <input
-                    class="form-control date-input"
-                    [class.is-invalid]="hasError('checkOutDate')"
-                    [value]="formatDate(bookingForm.get('checkOutDate')?.value)"
-                    placeholder="dd/MM/yyyy"
-                    ngbDatepicker
-                    #dpCheckOut="ngbDatepicker"
-                    [minDate]="checkOutMinDate"
-                    [markDisabled]="isCheckOutDateDisabled"
-                    (dateSelect)="onCheckOutDateSelect($event); onCheckOutDateChange()"
-                    (click)="!isBookingParked && dpCheckOut.toggle()"
-                    [disabled]="isBookingParked"
-                    readonly
+                    type="checkbox"
+                    (change)="toggleReturnDetails()"
                   />
-                  <button
-                    class="btn btn-outline-secondary calendar-btn"
-                    type="button"
-                    (click)="dpCheckOut.toggle()"
-                    [disabled]="isBookingParked"
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">
+                  Do you know the return details?
+                </span>
+              </div>
+            </div>
+
+            @if (returnDetailsEnabled) {
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="flightNumber">Return Flight Number *</label>
+                  <input
+                    type="text"
+                    id="flightNumber"
+                    class="form-control"
+                    formControlName="flightNumber"
+                    [class.is-invalid]="hasError('flightNumber')"
+                    placeholder="e.g. BA1234"
+                  />
+                  <app-form-field-error
+                    [control]="f['flightNumber']"
+                    fieldName="Return Flight Number"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                      <line x1="16" y1="2" x2="16" y2="6"></line>
-                      <line x1="8" y1="2" x2="8" y2="6"></line>
-                      <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                  </button>
+                  </app-form-field-error>
                 </div>
-                <app-form-field-error [control]="f['checkOutDate']" fieldName="Check-out Date">
-                </app-form-field-error>
               </div>
 
-              <div class="form-group">
-                <label for="checkOutTime">Check-out Time *</label>
-                <input
-                  type="time"
-                  id="checkOutTime"
-                  class="form-control time-input"
-                  [class.is-invalid]="hasError('checkOutTime')"
-                  formControlName="checkOutTime"
-                  step="60"
-                />
-                <app-form-field-error [control]="f['checkOutTime']" fieldName="Check-out Time">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Check-out Date *</label>
+                  <div class="input-group">
+                    <input
+                      class="form-control date-input"
+                      [class.is-invalid]="hasError('checkOutDate')"
+                      [value]="formatDate(bookingForm.get('checkOutDate')?.value)"
+                      placeholder="dd/MM/yyyy"
+                      ngbDatepicker
+                      #dpCheckOut="ngbDatepicker"
+                      [minDate]="checkOutMinDate"
+                      [markDisabled]="isCheckOutDateDisabled"
+                      (dateSelect)="onCheckOutDateSelect($event); onCheckOutDateChange()"
+                      (click)="!isBookingParked && dpCheckOut.toggle()"
+                      [disabled]="isBookingParked"
+                      readonly
+                    />
+                    <button
+                      class="btn btn-outline-secondary calendar-btn"
+                      type="button"
+                      (click)="dpCheckOut.toggle()"
+                      [disabled]="isBookingParked"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <app-form-field-error [control]="f['checkOutDate']" fieldName="Check-out Date">
+                  </app-form-field-error>
+                </div>
+
+                <div class="form-group">
+                  <label for="checkOutTime">Check-out Time *</label>
+                  <input
+                    type="time"
+                    id="checkOutTime"
+                    class="form-control time-input"
+                    [class.is-invalid]="hasError('checkOutTime')"
+                    formControlName="checkOutTime"
+                    step="60"
+                  />
+                  <app-form-field-error [control]="f['checkOutTime']" fieldName="Check-out Time">
+                  </app-form-field-error>
+                </div>
+              </div>
+
+              <div class="form-group transport-question">
+                <label>How will the customer get their car back? *</label>
+                <select
+                  class="form-control"
+                  [class.is-invalid]="hasError('pickUpOption')"
+                  formControlName="pickUpOption"
+                >
+                  <option value="airport_delivery">Deliver car to the airport</option>
+                  <option value="self_pickup">Customer will pick up from parking</option>
+                </select>
+                <app-form-field-error [control]="f['pickUpOption']" fieldName="Pick-up option">
                 </app-form-field-error>
               </div>
-            </div>
-
-            <div class="form-group transport-question">
-              <label>How will the customer get their car back? *</label>
-              <select
-                class="form-control"
-                [class.is-invalid]="hasError('pickUpOption')"
-                formControlName="pickUpOption"
-              >
-                <option value="airport_delivery">Deliver car to the airport</option>
-                <option value="self_pickup">Customer will pick up from parking</option>
-              </select>
-              <app-form-field-error [control]="f['pickUpOption']" fieldName="Pick-up option">
-              </app-form-field-error>
-            </div>
+            }
 
             <div class="form-group">
               <label for="parkingType">Parking Type *</label>

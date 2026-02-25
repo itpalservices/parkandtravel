@@ -54,6 +54,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   washAvailable = false;
   washPrice: number | null = null;
   washServiceEnabled = false;
+  returnDetailsEnabled= false;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -287,6 +288,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   onCheckOutDateSelect(date: NgbDateStruct): void {
     this.bookingForm.patchValue({ checkOutDate: date });
+  }
+
+  toggleReturnDetails(): void {
+    this.returnDetailsEnabled = !this.returnDetailsEnabled;
   }
 
   goBack(): void {

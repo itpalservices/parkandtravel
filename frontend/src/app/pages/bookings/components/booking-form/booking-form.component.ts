@@ -74,6 +74,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   washAvailable = false;
   washPrice: number | null = null;
   washServiceEnabled = false;
+  returnDetailsEnabled= false;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -341,6 +342,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return (
       this.washAvailable && (!this.isBookingParked || (this.isBookingParked && this.washAvailable))
     );
+  }
+  
+  toggleReturnDetails(): void {
+    this.returnDetailsEnabled = !this.returnDetailsEnabled;
   }
 
   private enableFieldsForNonParkedBooking(): void {
