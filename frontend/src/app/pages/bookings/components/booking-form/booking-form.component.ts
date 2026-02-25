@@ -953,7 +953,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   onPhoneBlur(): void {
     if (!this.isAdminOrDriver) return;
-    if (this.foundUserId) return;
 
     const phoneControl = this.bookingForm.get('phone');
     const phone = phoneControl?.value?.trim();
@@ -962,6 +961,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.resetAdminSearch();
       return;
     }
+
+    if (this.foundUserId) return;
 
     if (!this.selectedPhoneCode) return;
 
