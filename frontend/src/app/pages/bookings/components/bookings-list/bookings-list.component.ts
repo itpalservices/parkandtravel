@@ -105,6 +105,7 @@ export class BookingsListComponent {
   }
 
   formatArrival(booking: Booking): string {
+    if (!booking.dateTo) return '-';
     const date = new Date(booking.dateTo);
     const dateStr = date.toLocaleDateString('en-GB', {
       day: '2-digit',
