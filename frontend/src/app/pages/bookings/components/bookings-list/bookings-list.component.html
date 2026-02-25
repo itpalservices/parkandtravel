@@ -4,7 +4,7 @@
       <table class="table">
         <thead>
           <tr>
-            @if (!isDriver) {
+            @if (isAdmin || isDriver) {
               <th class="actions-col"></th>
             }
             <th>Status</th>
@@ -29,8 +29,7 @@
           @for (booking of bookings; track booking.id) {
             <tr>
               @if (
-                !isDriver &&
-                ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') ||
+                (((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') ||
                   (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))
               ) {
                 <td class="actions-col">
@@ -420,8 +419,7 @@
               }
             </div>
             @if (
-              !isDriver &&
-              ((isAdmin && booking.bookingStatusId !== 'bookingStatus_completed') ||
+              (((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') ||
                 (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))
             ) {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
