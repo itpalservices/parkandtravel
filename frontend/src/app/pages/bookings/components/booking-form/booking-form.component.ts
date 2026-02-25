@@ -334,7 +334,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     if (booking.userId) {
       this.foundUserId = booking.userId;
       if (this.isAdminOrDriver) {
-        this.loadFoundUserCars(booking.plateNo);
+        this.loadFoundUserCars(booking.plateNo || undefined);
       }
     }
 
