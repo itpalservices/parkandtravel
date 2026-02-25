@@ -469,11 +469,6 @@ export async function updateParkedBooking(
 ): Promise<void> {
   try {
     const authUser = req.authUser as AuthUser | undefined;
-    
-    if (authUser?.role === "user") {
-      res.status(403).json({ message: "Regular users are not allowed to update parked bookings" });
-      return;
-    }
 
     const { id } = req.params;
     const { parkPlace, pickUpOption, washService, flightNumber, checkOutDate, checkOutTime, finalPrice } = req.body;
@@ -491,6 +486,11 @@ export async function updateParkedBooking(
 
     if (existingBooking.bookingStatusId !== 'bookingStatus_parked') {
       res.status(400).json({ error: "Only parked bookings can be updated through this endpoint" });
+      return;
+    }
+
+    if (authUser?.role === "user" && existingBooking.dateTo && existingBooking.timeTo) {
+      res.status(403).json({ message: "Return details have already been set and cannot be changed" });
       return;
     }
 
