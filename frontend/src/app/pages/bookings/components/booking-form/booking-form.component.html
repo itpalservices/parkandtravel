@@ -453,28 +453,26 @@
               </app-form-field-error>
             </div>
 
-            @if (!isEditMode) {
-              <div class="form-row mb-3">
-                <div class="wash-service-toggle">
-                  <label class="toggle-switch">
-                    <input
-                      type="checkbox"
-                      [checked]="returnDetailsEnabled"
-                      (change)="toggleReturnDetails()"
-                    />
-                    <span class="toggle-slider"></span>
-                  </label>
-                  <span class="toggle-label">
-                    Do you know the return details?
-                  </span>
-                </div>
+            <div class="form-row mb-3">
+              <div class="wash-service-toggle">
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    [checked]="returnDetailsEnabled"
+                    (change)="toggleReturnDetails()"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">
+                  Do you know the return details?
+                </span>
               </div>
-            }
+            </div>
 
-            @if (returnDetailsEnabled || isEditMode) {
+            @if (returnDetailsEnabled) {
               <div class="form-row">
                 <div class="form-group">
-                  <label for="flightNumber">Return Flight Number{{ isEditMode ? '' : ' *' }}</label>
+                  <label for="flightNumber">Return Flight Number *</label>
                   <input
                     type="text"
                     id="flightNumber"
@@ -493,7 +491,7 @@
 
               <div class="form-row">
                 <div class="form-group">
-                  <label>Check-out Date{{ isEditMode ? '' : ' *' }}</label>
+                  <label>Check-out Date *</label>
                   <div class="input-group">
                     <input
                       class="form-control date-input"
@@ -505,15 +503,13 @@
                       [minDate]="checkOutMinDate"
                       [markDisabled]="isCheckOutDateDisabled"
                       (dateSelect)="onCheckOutDateSelect($event); onCheckOutDateChange()"
-                      (click)="!isBookingParked && dpCheckOut.toggle()"
-                      [disabled]="isBookingParked"
+                      (click)="dpCheckOut.toggle()"
                       readonly
                     />
                     <button
                       class="btn btn-outline-secondary calendar-btn"
                       type="button"
                       (click)="dpCheckOut.toggle()"
-                      [disabled]="isBookingParked"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -538,7 +534,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="checkOutTime">Check-out Time{{ isEditMode ? '' : ' *' }}</label>
+                  <label for="checkOutTime">Check-out Time *</label>
                   <input
                     type="time"
                     id="checkOutTime"
@@ -553,7 +549,7 @@
               </div>
 
               <div class="form-group transport-question">
-                <label>How will the customer get their car back?{{ isEditMode ? '' : ' *' }}</label>
+                <label>How will the customer get their car back? *</label>
                 <select
                   class="form-control"
                   [class.is-invalid]="hasError('pickUpOption')"
