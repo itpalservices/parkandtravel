@@ -333,6 +333,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     if (booking.userId) {
       this.foundUserId = booking.userId;
+      if (this.isAdminOrDriver) {
+        this.loadFoundUserCars(booking.plateNo);
+      }
     }
 
     this.currentStatusId = booking.bookingStatusId;
@@ -1098,7 +1101,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadFoundUserCars(): void {
+  private loadFoundUserCars(matchPlateNo?: string): void {
     if (!this.foundUserId) return;
     this.carsLoading = true;
     this.apiService
@@ -1111,7 +1114,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           if (response.success) {
             this.cars = response.data;
             if (this.cars.length > 0) {
-              this.selectCar(this.cars[0]);
+              const matchingCar = matchPlateNo
+                ? this.cars.find((car) => car.plateNo === matchPlateNo)
+                : null;
+              this.selectCar(matchingCar || this.cars[0]);
             }
           }
           this.carsLoading = false;
