@@ -30,7 +30,8 @@
             <tr>
               @if (
                 (((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') ||
-                  (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))
+                  (!isAdmin && !isDriver && booking.bookingStatusId === 'bookingStatus_created') ||
+                  (!isAdmin && !isDriver && !booking.dateTo))
               ) {
                 <td class="actions-col">
                   <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
@@ -420,7 +421,8 @@
             </div>
             @if (
               (((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') ||
-                (!isAdmin && booking.bookingStatusId === 'bookingStatus_created'))
+                (!isAdmin && !isDriver && booking.bookingStatusId === 'bookingStatus_created') ||
+                (!isAdmin && !isDriver && !booking.dateTo))
             ) {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                 <button class="btn btn-icon" ngbDropdownToggle>

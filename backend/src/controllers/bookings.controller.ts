@@ -356,7 +356,9 @@ export async function updateBooking(
       return;
     }
 
-    if (existingBooking.bookingStatusId !== 'bookingStatus_created') {
+    const isRegularUser = authUser?.role === 'user';
+    const hasNoCheckOut = !existingBooking.dateTo;
+    if (existingBooking.bookingStatusId !== 'bookingStatus_created' && !(isRegularUser && hasNoCheckOut)) {
       res.status(400).json({ error: "Cannot update booking. Only bookings with 'Created' status can be edited." });
       return;
     }
