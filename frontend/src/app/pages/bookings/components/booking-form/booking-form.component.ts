@@ -290,20 +290,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkInTime: checkInTime,
       dropOffOption: booking.dropOffOption || 'self_drive',
       checkOutDate: checkOutDate,
-      checkOutTime: checkOutTime,
+      checkOutTime: checkOutTime || '10:00',
       pickUpOption: booking.pickUpOption || 'self_pickup',
       parkingType: booking.parkingTypeId || '',
     });
-
-    if (hasReturnDetails) {
-      this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
-      this.bookingForm.get('checkOutDate')?.setValidators([Validators.required]);
-      this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
-      this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
-      ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'].forEach(field => {
-        this.bookingForm.get(field)?.updateValueAndValidity();
-      });
-    }
 
     if (checkInDate) {
       const checkInNgbDate = new NgbDate(checkInDate.year, checkInDate.month, checkInDate.day);
@@ -1339,10 +1329,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       dropOffOption: formValue.dropOffOption,
       parkingTypeId: formValue.parkingType,
       washService: this.washServiceEnabled,
-      flightNumber: this.returnDetailsEnabled ? (formValue.flightNumber?.trim() || null) : null,
-      checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
-      checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
-      pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
+      flightNumber: (this.returnDetailsEnabled || this.isEditMode) ? (formValue.flightNumber?.trim() || null) : null,
+      checkOutDate: (this.returnDetailsEnabled || this.isEditMode) && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
+      checkOutTime: (this.returnDetailsEnabled || this.isEditMode) && formValue.checkOutDate ? formValue.checkOutTime : null,
+      pickUpOption: (this.returnDetailsEnabled || this.isEditMode) ? formValue.pickUpOption : null,
     };
 
     if (this.isAdminOrDriver) {
