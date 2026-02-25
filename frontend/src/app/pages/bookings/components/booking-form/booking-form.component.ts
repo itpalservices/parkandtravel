@@ -883,12 +883,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     if (!this.isAdminOrDriver) return;
 
     const emailControl = this.bookingForm.get('email');
-    if (!emailControl || emailControl.invalid) {
+    const email = emailControl?.value?.trim().toLowerCase();
+
+    if (!email) {
+      this.resetAdminSearch();
       return;
     }
 
-    const email = emailControl.value?.trim().toLowerCase();
-    if (!email) return;
+    if (!emailControl || emailControl.invalid) {
+      return;
+    }
 
     this.searchingUser = true;
     this.userSearched = false;
@@ -921,7 +925,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     const phoneControl = this.bookingForm.get('phone');
     const phone = phoneControl?.value?.trim();
-    if (!phone || !this.selectedPhoneCode) return;
+
+    if (!phone) {
+      this.resetAdminSearch();
+      return;
+    }
+
+    if (!this.selectedPhoneCode) return;
 
     this.searchingUser = true;
     this.userSearched = false;
@@ -947,6 +957,19 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.clearFoundUser('phone');
         },
       });
+  }
+
+  private resetAdminSearch(): void {
+    this.foundUserId = null;
+    this.cars = [];
+    this.selectedCar = null;
+    this.searchingUser = false;
+    this.userSearched = false;
+    this.bookingForm.get('email')?.enable();
+    this.bookingForm.get('phone')?.enable();
+    this.bookingForm.get('phoneCodeId')?.enable();
+    this.bookingForm.get('fullName')?.enable();
+    this.enableVehicleFields();
   }
 
   private clearFoundUser(source: 'email' | 'phone' = 'email'): void {
