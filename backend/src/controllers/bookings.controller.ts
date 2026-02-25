@@ -489,11 +489,6 @@ export async function updateParkedBooking(
       return;
     }
 
-    if (authUser?.role === "user" && existingBooking.dateTo && existingBooking.timeTo) {
-      res.status(403).json({ message: "Return details have already been set and cannot be changed" });
-      return;
-    }
-
     const { updateParkedBooking: updateParkedBookingService } = await import("../services/bookings.service");
     const result = await updateParkedBookingService(id, { parkPlace, pickUpOption, washService, flightNumber, checkOutDate, checkOutTime, finalPrice });
 
