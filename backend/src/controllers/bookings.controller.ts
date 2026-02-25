@@ -394,6 +394,7 @@ export async function updateBooking(
       dropOffOption,
       pickUpOption,
       userId: requestUserId,
+      finalPrice,
     } = req.body;
 
     if (checkInDate && !isValidDateFormat(checkInDate)) {
@@ -447,6 +448,7 @@ export async function updateBooking(
       dropOffOption,
       pickUpOption,
       userId,
+      finalPrice,
     });
 
     if (!result) {
@@ -477,7 +479,7 @@ export async function updateParkedBooking(
     }
 
     const { id } = req.params;
-    const { parkPlace, pickUpOption, washService, flightNumber, checkOutDate, checkOutTime } = req.body;
+    const { parkPlace, pickUpOption, washService, flightNumber, checkOutDate, checkOutTime, finalPrice } = req.body;
 
     if (!isValidUUID(id)) {
       res.status(400).json({ error: "Invalid booking ID format" });
@@ -496,7 +498,7 @@ export async function updateParkedBooking(
     }
 
     const { updateParkedBooking: updateParkedBookingService } = await import("../services/bookings.service");
-    const result = await updateParkedBookingService(id, { parkPlace, pickUpOption, washService, flightNumber, checkOutDate, checkOutTime });
+    const result = await updateParkedBookingService(id, { parkPlace, pickUpOption, washService, flightNumber, checkOutDate, checkOutTime, finalPrice });
 
     res.json({
       success: true,

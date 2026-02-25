@@ -1344,6 +1344,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
+      finalPrice: this.returnDetailsEnabled ? this.calculateTotalPrice() : null,
     };
 
     if (this.isAdminOrDriver) {
@@ -1425,6 +1426,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       washService: this.washServiceEnabled,
+      finalPrice: this.returnDetailsEnabled ? this.calculateTotalPrice() : null,
     };
 
     this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({

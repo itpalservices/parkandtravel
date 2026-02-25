@@ -679,6 +679,7 @@ export interface UpdateBookingParams {
   dropOffOption?: string | null;
   pickUpOption?: string | null;
   userId?: string | null;
+  finalPrice?: number | null;
 }
 
 export async function updateBooking(
@@ -753,7 +754,9 @@ export async function updateBooking(
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
 
   let finalPrice: number | null = null;
-  if (checkOutDate) {
+  if (params.finalPrice !== undefined) {
+    finalPrice = params.finalPrice;
+  } else if (checkOutDate) {
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
 
@@ -1105,6 +1108,7 @@ interface UpdateParkedBookingParams {
   flightNumber?: string | null;
   checkOutDate?: string | null;
   checkOutTime?: string | null;
+  finalPrice?: number | null;
 }
 
 export async function updateParkedBooking(
@@ -1151,11 +1155,13 @@ export async function updateParkedBooking(
 
   const checkInDate = existingBooking.dateFrom;
   const checkOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
-  const parkingTypeId = existingBooking.parkingTypeId;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
 
   let finalPrice: number | null = null;
-  if (checkOutDate) {
+  if (params.finalPrice !== undefined) {
+    finalPrice = params.finalPrice;
+  } else if (checkOutDate) {
+    const parkingTypeId = existingBooking.parkingTypeId;
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
 
