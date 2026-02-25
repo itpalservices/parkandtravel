@@ -232,7 +232,9 @@
                 </td>
               }
               <td>
-                @if (booking.extraFee) {
+                @if (!booking.dateTo) {
+                  <span class="text-muted fst-italic">TBC</span>
+                } @else if (booking.extraFee) {
                   <span class="text-decoration-line-through text-muted me-1">{{
                     booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2'
                   }}</span>
@@ -397,7 +399,9 @@
           </div>
           <div class="mobile-card-footer">
             <div class="mobile-price">
-              @if (booking.extraFee) {
+              @if (!booking.dateTo) {
+                <span class="text-muted fst-italic">TBC</span>
+              } @else if (booking.extraFee) {
                 <span
                   class="text-decoration-line-through text-muted me-1"
                   style="font-size: 0.85rem"

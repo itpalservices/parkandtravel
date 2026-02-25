@@ -1172,6 +1172,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   calculateDays(): number {
+    if (!this.returnDetailsEnabled) return 0;
     const checkIn = this.bookingForm.get('checkInDate')?.value;
     const checkOut = this.bookingForm.get('checkOutDate')?.value;
     if (!checkIn || !checkOut) return 0;
