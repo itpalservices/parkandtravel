@@ -1148,21 +1148,23 @@ export async function updateParkedBooking(
   const parkingTypeId = existingBooking.parkingTypeId;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
 
-  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
-  const priceSettings = await getPriceSettings();
-
-  let parkingPricePerDay: number | null = null;
-  if (parkingTypeId === 'parkingType_uncovered') {
-    parkingPricePerDay = priceSettings.priceUncovered;
-  } else if (parkingTypeId === 'parkingType_covered') {
-    parkingPricePerDay = priceSettings.priceCovered;
-  }
-
   let finalPrice: number | null = null;
-  if (parkingPricePerDay !== null) {
-    finalPrice = days * parkingPricePerDay;
-    if (washService && priceSettings.priceWash !== null) {
-      finalPrice += priceSettings.priceWash;
+  if (checkOutDate) {
+    const days = calculateDays(checkInDate, checkOutDate);
+    const priceSettings = await getPriceSettings();
+
+    let parkingPricePerDay: number | null = null;
+    if (parkingTypeId === 'parkingType_uncovered') {
+      parkingPricePerDay = priceSettings.priceUncovered;
+    } else if (parkingTypeId === 'parkingType_covered') {
+      parkingPricePerDay = priceSettings.priceCovered;
+    }
+
+    if (parkingPricePerDay !== null) {
+      finalPrice = days * parkingPricePerDay;
+      if (washService && priceSettings.priceWash !== null) {
+        finalPrice += priceSettings.priceWash;
+      }
     }
   }
   updateData.finalPrice = finalPrice;
