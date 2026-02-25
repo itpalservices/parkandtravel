@@ -467,21 +467,23 @@ export async function createGuestBooking(
   const checkOutTime = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
 
   // Calculate final price
-  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
-  const priceSettings = await getPriceSettings();
-  
-  let parkingPricePerDay: number | null = null;
-  if (params.parkingTypeId === 'parkingType_uncovered') {
-    parkingPricePerDay = priceSettings.priceUncovered;
-  } else if (params.parkingTypeId === 'parkingType_covered') {
-    parkingPricePerDay = priceSettings.priceCovered;
-  }
-
   let finalPrice: number | null = null;
-  if (parkingPricePerDay !== null) {
-    finalPrice = days * parkingPricePerDay;
-    if (params.washService && priceSettings.priceWash !== null) {
-      finalPrice += priceSettings.priceWash;
+  if (checkOutDate) {
+    const days = calculateDays(checkInDate, checkOutDate);
+    const priceSettings = await getPriceSettings();
+    
+    let parkingPricePerDay: number | null = null;
+    if (params.parkingTypeId === 'parkingType_uncovered') {
+      parkingPricePerDay = priceSettings.priceUncovered;
+    } else if (params.parkingTypeId === 'parkingType_covered') {
+      parkingPricePerDay = priceSettings.priceCovered;
+    }
+
+    if (parkingPricePerDay !== null) {
+      finalPrice = days * parkingPricePerDay;
+      if (params.washService && priceSettings.priceWash !== null) {
+        finalPrice += priceSettings.priceWash;
+      }
     }
   }
 
@@ -572,21 +574,23 @@ export async function createBooking(
   const checkInTime = parseTimeToDate(params.checkInTime);
   const checkOutTime = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
 
-  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
-  const priceSettings = await getPriceSettings();
-  
-  let parkingPricePerDay: number | null = null;
-  if (params.parkingTypeId === 'parkingType_uncovered') {
-    parkingPricePerDay = priceSettings.priceUncovered;
-  } else if (params.parkingTypeId === 'parkingType_covered') {
-    parkingPricePerDay = priceSettings.priceCovered;
-  }
-
   let finalPrice: number | null = null;
-  if (parkingPricePerDay !== null) {
-    finalPrice = days * parkingPricePerDay;
-    if (params.washService && priceSettings.priceWash !== null) {
-      finalPrice += priceSettings.priceWash;
+  if (checkOutDate) {
+    const days = calculateDays(checkInDate, checkOutDate);
+    const priceSettings = await getPriceSettings();
+    
+    let parkingPricePerDay: number | null = null;
+    if (params.parkingTypeId === 'parkingType_uncovered') {
+      parkingPricePerDay = priceSettings.priceUncovered;
+    } else if (params.parkingTypeId === 'parkingType_covered') {
+      parkingPricePerDay = priceSettings.priceCovered;
+    }
+
+    if (parkingPricePerDay !== null) {
+      finalPrice = days * parkingPricePerDay;
+      if (params.washService && priceSettings.priceWash !== null) {
+        finalPrice += priceSettings.priceWash;
+      }
     }
   }
 
@@ -748,21 +752,23 @@ export async function updateBooking(
   const parkingTypeId = (updateData.parkingTypeId as string) || existingBooking.parkingTypeId;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
 
-  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
-  const priceSettings = await getPriceSettings();
-
-  let parkingPricePerDay: number | null = null;
-  if (parkingTypeId === 'parkingType_uncovered') {
-    parkingPricePerDay = priceSettings.priceUncovered;
-  } else if (parkingTypeId === 'parkingType_covered') {
-    parkingPricePerDay = priceSettings.priceCovered;
-  }
-
   let finalPrice: number | null = null;
-  if (parkingPricePerDay !== null) {
-    finalPrice = days * parkingPricePerDay;
-    if (washService && priceSettings.priceWash !== null) {
-      finalPrice += priceSettings.priceWash;
+  if (checkOutDate) {
+    const days = calculateDays(checkInDate, checkOutDate);
+    const priceSettings = await getPriceSettings();
+
+    let parkingPricePerDay: number | null = null;
+    if (parkingTypeId === 'parkingType_uncovered') {
+      parkingPricePerDay = priceSettings.priceUncovered;
+    } else if (parkingTypeId === 'parkingType_covered') {
+      parkingPricePerDay = priceSettings.priceCovered;
+    }
+
+    if (parkingPricePerDay !== null) {
+      finalPrice = days * parkingPricePerDay;
+      if (washService && priceSettings.priceWash !== null) {
+        finalPrice += priceSettings.priceWash;
+      }
     }
   }
   updateData.finalPrice = finalPrice;
