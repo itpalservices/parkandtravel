@@ -343,11 +343,6 @@ export async function updateBooking(
   try {
     const authUser = req.authUser as AuthUser | undefined;
     
-    if (authUser?.role === "driver") {
-      res.status(403).json({ message: "Drivers are not allowed to update bookings" });
-      return;
-    }
-
     const { id } = req.params;
 
     if (!isValidUUID(id)) {
