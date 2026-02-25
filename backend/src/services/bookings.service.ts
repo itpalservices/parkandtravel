@@ -28,7 +28,7 @@ interface BookingResponse {
   returnFlight: string | null;
   dateFrom: string;
   timeFrom: string | null;
-  dateTo: string;
+  dateTo: string | null;
   timeTo: string | null;
   mobile: string | null;
   phoneCodeId: string | null;
@@ -55,7 +55,8 @@ interface BookingResponse {
   deleteflag: number;
 }
 
-function formatDate(date: Date): string {
+function formatDate(date: Date | null): string | null {
+  if (!date) return null;
   return date.toISOString().split("T")[0];
 }
 
@@ -237,7 +238,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     surname: b.surname,
     email: b.email,
     returnFlight: b.returnFlight,
-    dateFrom: formatDate(b.dateFrom),
+    dateFrom: formatDate(b.dateFrom)!,
     timeFrom: formatTime(b.timeFrom),
     dateTo: formatDate(b.dateTo),
     timeTo: formatTime(b.timeTo),
@@ -326,7 +327,7 @@ export async function getBookingById(
     surname: b.surname,
     email: b.email,
     returnFlight: b.returnFlight,
-    dateFrom: formatDate(b.dateFrom),
+    dateFrom: formatDate(b.dateFrom)!,
     timeFrom: formatTime(b.timeFrom),
     dateTo: formatDate(b.dateTo),
     timeTo: formatTime(b.timeTo),
@@ -948,7 +949,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     surname: b.surname,
     email: b.email,
     returnFlight: b.returnFlight,
-    dateFrom: formatDate(b.dateFrom),
+    dateFrom: formatDate(b.dateFrom)!,
     timeFrom: formatTime(b.timeFrom),
     dateTo: formatDate(b.dateTo),
     timeTo: formatTime(b.timeTo),
