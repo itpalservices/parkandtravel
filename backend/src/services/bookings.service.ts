@@ -1096,12 +1096,15 @@ interface UpdateParkedBookingParams {
   parkPlace?: string;
   pickUpOption?: string;
   washService?: boolean;
+  flightNumber?: string | null;
+  checkOutDate?: string | null;
+  checkOutTime?: string | null;
 }
 
 export async function updateParkedBooking(
   id: string,
   params: UpdateParkedBookingParams,
-): Promise<{ id: string; parkPlace: string | null; pickUpOption: string | null; washService: boolean } | null> {
+): Promise<{ id: string; parkPlace: string | null; pickUpOption: string | null; washService: boolean; finalPrice: number | null } | null> {
   if (!isValidUUID(id)) return null;
 
   const existingBooking = await prisma.booking.findUnique({
@@ -1114,7 +1117,7 @@ export async function updateParkedBooking(
     return null;
   }
 
-  const updateData: { parkPlace?: string; pickUpOption?: string; washService?: boolean } = {};
+  const updateData: Record<string, unknown> = {};
   
   if (params.parkPlace !== undefined) {
     updateData.parkPlace = params.parkPlace;
@@ -1128,6 +1131,42 @@ export async function updateParkedBooking(
     updateData.washService = params.washService;
   }
 
+  if (params.flightNumber !== undefined) {
+    updateData.returnFlight = params.flightNumber;
+  }
+
+  if (params.checkOutDate !== undefined) {
+    updateData.dateTo = params.checkOutDate ? new Date(params.checkOutDate + "T12:00:00Z") : null;
+  }
+
+  if (params.checkOutTime !== undefined) {
+    updateData.timeTo = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
+  }
+
+  const checkInDate = existingBooking.dateFrom;
+  const checkOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
+  const parkingTypeId = existingBooking.parkingTypeId;
+  const washService = (updateData.washService as boolean) ?? existingBooking.washService;
+
+  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
+  const priceSettings = await getPriceSettings();
+
+  let parkingPricePerDay: number | null = null;
+  if (parkingTypeId === 'parkingType_uncovered') {
+    parkingPricePerDay = priceSettings.priceUncovered;
+  } else if (parkingTypeId === 'parkingType_covered') {
+    parkingPricePerDay = priceSettings.priceCovered;
+  }
+
+  let finalPrice: number | null = null;
+  if (parkingPricePerDay !== null) {
+    finalPrice = days * parkingPricePerDay;
+    if (washService && priceSettings.priceWash !== null) {
+      finalPrice += priceSettings.priceWash;
+    }
+  }
+  updateData.finalPrice = finalPrice;
+
   const updatedBooking = await prisma.booking.update({
     where: { id },
     data: updateData,
@@ -1138,6 +1177,7 @@ export async function updateParkedBooking(
     parkPlace: updatedBooking.parkPlace,
     pickUpOption: updatedBooking.pickUpOption,
     washService: updatedBooking.washService,
+    finalPrice: updatedBooking.finalPrice ? parseFloat(updatedBooking.finalPrice.toString()) : null,
   };
 }
 

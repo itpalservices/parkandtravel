@@ -1417,13 +1417,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.submitting = true;
     const formValue = this.bookingForm.getRawValue();
 
-    const updateData: { parkPlace: string; pickUpOption: string; washService?: boolean } = {
+    const updateData: Record<string, any> = {
       parkPlace: this.parkPlace.trim(),
       pickUpOption: formValue.pickUpOption,
+      flightNumber: this.returnDetailsEnabled ? (formValue.flightNumber?.trim() || null) : null,
+      checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
+      checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
     };
 
     if (this.washAvailable) {
-      updateData.washService = this.washServiceEnabled;
+      updateData['washService'] = this.washServiceEnabled;
     }
 
     this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({
