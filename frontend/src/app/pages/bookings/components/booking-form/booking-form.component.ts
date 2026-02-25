@@ -175,13 +175,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       vehicleBrand: ['', [Validators.required, Validators.minLength(2)]],
       vehicleModel: [''],
       vehicleColor: [''],
-      flightNumber: ['', Validators.required],
+      flightNumber: [''],
       checkInDate: [defaultCheckIn, Validators.required],
       checkInTime: ['10:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
-      checkOutDate: [defaultCheckOut, Validators.required],
-      checkOutTime: ['10:00', Validators.required],
-      pickUpOption: ['self_pickup', Validators.required],
+      checkOutDate: [defaultCheckOut],
+      checkOutTime: ['10:00'],
+      pickUpOption: ['self_pickup'],
       parkingType: ['', Validators.required],
     });
   }
@@ -270,9 +270,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const fullName = `${booking.name} ${booking.surname}`.trim();
 
     const checkInDate = this.parseApiDate(booking.dateFrom);
-    const checkOutDate = this.parseApiDate(booking.dateTo);
+    const checkOutDate = booking.dateTo ? this.parseApiDate(booking.dateTo) : null;
     const checkInTime = booking.timeFrom ? booking.timeFrom.substring(0, 5) : '10:00';
     const checkOutTime = booking.timeTo ? booking.timeTo.substring(0, 5) : '10:00';
+
+    const hasReturnDetails = !!(booking.dateTo || booking.returnFlight || booking.pickUpOption);
+    this.returnDetailsEnabled = hasReturnDetails;
 
     this.bookingForm.patchValue({
       fullName: fullName,
@@ -291,6 +294,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       pickUpOption: booking.pickUpOption || 'self_pickup',
       parkingType: booking.parkingTypeId || '',
     });
+
+    if (hasReturnDetails) {
+      this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
+      this.bookingForm.get('checkOutDate')?.setValidators([Validators.required]);
+      this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
+      this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
+      ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'].forEach(field => {
+        this.bookingForm.get(field)?.updateValueAndValidity();
+      });
+    }
 
     if (checkInDate) {
       const checkInNgbDate = new NgbDate(checkInDate.year, checkInDate.month, checkInDate.day);
@@ -346,6 +359,20 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   
   toggleReturnDetails(): void {
     this.returnDetailsEnabled = !this.returnDetailsEnabled;
+    const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'];
+    if (this.returnDetailsEnabled) {
+      this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
+      this.bookingForm.get('checkOutDate')?.setValidators([Validators.required]);
+      this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
+      this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
+    } else {
+      returnFields.forEach(field => {
+        this.bookingForm.get(field)?.clearValidators();
+      });
+    }
+    returnFields.forEach(field => {
+      this.bookingForm.get(field)?.updateValueAndValidity();
+    });
   }
 
   private enableFieldsForNonParkedBooking(): void {
@@ -1307,15 +1334,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       vehicleModel: formValue.vehicleModel.trim(),
       vehicleBrand: formValue.vehicleBrand.trim(),
       vehicleColor: formValue.vehicleColor.trim(),
-      flightNumber: formValue.flightNumber?.trim() || null,
       checkInDate: this.formatDateForApi(formValue.checkInDate),
       checkInTime: formValue.checkInTime,
       dropOffOption: formValue.dropOffOption,
-      checkOutDate: this.formatDateForApi(formValue.checkOutDate),
-      checkOutTime: formValue.checkOutTime,
-      pickUpOption: formValue.pickUpOption,
       parkingTypeId: formValue.parkingType,
       washService: this.washServiceEnabled,
+      flightNumber: this.returnDetailsEnabled ? (formValue.flightNumber?.trim() || null) : null,
+      checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
+      checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
+      pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
     };
 
     if (this.isAdminOrDriver) {

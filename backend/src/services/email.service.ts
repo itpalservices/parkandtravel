@@ -12,8 +12,8 @@ interface BookingEmailData {
   fullName: string;
   checkInDate: string;
   checkInTime: string;
-  checkOutDate: string;
-  checkOutTime: string;
+  checkOutDate?: string;
+  checkOutTime?: string;
   licensePlate: string;
   vehicleBrand: string;
   vehicleModel?: string;
@@ -137,11 +137,14 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                     <p style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 600;">${formatDate(data.checkInDate)}</p>
                     <p style="margin: 5px 0 0 0; color: #006B8F; font-size: 14px; font-weight: 500;">${formatTime(data.checkInTime)}</p>
                   </td>
-                  <td style="padding: 15px 25px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
+                  ${data.checkOutDate ? `<td style="padding: 15px 25px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
                     <p style="margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Check-out</p>
                     <p style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 600;">${formatDate(data.checkOutDate)}</p>
-                    <p style="margin: 5px 0 0 0; color: #006B8F; font-size: 14px; font-weight: 500;">${formatTime(data.checkOutTime)}</p>
-                  </td>
+                    ${data.checkOutTime ? `<p style="margin: 5px 0 0 0; color: #006B8F; font-size: 14px; font-weight: 500;">${formatTime(data.checkOutTime)}</p>` : ''}
+                  </td>` : `<td style="padding: 15px 25px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Check-out</p>
+                    <p style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 600;">To be determined</p>
+                  </td>`}
                 </tr>
                 
                 <!-- Divider -->
@@ -288,7 +291,7 @@ RESERVATION DETAILS
 -------------------
 
 Check-in: ${formatDate(data.checkInDate)} at ${formatTime(data.checkInTime)}
-Check-out: ${formatDate(data.checkOutDate)} at ${formatTime(data.checkOutTime)}
+Check-out: ${data.checkOutDate ? `${formatDate(data.checkOutDate)}${data.checkOutTime ? ` at ${formatTime(data.checkOutTime)}` : ''}` : 'To be determined'}
 
 Vehicle: ${vehicle}${data.vehicleColor ? ` (${data.vehicleColor})` : ""}
 License Plate: ${data.licensePlate}

@@ -390,8 +390,8 @@ interface CreateGuestBookingParams {
   flightNumber?: string | null;
   checkInDate: string;
   checkInTime: string;
-  checkOutDate: string;
-  checkOutTime: string;
+  checkOutDate?: string | null;
+  checkOutTime?: string | null;
   parkingTypeId: string;
   washService?: boolean;
   dropOffOption?: string | null;
@@ -444,14 +444,16 @@ async function getPriceSettings(): Promise<{
 export async function createGuestBooking(
   params: CreateGuestBookingParams,
 ): Promise<{ id: string; finalPrice: number | null }> {
-  const availability = await checkAvailability(
-    params.checkInDate,
-    params.checkOutDate,
-    params.parkingTypeId
-  );
+  if (params.checkOutDate) {
+    const availability = await checkAvailability(
+      params.checkInDate,
+      params.checkOutDate,
+      params.parkingTypeId
+    );
 
-  if (!availability.available) {
-    throw new Error(availability.message || "No parking spots available for the selected dates");
+    if (!availability.available) {
+      throw new Error(availability.message || "No parking spots available for the selected dates");
+    }
   }
 
   const nameParts = params.fullName.trim().split(" ");
@@ -459,12 +461,12 @@ export async function createGuestBooking(
   const surname = nameParts.slice(1).join(" ") || "";
 
   const checkInDate = new Date(params.checkInDate + "T12:00:00Z");
-  const checkOutDate = new Date(params.checkOutDate + "T12:00:00Z");
+  const checkOutDate = params.checkOutDate ? new Date(params.checkOutDate + "T12:00:00Z") : null;
   const checkInTime = parseTimeToDate(params.checkInTime);
-  const checkOutTime = parseTimeToDate(params.checkOutTime);
+  const checkOutTime = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
 
   // Calculate final price
-  const days = calculateDays(checkInDate, checkOutDate);
+  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
   const priceSettings = await getPriceSettings();
   
   let parkingPricePerDay: number | null = null;
@@ -519,8 +521,8 @@ export async function createGuestBooking(
       fullName: params.fullName,
       checkInDate: params.checkInDate,
       checkInTime: params.checkInTime,
-      checkOutDate: params.checkOutDate,
-      checkOutTime: params.checkOutTime,
+      checkOutDate: params.checkOutDate || undefined,
+      checkOutTime: params.checkOutTime || undefined,
       licensePlate: params.licensePlate,
       vehicleBrand: params.vehicleBrand,
       vehicleModel: params.vehicleModel || undefined,
@@ -548,14 +550,16 @@ export async function createGuestBooking(
 export async function createBooking(
   params: CreateBookingParams,
 ): Promise<{ id: string; finalPrice: number | null }> {
-  const availability = await checkAvailability(
-    params.checkInDate,
-    params.checkOutDate,
-    params.parkingTypeId
-  );
+  if (params.checkOutDate) {
+    const availability = await checkAvailability(
+      params.checkInDate,
+      params.checkOutDate,
+      params.parkingTypeId
+    );
 
-  if (!availability.available) {
-    throw new Error(availability.message || "No parking spots available for the selected dates");
+    if (!availability.available) {
+      throw new Error(availability.message || "No parking spots available for the selected dates");
+    }
   }
 
   const nameParts = params.fullName.trim().split(" ");
@@ -563,11 +567,11 @@ export async function createBooking(
   const surname = nameParts.slice(1).join(" ") || "";
 
   const checkInDate = new Date(params.checkInDate + "T12:00:00Z");
-  const checkOutDate = new Date(params.checkOutDate + "T12:00:00Z");
+  const checkOutDate = params.checkOutDate ? new Date(params.checkOutDate + "T12:00:00Z") : null;
   const checkInTime = parseTimeToDate(params.checkInTime);
-  const checkOutTime = parseTimeToDate(params.checkOutTime);
+  const checkOutTime = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
 
-  const days = calculateDays(checkInDate, checkOutDate);
+  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
   const priceSettings = await getPriceSettings();
   
   let parkingPricePerDay: number | null = null;
@@ -623,8 +627,8 @@ export async function createBooking(
       fullName: params.fullName,
       checkInDate: params.checkInDate,
       checkInTime: params.checkInTime,
-      checkOutDate: params.checkOutDate,
-      checkOutTime: params.checkOutTime,
+      checkOutDate: params.checkOutDate || undefined,
+      checkOutTime: params.checkOutTime || undefined,
       licensePlate: params.licensePlate,
       vehicleBrand: params.vehicleBrand,
       vehicleModel: params.vehicleModel,
@@ -685,10 +689,12 @@ export async function updateBooking(
   if (!existingBooking) return null;
 
   const checkInDateStr = params.checkInDate || existingBooking.dateFrom.toISOString().split("T")[0];
-  const checkOutDateStr = params.checkOutDate || existingBooking.dateTo.toISOString().split("T")[0];
+  const checkOutDateStr = params.checkOutDate !== undefined
+    ? (params.checkOutDate || null)
+    : (existingBooking.dateTo ? existingBooking.dateTo.toISOString().split("T")[0] : null);
   const parkingTypeIdForCheck = params.parkingTypeId || existingBooking.parkingTypeId;
 
-  if (parkingTypeIdForCheck) {
+  if (parkingTypeIdForCheck && checkOutDateStr) {
     const availability = await checkAvailability(
       checkInDateStr,
       checkOutDateStr,
@@ -730,18 +736,18 @@ export async function updateBooking(
     updateData.timeFrom = parseTimeToDate(params.checkInTime);
   }
   if (params.checkOutDate !== undefined) {
-    updateData.dateTo = new Date(params.checkOutDate + "T12:00:00Z");
+    updateData.dateTo = params.checkOutDate ? new Date(params.checkOutDate + "T12:00:00Z") : null;
   }
   if (params.checkOutTime !== undefined) {
-    updateData.timeTo = parseTimeToDate(params.checkOutTime);
+    updateData.timeTo = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
   }
 
   const checkInDate = updateData.dateFrom as Date || existingBooking.dateFrom;
-  const checkOutDate = updateData.dateTo as Date || existingBooking.dateTo;
+  const checkOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
   const parkingTypeId = (updateData.parkingTypeId as string) || existingBooking.parkingTypeId;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
 
-  const days = calculateDays(checkInDate, checkOutDate);
+  const days = checkOutDate ? calculateDays(checkInDate, checkOutDate) : 1;
   const priceSettings = await getPriceSettings();
 
   let parkingPricePerDay: number | null = null;
@@ -769,7 +775,7 @@ export async function updateBooking(
   if (emailToSend) {
     const fullName = params.fullName || `${existingBooking.name} ${existingBooking.surname}`.trim();
     const checkInTime = params.checkInTime || (existingBooking.timeFrom ? existingBooking.timeFrom.toISOString().split("T")[1].substring(0, 5) : "12:00");
-    const checkOutTime = params.checkOutTime || (existingBooking.timeTo ? existingBooking.timeTo.toISOString().split("T")[1].substring(0, 5) : "12:00");
+    const checkOutTime = params.checkOutTime !== undefined ? (params.checkOutTime || null) : (existingBooking.timeTo ? existingBooking.timeTo.toISOString().split("T")[1].substring(0, 5) : null);
     const licensePlate = params.licensePlate || existingBooking.plateNo || "";
     const vehicleBrand = params.vehicleBrand || existingBooking.carBrand || "";
     const vehicleModel = params.vehicleModel || existingBooking.carModel || undefined;
@@ -789,8 +795,8 @@ export async function updateBooking(
       fullName,
       checkInDate: checkInDateStr,
       checkInTime,
-      checkOutDate: checkOutDateStr,
-      checkOutTime,
+      checkOutDate: checkOutDateStr || undefined,
+      checkOutTime: checkOutTime || undefined,
       licensePlate,
       vehicleBrand,
       vehicleModel,
@@ -1036,13 +1042,15 @@ export async function updateBookingStatus(
     actualCheckOutDate = new Date();
     updateData.actualCheckOut = actualCheckOutDate;
 
-    const checkOutDate = new Date(existingBooking.dateTo);
-    checkOutDate.setHours(23, 59, 59, 999);
+    const checkOutDate = existingBooking.dateTo ? new Date(existingBooking.dateTo) : null;
+    if (checkOutDate) {
+      checkOutDate.setHours(23, 59, 59, 999);
+    }
 
-    if (actualCheckOutDate > checkOutDate && applyExtraFee === true) {
+    if (checkOutDate && actualCheckOutDate > checkOutDate && applyExtraFee === true) {
       const actualCheckOutDay = new Date(actualCheckOutDate);
       actualCheckOutDay.setHours(0, 0, 0, 0);
-      const checkOutDay = new Date(existingBooking.dateTo);
+      const checkOutDay = new Date(existingBooking.dateTo!);
       checkOutDay.setHours(0, 0, 0, 0);
 
       const diffTime = actualCheckOutDay.getTime() - checkOutDay.getTime();

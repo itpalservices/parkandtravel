@@ -33,7 +33,7 @@ model Booking {
   returnFlight String?      @db.VarChar(10)
   dateFrom     DateTime     @db.Date
   timeFrom     DateTime?    @db.Time(6)
-  dateTo       DateTime     @db.Date
+  dateTo       DateTime?    @db.Date
   timeTo       DateTime?    @db.Time(6)
   mobile       String?      @db.VarChar(20)
   phoneCodeId  String?      @db.Uuid

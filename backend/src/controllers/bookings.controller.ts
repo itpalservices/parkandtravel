@@ -210,12 +210,9 @@ export async function createGuestBooking(
       !licensePlate ||
       !checkInDate ||
       !checkInTime ||
-      !checkOutDate ||
-      !checkOutTime ||
       !parkingTypeId ||
       !vehicleBrand ||
-      !dropOffOption ||
-      !pickUpOption
+      !dropOffOption
     ) {
       res.status(400).json({ error: "Missing required fields" });
       return;
@@ -233,8 +230,8 @@ export async function createGuestBooking(
       flightNumber: flightNumber || null,
       checkInDate,
       checkInTime,
-      checkOutDate,
-      checkOutTime,
+      checkOutDate: checkOutDate || null,
+      checkOutTime: checkOutTime || null,
       parkingTypeId,
       washService: washService === true,
       dropOffOption: dropOffOption || null,
@@ -291,12 +288,9 @@ export async function createBooking(
       !licensePlate ||
       !checkInDate ||
       !checkInTime ||
-      !checkOutDate ||
-      !checkOutTime ||
       !parkingTypeId ||
       !vehicleBrand ||
-      !dropOffOption ||
-      !pickUpOption
+      !dropOffOption
     ) {
       res.status(400).json({ error: "Missing required fields" });
       return;
@@ -323,8 +317,8 @@ export async function createBooking(
       flightNumber: flightNumber || null,
       checkInDate,
       checkInTime,
-      checkOutDate,
-      checkOutTime,
+      checkOutDate: checkOutDate || null,
+      checkOutTime: checkOutTime || null,
       parkingTypeId,
       washService: washService === true,
       dropOffOption: dropOffOption || null,
