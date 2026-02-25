@@ -225,25 +225,16 @@ export async function getAllRegularUsers(): Promise<{
   }));
 }
 
-export async function searchRegularUserByEmail(email: string): Promise<{
+interface UserSearchResult {
   found: boolean;
   userId?: string;
+  email?: string;
   fullName?: string;
   phone?: string;
   phoneCode?: string;
-}> {
-  const user = await getUserByEmail(email);
+}
 
-  if (!user) {
-    return { found: false };
-  }
-
-  // Check app_metadata.role - exclude admin and driver users
-  const userRole = user.app_metadata?.role?.toLowerCase();
-  if (userRole === "admin" || userRole === "driver") {
-    return { found: false };
-  }
-
+function formatUserResult(user: Auth0User): UserSearchResult {
   const fullName = user.name || 
     [user.given_name, user.family_name].filter(Boolean).join(" ") || 
     "";
@@ -251,8 +242,56 @@ export async function searchRegularUserByEmail(email: string): Promise<{
   return {
     found: true,
     userId: user.user_id,
+    email: user.email,
     fullName,
     phone: user.user_metadata?.phone_number || "",
     phoneCode: user.user_metadata?.phone_code || "",
   };
+}
+
+export async function searchRegularUserByEmail(email: string): Promise<UserSearchResult> {
+  const user = await getUserByEmail(email);
+
+  if (!user) {
+    return { found: false };
+  }
+
+  const userRole = user.app_metadata?.role?.toLowerCase();
+  if (userRole === "admin" || userRole === "driver") {
+    return { found: false };
+  }
+
+  return formatUserResult(user);
+}
+
+export async function searchRegularUserByPhone(phone: string, phoneCode: string): Promise<UserSearchResult> {
+  const token = await getManagementToken();
+
+  const q = `user_metadata.phone_number:"${phone}" AND user_metadata.phone_code:"${phoneCode}"`;
+  
+  const response = await axios.get<Auth0User[]>(
+    `https://${AUTH0_DOMAIN}/api/v2/users`,
+    {
+      params: {
+        q,
+        search_engine: 'v3',
+        per_page: 10,
+        include_totals: false,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const regularUser = response.data.find(user => {
+    const role = user.app_metadata?.role?.toLowerCase();
+    return role !== "admin" && role !== "driver";
+  });
+
+  if (!regularUser) {
+    return { found: false };
+  }
+
+  return formatUserResult(regularUser);
 }

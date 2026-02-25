@@ -1,0 +1,67 @@
+@if (isRegularUser) {
+              <div class="form-group car-select-group">
+                <label>Select Car *</label>
+                @if (carsLoading) {
+                  <div class="loading-placeholder">Loading your cars...</div>
+                } @else if (cars.length === 0) {
+                  <div class="no-cars-message">
+                    <p>You don't have any saved cars yet.</p>
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-add-car"
+                      (click)="openAddCarModal()"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      Add New Car
+                    </button>
+                  </div>
+                } @else {
+                  <div class="car-select-wrapper">
+                    <select
+                      class="form-control car-select"
+                      (change)="selectCar(cars[$any($event.target).selectedIndex])"
+                    >
+                      @for (car of cars; track car.id; let i = $index) {
+                        <option [value]="car.id" [selected]="selectedCar?.id === car.id">
+                          {{ car.carBrand }} {{ car.carModel }} - {{ car.plateNo }}
+                        </option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary btn-add-car-inline"
+                      (click)="openAddCarModal()"
+                      title="Add new car"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            }

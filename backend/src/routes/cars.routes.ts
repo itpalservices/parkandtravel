@@ -15,12 +15,18 @@ router.get("/", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    if (role !== "user") {
-      res.status(403).json({ error: "Only regular users can access cars" });
+    const targetUserId = (role === "admin" || role === "driver") && req.query.userId
+      ? req.query.userId as string
+      : role === "user"
+        ? userId
+        : null;
+
+    if (!targetUserId) {
+      res.status(400).json({ error: "userId parameter required for admin/driver" });
       return;
     }
 
-    const cars = await getCarsByUserId(userId);
+    const cars = await getCarsByUserId(targetUserId);
     res.json({ success: true, data: cars });
   } catch (error: any) {
     console.error("Error fetching cars:", error.message);
@@ -69,8 +75,14 @@ router.post("/", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    if (role !== "user") {
-      res.status(403).json({ error: "Only regular users can manage cars" });
+    const targetUserId = (role === "admin" || role === "driver") && req.body.userId
+      ? req.body.userId
+      : role === "user"
+        ? userId
+        : null;
+
+    if (!targetUserId) {
+      res.status(403).json({ error: "Cannot create car without target user" });
       return;
     }
 
@@ -81,7 +93,7 @@ router.post("/", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    const car = await createCar(userId, carBrand, carModel, carColor, plateNo);
+    const car = await createCar(targetUserId, carBrand, carModel, carColor, plateNo);
     res.status(201).json({ success: true, data: car });
   } catch (error: any) {
     console.error("Error creating car:", error.message);

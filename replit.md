@@ -47,7 +47,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Booking Form Features
 - **Regular Users**: Personal info (email, phone, fullName) auto-filled from profile and disabled when values exist. Car selection dropdown to choose from saved vehicles. Add New Car modal if no saved vehicles exist.
-- **Admin/Driver Users**: Email field enabled initially, phone and fullName fields disabled. When email is entered and focus leaves, system searches Auth0 for matching regular users (excluding admin/driver roles). If found, fields are auto-filled and userId is set. If not found, fields are enabled for manual entry and userId is null.
+- **Admin/Driver Users**: Email field enabled initially, phone and fullName fields disabled. When email is entered and focus leaves, system searches Auth0 for matching regular users (excluding admin/driver roles). If found, fields are auto-filled, userId is set, and the user's saved cars are loaded in a dropdown. Phone search also supported: when phone number + phone code are entered and focus leaves the phone field, system searches Auth0 by phone metadata. If found via phone, email is auto-filled and disabled. Admin/driver can add new cars to the found user's account. If not found, fields are enabled for manual entry and userId is null.
 - Toast notifications for success/error messages using SweetAlert2.
 
 ### Customers Management

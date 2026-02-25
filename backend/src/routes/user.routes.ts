@@ -181,13 +181,19 @@ router.get("/search", checkJwt, async (req: Request, res: Response) => {
     }
 
     const email = req.query.email as string;
+    const phone = req.query.phone as string;
+    const phoneCode = req.query.phoneCode as string;
 
-    if (!email || typeof email !== "string") {
-      res.status(400).json({ error: "Email parameter is required" });
+    let result;
+    if (email && typeof email === "string") {
+      result = await searchRegularUserByEmail(email.toLowerCase().trim());
+    } else if (phone && phoneCode) {
+      const { searchRegularUserByPhone } = await import("../services/auth0.service");
+      result = await searchRegularUserByPhone(phone.trim(), phoneCode.trim());
+    } else {
+      res.status(400).json({ error: "Email or phone+phoneCode parameters are required" });
       return;
     }
-
-    const result = await searchRegularUserByEmail(email.toLowerCase().trim());
 
     res.json({
       success: true,

@@ -34,6 +34,18 @@ import {
 } from '../../../../core/services/availability.service';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 
+interface UserSearchResponse {
+  success: boolean;
+  data: {
+    found: boolean;
+    userId?: string;
+    email?: string;
+    fullName?: string;
+    phone?: string;
+    phoneCode?: string;
+  };
+}
+
 enum FormType {
   NewBooking,
   ExistingBooking,
@@ -820,10 +832,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private applyFoundUserData(data: {
+    email?: string;
     fullName?: string;
     phone?: string;
     phoneCode?: string;
-  }): void {
+  }, source: 'email' | 'phone' = 'email'): void {
+    if (source === 'phone' && data.email) {
+      this.bookingForm.patchValue({ email: data.email });
+      this.bookingForm.get('email')?.disable();
+    }
+
     if (data.fullName) {
       this.bookingForm.patchValue({ fullName: data.fullName });
       this.bookingForm.get('fullName')?.disable();
@@ -831,11 +849,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.bookingForm.get('fullName')?.enable();
     }
 
-    if (data.phone) {
-      this.bookingForm.patchValue({ phone: data.phone });
-      this.bookingForm.get('phone')?.disable();
-    } else {
-      this.bookingForm.get('phone')?.enable();
+    if (source === 'email') {
+      if (data.phone) {
+        this.bookingForm.patchValue({ phone: data.phone });
+        this.bookingForm.get('phone')?.disable();
+      } else {
+        this.bookingForm.get('phone')?.enable();
+      }
     }
 
     if (data.phoneCode) {
@@ -855,6 +875,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.bookingForm.get('phoneCodeId')?.enable();
       this.pendingFoundUserData = null;
     }
+
+    if (this.foundUserId) {
+      this.loadFoundUserCars();
+    }
   }
 
   onEmailBlur(): void {
@@ -872,16 +896,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.userSearched = false;
 
     this.apiService
-      .get<{
-        success: boolean;
-        data: {
-          found: boolean;
-          userId?: string;
-          fullName?: string;
-          phone?: string;
-          phoneCode?: string;
-        };
-      }>(`/user/search?email=${encodeURIComponent(email)}`)
+      .get<UserSearchResponse>(`/user/search?email=${encodeURIComponent(email)}`)
       .subscribe({
         next: (response) => {
           this.searchingUser = false;
@@ -889,23 +904,70 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
           if (response.success && response.data.found) {
             this.foundUserId = response.data.userId || null;
-            this.applyFoundUserData(response.data);
+            this.applyFoundUserData(response.data, 'email');
           } else {
-            this.foundUserId = null;
-            this.bookingForm.get('fullName')?.enable();
-            this.bookingForm.get('phone')?.enable();
-            this.bookingForm.get('phoneCodeId')?.enable();
+            this.clearFoundUser();
           }
         },
         error: () => {
           this.searchingUser = false;
           this.userSearched = true;
-          this.foundUserId = null;
-          this.bookingForm.get('fullName')?.enable();
-          this.bookingForm.get('phone')?.enable();
-          this.bookingForm.get('phoneCodeId')?.enable();
+          this.clearFoundUser();
         },
       });
+  }
+
+  onPhoneBlur(): void {
+    if (!this.isAdminOrDriver) return;
+    if (this.foundUserId) return;
+
+    const phoneControl = this.bookingForm.get('phone');
+    const phone = phoneControl?.value?.trim();
+    if (!phone || !this.selectedPhoneCode) return;
+
+    this.searchingUser = true;
+    this.userSearched = false;
+
+    const params = `phone=${encodeURIComponent(phone)}&phoneCode=${encodeURIComponent(this.selectedPhoneCode.phoneCode)}`;
+    this.apiService
+      .get<UserSearchResponse>(`/user/search?${params}`)
+      .subscribe({
+        next: (response) => {
+          this.searchingUser = false;
+          this.userSearched = true;
+
+          if (response.success && response.data.found) {
+            this.foundUserId = response.data.userId || null;
+            this.applyFoundUserData(response.data, 'phone');
+          } else {
+            this.clearFoundUser('phone');
+          }
+        },
+        error: () => {
+          this.searchingUser = false;
+          this.userSearched = true;
+          this.clearFoundUser('phone');
+        },
+      });
+  }
+
+  private clearFoundUser(source: 'email' | 'phone' = 'email'): void {
+    this.foundUserId = null;
+    this.cars = [];
+    this.selectedCar = null;
+    this.bookingForm.get('fullName')?.enable();
+    if (source === 'email') {
+      this.bookingForm.get('phone')?.enable();
+      this.bookingForm.get('phoneCodeId')?.enable();
+    }
+    this.enableVehicleFields();
+  }
+
+  private enableVehicleFields(): void {
+    this.bookingForm.get('vehicleBrand')?.enable();
+    this.bookingForm.get('vehicleModel')?.enable();
+    this.bookingForm.get('vehicleColor')?.enable();
+    this.bookingForm.get('licensePlate')?.enable();
   }
 
   private loadUserProfile(): void {
@@ -981,6 +1043,25 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadFoundUserCars(): void {
+    if (!this.foundUserId) return;
+    this.carsLoading = true;
+    this.apiService.get<{ success: boolean; data: Car[] }>(`/cars?userId=${encodeURIComponent(this.foundUserId)}`).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.cars = response.data;
+          if (this.cars.length > 0) {
+            this.selectCar(this.cars[0]);
+          }
+        }
+        this.carsLoading = false;
+      },
+      error: () => {
+        this.carsLoading = false;
+      },
+    });
+  }
+
   selectCar(car: Car): void {
     this.selectedCar = car;
     this.bookingForm.patchValue({
@@ -1018,7 +1099,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
 
     this.savingCar = true;
-    const carData = this.carForm.value;
+    const carData = { ...this.carForm.value };
+    if (this.isAdminOrDriver && this.foundUserId) {
+      carData.userId = this.foundUserId;
+    }
 
     this.apiService.post<{ success: boolean; data: Car }>('/cars', carData).subscribe({
       next: (response) => {

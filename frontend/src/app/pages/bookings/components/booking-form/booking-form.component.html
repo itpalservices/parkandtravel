@@ -213,6 +213,7 @@
                       [class.disabled-field]="f['phone'].disabled"
                       formControlName="phone"
                       placeholder="99123456"
+                      (blur)="onPhoneBlur()"
                     />
                   </div>
                   <app-form-field-error
@@ -244,7 +245,7 @@
           <div class="form-section">
             <h3>Vehicle Information</h3>
 
-            @if (isRegularUser) {
+            @if (isRegularUser || (isAdminOrDriver && foundUserId)) {
               <div class="form-group car-select-group">
                 <label>Select Car *</label>
                 @if (carsLoading) {
