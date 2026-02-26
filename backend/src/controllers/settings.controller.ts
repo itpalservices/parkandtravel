@@ -122,18 +122,30 @@ export async function updateSettingsHandler(
       emailDescription: data.emailDescription !== null && data.emailDescription !== undefined
         ? String(data.emailDescription)
         : null,
+      priceIncrementsCovered: undefined,
+      priceIncrementsUncovered: undefined,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {
       validatedData.priceUncovered = data.priceUncovered !== null && data.priceUncovered !== undefined
         ? Number(data.priceUncovered)
         : null;
+      if (data.priceIncrementsUncovered !== undefined) {
+        validatedData.priceIncrementsUncovered = Array.isArray(data.priceIncrementsUncovered)
+          ? data.priceIncrementsUncovered.map(Number)
+          : null;
+      }
     }
 
     if (validatedData.availableCovered && validatedData.availableCovered > 0) {
       validatedData.priceCovered = data.priceCovered !== null && data.priceCovered !== undefined
         ? Number(data.priceCovered)
         : null;
+      if (data.priceIncrementsCovered !== undefined) {
+        validatedData.priceIncrementsCovered = Array.isArray(data.priceIncrementsCovered)
+          ? data.priceIncrementsCovered.map(Number)
+          : null;
+      }
     }
 
     const settings = await updateSettings(validatedData);

@@ -296,6 +296,111 @@
               </div>
 
               <div class="settings-group">
+                <h4>Price Increments</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  Define daily price increments for progressive pricing. Day 1 uses the base price above. Each subsequent day adds the corresponding increment. The last increment repeats for all remaining days.
+                </small>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="mb-0">Covered Increments</label>
+                      @if (priceIncrementsUncovered.length > 0) {
+                        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyIncrementsToCovered()" title="Copy from Uncovered">
+                          <i class="bi bi-arrow-left"></i> Copy from Uncovered
+                        </button>
+                      }
+                    </div>
+                    <div class="increments-list">
+                      @for (inc of priceIncrementsCovered; track $index) {
+                        <div class="increment-item">
+                          <span class="increment-label">Day {{ $index + 2 }}{{ $index === priceIncrementsCovered.length - 1 ? '+' : '' }}:</span>
+                          <div class="input-group input-group-sm" style="max-width: 100px;">
+                            <span class="input-group-text">+</span>
+                            <input
+                              type="number"
+                              class="form-control"
+                              [value]="inc"
+                              min="0"
+                              step="0.01"
+                              (change)="updateIncrement('covered', $index, $event)"
+                            />
+                          </div>
+                          <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeIncrementCovered($index)">
+                            &times;
+                          </button>
+                        </div>
+                      }
+                    </div>
+                    <div class="increment-add">
+                      <div class="input-group input-group-sm" style="max-width: 120px;">
+                        <span class="input-group-text">+</span>
+                        <input
+                          type="number"
+                          class="form-control"
+                          [(ngModel)]="newIncrementCovered"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="0"
+                          min="0"
+                          step="0.01"
+                          (keydown.enter)="addIncrementCovered(); $event.preventDefault()"
+                        />
+                      </div>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addIncrementCovered()">Add</button>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="mb-0">Uncovered Increments</label>
+                      @if (priceIncrementsCovered.length > 0) {
+                        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyIncrementsToUncovered()" title="Copy from Covered">
+                          <i class="bi bi-arrow-left"></i> Copy from Covered
+                        </button>
+                      }
+                    </div>
+                    <div class="increments-list">
+                      @for (inc of priceIncrementsUncovered; track $index) {
+                        <div class="increment-item">
+                          <span class="increment-label">Day {{ $index + 2 }}{{ $index === priceIncrementsUncovered.length - 1 ? '+' : '' }}:</span>
+                          <div class="input-group input-group-sm" style="max-width: 100px;">
+                            <span class="input-group-text">+</span>
+                            <input
+                              type="number"
+                              class="form-control"
+                              [value]="inc"
+                              min="0"
+                              step="0.01"
+                              (change)="updateIncrement('uncovered', $index, $event)"
+                            />
+                          </div>
+                          <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeIncrementUncovered($index)">
+                            &times;
+                          </button>
+                        </div>
+                      }
+                    </div>
+                    <div class="increment-add">
+                      <div class="input-group input-group-sm" style="max-width: 120px;">
+                        <span class="input-group-text">+</span>
+                        <input
+                          type="number"
+                          class="form-control"
+                          [(ngModel)]="newIncrementUncovered"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="0"
+                          min="0"
+                          step="0.01"
+                          (keydown.enter)="addIncrementUncovered(); $event.preventDefault()"
+                        />
+                      </div>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addIncrementUncovered()">Add</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
                 <h4>Day End</h4>
 
                 <div class="form-group">

@@ -1301,8 +1301,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.parkingTypes = [
-          { id: 'parkingType_covered', name: 'Covered', pricePerDay: null },
-          { id: 'parkingType_uncovered', name: 'Un Covered', pricePerDay: null },
+          { id: 'parkingType_covered', name: 'Covered', pricePerDay: null, priceIncrements: null },
+          { id: 'parkingType_uncovered', name: 'Un Covered', pricePerDay: null, priceIncrements: null },
         ];
         this.washAvailable = false;
         this.washPrice = null;
@@ -1344,11 +1344,23 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return dropOffMatch || pickUpMatch;
   }
 
+  calculateProgressivePrice(basePrice: number, days: number, increments: number[] | null): number {
+    let price = basePrice;
+    for (let day = 2; day <= days; day++) {
+      const idx = day - 2;
+      const increment = increments && increments.length > 0
+        ? (idx < increments.length ? increments[idx] : increments[increments.length - 1])
+        : 0;
+      price += increment;
+    }
+    return price;
+  }
+
   calculateTotalPrice(): number | null {
     const parkingType = this.getSelectedParkingType();
     if (!parkingType || parkingType.pricePerDay === null) return null;
     const days = this.calculateDays();
-    let total = days * parkingType.pricePerDay;
+    let total = this.calculateProgressivePrice(parkingType.pricePerDay, days, parkingType.priceIncrements);
     if (this.washServiceEnabled && this.washPrice !== null) {
       total += this.washPrice;
     }

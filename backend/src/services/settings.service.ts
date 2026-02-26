@@ -9,6 +9,8 @@ export interface ConfigurationSettings {
   dayEnd: number | null;
   deliveryFee: number | null;
   emailDescription: string | null;
+  priceIncrementsCovered: number[] | null;
+  priceIncrementsUncovered: number[] | null;
 }
 
 const SETTING_KEYS = {
@@ -20,6 +22,8 @@ const SETTING_KEYS = {
   dayEnd: "configurationSetting_dayEnd",
   deliveryFee: "configurationSetting_deliveryFee",
   emailDescription: "configurationSetting_emailDescription",
+  priceIncrementsCovered: "configurationSetting_priceIncrementsCovered",
+  priceIncrementsUncovered: "configurationSetting_priceIncrementsUncovered",
 };
 
 interface SettingRow {
@@ -50,6 +54,8 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     dayEnd: parseIntOrNull(settingsMap.get(SETTING_KEYS.dayEnd)),
     deliveryFee: parseFloatOrNull(settingsMap.get(SETTING_KEYS.deliveryFee)),
     emailDescription: settingsMap.get(SETTING_KEYS.emailDescription) ?? null,
+    priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsCovered)),
+    priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsUncovered)),
   };
 }
 
@@ -118,6 +124,20 @@ export async function updateSettings(
     });
   }
 
+  if (data.priceIncrementsCovered !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.priceIncrementsCovered,
+      value: data.priceIncrementsCovered !== null ? JSON.stringify(data.priceIncrementsCovered) : null,
+    });
+  }
+
+  if (data.priceIncrementsUncovered !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.priceIncrementsUncovered,
+      value: data.priceIncrementsUncovered !== null ? JSON.stringify(data.priceIncrementsUncovered) : null,
+    });
+  }
+
   for (const update of updates) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO configuration_settings (id, value) VALUES ($1, $2)
@@ -140,4 +160,17 @@ function parseFloatOrNull(value: string | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed = parseFloat(value);
   return isNaN(parsed) ? null : parsed;
+}
+
+function parseJsonArrayOrNull(value: string | null | undefined): number[] | null {
+  if (value === null || value === undefined || value === "") return null;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed) && parsed.every((v: any) => typeof v === "number")) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }

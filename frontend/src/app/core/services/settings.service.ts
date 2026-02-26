@@ -11,6 +11,8 @@ export interface ConfigurationSettings {
   dayEnd: number | null;
   deliveryFee: number | null;
   emailDescription: string | null;
+  priceIncrementsCovered: number[] | null;
+  priceIncrementsUncovered: number[] | null;
 }
 
 @Injectable({

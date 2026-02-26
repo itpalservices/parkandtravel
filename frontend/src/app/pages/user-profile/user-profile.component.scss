@@ -969,3 +969,29 @@
     }
   }
 }
+
+.increments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.increment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.increment-label {
+  font-size: 0.85rem;
+  color: #666;
+  min-width: 60px;
+}
+
+.increment-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}

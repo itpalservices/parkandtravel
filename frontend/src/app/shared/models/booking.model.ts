@@ -54,6 +54,7 @@ export interface ParkingType {
   id: string;
   name: string;
   pricePerDay: number | null;
+  priceIncrements: number[] | null;
 }
 
 export interface ParkingTypesResponse {

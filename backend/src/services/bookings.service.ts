@@ -427,13 +427,17 @@ async function getPriceSettings(): Promise<{
   priceCovered: number | null;
   priceWash: number | null;
   deliveryFee: number | null;
+  priceIncrementsCovered: number[] | null;
+  priceIncrementsUncovered: number[] | null;
 }> {
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6)`,
     'configurationSetting_priceUncovered',
     'configurationSetting_priceCovered',
     'configurationSetting_priceWash',
-    'configurationSetting_deliveryFee'
+    'configurationSetting_deliveryFee',
+    'configurationSetting_priceIncrementsCovered',
+    'configurationSetting_priceIncrementsUncovered'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -445,12 +449,50 @@ async function getPriceSettings(): Promise<{
     return isNaN(parsed) ? null : parsed;
   };
 
+  const parseJsonArrayOrNull = (value: string | null | undefined): number[] | null => {
+    if (value === null || value === undefined || value === '') return null;
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed) && parsed.every((v: any) => typeof v === 'number')) {
+        return parsed;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   return {
     priceUncovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceUncovered')),
     priceCovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceCovered')),
     priceWash: parseFloatOrNull(settingsMap.get('configurationSetting_priceWash')),
     deliveryFee: parseFloatOrNull(settingsMap.get('configurationSetting_deliveryFee')),
+    priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get('configurationSetting_priceIncrementsCovered')),
+    priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get('configurationSetting_priceIncrementsUncovered')),
   };
+}
+
+function calculateProgressivePrice(basePrice: number, days: number, increments: number[] | null): number {
+  let price = basePrice;
+  for (let day = 2; day <= days; day++) {
+    const incrementIndex = day - 2;
+    const increment = increments && increments.length > 0
+      ? (incrementIndex < increments.length ? increments[incrementIndex] : increments[increments.length - 1])
+      : 0;
+    price += increment;
+  }
+  return price;
+}
+
+function calculateExtraFeeProgressive(originalDays: number, extraDays: number, increments: number[] | null): number {
+  if (!increments || increments.length === 0) return 0;
+  let fee = 0;
+  for (let i = 0; i < extraDays; i++) {
+    const incrementIndex = originalDays + i - 1;
+    const increment = incrementIndex < increments.length ? increments[incrementIndex] : increments[increments.length - 1];
+    fee += increment;
+  }
+  return fee;
 }
 
 function hasAirportDelivery(dropOffOption?: string | null, pickUpOption?: string | null): boolean {
@@ -487,15 +529,18 @@ export async function createGuestBooking(
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
     
-    let parkingPricePerDay: number | null = null;
+    let basePrice: number | null = null;
+    let increments: number[] | null = null;
     if (params.parkingTypeId === 'parkingType_uncovered') {
-      parkingPricePerDay = priceSettings.priceUncovered;
+      basePrice = priceSettings.priceUncovered;
+      increments = priceSettings.priceIncrementsUncovered;
     } else if (params.parkingTypeId === 'parkingType_covered') {
-      parkingPricePerDay = priceSettings.priceCovered;
+      basePrice = priceSettings.priceCovered;
+      increments = priceSettings.priceIncrementsCovered;
     }
 
-    if (parkingPricePerDay !== null) {
-      finalPrice = days * parkingPricePerDay;
+    if (basePrice !== null) {
+      finalPrice = calculateProgressivePrice(basePrice, days, increments);
       if (params.washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
@@ -600,15 +645,18 @@ export async function createBooking(
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
     
-    let parkingPricePerDay: number | null = null;
+    let basePrice: number | null = null;
+    let increments: number[] | null = null;
     if (params.parkingTypeId === 'parkingType_uncovered') {
-      parkingPricePerDay = priceSettings.priceUncovered;
+      basePrice = priceSettings.priceUncovered;
+      increments = priceSettings.priceIncrementsUncovered;
     } else if (params.parkingTypeId === 'parkingType_covered') {
-      parkingPricePerDay = priceSettings.priceCovered;
+      basePrice = priceSettings.priceCovered;
+      increments = priceSettings.priceIncrementsCovered;
     }
 
-    if (parkingPricePerDay !== null) {
-      finalPrice = days * parkingPricePerDay;
+    if (basePrice !== null) {
+      finalPrice = calculateProgressivePrice(basePrice, days, increments);
       if (params.washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
@@ -789,15 +837,18 @@ export async function updateBooking(
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
 
-    let parkingPricePerDay: number | null = null;
+    let basePrice: number | null = null;
+    let increments: number[] | null = null;
     if (parkingTypeId === 'parkingType_uncovered') {
-      parkingPricePerDay = priceSettings.priceUncovered;
+      basePrice = priceSettings.priceUncovered;
+      increments = priceSettings.priceIncrementsUncovered;
     } else if (parkingTypeId === 'parkingType_covered') {
-      parkingPricePerDay = priceSettings.priceCovered;
+      basePrice = priceSettings.priceCovered;
+      increments = priceSettings.priceIncrementsCovered;
     }
 
-    if (parkingPricePerDay !== null) {
-      finalPrice = days * parkingPricePerDay;
+    if (basePrice !== null) {
+      finalPrice = calculateProgressivePrice(basePrice, days, increments);
       if (washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
@@ -868,7 +919,7 @@ export async function updateBooking(
 }
 
 export interface ParkingTypesResponse {
-  parkingTypes: { id: string; name: string; pricePerDay: number | null }[];
+  parkingTypes: { id: string; name: string; pricePerDay: number | null; priceIncrements: number[] | null }[];
   washAvailable: boolean;
   washPrice: number | null;
   deliveryFee: number | null;
@@ -879,15 +930,16 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     select: { id: true, name: true },
   });
 
-  // Get availability settings to filter parking types
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
     'configurationSetting_priceCovered',
     'configurationSetting_priceWash',
-    'configurationSetting_deliveryFee'
+    'configurationSetting_deliveryFee',
+    'configurationSetting_priceIncrementsCovered',
+    'configurationSetting_priceIncrementsUncovered'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -900,7 +952,17 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   const priceWash = parsePrice(settingsMap.get('configurationSetting_priceWash'));
   const deliveryFee = parsePrice(settingsMap.get('configurationSetting_deliveryFee'));
 
-  // Filter types based on availability
+  const parseJsonArray = (value: string | null | undefined): number[] | null => {
+    if (value === null || value === undefined || value === '') return null;
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed) && parsed.every((v: any) => typeof v === 'number')) return parsed;
+      return null;
+    } catch { return null; }
+  };
+  const incrementsCovered = parseJsonArray(settingsMap.get('configurationSetting_priceIncrementsCovered'));
+  const incrementsUncovered = parseJsonArray(settingsMap.get('configurationSetting_priceIncrementsUncovered'));
+
   const filteredTypes = types.filter((type) => {
     if (type.id === 'parkingType_uncovered') {
       return availableUncovered !== null && availableUncovered > 0;
@@ -911,12 +973,13 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     return true;
   });
 
-  // Add price per day to each type
   const parkingTypes = filteredTypes.map((type) => ({
     id: type.id,
     name: type.name,
     pricePerDay: type.id === 'parkingType_uncovered' ? priceUncovered : 
                  type.id === 'parkingType_covered' ? priceCovered : null,
+    priceIncrements: type.id === 'parkingType_uncovered' ? incrementsUncovered :
+                     type.id === 'parkingType_covered' ? incrementsCovered : null,
   }));
 
   return {
@@ -1107,16 +1170,18 @@ export async function updateBookingStatus(
 
       if (extraDays > 0 && existingBooking.parkingTypeId) {
         const priceSettings = await getPriceSettings();
-        let pricePerDay: number | null = null;
+        let increments: number[] | null = null;
         
         if (existingBooking.parkingTypeId === 'parkingType_uncovered') {
-          pricePerDay = priceSettings.priceUncovered;
+          increments = priceSettings.priceIncrementsUncovered;
         } else if (existingBooking.parkingTypeId === 'parkingType_covered') {
-          pricePerDay = priceSettings.priceCovered;
+          increments = priceSettings.priceIncrementsCovered;
         }
 
-        if (pricePerDay !== null) {
-          calculatedExtraFee = extraDays * pricePerDay;
+        const checkInDate = existingBooking.dateFrom ? new Date(existingBooking.dateFrom) : null;
+        if (checkInDate && checkOutDay) {
+          const originalDays = calculateDays(checkInDate, checkOutDay);
+          calculatedExtraFee = calculateExtraFeeProgressive(originalDays, extraDays, increments);
           updateData.extraFee = calculatedExtraFee;
         }
       }
@@ -1206,15 +1271,18 @@ export async function updateParkedBooking(
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
 
-    let parkingPricePerDay: number | null = null;
+    let basePrice: number | null = null;
+    let increments: number[] | null = null;
     if (parkingTypeId === 'parkingType_uncovered') {
-      parkingPricePerDay = priceSettings.priceUncovered;
+      basePrice = priceSettings.priceUncovered;
+      increments = priceSettings.priceIncrementsUncovered;
     } else if (parkingTypeId === 'parkingType_covered') {
-      parkingPricePerDay = priceSettings.priceCovered;
+      basePrice = priceSettings.priceCovered;
+      increments = priceSettings.priceIncrementsCovered;
     }
 
-    if (parkingPricePerDay !== null) {
-      finalPrice = days * parkingPricePerDay;
+    if (basePrice !== null) {
+      finalPrice = calculateProgressivePrice(basePrice, days, increments);
       if (washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }

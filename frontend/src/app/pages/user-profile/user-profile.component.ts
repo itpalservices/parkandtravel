@@ -62,6 +62,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   savingSettings = false;
   offerWashService = false;
   settingsSubmitted = false;
+  priceIncrementsCovered: number[] = [];
+  priceIncrementsUncovered: number[] = [];
+  newIncrementCovered: number | null = null;
+  newIncrementUncovered: number | null = null;
 
   phoneCodes: PhoneCode[] = [];
   selectedPhoneCode: PhoneCode | null = null;
@@ -193,6 +197,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           emailDescription: settings.emailDescription,
         });
         this.offerWashService = settings.priceWash !== null;
+        this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
+        this.priceIncrementsUncovered = settings.priceIncrementsUncovered || [];
         this.settingsLoading = false;
       },
       error: (error) => {
@@ -310,6 +316,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         formValue.emailDescription !== '' && formValue.emailDescription !== null
           ? formValue.emailDescription
           : null,
+      priceIncrementsCovered: this.priceIncrementsCovered.length > 0 ? this.priceIncrementsCovered : null,
+      priceIncrementsUncovered: this.priceIncrementsUncovered.length > 0 ? this.priceIncrementsUncovered : null,
     };
 
     this.settingsService.updateSettings(data).subscribe({
@@ -337,6 +345,47 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
 
   get sf() {
     return this.settingsForm.controls;
+  }
+
+  addIncrementCovered(): void {
+    if (this.newIncrementCovered !== null && this.newIncrementCovered >= 0) {
+      this.priceIncrementsCovered = [...this.priceIncrementsCovered, this.newIncrementCovered];
+      this.newIncrementCovered = null;
+    }
+  }
+
+  removeIncrementCovered(index: number): void {
+    this.priceIncrementsCovered = this.priceIncrementsCovered.filter((_, i) => i !== index);
+  }
+
+  addIncrementUncovered(): void {
+    if (this.newIncrementUncovered !== null && this.newIncrementUncovered >= 0) {
+      this.priceIncrementsUncovered = [...this.priceIncrementsUncovered, this.newIncrementUncovered];
+      this.newIncrementUncovered = null;
+    }
+  }
+
+  removeIncrementUncovered(index: number): void {
+    this.priceIncrementsUncovered = this.priceIncrementsUncovered.filter((_, i) => i !== index);
+  }
+
+  copyIncrementsToCovered(): void {
+    this.priceIncrementsCovered = [...this.priceIncrementsUncovered];
+  }
+
+  copyIncrementsToUncovered(): void {
+    this.priceIncrementsUncovered = [...this.priceIncrementsCovered];
+  }
+
+  updateIncrement(type: 'covered' | 'uncovered', index: number, event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    if (!isNaN(value) && value >= 0) {
+      if (type === 'covered') {
+        this.priceIncrementsCovered = this.priceIncrementsCovered.map((v, i) => i === index ? value : v);
+      } else {
+        this.priceIncrementsUncovered = this.priceIncrementsUncovered.map((v, i) => i === index ? value : v);
+      }
+    }
   }
 
   private checkUserRole(): void {
