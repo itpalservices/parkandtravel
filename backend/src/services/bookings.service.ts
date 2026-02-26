@@ -10,6 +10,14 @@ import {
 import { sendBookingConfirmationEmail } from "./email.service";
 import { checkAvailability } from "./availability.service";
 
+async function getEmailDescription(): Promise<string | null> {
+  const result = await prisma.$queryRawUnsafe<{ value: string | null }[]>(
+    `SELECT value FROM configuration_settings WHERE id = $1`,
+    'configurationSetting_emailDescription'
+  );
+  return result.length > 0 ? result[0].value : null;
+}
+
 interface GetBookingsParams {
   dateFrom?: string;
   dateTo?: string;
@@ -529,29 +537,32 @@ export async function createGuestBooking(
 
   if (params.email) {
     console.log(`Sending guest booking confirmation email to: ${params.email}`);
-    sendBookingConfirmationEmail({
-      email: params.email,
-      fullName: params.fullName,
-      checkInDate: params.checkInDate,
-      checkInTime: params.checkInTime,
-      checkOutDate: params.checkOutDate || undefined,
-      checkOutTime: params.checkOutTime || undefined,
-      licensePlate: params.licensePlate,
-      vehicleBrand: params.vehicleBrand,
-      vehicleModel: params.vehicleModel || undefined,
-      vehicleColor: params.vehicleColor || undefined,
-      parkingType: parkingType?.name || params.parkingTypeId,
-      washService: params.washService || false,
-      flightNumber: params.flightNumber || undefined,
-      dropOffOption: params.dropOffOption || undefined,
-      pickUpOption: params.pickUpOption || undefined,
-      finalPrice: finalPrice,
-    }).then((result) => {
-      if (result.success) {
-        console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
-      } else {
-        console.error(`Failed to send email to ${params.email}: ${result.error}`);
-      }
+    getEmailDescription().then((emailDescription) => {
+      sendBookingConfirmationEmail({
+        email: params.email,
+        fullName: params.fullName,
+        checkInDate: params.checkInDate,
+        checkInTime: params.checkInTime,
+        checkOutDate: params.checkOutDate || undefined,
+        checkOutTime: params.checkOutTime || undefined,
+        licensePlate: params.licensePlate,
+        vehicleBrand: params.vehicleBrand,
+        vehicleModel: params.vehicleModel || undefined,
+        vehicleColor: params.vehicleColor || undefined,
+        parkingType: parkingType?.name || params.parkingTypeId,
+        washService: params.washService || false,
+        flightNumber: params.flightNumber || undefined,
+        dropOffOption: params.dropOffOption || undefined,
+        pickUpOption: params.pickUpOption || undefined,
+        finalPrice: finalPrice,
+        emailDescription,
+      }).then((result) => {
+        if (result.success) {
+          console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
+        } else {
+          console.error(`Failed to send email to ${params.email}: ${result.error}`);
+        }
+      });
     }).catch((err) => {
       console.error("Failed to send guest booking confirmation email:", err);
     });
@@ -640,29 +651,32 @@ export async function createBooking(
 
   if (params.email) {
     console.log(`Sending booking confirmation email to: ${params.email}`);
-    sendBookingConfirmationEmail({
-      email: params.email,
-      fullName: params.fullName,
-      checkInDate: params.checkInDate,
-      checkInTime: params.checkInTime,
-      checkOutDate: params.checkOutDate || undefined,
-      checkOutTime: params.checkOutTime || undefined,
-      licensePlate: params.licensePlate,
-      vehicleBrand: params.vehicleBrand,
-      vehicleModel: params.vehicleModel,
-      vehicleColor: params.vehicleColor,
-      parkingType: parkingType?.name || params.parkingTypeId,
-      washService: params.washService || false,
-      flightNumber: params.flightNumber || undefined,
-      dropOffOption: params.dropOffOption || undefined,
-      pickUpOption: params.pickUpOption || undefined,
-      finalPrice: finalPrice,
-    }).then((result) => {
-      if (result.success) {
-        console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
-      } else {
-        console.error(`Failed to send email to ${params.email}: ${result.error}`);
-      }
+    getEmailDescription().then((emailDescription) => {
+      sendBookingConfirmationEmail({
+        email: params.email,
+        fullName: params.fullName,
+        checkInDate: params.checkInDate,
+        checkInTime: params.checkInTime,
+        checkOutDate: params.checkOutDate || undefined,
+        checkOutTime: params.checkOutTime || undefined,
+        licensePlate: params.licensePlate,
+        vehicleBrand: params.vehicleBrand,
+        vehicleModel: params.vehicleModel,
+        vehicleColor: params.vehicleColor,
+        parkingType: parkingType?.name || params.parkingTypeId,
+        washService: params.washService || false,
+        flightNumber: params.flightNumber || undefined,
+        dropOffOption: params.dropOffOption || undefined,
+        pickUpOption: params.pickUpOption || undefined,
+        finalPrice: finalPrice,
+        emailDescription,
+      }).then((result) => {
+        if (result.success) {
+          console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
+        } else {
+          console.error(`Failed to send email to ${params.email}: ${result.error}`);
+        }
+      });
     }).catch((err) => {
       console.error("Failed to send booking confirmation email:", err);
     });
@@ -818,30 +832,33 @@ export async function updateBooking(
     });
 
     console.log(`Sending booking update confirmation email to: ${emailToSend}`);
-    sendBookingConfirmationEmail({
-      email: emailToSend,
-      fullName,
-      checkInDate: checkInDateStr,
-      checkInTime,
-      checkOutDate: checkOutDateStr || undefined,
-      checkOutTime: checkOutTime || undefined,
-      licensePlate,
-      vehicleBrand,
-      vehicleModel,
-      vehicleColor,
-      parkingType: parkingType?.name || parkingTypeId || "",
-      washService: washService || false,
-      flightNumber: flightNumber || undefined,
-      dropOffOption: dropOffOption || undefined,
-      pickUpOption: pickUpOption || undefined,
-      finalPrice,
-      isUpdate: true,
-    }).then((result) => {
-      if (result.success) {
-        console.log(`Update email sent successfully to ${emailToSend}, messageId: ${result.messageId}`);
-      } else {
-        console.error(`Failed to send update email to ${emailToSend}: ${result.error}`);
-      }
+    getEmailDescription().then((emailDescription) => {
+      sendBookingConfirmationEmail({
+        email: emailToSend,
+        fullName,
+        checkInDate: checkInDateStr,
+        checkInTime,
+        checkOutDate: checkOutDateStr || undefined,
+        checkOutTime: checkOutTime || undefined,
+        licensePlate,
+        vehicleBrand,
+        vehicleModel,
+        vehicleColor,
+        parkingType: parkingType?.name || parkingTypeId || "",
+        washService: washService || false,
+        flightNumber: flightNumber || undefined,
+        dropOffOption: dropOffOption || undefined,
+        pickUpOption: pickUpOption || undefined,
+        finalPrice,
+        isUpdate: true,
+        emailDescription,
+      }).then((result) => {
+        if (result.success) {
+          console.log(`Update email sent successfully to ${emailToSend}, messageId: ${result.messageId}`);
+        } else {
+          console.error(`Failed to send update email to ${emailToSend}: ${result.error}`);
+        }
+      });
     }).catch((err) => {
       console.error("Failed to send booking update confirmation email:", err);
     });

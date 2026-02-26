@@ -25,6 +25,7 @@ interface BookingEmailData {
   pickUpOption?: string;
   finalPrice: number | null;
   isUpdate?: boolean;
+  emailDescription?: string | null;
 }
 
 function formatDate(dateStr: string): string {
@@ -230,6 +231,17 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
             </td>
           </tr>
           
+          ${data.emailDescription ? `
+          <!-- Email Description -->
+          <tr>
+            <td style="padding: 0 30px 20px 30px;">
+              <div style="background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; padding: 20px 25px;">
+                <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.8; white-space: pre-line;">${data.emailDescription}</p>
+              </div>
+            </td>
+          </tr>
+          ` : ""}
+          
           ${data.finalPrice !== null ? `
           <!-- Price Section -->
           <tr>
@@ -310,6 +322,10 @@ Car Wash: ${data.washService ? "Included" : "Not selected"}
 
   if (data.pickUpOption) {
     text += `Pick-up: ${getTransportLabel(data.pickUpOption)}\n`;
+  }
+
+  if (data.emailDescription) {
+    text += `\n${data.emailDescription}\n`;
   }
 
   if (data.finalPrice !== null) {
