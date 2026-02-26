@@ -146,6 +146,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       priceWash: [null, [Validators.min(1)]],
       dayEnd: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
       deliveryFee: [null, [Validators.min(0)]],
+      emailDescription: [null],
     });
 
     this.settingsForm.get('availableUncovered')!.valueChanges.subscribe((value) => {
@@ -189,6 +190,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           priceWash: settings.priceWash?.toFixed(2),
           dayEnd: settings.dayEnd,
           deliveryFee: settings.deliveryFee?.toFixed(2),
+          emailDescription: settings.emailDescription,
         });
         this.offerWashService = settings.priceWash !== null;
         this.settingsLoading = false;
@@ -303,6 +305,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       deliveryFee:
         formValue.deliveryFee !== '' && formValue.deliveryFee !== null
           ? Number(formValue.deliveryFee)
+          : null,
+      emailDescription:
+        formValue.emailDescription !== '' && formValue.emailDescription !== null
+          ? formValue.emailDescription
           : null,
     };
 

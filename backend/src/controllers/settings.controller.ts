@@ -119,6 +119,9 @@ export async function updateSettingsHandler(
       deliveryFee: data.deliveryFee !== null && data.deliveryFee !== undefined
         ? Number(data.deliveryFee)
         : null,
+      emailDescription: data.emailDescription !== null && data.emailDescription !== undefined
+        ? String(data.emailDescription)
+        : null,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {

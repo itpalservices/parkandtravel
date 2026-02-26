@@ -8,6 +8,7 @@ export interface ConfigurationSettings {
   priceWash: number | null;
   dayEnd: number | null;
   deliveryFee: number | null;
+  emailDescription: string | null;
 }
 
 const SETTING_KEYS = {
@@ -18,6 +19,7 @@ const SETTING_KEYS = {
   priceWash: "configurationSetting_priceWash",
   dayEnd: "configurationSetting_dayEnd",
   deliveryFee: "configurationSetting_deliveryFee",
+  emailDescription: "configurationSetting_emailDescription",
 };
 
 interface SettingRow {
@@ -47,6 +49,7 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     priceWash: parseFloatOrNull(settingsMap.get(SETTING_KEYS.priceWash)),
     dayEnd: parseIntOrNull(settingsMap.get(SETTING_KEYS.dayEnd)),
     deliveryFee: parseFloatOrNull(settingsMap.get(SETTING_KEYS.deliveryFee)),
+    emailDescription: settingsMap.get(SETTING_KEYS.emailDescription) ?? null,
   };
 }
 
@@ -105,6 +108,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.deliveryFee,
       value: data.deliveryFee !== null ? String(data.deliveryFee) : null,
+    });
+  }
+
+  if (data.emailDescription !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.emailDescription,
+      value: data.emailDescription !== null && data.emailDescription.trim() !== '' ? data.emailDescription : null,
     });
   }
 

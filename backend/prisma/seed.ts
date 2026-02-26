@@ -79,6 +79,7 @@ async function main() {
       { id: "configurationSetting_priceWash", value: null },
       { id: "configurationSetting_dayEnd", value: null },
       { id: "configurationSetting_deliveryFee", value: null },
+      { id: "configurationSetting_emailDescription", value: null },
     ],
     skipDuplicates: true,
   });
