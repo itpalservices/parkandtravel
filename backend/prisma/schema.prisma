@@ -52,6 +52,7 @@ model Booking {
   keepKeys     Boolean?     @default(false)
   mileageKm    Int?
   parkingComments String?   @db.Text
+  actualCheckIn  DateTime?  @db.Timestamptz(6)
   actualCheckOut DateTime?  @db.Timestamptz(6)
   extraFee     Decimal?     @db.Decimal(10, 2)
   deleteflag   Int          @default(0)

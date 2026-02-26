@@ -229,6 +229,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."keepKeys",
       b."mileageKm",
       b."parkingComments",
+      b."actualCheckIn",
       b."actualCheckOut",
       b."extraFee"
     FROM bookings b
@@ -317,6 +318,7 @@ export async function getBookingById(
       b."keepKeys",
       b."mileageKm",
       b."parkingComments",
+      b."actualCheckIn",
       b."actualCheckOut",
       b."extraFee",
       b.deleteflag
@@ -1044,6 +1046,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."keepKeys",
       b."mileageKm",
       b."parkingComments",
+      b."actualCheckIn",
       b."actualCheckOut",
       b."extraFee",
       b.deleteflag
@@ -1105,7 +1108,7 @@ export async function updateBookingStatus(
   parkPlace?: string,
   applyExtraFee?: boolean,
   extraFields?: ParkExtraFields,
-): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckOut?: string; extraFee?: number } | null> {
+): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckIn?: string; actualCheckOut?: string; extraFee?: number } | null> {
   if (!isValidUUID(id)) return null;
 
   const statusLabels: Record<string, string> = {
@@ -1130,6 +1133,7 @@ export async function updateBookingStatus(
   
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
+    updateData.actualCheckIn = new Date();
     if (extraFields) {
       if (extraFields.keepKeys !== undefined) updateData.keepKeys = extraFields.keepKeys;
       if (extraFields.mileageKm !== undefined) updateData.mileageKm = extraFields.mileageKm;
@@ -1142,6 +1146,7 @@ export async function updateBookingStatus(
 
   if (bookingStatusId === 'bookingStatus_created') {
     updateData.parkPlace = null;
+    updateData.actualCheckIn = null;
     updateData.keepKeys = null;
     updateData.mileageKm = null;
     updateData.parkingComments = null;
@@ -1200,6 +1205,7 @@ export async function updateBookingStatus(
     bookingStatusId,
     bookingStatus: statusLabels[bookingStatusId],
     parkPlace: parkPlace || undefined,
+    actualCheckIn: bookingStatusId === 'bookingStatus_parked' ? updateData.actualCheckIn?.toISOString?.() ?? new Date().toISOString() : undefined,
     actualCheckOut: actualCheckOutDate?.toISOString(),
     extraFee: calculatedExtraFee,
   };
