@@ -59,8 +59,8 @@ export class DailyInOutReportComponent implements OnInit {
     this.loadReport();
   }
 
-  getKeysText(keysOption: boolean): string {
-    return keysOption ? 'Customer keeps keys' : 'P&T keeps keys';
+  getKeysText(record: DailyInOutReportItem): string {
+    return record.bookingStatus == 'Created' ? '-' : record.keyOption ? 'Customer keeps keys' : 'P&T keeps keys';
   }
 
   onFilterByChange(filter: 'check-ins' | 'check-outs' | 'both'): void {
