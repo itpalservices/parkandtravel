@@ -469,7 +469,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             <div style="flex: 1; display: flex; align-items: flex-end; padding-bottom: 4px;">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #374151; font-size: 14px; user-select: none;">
                 <input id="swal-keep-keys" type="checkbox" style="width: 18px; height: 18px; cursor: pointer;" />
-                Keep Keys
+                Customer Keep Keys
               </label>
             </div>
           </div>
