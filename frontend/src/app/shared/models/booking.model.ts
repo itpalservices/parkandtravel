@@ -60,6 +60,7 @@ export interface ParkingTypesResponse {
   parkingTypes: ParkingType[];
   washAvailable: boolean;
   washPrice: number | null;
+  deliveryFee: number | null;
 }
 
 export interface HistoryBooking {

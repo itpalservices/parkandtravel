@@ -836,6 +836,7 @@ export interface ParkingTypesResponse {
   parkingTypes: { id: string; name: string; pricePerDay: number | null }[];
   washAvailable: boolean;
   washPrice: number | null;
+  deliveryFee: number | null;
 }
 
 export async function getParkingTypes(): Promise<ParkingTypesResponse> {
@@ -845,12 +846,13 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
 
   // Get availability settings to filter parking types
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
     'configurationSetting_priceCovered',
-    'configurationSetting_priceWash'
+    'configurationSetting_priceWash',
+    'configurationSetting_deliveryFee'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -861,6 +863,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   const priceUncovered = parsePrice(settingsMap.get('configurationSetting_priceUncovered'));
   const priceCovered = parsePrice(settingsMap.get('configurationSetting_priceCovered'));
   const priceWash = parsePrice(settingsMap.get('configurationSetting_priceWash'));
+  const deliveryFee = parsePrice(settingsMap.get('configurationSetting_deliveryFee'));
 
   // Filter types based on availability
   const filteredTypes = types.filter((type) => {
@@ -885,6 +888,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     parkingTypes,
     washAvailable: priceWash !== null,
     washPrice: priceWash,
+    deliveryFee,
   };
 }
 
