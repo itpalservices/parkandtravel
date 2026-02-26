@@ -347,26 +347,25 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
     return this.settingsForm.controls;
   }
 
-  addIncrementCovered(): void {
-    if (this.newIncrementCovered !== null && this.newIncrementCovered >= 0) {
-      this.priceIncrementsCovered = [...this.priceIncrementsCovered, this.newIncrementCovered];
-      this.newIncrementCovered = null;
+  addIncrement(type: 'covered' | 'uncovered'): void {
+    const value = type === 'covered' ? this.newIncrementCovered : this.newIncrementUncovered;
+    if (value !== null && value >= 0) {
+      if (type === 'covered') {
+        this.priceIncrementsCovered = [...this.priceIncrementsCovered, value];
+        this.newIncrementCovered = null;
+      } else {
+        this.priceIncrementsUncovered = [...this.priceIncrementsUncovered, value];
+        this.newIncrementUncovered = null;
+      }
     }
   }
 
-  removeIncrementCovered(index: number): void {
-    this.priceIncrementsCovered = this.priceIncrementsCovered.filter((_, i) => i !== index);
-  }
-
-  addIncrementUncovered(): void {
-    if (this.newIncrementUncovered !== null && this.newIncrementUncovered >= 0) {
-      this.priceIncrementsUncovered = [...this.priceIncrementsUncovered, this.newIncrementUncovered];
-      this.newIncrementUncovered = null;
+  removeIncrement(type: 'covered' | 'uncovered', index: number): void {
+    if (type === 'covered') {
+      this.priceIncrementsCovered = this.priceIncrementsCovered.filter((_, i) => i !== index);
+    } else {
+      this.priceIncrementsUncovered = this.priceIncrementsUncovered.filter((_, i) => i !== index);
     }
-  }
-
-  removeIncrementUncovered(index: number): void {
-    this.priceIncrementsUncovered = this.priceIncrementsUncovered.filter((_, i) => i !== index);
   }
 
   copyIncrementsToCovered(): void {
@@ -386,6 +385,20 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         this.priceIncrementsUncovered = this.priceIncrementsUncovered.map((v, i) => i === index ? value : v);
       }
     }
+  }
+
+  getProgressivePrice(type: 'covered' | 'uncovered', dayIndex: number): number {
+    const baseKey = type === 'covered' ? 'priceCovered' : 'priceUncovered';
+    const basePrice = Number(this.settingsForm.get(baseKey)?.value) || 0;
+    const increments = type === 'covered' ? this.priceIncrementsCovered : this.priceIncrementsUncovered;
+    let price = basePrice;
+    for (let d = 0; d < dayIndex; d++) {
+      const inc = increments.length > 0
+        ? (d < increments.length ? increments[d] : increments[increments.length - 1])
+        : 0;
+      price += inc;
+    }
+    return price;
   }
 
   private checkUserRole(): void {

@@ -970,28 +970,77 @@
   }
 }
 
-.increments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
+.pricing-table {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.increment-item {
-  display: flex;
+.pricing-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 90px 40px;
   align-items: center;
-  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.875rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
-.increment-label {
-  font-size: 0.85rem;
-  color: #666;
-  min-width: 60px;
+.pricing-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 6px 12px;
 }
 
-.increment-add {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
+.pricing-row-base {
+  background-color: #f0f7ff;
+}
+
+.pricing-row-last {
+  background-color: #fffdf0;
+}
+
+.pricing-row-add {
+  background-color: #fafafa;
+  border-top: 1px dashed #dee2e6;
+}
+
+.pricing-col-day {
+  font-weight: 500;
+}
+
+.pricing-col-increment {
+  .input-group {
+    max-width: 110px;
+  }
+}
+
+.pricing-col-price {
+  text-align: right;
+  color: #198754;
+}
+
+.pricing-col-action {
+  text-align: center;
+}
+
+.btn-icon-remove {
+  border: none;
+  background: none;
+  color: #dc3545;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
 }

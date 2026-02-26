@@ -297,104 +297,164 @@
 
               <div class="settings-group">
                 <h4>Price Increments</h4>
-                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
-                  Define daily price increments for progressive pricing. Day 1 uses the base price above. Each subsequent day adds the corresponding increment. The last increment repeats for all remaining days.
+                <small class="form-text text-muted" style="margin-bottom: 16px; display: block;">
+                  Set how the price changes for each additional day of parking. Day 1 uses the base price above. For each extra day, add an increment to define the new price. The last increment repeats for all further days.
                 </small>
 
                 <div class="form-row">
+                  <!-- Covered Pricing Table -->
                   <div class="form-group">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                      <label class="mb-0">Covered Increments</label>
+                      <label class="mb-0 fw-semibold">Covered</label>
                       @if (priceIncrementsUncovered.length > 0) {
-                        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyIncrementsToCovered()" title="Copy from Uncovered">
-                          <i class="bi bi-arrow-left"></i> Copy from Uncovered
+                        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyIncrementsToCovered()">
+                          Copy from Uncovered
                         </button>
                       }
                     </div>
-                    <div class="increments-list">
+
+                    <div class="pricing-table">
+                      <div class="pricing-row pricing-header">
+                        <span class="pricing-col-day">Day</span>
+                        <span class="pricing-col-increment">Increment</span>
+                        <span class="pricing-col-price">Total Price</span>
+                        <span class="pricing-col-action"></span>
+                      </div>
+
+                      <div class="pricing-row" [class.pricing-row-base]="true">
+                        <span class="pricing-col-day">1</span>
+                        <span class="pricing-col-increment text-muted">Base price</span>
+                        <span class="pricing-col-price fw-semibold">&euro;{{ getProgressivePrice('covered', 0) | number:'1.2-2' }}</span>
+                        <span class="pricing-col-action"></span>
+                      </div>
+
                       @for (inc of priceIncrementsCovered; track $index) {
-                        <div class="increment-item">
-                          <span class="increment-label">Day {{ $index + 2 }}{{ $index === priceIncrementsCovered.length - 1 ? '+' : '' }}:</span>
-                          <div class="input-group input-group-sm" style="max-width: 100px;">
-                            <span class="input-group-text">+</span>
+                        <div class="pricing-row" [class.pricing-row-last]="$index === priceIncrementsCovered.length - 1">
+                          <span class="pricing-col-day">
+                            {{ $index + 2 }}@if ($index === priceIncrementsCovered.length - 1) {<span class="text-muted">+</span>}
+                          </span>
+                          <span class="pricing-col-increment">
+                            <div class="input-group input-group-sm">
+                              <span class="input-group-text">+&euro;</span>
+                              <input
+                                type="number"
+                                class="form-control"
+                                [value]="inc"
+                                min="0"
+                                step="0.01"
+                                (change)="updateIncrement('covered', $index, $event)"
+                              />
+                            </div>
+                          </span>
+                          <span class="pricing-col-price fw-semibold">&euro;{{ getProgressivePrice('covered', $index + 1) | number:'1.2-2' }}</span>
+                          <span class="pricing-col-action">
+                            <button type="button" class="btn btn-sm btn-icon-remove" (click)="removeIncrement('covered', $index)" title="Remove">
+                              &times;
+                            </button>
+                          </span>
+                        </div>
+                      }
+
+                      <div class="pricing-row pricing-row-add">
+                        <span class="pricing-col-day text-muted">{{ priceIncrementsCovered.length + 2 }}</span>
+                        <span class="pricing-col-increment">
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text">+&euro;</span>
                             <input
                               type="number"
                               class="form-control"
-                              [value]="inc"
+                              [(ngModel)]="newIncrementCovered"
+                              [ngModelOptions]="{standalone: true}"
+                              placeholder="0"
                               min="0"
                               step="0.01"
-                              (change)="updateIncrement('covered', $index, $event)"
+                              (keydown.enter)="addIncrement('covered'); $event.preventDefault()"
                             />
                           </div>
-                          <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeIncrementCovered($index)">
-                            &times;
-                          </button>
-                        </div>
-                      }
-                    </div>
-                    <div class="increment-add">
-                      <div class="input-group input-group-sm" style="max-width: 120px;">
-                        <span class="input-group-text">+</span>
-                        <input
-                          type="number"
-                          class="form-control"
-                          [(ngModel)]="newIncrementCovered"
-                          [ngModelOptions]="{standalone: true}"
-                          placeholder="0"
-                          min="0"
-                          step="0.01"
-                          (keydown.enter)="addIncrementCovered(); $event.preventDefault()"
-                        />
+                        </span>
+                        <span class="pricing-col-price"></span>
+                        <span class="pricing-col-action">
+                          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addIncrement('covered')">Add</button>
+                        </span>
                       </div>
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addIncrementCovered()">Add</button>
                     </div>
                   </div>
 
+                  <!-- Uncovered Pricing Table -->
                   <div class="form-group">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                      <label class="mb-0">Uncovered Increments</label>
+                      <label class="mb-0 fw-semibold">Uncovered</label>
                       @if (priceIncrementsCovered.length > 0) {
-                        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyIncrementsToUncovered()" title="Copy from Covered">
-                          <i class="bi bi-arrow-left"></i> Copy from Covered
+                        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyIncrementsToUncovered()">
+                          Copy from Covered
                         </button>
                       }
                     </div>
-                    <div class="increments-list">
+
+                    <div class="pricing-table">
+                      <div class="pricing-row pricing-header">
+                        <span class="pricing-col-day">Day</span>
+                        <span class="pricing-col-increment">Increment</span>
+                        <span class="pricing-col-price">Total Price</span>
+                        <span class="pricing-col-action"></span>
+                      </div>
+
+                      <div class="pricing-row" [class.pricing-row-base]="true">
+                        <span class="pricing-col-day">1</span>
+                        <span class="pricing-col-increment text-muted">Base price</span>
+                        <span class="pricing-col-price fw-semibold">&euro;{{ getProgressivePrice('uncovered', 0) | number:'1.2-2' }}</span>
+                        <span class="pricing-col-action"></span>
+                      </div>
+
                       @for (inc of priceIncrementsUncovered; track $index) {
-                        <div class="increment-item">
-                          <span class="increment-label">Day {{ $index + 2 }}{{ $index === priceIncrementsUncovered.length - 1 ? '+' : '' }}:</span>
-                          <div class="input-group input-group-sm" style="max-width: 100px;">
-                            <span class="input-group-text">+</span>
+                        <div class="pricing-row" [class.pricing-row-last]="$index === priceIncrementsUncovered.length - 1">
+                          <span class="pricing-col-day">
+                            {{ $index + 2 }}@if ($index === priceIncrementsUncovered.length - 1) {<span class="text-muted">+</span>}
+                          </span>
+                          <span class="pricing-col-increment">
+                            <div class="input-group input-group-sm">
+                              <span class="input-group-text">+&euro;</span>
+                              <input
+                                type="number"
+                                class="form-control"
+                                [value]="inc"
+                                min="0"
+                                step="0.01"
+                                (change)="updateIncrement('uncovered', $index, $event)"
+                              />
+                            </div>
+                          </span>
+                          <span class="pricing-col-price fw-semibold">&euro;{{ getProgressivePrice('uncovered', $index + 1) | number:'1.2-2' }}</span>
+                          <span class="pricing-col-action">
+                            <button type="button" class="btn btn-sm btn-icon-remove" (click)="removeIncrement('uncovered', $index)" title="Remove">
+                              &times;
+                            </button>
+                          </span>
+                        </div>
+                      }
+
+                      <div class="pricing-row pricing-row-add">
+                        <span class="pricing-col-day text-muted">{{ priceIncrementsUncovered.length + 2 }}</span>
+                        <span class="pricing-col-increment">
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text">+&euro;</span>
                             <input
                               type="number"
                               class="form-control"
-                              [value]="inc"
+                              [(ngModel)]="newIncrementUncovered"
+                              [ngModelOptions]="{standalone: true}"
+                              placeholder="0"
                               min="0"
                               step="0.01"
-                              (change)="updateIncrement('uncovered', $index, $event)"
+                              (keydown.enter)="addIncrement('uncovered'); $event.preventDefault()"
                             />
                           </div>
-                          <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeIncrementUncovered($index)">
-                            &times;
-                          </button>
-                        </div>
-                      }
-                    </div>
-                    <div class="increment-add">
-                      <div class="input-group input-group-sm" style="max-width: 120px;">
-                        <span class="input-group-text">+</span>
-                        <input
-                          type="number"
-                          class="form-control"
-                          [(ngModel)]="newIncrementUncovered"
-                          [ngModelOptions]="{standalone: true}"
-                          placeholder="0"
-                          min="0"
-                          step="0.01"
-                          (keydown.enter)="addIncrementUncovered(); $event.preventDefault()"
-                        />
+                        </span>
+                        <span class="pricing-col-price"></span>
+                        <span class="pricing-col-action">
+                          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addIncrement('uncovered')">Add</button>
+                        </span>
                       </div>
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addIncrementUncovered()">Add</button>
                     </div>
                   </div>
                 </div>
