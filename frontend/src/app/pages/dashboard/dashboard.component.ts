@@ -21,7 +21,9 @@ export class DashboardComponent implements OnInit {
   stats: DashboardStats = {
     totalCars: 0,
     todayCheckIns: 0,
+    todayCheckInsAmount: 0,
     todayCheckOuts: 0,
+    todayCheckOutsAmount: 0,
     carsForWashToday: 0,
     carsForWashTomorrow: 0
   };

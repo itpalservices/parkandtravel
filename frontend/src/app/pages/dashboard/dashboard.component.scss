@@ -112,6 +112,23 @@
   }
 }
 
+.stat-value-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  &.blue {
+    color: #2563eb;
+  }
+
+  &.green {
+    color: #16a34a;
+  }
+
+  &.orange {
+    color: #f97316;
+  }
+}
+
 .stat-value-placeholder {
   display: block;
   height: 2.5rem;

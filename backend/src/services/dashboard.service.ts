@@ -9,7 +9,9 @@ import {
 export interface DashboardStats {
   totalCars: number;
   todayCheckIns: number;
+  todayCheckInsAmount: number;
   todayCheckOuts: number;
+  todayCheckOutsAmount: number;
   carsForWashToday: number;
   carsForWashTomorrow: number;
 }
@@ -75,8 +77,24 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       AND "bookingStatusId" = 'bookingStatus_created'
   `);
 
+  const todayCheckInsAmountResult = await prisma.$queryRawUnsafe<{ amount: bigint }[]>(`
+    SELECT SUM("finalPrice")+SUM(COALESCE("extraFee",0)) as amount
+    FROM bookings 
+    WHERE deleteflag = 0 
+      AND ${todayCheckInCondition}
+      AND "bookingStatusId" = 'bookingStatus_created'
+  `);
+
   const todayCheckOutsResult = await prisma.$queryRawUnsafe<{ count: bigint }[]>(`
     SELECT COUNT(*) as count 
+    FROM bookings 
+    WHERE deleteflag = 0 
+      AND ${todayCheckOutCondition}
+      AND "bookingStatusId" = 'bookingStatus_parked'
+  `);
+
+  const todayCheckOutsAmountResult = await prisma.$queryRawUnsafe<{ amount: bigint }[]>(`
+    SELECT SUM("finalPrice")+SUM(COALESCE("extraFee",0)) as amount 
     FROM bookings 
     WHERE deleteflag = 0 
       AND ${todayCheckOutCondition}
@@ -104,7 +122,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return {
     totalCars: Number(totalCarsResult[0]?.count || 0),
     todayCheckIns: Number(todayCheckInsResult[0]?.count || 0),
+    todayCheckInsAmount: Number(todayCheckInsAmountResult[0]?.amount || 0),
     todayCheckOuts: Number(todayCheckOutsResult[0]?.count || 0),
+    todayCheckOutsAmount: Number(todayCheckOutsAmountResult[0]?.amount || 0),
     carsForWashToday: Number(carsForWashTodayResult[0]?.count || 0),
     carsForWashTomorrow: Number(carsForWashTomorrowResult[0]?.count || 0),
   };

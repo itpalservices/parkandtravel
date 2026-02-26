@@ -10,7 +10,9 @@ export interface CheckInOutItem {
 export interface DashboardStats {
   totalCars: number;
   todayCheckIns: number;
+  todayCheckInsAmount: number;
   todayCheckOuts: number;
+  todayCheckOutsAmount: number;
   carsForWashToday: number;
   carsForWashTomorrow: number;
 }

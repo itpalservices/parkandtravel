@@ -59,7 +59,10 @@
         @if (loading) {
           <span class="stat-value-placeholder"></span>
         } @else {
-          <span class="stat-value green">{{ stats.todayCheckIns }}</span>
+          <div class="d-flex justify-content-between align-items-baseline">
+            <span class="stat-value green">{{ stats.todayCheckIns }}</span>
+            <span class="stat-value-amount green">{{ stats.todayCheckInsAmount | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+          </div>
         }
       </div>
 
@@ -89,7 +92,10 @@
         @if (loading) {
           <span class="stat-value-placeholder"></span>
         } @else {
-          <span class="stat-value orange">{{ stats.todayCheckOuts }}</span>
+          <div class="d-flex justify-content-between align-items-baseline">
+            <span class="stat-value orange">{{ stats.todayCheckOuts }}</span>
+            <span class="stat-value-amount orange">{{ stats.todayCheckOutsAmount | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+          </div>
         }
       </div>
 
