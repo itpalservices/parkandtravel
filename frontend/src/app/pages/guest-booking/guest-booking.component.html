@@ -484,7 +484,7 @@
                     <span>Parking ({{ calculateDays() }}
                       {{ calculateDays() === 1 ? 'day' : 'days' }})</span>
                     <span>{{
-                      (getSelectedParkingType()?.pricePerDay || 0) * calculateDays()
+                      calculateProgressivePrice(getSelectedParkingType()?.pricePerDay || 0, calculateDays(), getSelectedParkingType()?.priceIncrements || null)
                         | currency: 'EUR' : 'symbol' : '1.2-2'
                     }}</span>
                   } @else {
