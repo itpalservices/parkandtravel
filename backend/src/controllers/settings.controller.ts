@@ -116,6 +116,9 @@ export async function updateSettingsHandler(
       dayEnd: data.dayEnd !== null && data.dayEnd !== undefined
         ? Math.floor(Number(data.dayEnd))
         : null,
+      deliveryFee: data.deliveryFee !== null && data.deliveryFee !== undefined
+        ? Number(data.deliveryFee)
+        : null,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {
