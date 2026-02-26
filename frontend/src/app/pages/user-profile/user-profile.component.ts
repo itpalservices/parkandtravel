@@ -262,7 +262,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
 
-    const formValue = this.settingsForm.value;
+    const formValue = this.settingsForm.getRawValue();
 
     if (!this.canSetPriceUncovered && formValue.priceUncovered) {
       this.settingsForm.patchValue({ priceUncovered: null });
