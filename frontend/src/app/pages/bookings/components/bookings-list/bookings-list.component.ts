@@ -74,22 +74,23 @@ export class BookingsListComponent {
     background: #1a3c5e;
     color: #fff;
     text-align: center;
-    padding: 8mm 4mm 5mm;
+    padding: 6mm 3mm 4mm;
   }
-  .tag-header img { height: 14mm; margin-bottom: 2mm; }
-  .tag-header .phone { font-size: 10pt; color: #f5c518; margin-top: 1mm; }
+  .tag-header img { height: 12mm; margin-bottom: 1mm; }
+  .tag-header .phone { font-size: 8pt; color: #f5c518; }
   .tag-body {
-    padding: 3mm 4mm;
-    font-size: 8pt;
-    line-height: 1.6;
+    padding: 2mm 3mm;
+    font-size: 7pt;
+    line-height: 1.5;
   }
-  .tag-body table { width: 100%; border-collapse: collapse; }
-  .tag-body td { padding: 1mm 0; vertical-align: top; }
-  .tag-body td:first-child { font-weight: 600; width: 28mm; color: #333; }
-  .tag-body td:last-child { color: #000; }
-  .divider { border-top: 1px dashed #999; margin: 2mm 0; }
-  .tag-footer { text-align: center; padding: 2mm; font-size: 7pt; color: #888; }
-  .plate { font-size: 13pt; font-weight: 700; letter-spacing: 1px; }
+  .plate-row { text-align: center; font-size: 14pt; font-weight: 700; letter-spacing: 1px; padding: 1mm 0 2mm; }
+  .cols { display: flex; gap: 2mm; }
+  .col { flex: 1; }
+  .col table { width: 100%; border-collapse: collapse; }
+  .col td { padding: 0.5mm 0; vertical-align: top; }
+  .col td.lbl { font-weight: 600; color: #555; white-space: nowrap; padding-right: 1mm; width: 1%; }
+  .col td.val { color: #000; }
+  .divider { border-top: 1px dashed #999; margin: 1.5mm 0; }
 </style>
 </head>
 <body>
@@ -99,21 +100,28 @@ export class BookingsListComponent {
     <div class="phone">Phone: 99 877866</div>
   </div>
   <div class="tag-body">
-    <table>
-      <tr><td>Reg. No:</td><td class="plate">${booking.plateNo || '-'}</td></tr>
-      <tr><td>Flight:</td><td>${booking.returnFlight || '-'}</td></tr>
-      <tr><td>Return:</td><td>${dateTo}  ${timeTo}</td></tr>
-      <tr><td>Check-in:</td><td>${checkIn}</td></tr>
-    </table>
+    <div class="plate-row">${booking.plateNo || '-'}</div>
     <div class="divider"></div>
-    <table>
-      <tr><td>Name:</td><td>${fullName}</td></tr>
-      <tr><td>Adults:</td><td>${booking.adults ?? '-'}</td></tr>
-      <tr><td>Price:</td><td>${booking.finalPrice != null ? '\u20AC' + Number(booking.finalPrice).toFixed(2) : '-'}</td></tr>
-      <tr><td>Park Place:</td><td>${booking.parkPlace || '-'}</td></tr>
-      <tr><td>Keys:</td><td>${keysLabel}</td></tr>
-      <tr><td>Pick-up:</td><td>${pickUpLabel}</td></tr>
-    </table>
+    <div class="cols">
+      <div class="col">
+        <table>
+          <tr><td class="lbl">Flight:</td><td class="val">${booking.returnFlight || '-'}</td></tr>
+          <tr><td class="lbl">Return:</td><td class="val">${dateTo}</td></tr>
+          <tr><td class="lbl">Time:</td><td class="val">${timeTo}</td></tr>
+          <tr><td class="lbl">Check-in:</td><td class="val">${checkIn}</td></tr>
+          <tr><td class="lbl">Place:</td><td class="val">${booking.parkPlace || '-'}</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <table>
+          <tr><td class="lbl">Name:</td><td class="val">${fullName}</td></tr>
+          <tr><td class="lbl">Adults:</td><td class="val">${booking.adults ?? '-'}</td></tr>
+          <tr><td class="lbl">Price:</td><td class="val">${booking.finalPrice != null ? '\u20AC' + Number(booking.finalPrice).toFixed(2) : '-'}</td></tr>
+          <tr><td class="lbl">Keys:</td><td class="val">${keysLabel}</td></tr>
+          <tr><td class="lbl">Pick-up:</td><td class="val">${pickUpLabel}</td></tr>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
