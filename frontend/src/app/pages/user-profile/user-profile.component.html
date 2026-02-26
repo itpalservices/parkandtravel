@@ -315,7 +315,7 @@
                 </div>
               </div>
 
-              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+              <div class="settings-group">
                 <h4>Car Wash Service</h4>
 
                 <div class="wash-service-toggle">
@@ -353,6 +353,29 @@
                     </div>
                   </div>
                 }
+              </div>
+
+              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+                <h4>Delivery Fee</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  Fee for delivering a car from/to the airport. Leave empty if not applicable.
+                </small>
+
+                <div class="form-group">
+                  <label for="deliveryFee">Delivery Fee</label>
+                  <div class="input-group" style="max-width: 250px;">
+                    <span class="input-group-text">€</span>
+                    <input
+                      type="number"
+                      id="deliveryFee"
+                      class="form-control"
+                      formControlName="deliveryFee"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div class="form-actions">

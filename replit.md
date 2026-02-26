@@ -43,7 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **Park Place**: When changing a booking status from Created to Parked, a modal prompts the user to enter the parking place (e.g., A-15, B-22). This field is required and stored in the `parkPlace` column. The parking place is included in all booking responses.
 - **User Profile**: Users can view and update their name, surname, and phone number. Email is displayed but not editable.
 - **Car Management**: Regular users can add, edit, and delete their cars.
-- **Configuration Settings**: Admin users can manage parking availability, prices per day, and car wash service options.
+- **Configuration Settings**: Admin users can manage parking availability, prices per day, car wash service options, and delivery fee (car delivery from/to airport).
 
 ### Booking Form Features
 - **Regular Users**: Personal info (email, phone, fullName) auto-filled from profile and disabled when values exist. Car selection dropdown to choose from saved vehicles. Add New Car modal if no saved vehicles exist.

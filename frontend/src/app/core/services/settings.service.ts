@@ -9,6 +9,7 @@ export interface ConfigurationSettings {
   priceCovered: number | null;
   priceWash: number | null;
   dayEnd: number | null;
+  deliveryFee: number | null;
 }
 
 @Injectable({

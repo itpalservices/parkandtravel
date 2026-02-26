@@ -7,6 +7,7 @@ export interface ConfigurationSettings {
   priceCovered: number | null;
   priceWash: number | null;
   dayEnd: number | null;
+  deliveryFee: number | null;
 }
 
 const SETTING_KEYS = {
@@ -16,6 +17,7 @@ const SETTING_KEYS = {
   priceCovered: "configurationSetting_priceCovered",
   priceWash: "configurationSetting_priceWash",
   dayEnd: "configurationSetting_dayEnd",
+  deliveryFee: "configurationSetting_deliveryFee",
 };
 
 interface SettingRow {
@@ -44,6 +46,7 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     priceCovered: parseFloatOrNull(settingsMap.get(SETTING_KEYS.priceCovered)),
     priceWash: parseFloatOrNull(settingsMap.get(SETTING_KEYS.priceWash)),
     dayEnd: parseIntOrNull(settingsMap.get(SETTING_KEYS.dayEnd)),
+    deliveryFee: parseFloatOrNull(settingsMap.get(SETTING_KEYS.deliveryFee)),
   };
 }
 
@@ -95,6 +98,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.dayEnd,
       value: data.dayEnd !== null ? String(data.dayEnd) : null,
+    });
+  }
+
+  if (data.deliveryFee !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.deliveryFee,
+      value: data.deliveryFee !== null ? String(data.deliveryFee) : null,
     });
   }
 
