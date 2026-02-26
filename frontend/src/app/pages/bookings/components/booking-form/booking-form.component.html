@@ -654,6 +654,12 @@
                       <span>{{ washPrice | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
                     </div>
                   }
+                  @if (hasDeliveryFee) {
+                    <div class="price-row">
+                      <span>Delivery from/to airport</span>
+                      <span>{{ deliveryFee | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                    </div>
+                  }
                 </div>
                 <div class="price-total">
                   <span>Total</span>

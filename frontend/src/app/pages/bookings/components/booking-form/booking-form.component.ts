@@ -87,6 +87,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   washPrice: number | null = null;
   washServiceEnabled = false;
   returnDetailsEnabled = false;
+  deliveryFee: number | null = null;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -1289,6 +1290,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.parkingTypes = response.parkingTypes;
         this.washAvailable = response.washAvailable;
         this.washPrice = response.washPrice;
+        this.deliveryFee = response.deliveryFee;
 
         if (this.existingBooking?.parkingTypeId) {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
@@ -1333,6 +1335,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return Math.max(diffDays, 1);
   }
 
+  get hasDeliveryFee(): boolean {
+    if (this.deliveryFee === null) return false;
+    const dropOff = this.bookingForm.get('dropOffOption')?.value;
+    const pickUp = this.bookingForm.get('pickUpOption')?.value;
+    const dropOffMatch = dropOff === 'airport_pickup';
+    const pickUpMatch = this.returnDetailsEnabled && pickUp === 'airport_delivery';
+    return dropOffMatch || pickUpMatch;
+  }
+
   calculateTotalPrice(): number | null {
     const parkingType = this.getSelectedParkingType();
     if (!parkingType || parkingType.pricePerDay === null) return null;
@@ -1340,6 +1351,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     let total = days * parkingType.pricePerDay;
     if (this.washServiceEnabled && this.washPrice !== null) {
       total += this.washPrice;
+    }
+    if (this.hasDeliveryFee && this.deliveryFee !== null) {
+      total += this.deliveryFee;
     }
     return total;
   }

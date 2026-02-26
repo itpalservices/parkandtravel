@@ -418,12 +418,14 @@ async function getPriceSettings(): Promise<{
   priceUncovered: number | null;
   priceCovered: number | null;
   priceWash: number | null;
+  deliveryFee: number | null;
 }> {
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4)`,
     'configurationSetting_priceUncovered',
     'configurationSetting_priceCovered',
-    'configurationSetting_priceWash'
+    'configurationSetting_priceWash',
+    'configurationSetting_deliveryFee'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -439,7 +441,12 @@ async function getPriceSettings(): Promise<{
     priceUncovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceUncovered')),
     priceCovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceCovered')),
     priceWash: parseFloatOrNull(settingsMap.get('configurationSetting_priceWash')),
+    deliveryFee: parseFloatOrNull(settingsMap.get('configurationSetting_deliveryFee')),
   };
+}
+
+function hasAirportDelivery(dropOffOption?: string | null, pickUpOption?: string | null): boolean {
+  return dropOffOption === 'airport_pickup' || pickUpOption === 'airport_delivery';
 }
 
 export async function createGuestBooking(
@@ -483,6 +490,9 @@ export async function createGuestBooking(
       finalPrice = days * parkingPricePerDay;
       if (params.washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
+      }
+      if (hasAirportDelivery(params.dropOffOption, params.pickUpOption) && priceSettings.deliveryFee !== null) {
+        finalPrice += priceSettings.deliveryFee;
       }
     }
   }
@@ -590,6 +600,9 @@ export async function createBooking(
       finalPrice = days * parkingPricePerDay;
       if (params.washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
+      }
+      if (hasAirportDelivery(params.dropOffOption, params.pickUpOption) && priceSettings.deliveryFee !== null) {
+        finalPrice += priceSettings.deliveryFee;
       }
     }
   }
@@ -752,6 +765,8 @@ export async function updateBooking(
   const checkOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
   const parkingTypeId = (updateData.parkingTypeId as string) || existingBooking.parkingTypeId;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
+  const dropOffOption = (params.dropOffOption !== undefined ? params.dropOffOption : existingBooking.dropOffOption) as string | null;
+  const pickUpOption = (params.pickUpOption !== undefined ? params.pickUpOption : existingBooking.pickUpOption) as string | null;
 
   let finalPrice: number | null = null;
   if (params.finalPrice !== undefined) {
@@ -771,6 +786,9 @@ export async function updateBooking(
       finalPrice = days * parkingPricePerDay;
       if (washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
+      }
+      if (hasAirportDelivery(dropOffOption, pickUpOption) && priceSettings.deliveryFee !== null) {
+        finalPrice += priceSettings.deliveryFee;
       }
     }
   }
@@ -1160,6 +1178,8 @@ export async function updateParkedBooking(
   const checkInDate = existingBooking.dateFrom;
   const checkOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
+  const pickUpOption = (params.pickUpOption !== undefined ? params.pickUpOption : existingBooking.pickUpOption) as string | null;
+  const dropOffOption = existingBooking.dropOffOption as string | null;
 
   let finalPrice: number | null = null;
   if (params.finalPrice !== undefined) {
@@ -1180,6 +1200,9 @@ export async function updateParkedBooking(
       finalPrice = days * parkingPricePerDay;
       if (washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
+      }
+      if (hasAirportDelivery(dropOffOption, pickUpOption) && priceSettings.deliveryFee !== null) {
+        finalPrice += priceSettings.deliveryFee;
       }
     }
   }
