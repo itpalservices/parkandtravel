@@ -1205,7 +1205,7 @@ export async function updateBookingStatus(
     bookingStatusId,
     bookingStatus: statusLabels[bookingStatusId],
     parkPlace: parkPlace || undefined,
-    actualCheckIn: bookingStatusId === 'bookingStatus_parked' ? updateData.actualCheckIn?.toISOString?.() ?? new Date().toISOString() : undefined,
+    actualCheckIn: bookingStatusId === 'bookingStatus_parked' && updateData.actualCheckIn instanceof Date ? updateData.actualCheckIn.toISOString() : undefined,
     actualCheckOut: actualCheckOutDate?.toISOString(),
     extraFee: calculatedExtraFee,
   };
