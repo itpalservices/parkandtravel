@@ -58,6 +58,7 @@ interface BookingResponse {
   keepKeys: boolean | null;
   mileageKm: number | null;
   parkingComments: string | null;
+  actualCheckIn: string | null;
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;
@@ -271,6 +272,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     keepKeys: b.keepKeys ?? null,
     mileageKm: b.mileageKm ?? null,
     parkingComments: b.parkingComments || null,
+    actualCheckIn: b.actualCheckIn ? b.actualCheckIn.toISOString() : null,
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
@@ -361,6 +363,7 @@ export async function getBookingById(
     keepKeys: b.keepKeys ?? null,
     mileageKm: b.mileageKm ?? null,
     parkingComments: b.parkingComments || null,
+    actualCheckIn: b.actualCheckIn ? b.actualCheckIn.toISOString() : null,
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
@@ -1087,6 +1090,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     keepKeys: b.keepKeys ?? null,
     mileageKm: b.mileageKm ?? null,
     parkingComments: b.parkingComments || null,
+    actualCheckIn: b.actualCheckIn ? b.actualCheckIn.toISOString() : null,
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
