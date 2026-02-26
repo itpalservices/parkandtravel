@@ -225,7 +225,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     if (this.deliveryFee === null) return false;
     const dropOff = this.bookingForm.get('dropOffOption')?.value;
     const pickUp = this.bookingForm.get('pickUpOption')?.value;
-    return dropOff === 'airport_pickup' || pickUp === 'airport_delivery';
+    const dropOffMatch = dropOff === 'airport_pickup';
+    const pickUpMatch = this.returnDetailsEnabled && pickUp === 'airport_delivery';
+    return dropOffMatch || pickUpMatch;
   }
 
   calculateTotalPrice(): number | null {
