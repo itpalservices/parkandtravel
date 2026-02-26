@@ -42,6 +42,86 @@ export class BookingsListComponent {
 
   constructor(private bookingsService: BookingsService) {}
 
+  printBookingTag(booking: Booking): void {
+    const checkIn = booking.actualCheckIn
+      ? new Date(booking.actualCheckIn).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+        ' ' +
+        new Date(booking.actualCheckIn).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      : '-';
+    const dateTo = booking.dateTo
+      ? new Date(booking.dateTo + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : '-';
+    const timeTo = booking.timeTo || '-';
+    const fullName = `${booking.name} ${booking.surname}`;
+    const keysLabel = booking.keepKeys ? 'KK' : 'P&T';
+    const pickUpLabel = booking.pickUpOption === 'airport_delivery'
+      ? '<span style="color:#0d6efd;font-weight:600;">Airport</span>'
+      : '<span style="color:#dc3545;font-weight:600;">P</span>';
+
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<title>Booking Tag</title>
+<style>
+  @page { size: 80mm 100mm; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; width: 80mm; margin: 0 auto; }
+  .tag { width: 80mm; }
+  .tag-header {
+    background: #1a3c5e;
+    color: #fff;
+    text-align: center;
+    padding: 8mm 4mm 5mm;
+  }
+  .tag-header img { height: 14mm; margin-bottom: 2mm; }
+  .tag-header .phone { font-size: 10pt; color: #f5c518; margin-top: 1mm; }
+  .tag-body {
+    padding: 3mm 4mm;
+    font-size: 8pt;
+    line-height: 1.6;
+  }
+  .tag-body table { width: 100%; border-collapse: collapse; }
+  .tag-body td { padding: 1mm 0; vertical-align: top; }
+  .tag-body td:first-child { font-weight: 600; width: 28mm; color: #333; }
+  .tag-body td:last-child { color: #000; }
+  .divider { border-top: 1px dashed #999; margin: 2mm 0; }
+  .tag-footer { text-align: center; padding: 2mm; font-size: 7pt; color: #888; }
+  .plate { font-size: 13pt; font-weight: 700; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="tag">
+  <div class="tag-header">
+    <img src="/assets/img/park-and-travel-logo.png" alt="Park & Travel" />
+    <div class="phone">Phone: 99 877866</div>
+  </div>
+  <div class="tag-body">
+    <table>
+      <tr><td>Reg. No:</td><td class="plate">${booking.plateNo || '-'}</td></tr>
+      <tr><td>Flight:</td><td>${booking.returnFlight || '-'}</td></tr>
+      <tr><td>Return:</td><td>${dateTo}  ${timeTo}</td></tr>
+      <tr><td>Check-in:</td><td>${checkIn}</td></tr>
+    </table>
+    <div class="divider"></div>
+    <table>
+      <tr><td>Name:</td><td>${fullName}</td></tr>
+      <tr><td>Adults:</td><td>${booking.adults ?? '-'}</td></tr>
+      <tr><td>Price:</td><td>${booking.finalPrice != null ? '\u20AC' + Number(booking.finalPrice).toFixed(2) : '-'}</td></tr>
+      <tr><td>Park Place:</td><td>${booking.parkPlace || '-'}</td></tr>
+      <tr><td>Keys:</td><td>${keysLabel}</td></tr>
+      <tr><td>Pick-up:</td><td>${pickUpLabel}</td></tr>
+    </table>
+  </div>
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`);
+    printWindow.document.close();
+  }
+
   canHaveImages(booking: Booking): boolean {
     return booking.bookingStatusId === 'bookingStatus_parked' || booking.bookingStatusId === 'bookingStatus_completed';
   }

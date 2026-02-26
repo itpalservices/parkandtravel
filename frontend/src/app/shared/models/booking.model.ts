@@ -26,6 +26,7 @@ export interface Booking {
   keepKeys: boolean | null;
   mileageKm: number | null;
   parkingComments: string | null;
+  actualCheckIn: string | null;
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;
