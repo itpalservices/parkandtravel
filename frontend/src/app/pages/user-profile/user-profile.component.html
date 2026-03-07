@@ -502,7 +502,7 @@
                 </div>
               </div>
 
-              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+              <div class="settings-group">
                 <h4>Email</h4>
                 <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
                   Description text to include in booking confirmation emails. Leave empty if not needed.
@@ -517,6 +517,27 @@
                     rows="5"
                     placeholder="Enter email description text..."
                   ></textarea>
+                </div>
+              </div>
+
+              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+                <h4>Payment</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  This toggle is to set mandatory payment for customers on booking creation.
+                </small>
+
+                <div class="wash-service-toggle">
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      [checked]="mandatoryPayment"
+                      (change)="mandatoryPayment=!mandatoryPayment"
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">
+                    Mandatory Payment on booking creation
+                  </span>
                 </div>
               </div>
 

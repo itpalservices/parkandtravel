@@ -13,6 +13,7 @@ export interface ConfigurationSettings {
   emailDescription: string | null;
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
+  mandatoryPayment: boolean;
 }
 
 @Injectable({

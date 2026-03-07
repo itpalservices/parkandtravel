@@ -11,6 +11,7 @@ export interface ConfigurationSettings {
   emailDescription: string | null;
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
+  mandatoryPayment: boolean;
 }
 
 const SETTING_KEYS = {
@@ -24,6 +25,7 @@ const SETTING_KEYS = {
   emailDescription: "configurationSetting_emailDescription",
   priceIncrementsCovered: "configurationSetting_priceIncrementsCovered",
   priceIncrementsUncovered: "configurationSetting_priceIncrementsUncovered",
+  mandatoryPayment: "configurationSetting_mandatoryPrePayment"
 };
 
 interface SettingRow {
@@ -56,6 +58,7 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     emailDescription: settingsMap.get(SETTING_KEYS.emailDescription) ?? null,
     priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsCovered)),
     priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsUncovered)),
+    mandatoryPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryPayment))
   };
 }
 
@@ -138,6 +141,13 @@ export async function updateSettings(
     });
   }
 
+  if (data.mandatoryPayment !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.mandatoryPayment,
+      value: data.mandatoryPayment !== null ? JSON.stringify(data.mandatoryPayment) : null,
+    });
+  }
+
   for (const update of updates) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO configuration_settings (id, value) VALUES ($1, $2)
@@ -160,6 +170,17 @@ function parseFloatOrNull(value: string | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed = parseFloat(value);
   return isNaN(parsed) ? null : parsed;
+}
+
+function parseBoolean(value: string | null | undefined): boolean {
+  if (!value) return false;
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "true" || normalized === "1") return true;
+  if (normalized === "false" || normalized === "0") return false;
+
+  return false;
 }
 
 function parseJsonArrayOrNull(value: string | null | undefined): number[] | null {

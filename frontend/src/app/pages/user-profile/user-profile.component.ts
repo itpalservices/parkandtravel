@@ -62,6 +62,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   savingSettings = false;
   offerWashService = false;
   settingsSubmitted = false;
+  mandatoryPayment = false;
   priceIncrementsCovered: number[] = [];
   priceIncrementsUncovered: number[] = [];
   newIncrementCovered: number | null = null;
@@ -151,6 +152,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       dayEnd: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
       deliveryFee: [null, [Validators.min(0)]],
       emailDescription: [null],
+      mandatoryPayment: [false]
     });
 
     this.settingsForm.get('availableUncovered')!.valueChanges.subscribe((value) => {
@@ -195,7 +197,9 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           dayEnd: settings.dayEnd,
           deliveryFee: settings.deliveryFee?.toFixed(2),
           emailDescription: settings.emailDescription,
+          mandatoryPayment: settings.mandatoryPayment
         });
+        this.mandatoryPayment = settings.mandatoryPayment;
         this.offerWashService = settings.priceWash !== null;
         this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
         this.priceIncrementsUncovered = settings.priceIncrementsUncovered || [];
@@ -318,6 +322,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           : null,
       priceIncrementsCovered: this.priceIncrementsCovered.length > 0 ? this.priceIncrementsCovered : null,
       priceIncrementsUncovered: this.priceIncrementsUncovered.length > 0 ? this.priceIncrementsUncovered : null,
+      mandatoryPayment: this.mandatoryPayment
     };
 
     this.settingsService.updateSettings(data).subscribe({

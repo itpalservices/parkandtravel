@@ -82,6 +82,7 @@ async function main() {
       { id: "configurationSetting_emailDescription", value: null },
       { id: "configurationSetting_priceIncrementsCovered", value: null },
       { id: "configurationSetting_priceIncrementsUncovered", value: null },
+      { id: "configurationSetting_mandatoryPrePayment", value: null },
     ],
     skipDuplicates: true,
   });
