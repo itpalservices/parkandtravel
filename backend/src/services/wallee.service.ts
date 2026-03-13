@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 import axios from 'axios';
 
 const WALLEE_BASE_URL = 'https://app-wallee.com';
@@ -6,18 +6,29 @@ const WALLEE_SPACE_ID = 93067;
 const WALLEE_SUB = '163504';
 const WALLEE_LIMIT = 10;
 
-function buildQueryParam(dateFrom: string, dateTo: string): string {
-  return `createdOn:>='${dateFrom}' AND createdOn:<='${dateTo}'`;
+function base64urlEncode(input: string | Buffer): string {
+  const buf = typeof input === 'string' ? Buffer.from(input, 'utf8') : input;
+  return buf
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+function buildEncodedQuery(dateFrom: string, dateTo: string): string {
+  const raw = `createdOn:>='${dateFrom}' AND createdOn:<='${dateTo}'`;
+  return encodeURIComponent(raw).replace(/%20/g, '+');
 }
 
 function buildRequestPath(dateFrom: string, dateTo: string, offset: number): string {
-  const query = encodeURIComponent(buildQueryParam(dateFrom, dateTo));
-  return `/api/v2.0/payment/transactions/search?limit=${WALLEE_LIMIT}&offset=${offset}&query=${query}`;
+  const encodedQuery = buildEncodedQuery(dateFrom, dateTo);
+  return `/api/v2.0/payment/transactions/search?limit=${WALLEE_LIMIT}&offset=${offset}&query=${encodedQuery}`;
 }
 
 function generateJWT(requestPath: string): string {
   const secret = Buffer.from(process.env.WALLEE_SECRET!, 'base64');
 
+  const header = { alg: 'HS256', type: 'JWT', ver: 1 };
   const payload = {
     sub: WALLEE_SUB,
     iat: Math.floor(Date.now() / 1000),
@@ -25,15 +36,16 @@ function generateJWT(requestPath: string): string {
     requestMethod: 'GET',
   };
 
-  return jwt.sign(payload, secret, {
-    algorithm: 'HS256',
-    header: {
-      alg: 'HS256',
-      type: 'JWT',
-      ver: 1,
-    } as any,
-    noTimestamp: true,
-  });
+  const headerEncoded = base64urlEncode(JSON.stringify(header));
+  const payloadEncoded = base64urlEncode(JSON.stringify(payload));
+  const signingInput = `${headerEncoded}.${payloadEncoded}`;
+
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(signingInput)
+    .digest();
+
+  return `${signingInput}.${base64urlEncode(signature)}`;
 }
 
 export async function getWalleeTransactions(
@@ -44,6 +56,8 @@ export async function getWalleeTransactions(
   const requestPath = buildRequestPath(dateFrom, dateTo, offset);
   const token = generateJWT(requestPath);
   const url = `${WALLEE_BASE_URL}${requestPath}`;
+
+  console.log('Wallee requestPath:', requestPath);
 
   const response = await axios.get(url, {
     headers: {
