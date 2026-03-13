@@ -17,6 +17,11 @@ export const reportsRoutes: Routes = [
       import('./daily-in-out-report/daily-in-out-report.component').then((m) => m.DailyInOutReportComponent),
   },
   {
+    path: 'z-report',
+    loadComponent: () =>
+      import('./z-report/z-report.component').then((m) => m.ZReportComponent),
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./report-detail/report-detail.component').then((m) => m.ReportDetailComponent),
