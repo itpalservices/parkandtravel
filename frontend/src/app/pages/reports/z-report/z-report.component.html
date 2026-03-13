@@ -37,7 +37,29 @@
         <div class="loading-spinner"></div>
         <span>Loading report...</span>
       </div>
-    } @else {
+    } @else if (error) {
+      <div class="error-state">
+        <div class="error-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <p class="error-message">{{ error }}</p>
+        <button class="btn btn-outline-primary btn-sm" (click)="loadReport()">Retry</button>
+      </div>
+    } @else if (!walleeData || walleeData.data.length === 0) {
       <div class="empty-state">
         <div class="empty-icon">
           <svg
@@ -57,7 +79,7 @@
             <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
         </div>
-        <p class="empty-message">No data available for the selected period</p>
+        <p class="empty-message">No transactions found for the selected period</p>
         @if (dateFrom && dateTo) {
           <p class="empty-sub">
             {{ formatDisplayDate(dateFrom) }}
@@ -66,6 +88,33 @@
             }
           </p>
         }
+      </div>
+    } @else {
+      <div class="results-info">
+        <span>Page {{ currentPage }} &mdash; showing {{ walleeData.data.length }} transaction(s)</span>
+      </div>
+
+      <div class="placeholder-table">
+        <p class="placeholder-note">Data received — check the browser console for the full response.</p>
+        <pre class="data-preview">{{ walleeData | json }}</pre>
+      </div>
+
+      <div class="pagination-bar">
+        <button
+          class="btn btn-outline-secondary btn-sm"
+          [disabled]="currentOffset === 0"
+          (click)="goToPreviousPage()"
+        >
+          &larr; Previous
+        </button>
+        <span class="page-info">Page {{ currentPage }}</span>
+        <button
+          class="btn btn-outline-secondary btn-sm"
+          [disabled]="!walleeData.hasMore"
+          (click)="goToNextPage()"
+        >
+          Next &rarr;
+        </button>
       </div>
     }
   </div>
