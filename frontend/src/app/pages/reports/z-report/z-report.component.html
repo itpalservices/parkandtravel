@@ -40,17 +40,8 @@
     } @else if (error) {
       <div class="error-state">
         <div class="error-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -62,17 +53,8 @@
     } @else if (!walleeData || walleeData.data.length === 0) {
       <div class="empty-state">
         <div class="empty-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -90,13 +72,57 @@
         }
       </div>
     } @else {
-      <div class="results-info">
-        <span>Page {{ currentPage }} &mdash; showing {{ walleeData.data.length }} transaction(s)</span>
+      <div class="results-summary">
+        <span class="count-badge">{{ walleeData.data.length }} transaction{{ walleeData.data.length !== 1 ? 's' : '' }}</span>
+        <span class="count-sub">on page {{ currentPage }}</span>
       </div>
 
-      <div class="placeholder-table">
-        <p class="placeholder-note">Data received — check the browser console for the full response.</p>
-        <pre class="data-preview">{{ walleeData | json }}</pre>
+      <div class="desktop-table">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of walleeData.data; track item.id) {
+              <tr>
+                <td class="td-id">{{ item.id }}</td>
+                <td>{{ formatCreatedOn(item.createdOn) }}</td>
+                <td class="td-amount">{{ formatAmount(item.authorizationAmount, item.currency) }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="getStatusClass(item.state)">
+                    {{ getStatusLabel(item.state) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-cards">
+        @for (item of walleeData.data; track item.id) {
+          <div class="transaction-card">
+            <div class="card-header-row">
+              <span class="card-id">#{{ item.id }}</span>
+              <span class="status-badge" [ngClass]="getStatusClass(item.state)">
+                {{ getStatusLabel(item.state) }}
+              </span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Date</span>
+              <span class="card-value">{{ formatCreatedOn(item.createdOn) }}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Amount</span>
+              <span class="card-value card-amount">{{ formatAmount(item.authorizationAmount, item.currency) }}</span>
+            </div>
+          </div>
+        }
       </div>
 
       <div class="pagination-bar">

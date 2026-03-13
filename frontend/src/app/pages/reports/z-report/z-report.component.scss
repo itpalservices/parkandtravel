@@ -11,9 +11,7 @@
   font-size: 14px;
   margin-bottom: 16px;
 
-  &:hover {
-    color: #1a3c5e;
-  }
+  &:hover { color: #1a3c5e; }
 }
 
 .title-row {
@@ -69,7 +67,8 @@
   }
 }
 
-.empty-state {
+.empty-state,
+.error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -78,9 +77,11 @@
   gap: 12px;
   text-align: center;
 
-  .empty-icon { color: #d1d5db; }
+  .empty-icon  { color: #d1d5db; }
+  .error-icon  { color: #f87171; }
 
-  .empty-message {
+  .empty-message,
+  .error-message {
     font-size: 16px;
     font-weight: 500;
     color: #6b7280;
@@ -94,52 +95,150 @@
   }
 }
 
-.error-state {
+.results-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e5e7eb;
+
+  .count-badge {
+    background: #1a3c5e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+
+  .count-sub {
+    font-size: 13px;
+    color: #6b7280;
+  }
+}
+
+.desktop-table {
+  overflow-x: auto;
+
+  @media (max-width: 640px) { display: none; }
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  thead tr {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: #f9fafb; }
+  }
+
+  td {
+    padding: 12px 16px;
+    color: #374151;
+    vertical-align: middle;
+  }
+
+  .td-id {
+    font-family: monospace;
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  .td-amount {
+    font-weight: 600;
+    color: #1a3c5e;
+  }
+}
+
+.mobile-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+
+  @media (max-width: 640px) { display: flex; }
+}
+
+.transaction-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 24px;
-  gap: 12px;
-  text-align: center;
+  gap: 8px;
 
-  .error-icon { color: #f87171; }
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-  .error-message {
-    font-size: 16px;
+  .card-id {
+    font-family: monospace;
+    font-size: 13px;
+    color: #6b7280;
     font-weight: 500;
-    color: #6b7280;
-    margin: 0;
   }
-}
 
-.results-info {
-  padding: 12px 20px;
-  font-size: 13px;
-  color: #6b7280;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.placeholder-table {
-  padding: 20px;
-
-  .placeholder-note {
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 14px;
-    color: #6b7280;
-    margin-bottom: 12px;
-    font-style: italic;
   }
 
-  .data-preview {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
-    font-size: 12px;
-    overflow: auto;
-    max-height: 400px;
-    color: #374151;
+  .card-label {
+    color: #9ca3af;
+    font-weight: 500;
   }
+
+  .card-value {
+    color: #374151;
+    font-weight: 500;
+  }
+
+  .card-amount {
+    font-weight: 700;
+    color: #1a3c5e;
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.status-fulfill    { background: #d1fae5; color: #065f46; }
+  &.status-failed     { background: #fee2e2; color: #991b1b; }
+  &.status-authorized { background: #dbeafe; color: #1e40af; }
+  &.status-confirmed  { background: #e0e7ff; color: #3730a3; }
+  &.status-processing { background: #fef3c7; color: #92400e; }
+  &.status-voided     { background: #f3f4f6; color: #6b7280; }
+  &.status-default    { background: #f3f4f6; color: #6b7280; }
 }
 
 .pagination-bar {

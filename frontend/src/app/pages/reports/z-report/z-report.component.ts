@@ -5,8 +5,19 @@ import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
 
+export interface WalleeTransaction {
+  id: number;
+  createdOn: string;
+  authorizationAmount: number;
+  currency: string;
+  state: string;
+  merchantReference?: string;
+  failureReason?: { name?: { 'en-US': string } };
+  [key: string]: any;
+}
+
 interface WalleeResponse {
-  data: any[];
+  data: WalleeTransaction[];
   hasMore: boolean;
   limit: number;
   offset: number;
@@ -89,6 +100,39 @@ export class ZReportComponent {
 
   get currentPage(): number {
     return Math.floor(this.currentOffset / this.pageSize) + 1;
+  }
+
+  formatCreatedOn(dateStr: string): string {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
+  formatAmount(amount: number, currency: string): string {
+    if (amount == null) return '-';
+    return `${currency} ${Number(amount).toFixed(2)}`;
+  }
+
+  getStatusClass(state: string): string {
+    switch (state?.toUpperCase()) {
+      case 'FULFILL': return 'status-fulfill';
+      case 'FAILED': return 'status-failed';
+      case 'AUTHORIZED': return 'status-authorized';
+      case 'CONFIRMED': return 'status-confirmed';
+      case 'PROCESSING': return 'status-processing';
+      case 'VOIDED': return 'status-voided';
+      default: return 'status-default';
+    }
+  }
+
+  getStatusLabel(state: string): string {
+    if (!state) return '-';
+    return state.charAt(0).toUpperCase() + state.slice(1).toLowerCase();
   }
 
   formatDisplayDate(date: Date | null): string {
