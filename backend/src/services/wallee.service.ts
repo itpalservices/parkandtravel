@@ -17,7 +17,9 @@ function base64urlEncode(input: string | Buffer): string {
 
 function buildEncodedQuery(dateFrom: string, dateTo: string): string {
   const raw = `createdOn:>='${dateFrom}' AND createdOn:<='${dateTo}'`;
-  return encodeURIComponent(raw).replace(/%20/g, '+');
+  return encodeURIComponent(raw)
+    .replace(/%20/g, '+')
+    .replace(/'/g, '%27');
 }
 
 function buildRequestPath(dateFrom: string, dateTo: string, offset: number): string {
