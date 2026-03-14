@@ -13,8 +13,8 @@ function getAppDomain(): string {
   if (process.env.PARK_AND_FLY_DOMAIN) {
     return process.env.PARK_AND_FLY_DOMAIN;
   }
-  if (process.env.REPLIT_DEV_DOMAIN) {
-    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  if (process.env.PARK_AND_FLY_DOMAIN) {
+    return `https://${process.env.PARK_AND_FLY_DOMAIN}`;
   }
   return 'http://localhost:4200';
 }
