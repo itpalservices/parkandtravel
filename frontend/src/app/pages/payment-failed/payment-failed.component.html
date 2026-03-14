@@ -1,0 +1,26 @@
+<div class="payment-page">
+  <div class="payment-card">
+    <div class="brand">
+      <span class="brand-icon">P</span>
+      <span class="brand-name">Park &amp; Travel</span>
+    </div>
+
+    <div class="state failed">
+      <div class="icon-wrap failed-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <h2>Payment Unsuccessful</h2>
+      <p>Your payment was not completed. This could be due to a declined card, insufficient funds, or a cancellation.</p>
+      <p class="sub">Your reservation has not been confirmed. Please try again.</p>
+      <div class="actions">
+        <button class="btn-primary" (click)="tryAgain()">Try Again</button>
+        <button class="btn-secondary" (click)="goHome()">Back to Home</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -15,6 +15,16 @@ export const appRoutes: Routes = [
       import('./pages/guest-booking/guest-booking.component').then((m) => m.GuestBookingComponent),
   },
   {
+    path: 'payment/success',
+    loadComponent: () =>
+      import('./pages/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
+  },
+  {
+    path: 'payment/failed',
+    loadComponent: () =>
+      import('./pages/payment-failed/payment-failed.component').then((m) => m.PaymentFailedComponent),
+  },
+  {
     path: 'admin',
     component: LayoutComponent,
     canActivate: [authGuard],

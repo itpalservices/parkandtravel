@@ -55,10 +55,17 @@
             email shortly.
           </p>
         }
+        @if (paymentError) {
+          <div class="error-alert">{{ paymentError }}</div>
+        }
         <div class="success-actions">
           @if (!mandatoryPrePayment) {
-            <button class="btn-pay" (click)="$event.preventDefault()">
-              Proceed to Payment
+            <button class="btn-pay" (click)="proceedToPayment()" [disabled]="paymentInitiating">
+              @if (paymentInitiating) {
+                Processing&hellip;
+              } @else {
+                Proceed to Payment
+              }
             </button>
           }
           <button class="btn-primary" (click)="createAnotherBooking()">

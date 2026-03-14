@@ -1,0 +1,72 @@
+<div class="payment-page">
+  <div class="payment-card">
+    <div class="brand">
+      <span class="brand-icon">P</span>
+      <span class="brand-name">Park &amp; Travel</span>
+    </div>
+
+    @if (verifying) {
+      <div class="state verifying">
+        <div class="spinner"></div>
+        <h2>Verifying your payment&hellip;</h2>
+        <p>Please wait while we confirm your reservation.</p>
+      </div>
+    }
+
+    @if (!verifying && status === 'success') {
+      <div class="state success">
+        <div class="icon-wrap success-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <h2>Payment Successful!</h2>
+        <p>Your parking reservation has been confirmed and a confirmation email has been sent to you.</p>
+        @if (bookingId) {
+          <p class="booking-ref">Booking reference: <strong>{{ bookingId }}</strong></p>
+        }
+        <div class="actions">
+          <button class="btn-primary" (click)="goHome()">Back to Home</button>
+        </div>
+      </div>
+    }
+
+    @if (!verifying && status === 'failed') {
+      <div class="state failed">
+        <div class="icon-wrap failed-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <h2>Payment Failed</h2>
+        <p>{{ message || 'Your payment could not be processed. Please try again.' }}</p>
+        <div class="actions">
+          <button class="btn-primary" (click)="tryAgain()">Try Again</button>
+          <button class="btn-secondary" (click)="goHome()">Back to Home</button>
+        </div>
+      </div>
+    }
+
+    @if (!verifying && status === 'pending') {
+      <div class="state pending">
+        <div class="icon-wrap pending-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h2>Payment Pending</h2>
+        <p>{{ message || 'Your payment is still being processed. Please check back shortly.' }}</p>
+        <div class="actions">
+          <button class="btn-primary" (click)="goHome()">Back to Home</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

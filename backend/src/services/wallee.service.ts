@@ -27,7 +27,7 @@ function buildRequestPath(dateFrom: string, dateTo: string, offset: number): str
   return `/api/v2.0/payment/transactions/search?limit=${WALLEE_LIMIT}&offset=${offset}&query=${encodedQuery}`;
 }
 
-function generateJWT(requestPath: string): string {
+function generateJWT(requestPath: string, method: 'GET' | 'POST' = 'GET'): string {
   const secret = Buffer.from(process.env.WALLEE_SECRET!, 'base64');
 
   const header = { alg: 'HS256', type: 'JWT', ver: 1 };
@@ -35,7 +35,7 @@ function generateJWT(requestPath: string): string {
     sub: WALLEE_SUB,
     iat: Math.floor(Date.now() / 1000),
     requestPath,
-    requestMethod: 'GET',
+    requestMethod: method,
   };
 
   const headerEncoded = base64urlEncode(JSON.stringify(header));
@@ -60,6 +60,93 @@ export async function getWalleeTransactions(
   const url = `${WALLEE_BASE_URL}${requestPath}`;
 
   console.log('Wallee requestPath:', requestPath);
+
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Space: WALLEE_SPACE_ID,
+    },
+  });
+
+  return response.data;
+}
+
+export async function createWalleeTransaction(params: {
+  merchantReference: string;
+  amount: number;
+  currency: string;
+  customerEmail?: string;
+  fullName?: string;
+  description: string;
+  successUrl: string;
+  failedUrl: string;
+}): Promise<number> {
+  const requestPath = `/api/v2.0/payment/transaction/create?spaceId=${WALLEE_SPACE_ID}`;
+  const token = generateJWT(requestPath, 'POST');
+  const url = `${WALLEE_BASE_URL}${requestPath}`;
+
+  const nameParts = (params.fullName || '').trim().split(' ');
+  const givenName = nameParts[0] || 'Customer';
+  const familyName = nameParts.slice(1).join(' ') || givenName;
+
+  const body: any = {
+    currency: params.currency,
+    merchantReference: params.merchantReference,
+    successUrl: params.successUrl,
+    failedUrl: params.failedUrl,
+    lineItems: [
+      {
+        name: params.description,
+        uniqueId: 'parking-reservation',
+        type: 'PRODUCT',
+        quantity: '1',
+        amountIncludingTax: params.amount.toFixed(2),
+        shippingRequired: false,
+      },
+    ],
+  };
+
+  if (params.customerEmail || params.fullName) {
+    body.billingAddress = {
+      emailAddress: params.customerEmail || '',
+      givenName,
+      familyName,
+    };
+  }
+
+  console.log('Creating Wallee transaction, merchantReference:', params.merchantReference);
+
+  const response = await axios.post(url, body, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Space: WALLEE_SPACE_ID,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  console.log('Wallee transaction created, id:', response.data.id);
+  return response.data.id;
+}
+
+export async function buildPaymentPageUrl(transactionId: number): Promise<string> {
+  const requestPath = `/api/v2.0/payment/transaction/build-payment-page-url?spaceId=${WALLEE_SPACE_ID}&id=${transactionId}`;
+  const token = generateJWT(requestPath);
+  const url = `${WALLEE_BASE_URL}${requestPath}`;
+
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Space: WALLEE_SPACE_ID,
+    },
+  });
+
+  return response.data;
+}
+
+export async function getWalleeTransactionById(transactionId: number): Promise<any> {
+  const requestPath = `/api/v2.0/payment/transaction/read?spaceId=${WALLEE_SPACE_ID}&id=${transactionId}`;
+  const token = generateJWT(requestPath);
+  const url = `${WALLEE_BASE_URL}${requestPath}`;
 
   const response = await axios.get(url, {
     headers: {

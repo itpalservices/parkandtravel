@@ -64,6 +64,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   submitting = false;
   submitSuccess = false;
   submitError = '';
+  createdBookingId: string | null = null;
+  paymentInitiating = false;
+  paymentError = '';
   
   checkingAvailability = false;
   availabilityResult: AvailabilityResult | null = null;
@@ -371,15 +374,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.mandatoryPrePayment) {
-      return;
-    }
-
-    this.submitting = true;
-    this.submitError = '';
-
     const formValue = this.bookingForm.value;
-    const booking: Record<string, any> = {
+    const bookingData: Record<string, any> = {
       fullName: formValue.fullName.trim(),
       email: formValue.email.trim(),
       phoneCodeId: formValue.phoneCodeId,
@@ -399,14 +395,48 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
     };
 
-    this.apiService.post('/bookings/guest', booking).subscribe({
-      next: () => {
+    if (this.mandatoryPrePayment) {
+      this.submitting = true;
+      this.submitError = '';
+      this.apiService.post<{ paymentUrl: string }>('/payment/initiate', bookingData).subscribe({
+        next: (res) => {
+          window.location.href = res.paymentUrl;
+        },
+        error: (err) => {
+          this.submitting = false;
+          this.submitError = err.error?.message || 'Failed to initiate payment. Please try again.';
+        },
+      });
+      return;
+    }
+
+    this.submitting = true;
+    this.submitError = '';
+
+    this.apiService.post<{ id: string; finalPrice: number | null }>('/bookings/guest', bookingData).subscribe({
+      next: (res) => {
         this.submitting = false;
         this.submitSuccess = true;
+        this.createdBookingId = res.id || null;
       },
       error: (err) => {
         this.submitting = false;
         this.submitError = err.error?.message || 'Failed to create booking. Please try again.';
+      },
+    });
+  }
+
+  proceedToPayment(): void {
+    if (!this.createdBookingId) return;
+    this.paymentInitiating = true;
+    this.paymentError = '';
+    this.apiService.post<{ paymentUrl: string }>('/payment/initiate-for-booking', { bookingId: this.createdBookingId }).subscribe({
+      next: (res) => {
+        window.location.href = res.paymentUrl;
+      },
+      error: (err) => {
+        this.paymentInitiating = false;
+        this.paymentError = err.error?.message || 'Failed to initiate payment. Please try again.';
       },
     });
   }

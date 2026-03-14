@@ -54,15 +54,27 @@ model Booking {
   parkingComments String?   @db.Text
   actualCheckIn  DateTime?  @db.Timestamptz(6)
   actualCheckOut DateTime?  @db.Timestamptz(6)
-  extraFee     Decimal?     @db.Decimal(10, 2)
-  deleteflag   Int          @default(0)
-  createdAt    DateTime     @default(now())
+  extraFee        Decimal?   @db.Decimal(10, 2)
+  deleteflag      Int        @default(0)
+  createdAt       DateTime   @default(now())
+  wlTransactionId BigInt?    @map("wl_transaction_id")
+  paymentStatus   String?    @map("payment_status") @db.VarChar(20)
 
   parkingType  ParkingType? @relation(fields: [parkingTypeId], references: [id])
   phoneCode    PhoneCode?   @relation(fields: [phoneCodeId], references: [id])
   bookingStatus BookingStatus? @relation(fields: [bookingStatusId], references: [id])
 
   @@map("bookings")
+}
+
+model PendingBooking {
+  id              String   @id @default(uuid()) @db.Uuid
+  wlTransactionId BigInt?  @map("wl_transaction_id")
+  formData        Json     @map("form_data")
+  expiresAt       DateTime @map("expires_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("pending_bookings")
 }
 
 model ConfigurationSetting {

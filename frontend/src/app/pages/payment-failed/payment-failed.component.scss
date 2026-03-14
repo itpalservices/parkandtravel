@@ -1,0 +1,95 @@
+.payment-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff1f1 0%, #fee2e2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.payment-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+  padding: 48px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  background: #1a56db;
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 36px;
+}
+.brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.state { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+.icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.failed-icon { background: #fee2e2; color: #dc2626; }
+
+h2 { font-size: 24px; font-weight: 700; color: #111827; margin: 0; }
+p  { font-size: 15px; color: #6b7280; margin: 0; line-height: 1.6; }
+.sub { font-size: 13px; }
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.btn-primary {
+  background: #1a56db;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: #1e429f; }
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: #e5e7eb; }
+}
