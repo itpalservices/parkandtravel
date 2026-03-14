@@ -414,6 +414,7 @@ interface CreateGuestBookingParams {
 
 export interface CreateBookingParams extends CreateGuestBookingParams {
   userId?: string | null;
+  paymentStatus?: 'pending' | null;
 }
 
 function parseTimeToDate(timeStr: string): Date {
@@ -703,6 +704,7 @@ export async function createBooking(
       dropOffOption: params.dropOffOption || null,
       pickUpOption: params.pickUpOption || null,
       deleteflag: 0,
+      paymentStatus: params.paymentStatus ?? null,
     },
   });
 
@@ -732,6 +734,7 @@ export async function createBooking(
         pickUpOption: params.pickUpOption || undefined,
         finalPrice: finalPrice,
         emailDescription,
+        paymentStatus: params.paymentStatus ?? null,
       }).then((result) => {
         if (result.success) {
           console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);

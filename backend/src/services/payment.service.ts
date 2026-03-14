@@ -276,7 +276,7 @@ export async function initiatePaymentForPending(formData: GuestFormData): Promis
   return { paymentUrl };
 }
 
-export async function initiatePaymentForBooking(bookingId: string): Promise<{ paymentUrl: string }> {
+export async function initiatePaymentForBooking(bookingId: string, source?: string): Promise<{ paymentUrl: string }> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) throw new Error('Booking not found');
   if (booking.deleteflag !== 0) throw new Error('Booking not found');
@@ -296,8 +296,8 @@ export async function initiatePaymentForBooking(bookingId: string): Promise<{ pa
     customerEmail: booking.email || undefined,
     fullName: `${booking.name} ${booking.surname}`.trim(),
     description: 'Parking Reservation - Park & Travel',
-    successUrl: `${domain}/payment/success?ref=${merchantReference}`,
-    failedUrl: `${domain}/payment/failed?ref=${merchantReference}`,
+    successUrl: `${domain}/payment/success?ref=${merchantReference}${source ? `&source=${source}` : ''}`,
+    failedUrl: `${domain}/payment/failed?ref=${merchantReference}${source ? `&source=${source}` : ''}`,
   });
 
   await prisma.booking.update({

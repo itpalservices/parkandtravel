@@ -93,6 +93,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   checkOutMinDate: NgbDateStruct;
 
   submitting = false;
+  paymentInitiating = false;
+  mandatoryPrePayment = false;
   private availabilityService = inject(AvailabilityService);
   private availabilitySubscription?: Subscription;
 
@@ -233,6 +235,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   get isEditMode(): boolean {
     return this.formType === FormType.ExistingBooking;
+  }
+
+  get isPriceTBC(): boolean {
+    return !this.returnDetailsEnabled;
+  }
+
+  get submitButtonLabel(): string {
+    if (this.isEditMode) return 'Update Booking';
+    if (this.isRegularUser && this.mandatoryPrePayment && !this.isPriceTBC) return 'Proceed to Payment';
+    return 'Create Booking';
   }
 
   private loadBookingDetails(): void {
@@ -1291,6 +1303,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.washAvailable = response.washAvailable;
         this.washPrice = response.washPrice;
         this.deliveryFee = response.deliveryFee;
+        this.mandatoryPrePayment = response.mandatoryPrePayment ?? false;
 
         if (this.existingBooking?.parkingTypeId) {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
@@ -1499,8 +1512,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.submitting = true;
-
     const formValue = this.bookingForm.getRawValue();
     const booking: Record<string, unknown> = {
       fullName: formValue.fullName.trim(),
@@ -1531,6 +1542,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
 
     if (this.isEditMode && this.bookingId) {
+      this.submitting = true;
       this.apiService.put(`/bookings/${this.bookingId}`, booking).subscribe({
         next: () => {
           this.submitting = false;
@@ -1561,20 +1573,94 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           });
         },
       });
+    } else if (this.isRegularUser && !this.isPriceTBC) {
+      if (this.mandatoryPrePayment) {
+        this.submitting = true;
+        this.processNewBooking(booking, true);
+      } else {
+        Swal.fire({
+          title: 'Payment Option',
+          text: 'Would you like to pay for your booking now or later?',
+          icon: 'question',
+          showConfirmButton: true,
+          showDenyButton: true,
+          confirmButtonText: 'Pay Now',
+          denyButtonText: 'Pay Later',
+          confirmButtonColor: '#006B8F',
+          denyButtonColor: '#6c757d',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.submitting = true;
+            this.processNewBooking(booking, true);
+          } else if (result.isDenied) {
+            this.submitting = true;
+            this.processNewBooking(booking, false);
+          }
+        });
+      }
     } else {
-      this.apiService.post('/bookings', booking).subscribe({
-        next: () => {
+      this.submitting = true;
+      this.processNewBooking(booking, false);
+    }
+  }
+
+  private processNewBooking(booking: Record<string, unknown>, paymentIntended: boolean): void {
+    if (paymentIntended) {
+      booking['paymentIntended'] = true;
+    }
+    this.apiService
+      .post<{ success: boolean; data: { id: string; finalPrice: number | null } }>('/bookings', booking)
+      .subscribe({
+        next: (res) => {
           this.submitting = false;
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Booking created successfully',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-          this.router.navigate(['/admin/bookings']);
+          if (paymentIntended) {
+            const bookingId = res.data?.id;
+            if (!bookingId) {
+              Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: 'Booking created but failed to initiate payment.',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+              });
+              this.router.navigate(['/admin/bookings']);
+              return;
+            }
+            this.paymentInitiating = true;
+            this.apiService
+              .post<{ paymentUrl: string }>('/payment/initiate-for-booking', { bookingId, source: 'auth' })
+              .subscribe({
+                next: (payRes) => {
+                  window.location.href = payRes.paymentUrl;
+                },
+                error: (err) => {
+                  this.paymentInitiating = false;
+                  Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: err.error?.message || 'Failed to initiate payment. Please try again.',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                  });
+                  this.router.navigate(['/admin/bookings']);
+                },
+              });
+          } else {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Booking created successfully',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            this.router.navigate(['/admin/bookings']);
+          }
         },
         error: (err) => {
           this.submitting = false;
@@ -1589,7 +1675,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           });
         },
       });
-    }
   }
 
   saveParkedBooking(): void {

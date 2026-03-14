@@ -677,8 +677,8 @@
 
           <div class="form-actions">
             @if (currentStatusId !== 'bookingStatus_completed') {
-              <button type="submit" class="btn-submit" [disabled]="submitting || loadingBooking || checkingAvailability || (availabilityResult && !availabilityResult.available)">
-                @if (submitting) {
+              <button type="submit" class="btn-submit" [disabled]="submitting || paymentInitiating || loadingBooking || checkingAvailability || (availabilityResult && !availabilityResult.available)">
+                @if (submitting || paymentInitiating) {
                   <span class="spinner"></span>
                   Processing...
                 } @else if (checkingAvailability) {
@@ -686,7 +686,7 @@
                 } @else if (isBookingParked) {
                   Save Changes
                 } @else {
-                  {{ isEditMode ? 'Update Booking' : 'Create Booking' }}
+                  {{ submitButtonLabel }}
                 }
               </button>
             }

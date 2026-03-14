@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import Swal from 'sweetalert2';
 
 interface VerifyResult {
   status: 'success' | 'failed' | 'pending';
@@ -28,25 +29,59 @@ export class PaymentSuccessComponent implements OnInit {
 
   ngOnInit(): void {
     const ref = this.route.snapshot.queryParamMap.get('ref');
+    const source = this.route.snapshot.queryParamMap.get('source');
+
     if (!ref) {
-      this.verifying = false;
-      this.status = 'failed';
-      this.message = 'Invalid payment reference. Please contact support.';
+      if (source === 'auth') {
+        this.redirectAuthWithToast('error', 'Invalid payment reference. Please contact support.');
+      } else {
+        this.verifying = false;
+        this.status = 'failed';
+        this.message = 'Invalid payment reference. Please contact support.';
+      }
       return;
     }
+
     this.apiService.get<VerifyResult>(`/payment/verify?ref=${encodeURIComponent(ref)}`).subscribe({
       next: (result) => {
         this.verifying = false;
         this.status = result.status;
         this.message = result.message || '';
         this.bookingId = result.bookingId || null;
+
+        if (source === 'auth') {
+          if (result.status === 'success') {
+            this.redirectAuthWithToast('success', 'Payment completed successfully!');
+          } else if (result.status === 'failed') {
+            this.redirectAuthWithToast('warning', 'Booking saved but payment was not completed.');
+          } else {
+            this.redirectAuthWithToast('info', 'Payment is still processing. Check your booking for updates.');
+          }
+        }
       },
       error: (err) => {
         this.verifying = false;
         this.status = 'failed';
         this.message = err.error?.message || 'An error occurred while verifying your payment.';
+
+        if (source === 'auth') {
+          this.redirectAuthWithToast('warning', 'Booking saved but payment could not be verified.');
+        }
       },
     });
+  }
+
+  private redirectAuthWithToast(icon: 'success' | 'warning' | 'error' | 'info', title: string): void {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+    });
+    this.router.navigate(['/admin/bookings']);
   }
 
   goHome(): void {
