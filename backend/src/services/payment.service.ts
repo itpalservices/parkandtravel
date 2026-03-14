@@ -10,10 +10,13 @@ const WALLEE_SUCCESS_STATES = ['AUTHORIZED', 'FULFILL', 'COMPLETED'];
 const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
 
 function getAppDomain(): string {
-  return (
-    process.env.PARK_AND_FLY_DOMAIN ||
-    'http://localhost:4200'
-  );
+  if (process.env.PARK_AND_FLY_DOMAIN) {
+    return process.env.PARK_AND_FLY_DOMAIN;
+  }
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  return 'http://localhost:4200';
 }
 
 async function getEmailDescription(): Promise<string | null> {
