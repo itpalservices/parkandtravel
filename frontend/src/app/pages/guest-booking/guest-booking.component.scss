@@ -299,6 +299,22 @@ input[type="time"].form-control {
   gap: 0.75rem;
 }
 
+.btn-pay {
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #b45309, #d97706);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #92400e, #b45309);
+  }
+}
+
 .btn-primary {
   padding: 0.875rem 1.5rem;
   font-size: 0.9375rem;

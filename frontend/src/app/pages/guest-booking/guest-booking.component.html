@@ -48,7 +48,6 @@
           </p>
           <div class="payment-pending-notice">
             <span class="payment-status-badge">⏳ Payment Status: Pending</span>
-            <p>Please check your email to complete the payment and confirm your reservation.</p>
           </div>
         } @else {
           <p>
@@ -57,6 +56,11 @@
           </p>
         }
         <div class="success-actions">
+          @if (!mandatoryPrePayment) {
+            <button class="btn-pay" (click)="$event.preventDefault()">
+              Proceed to Payment
+            </button>
+          }
           <button class="btn-primary" (click)="createAnotherBooking()">
             Create Another Booking
           </button>
