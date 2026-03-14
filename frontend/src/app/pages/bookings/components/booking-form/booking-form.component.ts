@@ -243,7 +243,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   get submitButtonLabel(): string {
     if (this.isEditMode) return 'Update Booking';
-    if (this.isRegularUser && this.mandatoryPrePayment && !this.isPriceTBC) return 'Proceed to Payment';
+    if (this.isRegularUser && this.mandatoryPrePayment) return 'Proceed to Payment';
     return 'Create Booking';
   }
 
