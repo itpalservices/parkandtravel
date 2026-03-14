@@ -12,8 +12,7 @@ const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
 function getAppDomain(): string {
   return (
     process.env.PARK_AND_FLY_DOMAIN ||
-    `https://${process.env.REPLIT_DEV_DOMAIN}` ||
-    'http://localhost:3000'
+    'http://localhost:4200'
   );
 }
 
