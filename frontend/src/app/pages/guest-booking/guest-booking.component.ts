@@ -67,6 +67,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   createdBookingId: string | null = null;
   paymentInitiating = false;
   paymentError = '';
+  showPaymentButtonOnSuccess = false;
   
   checkingAvailability = false;
   availabilityResult: AvailabilityResult | null = null;
@@ -344,6 +345,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
+  get isPriceTBC(): boolean {
+    return !this.returnDetailsEnabled;
+  }
+
   get f() {
     return this.bookingForm.controls;
   }
@@ -395,7 +400,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
     };
 
-    if (this.mandatoryPrePayment) {
+    if (this.mandatoryPrePayment && !this.isPriceTBC) {
       this.submitting = true;
       this.submitError = '';
       this.apiService.post<{ paymentUrl: string }>('/payment/initiate', bookingData).subscribe({
@@ -418,6 +423,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.submitting = false;
         this.submitSuccess = true;
         this.createdBookingId = res.id || null;
+        this.showPaymentButtonOnSuccess = !this.mandatoryPrePayment && !this.isPriceTBC;
       },
       error: (err) => {
         this.submitting = false;
@@ -464,6 +470,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       pickUpOption: 'self_pickup',
     });
     this.washServiceEnabled = false;
+    this.showPaymentButtonOnSuccess = false;
+    this.createdBookingId = null;
     if (this.parkingTypes.length > 0) {
       this.bookingForm.patchValue({ parkingType: this.parkingTypes[0].id });
     }

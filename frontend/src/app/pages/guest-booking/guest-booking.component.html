@@ -42,7 +42,7 @@
           </svg>
         </div>
         <h2>Booking Confirmed!</h2>
-        @if (!mandatoryPrePayment) {
+        @if (showPaymentButtonOnSuccess) {
           <p>
             Your parking reservation has been successfully created. A confirmation email with payment instructions has been sent to you.
           </p>
@@ -51,15 +51,14 @@
           </div>
         } @else {
           <p>
-            Your parking reservation has been successfully created. You will receive a confirmation
-            email shortly.
+            Your parking reservation has been successfully created. You will receive a confirmation email shortly.
           </p>
         }
         @if (paymentError) {
           <div class="error-alert">{{ paymentError }}</div>
         }
         <div class="success-actions">
-          @if (!mandatoryPrePayment) {
+          @if (showPaymentButtonOnSuccess) {
             <button class="btn-pay" (click)="proceedToPayment()" [disabled]="paymentInitiating">
               @if (paymentInitiating) {
                 Processing&hellip;
@@ -547,7 +546,7 @@
               Processing...
             } @else if (checkingAvailability) {
               Checking availability...
-            } @else if (mandatoryPrePayment) {
+            } @else if (mandatoryPrePayment && !isPriceTBC) {
               Proceed to Payment
             } @else {
               Confirm Booking
