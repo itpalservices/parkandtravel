@@ -76,10 +76,8 @@ export class ZReportComponent {
         next: (data) => {
           this.walleeData = data;
           this.loading = false;
-          console.log('Wallee Z-Report response:', data);
         },
         error: (err) => {
-          console.error('Error loading z-report:', err);
           this.error = 'Failed to load report. Please try again.';
           this.loading = false;
         },

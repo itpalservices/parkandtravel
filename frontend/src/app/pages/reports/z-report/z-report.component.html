@@ -17,7 +17,7 @@
       <span>Back to Reports</span>
     </a>
     <div class="title-row">
-      <h1 class="page-title">Z-Report by Employee</h1>
+      <h1 class="page-title">Z-Report</h1>
       <div class="header-actions">
         <app-date-range-picker
           [selectedPreset]="selectedPreset"
@@ -25,6 +25,7 @@
           [selectedToDate]="dateTo"
           [enablePastDates]="true"
           [enableCustomRange]="true"
+          [showPastOptions]="true"
           (dateRangeChange)="onDateRangeChange($event)"
         ></app-date-range-picker>
       </div>

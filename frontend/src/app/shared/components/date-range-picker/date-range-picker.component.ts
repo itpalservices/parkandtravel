@@ -32,6 +32,7 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
   @Input() selectedToDate: Date | null = null;
   @Input() enablePastDates: boolean = false;
   @Input() enableCustomRange: boolean = true;
+  @Input() showPastOptions: boolean = false;
 
   @Output() dateRangeChange = new EventEmitter<DateRange>();
 
@@ -44,6 +45,15 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
     { id: 'next2days', label: 'Next 2 Days' },
     { id: 'next7days', label: 'Next 7 Days' },
     { id: 'next30days', label: 'Next 30 Days' },
+    { id: 'custom', label: 'Custom Range' },
+  ];
+
+  pastPresets = [
+    { id: 'today', label: 'Today' },
+    { id: 'yesterday', label: 'Yesterday' },
+    { id: 'before2days', label: 'Before 2 Days' },
+    { id: 'before7days', label: 'Before 7 Days' },
+    { id: 'before30days', label: 'Before 30 Days' },
     { id: 'custom', label: 'Custom Range' },
   ];
 
@@ -231,6 +241,22 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
         const next30 = new Date(today);
         next30.setDate(next30.getDate() + 30);
         return { from: today, to: next30 };
+      case 'yesterday':
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return { from: yesterday, to: yesterday };
+      case 'before2days':
+        const before2 = new Date(today);
+        before2.setDate(before2.getDate() - 2);
+        return { from: before2, to: today };
+      case 'before7days':
+        const before7 = new Date(today);
+        before7.setDate(before7.getDate() - 7);
+        return { from: before7, to: today };
+      case 'before30days':
+        const before30 = new Date(today);
+        before30.setDate(before30.getDate() - 30);
+        return { from: before30, to: today };
       default:
         return { from: today, to: today };
     }
@@ -271,7 +297,7 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
         : `${this.formatNgbDate(this.appliedFromDate)} - ${this.formatNgbDate(this.appliedToDate)}`;
     }
     if (this.activePreset) {
-      const preset = this.presets.find((p) => p.id === this.activePreset);
+      const preset = (this.showPastOptions ? this.pastPresets : this.presets).find((p) => p.id === this.activePreset);
       if (preset && preset.id !== 'custom') {
         return preset.label;
       }

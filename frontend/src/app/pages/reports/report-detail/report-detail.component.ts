@@ -16,7 +16,7 @@ export class ReportDetailComponent implements OnInit {
   reportTitle: string = '';
 
   private reportTitles: Record<string, string> = {
-    'z-report': 'Z-Report by Employee',
+    'z-report': 'Z-Report',
     'daily-inout': 'Daily In/Out Report',
     'wash-service': 'Wash Service Report'
   };

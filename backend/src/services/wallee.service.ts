@@ -1,9 +1,9 @@
 import * as crypto from 'crypto';
 import axios from 'axios';
 
-const WALLEE_BASE_URL = 'https://app-wallee.com';
-const WALLEE_SPACE_ID = 93067;
-const WALLEE_SUB = '163504';
+const WALLEE_BASE_URL = process.env.WALLEE_BASE_URL;
+const WALLEE_SPACE_ID = process.env.WALLEE_SPACE_ID;
+const WALLEE_SUB = process.env.WALLEE_APPLICATION_USER_ID;
 const WALLEE_LIMIT = 10;
 
 function base64urlEncode(input: string | Buffer): string {
@@ -16,7 +16,7 @@ function base64urlEncode(input: string | Buffer): string {
 }
 
 function buildEncodedQuery(dateFrom: string, dateTo: string): string {
-  const raw = `createdOn:>='${dateFrom}' AND createdOn:<='${dateTo}'`;
+  const raw = `createdOn:>='${dateFrom}T00:00:00' AND createdOn:<='${dateTo}T23:59:59'`;
   return encodeURIComponent(raw)
     .replace(/%20/g, '+')
     .replace(/'/g, '%27');

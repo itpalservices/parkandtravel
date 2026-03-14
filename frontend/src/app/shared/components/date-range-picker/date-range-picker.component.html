@@ -22,7 +22,7 @@
   @if (isOpen) {
     <div class="dropdown-panel" [class.expanded]="showCustomRange">
       <div class="presets-list" [class.with-border]="showCustomRange">
-        @for (preset of presets; track preset.id) {
+        @for (preset of showPastOptions ? pastPresets : presets; track preset.id) {
           @if (preset.id === 'custom') {
             @if (enableCustomRange) {
               <button
