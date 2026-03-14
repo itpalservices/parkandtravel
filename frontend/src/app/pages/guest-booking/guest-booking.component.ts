@@ -418,11 +418,11 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     this.submitting = true;
     this.submitError = '';
 
-    this.apiService.post<{ id: string; finalPrice: number | null }>('/bookings/guest', bookingData).subscribe({
+    this.apiService.post<{ success: boolean; data: { id: string; finalPrice: number | null } }>('/bookings/guest', bookingData).subscribe({
       next: (res) => {
         this.submitting = false;
         this.submitSuccess = true;
-        this.createdBookingId = res.id || null;
+        this.createdBookingId = res.data?.id || null;
         this.showPaymentButtonOnSuccess = !this.mandatoryPrePayment && !this.isPriceTBC;
       },
       error: (err) => {
