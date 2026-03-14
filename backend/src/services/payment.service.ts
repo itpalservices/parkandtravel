@@ -370,6 +370,7 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
 
     const formData = pending.formData as any;
     if (formData.processedBookingId) {
+      await prisma.pendingBooking.delete({ where: { id: pendingId } }).catch(() => {});
       return { status: 'success', bookingId: formData.processedBookingId };
     }
 
@@ -382,6 +383,7 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
 
     if (WALLEE_SUCCESS_STATES.includes(state)) {
       const bookingId = await createBookingFromPending(pending, Number(pending.wlTransactionId));
+      await prisma.pendingBooking.delete({ where: { id: pendingId } }).catch(() => {});
       return { status: 'success', bookingId };
     } else if (WALLEE_FAILED_STATES.includes(state)) {
       return { status: 'failed', message: 'Payment was declined. Please try again.' };
