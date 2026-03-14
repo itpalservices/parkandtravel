@@ -455,6 +455,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   }
 
   createAnotherBooking(): void {
+    this.returnDetailsEnabled = false;
     this.submitSuccess = false;
     const today = this.calendar.getToday();
     const tomorrow = this.calendar.getNext(today, 'd', 1);
