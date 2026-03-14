@@ -42,10 +42,20 @@
           </svg>
         </div>
         <h2>Booking Confirmed!</h2>
-        <p>
-          Your parking reservation has been successfully created. You will receive a confirmation
-          email shortly.
-        </p>
+        @if (!mandatoryPrePayment) {
+          <p>
+            Your parking reservation has been successfully created. A confirmation email with payment instructions has been sent to you.
+          </p>
+          <div class="payment-pending-notice">
+            <span class="payment-status-badge">⏳ Payment Status: Pending</span>
+            <p>Please check your email to complete the payment and confirm your reservation.</p>
+          </div>
+        } @else {
+          <p>
+            Your parking reservation has been successfully created. You will receive a confirmation
+            email shortly.
+          </p>
+        }
         <div class="success-actions">
           <button class="btn-primary" (click)="createAnotherBooking()">
             Create Another Booking
@@ -526,6 +536,8 @@
               Processing...
             } @else if (checkingAvailability) {
               Checking availability...
+            } @else if (mandatoryPrePayment) {
+              Proceed to Payment
             } @else {
               Confirm Booking
             }

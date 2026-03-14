@@ -26,6 +26,7 @@ interface BookingEmailData {
   finalPrice: number | null;
   isUpdate?: boolean;
   emailDescription?: string | null;
+  paymentPending?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -258,6 +259,29 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
           </tr>
           ` : ""}
           
+          ${data.paymentPending ? `
+          <!-- Payment Pending Section -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fffbeb; border-radius: 10px; border: 1px solid #fbbf24;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                      <tr>
+                        <td>
+                          <p style="margin: 0 0 5px 0; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
+                          <p style="margin: 0 0 15px 0; color: #b45309; font-size: 16px; font-weight: 700;">⏳ Pending</p>
+                          <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">Your booking has been created. To confirm your reservation, please complete the payment.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ` : ""}
+
           <!-- Footer -->
           <tr>
             <td style="background-color: #f1f5f9; padding: 30px; border-radius: 0 0 12px 12px; text-align: center;">
@@ -333,6 +357,16 @@ Car Wash: ${data.washService ? "Included" : "Not selected"}
 TOTAL AMOUNT
 ------------
 €${data.finalPrice.toFixed(2)}
+`;
+  }
+
+  if (data.paymentPending) {
+    text += `
+PAYMENT STATUS
+--------------
+Pending
+
+Your booking has been created. To confirm your reservation, please complete the payment.
 `;
   }
 

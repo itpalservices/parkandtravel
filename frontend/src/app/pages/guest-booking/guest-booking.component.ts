@@ -56,6 +56,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   washServiceEnabled = false;
   returnDetailsEnabled= false;
   deliveryFee: number | null = null;
+  mandatoryPrePayment = false;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -183,6 +184,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.washAvailable = response.washAvailable;
         this.washPrice = response.washPrice;
         this.deliveryFee = response.deliveryFee;
+        this.mandatoryPrePayment = response.mandatoryPrePayment ?? false;
         if (response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
           this.checkAvailability();
@@ -195,6 +197,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         ];
         this.washAvailable = false;
         this.washPrice = null;
+        this.mandatoryPrePayment = false;
         this.bookingForm.patchValue({ parkingType: 'parkingType_covered' });
         this.checkAvailability();
       },

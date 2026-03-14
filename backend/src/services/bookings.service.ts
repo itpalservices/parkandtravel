@@ -434,15 +434,17 @@ async function getPriceSettings(): Promise<{
   deliveryFee: number | null;
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
+  mandatoryPrePayment: boolean;
 }> {
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7)`,
     'configurationSetting_priceUncovered',
     'configurationSetting_priceCovered',
     'configurationSetting_priceWash',
     'configurationSetting_deliveryFee',
     'configurationSetting_priceIncrementsCovered',
-    'configurationSetting_priceIncrementsUncovered'
+    'configurationSetting_priceIncrementsUncovered',
+    'configurationSetting_mandatoryPrePayment'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -467,6 +469,11 @@ async function getPriceSettings(): Promise<{
     }
   };
 
+  const parseBoolean = (value: string | null | undefined): boolean => {
+    if (value === null || value === undefined || value === '') return false;
+    try { return JSON.parse(value) === true; } catch { return false; }
+  };
+
   return {
     priceUncovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceUncovered')),
     priceCovered: parseFloatOrNull(settingsMap.get('configurationSetting_priceCovered')),
@@ -474,6 +481,7 @@ async function getPriceSettings(): Promise<{
     deliveryFee: parseFloatOrNull(settingsMap.get('configurationSetting_deliveryFee')),
     priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get('configurationSetting_priceIncrementsCovered')),
     priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get('configurationSetting_priceIncrementsUncovered')),
+    mandatoryPrePayment: parseBoolean(settingsMap.get('configurationSetting_mandatoryPrePayment')),
   };
 }
 
@@ -530,9 +538,9 @@ export async function createGuestBooking(
 
   // Calculate final price
   let finalPrice: number | null = null;
+  const priceSettings = await getPriceSettings();
   if (checkOutDate) {
     const days = calculateDays(checkInDate, checkOutDate);
-    const priceSettings = await getPriceSettings();
     
     let basePrice: number | null = null;
     let increments: number[] | null = null;
@@ -606,6 +614,7 @@ export async function createGuestBooking(
         pickUpOption: params.pickUpOption || undefined,
         finalPrice: finalPrice,
         emailDescription,
+        paymentPending: !priceSettings.mandatoryPrePayment,
       }).then((result) => {
         if (result.success) {
           console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
@@ -928,6 +937,7 @@ export interface ParkingTypesResponse {
   washAvailable: boolean;
   washPrice: number | null;
   deliveryFee: number | null;
+  mandatoryPrePayment: boolean;
 }
 
 export async function getParkingTypes(): Promise<ParkingTypesResponse> {
@@ -936,7 +946,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   });
 
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
@@ -944,7 +954,8 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     'configurationSetting_priceWash',
     'configurationSetting_deliveryFee',
     'configurationSetting_priceIncrementsCovered',
-    'configurationSetting_priceIncrementsUncovered'
+    'configurationSetting_priceIncrementsUncovered',
+    'configurationSetting_mandatoryPrePayment'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -965,8 +976,14 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
       return null;
     } catch { return null; }
   };
+  const parseBooleanSetting = (value: string | null | undefined): boolean => {
+    if (value === null || value === undefined || value === '') return false;
+    try { return JSON.parse(value) === true; } catch { return false; }
+  };
+
   const incrementsCovered = parseJsonArray(settingsMap.get('configurationSetting_priceIncrementsCovered'));
   const incrementsUncovered = parseJsonArray(settingsMap.get('configurationSetting_priceIncrementsUncovered'));
+  const mandatoryPrePayment = parseBooleanSetting(settingsMap.get('configurationSetting_mandatoryPrePayment'));
 
   const filteredTypes = types.filter((type) => {
     if (type.id === 'parkingType_uncovered') {
@@ -992,6 +1009,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     washAvailable: priceWash !== null,
     washPrice: priceWash,
     deliveryFee,
+    mandatoryPrePayment,
   };
 }
 

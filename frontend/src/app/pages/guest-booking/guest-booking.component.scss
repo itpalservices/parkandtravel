@@ -267,6 +267,32 @@ input[type="time"].form-control {
   }
 }
 
+.payment-pending-notice {
+  background-color: #fffbeb;
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.5rem;
+  text-align: center;
+
+  .payment-status-badge {
+    display: inline-block;
+    background-color: #fef3c7;
+    color: #b45309;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    padding: 0.35rem 0.875rem;
+    border-radius: 20px;
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: #78350f;
+    margin: 0;
+  }
+}
+
 .success-actions {
   display: flex;
   flex-direction: column;
