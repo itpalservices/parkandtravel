@@ -81,7 +81,7 @@ export async function createWalleeTransaction(params: {
   successUrl: string;
   failedUrl: string;
 }): Promise<number> {
-  const requestPath = `/api/v2.0/payment/transaction/create?spaceId=${WALLEE_SPACE_ID}`;
+  const requestPath = `/api/v2.0/transaction/create?spaceId=${WALLEE_SPACE_ID}`;
   const token = generateJWT(requestPath, 'POST');
   const url = `${WALLEE_BASE_URL}${requestPath}`;
 
@@ -114,7 +114,7 @@ export async function createWalleeTransaction(params: {
     };
   }
 
-  console.log('Creating Wallee transaction, merchantReference:', params.merchantReference);
+  console.log('Creating Wallee transaction URL:', url, 'merchantReference:', params.merchantReference);
 
   const response = await axios.post(url, body, {
     headers: {
@@ -129,7 +129,7 @@ export async function createWalleeTransaction(params: {
 }
 
 export async function buildPaymentPageUrl(transactionId: number): Promise<string> {
-  const requestPath = `/api/v2.0/payment/transaction/build-payment-page-url?spaceId=${WALLEE_SPACE_ID}&id=${transactionId}`;
+  const requestPath = `/api/v2.0/transaction/build-payment-page-url?spaceId=${WALLEE_SPACE_ID}&id=${transactionId}`;
   const token = generateJWT(requestPath);
   const url = `${WALLEE_BASE_URL}${requestPath}`;
 
@@ -144,7 +144,7 @@ export async function buildPaymentPageUrl(transactionId: number): Promise<string
 }
 
 export async function getWalleeTransactionById(transactionId: number): Promise<any> {
-  const requestPath = `/api/v2.0/payment/transaction/read?spaceId=${WALLEE_SPACE_ID}&id=${transactionId}`;
+  const requestPath = `/api/v2.0/transaction/read?spaceId=${WALLEE_SPACE_ID}&id=${transactionId}`;
   const token = generateJWT(requestPath);
   const url = `${WALLEE_BASE_URL}${requestPath}`;
 
