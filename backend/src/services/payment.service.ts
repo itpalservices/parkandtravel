@@ -228,7 +228,7 @@ async function createBookingFromPending(
       pickUpOption: formData.pickUpOption || undefined,
       finalPrice,
       emailDescription,
-      paymentPending: false,
+      paymentStatus: 'paid',
     }).catch((err) => console.error('Failed to send payment confirmation email:', err));
   }
 
@@ -322,13 +322,69 @@ async function handlePendingPaymentSuccess(merchantReference: string, wlTransact
   }
 }
 
+async function sendPaidConfirmationEmailForBooking(bookingId: string): Promise<void> {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking || !booking.email) return;
+
+  const parkingType = await prisma.parkingType.findUnique({
+    where: { id: booking.parkingTypeId || '' },
+    select: { name: true },
+  });
+  const emailDescription = await getEmailDescription();
+
+  const checkInDate = booking.dateFrom.toISOString().split('T')[0];
+  const checkInTime = booking.timeFrom
+    ? booking.timeFrom.toISOString().split('T')[1].substring(0, 5)
+    : '00:00';
+  const checkOutDate = booking.dateTo ? booking.dateTo.toISOString().split('T')[0] : undefined;
+  const checkOutTime = booking.timeTo
+    ? booking.timeTo.toISOString().split('T')[1].substring(0, 5)
+    : undefined;
+
+  sendBookingConfirmationEmail({
+    email: booking.email,
+    fullName: `${booking.name} ${booking.surname}`.trim(),
+    checkInDate,
+    checkInTime,
+    checkOutDate,
+    checkOutTime,
+    licensePlate: booking.plateNo || '',
+    vehicleBrand: booking.carBrand || '',
+    vehicleModel: booking.carModel || undefined,
+    vehicleColor: booking.carColor || undefined,
+    parkingType: parkingType?.name || booking.parkingTypeId || '',
+    washService: booking.washService || false,
+    flightNumber: booking.returnFlight || undefined,
+    dropOffOption: booking.dropOffOption || undefined,
+    pickUpOption: booking.pickUpOption || undefined,
+    finalPrice: booking.finalPrice ? Number(booking.finalPrice) : null,
+    emailDescription,
+    paymentStatus: 'paid',
+    isPaymentConfirmation: true,
+  }).catch((err) => console.error('Failed to send paid confirmation email:', err));
+}
+
 async function handleBookingPaymentSuccess(merchantReference: string, wlTransactionId: number): Promise<void> {
   const bookingId = merchantReference.replace('booking_', '');
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) {
+    console.log(`Webhook: booking ${bookingId} not found`);
+    return;
+  }
+
+  if (booking.paymentStatus === 'paid') {
+    console.log(`Webhook: booking ${bookingId} already marked as paid, skipping`);
+    return;
+  }
+
   await prisma.booking.update({
     where: { id: bookingId },
     data: { paymentStatus: 'paid' },
   });
   console.log(`Webhook: booking ${bookingId} marked as paid`);
+
+  await sendPaidConfirmationEmailForBooking(bookingId);
 }
 
 export async function handleWalleeWebhook(body: any): Promise<void> {
@@ -411,6 +467,7 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
 
     if (WALLEE_SUCCESS_STATES.includes(state)) {
       await prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'paid' } });
+      await sendPaidConfirmationEmailForBooking(bookingId);
       return { status: 'success', bookingId };
     } else if (WALLEE_FAILED_STATES.includes(state)) {
       return { status: 'failed', message: 'Payment was declined. Please try again.' };

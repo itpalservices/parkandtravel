@@ -25,8 +25,9 @@ interface BookingEmailData {
   pickUpOption?: string;
   finalPrice: number | null;
   isUpdate?: boolean;
+  isPaymentConfirmation?: boolean;
   emailDescription?: string | null;
-  paymentPending?: boolean;
+  paymentStatus?: 'paid' | 'pending' | null;
 }
 
 function formatDate(dateStr: string): string {
@@ -60,6 +61,62 @@ function getTransportLabel(option: string): string {
     default:
       return option;
   }
+}
+
+function getEmailTitle(data: BookingEmailData): string {
+  if (data.isPaymentConfirmation) return 'Payment Confirmed!';
+  if (data.isUpdate) return 'Booking Updated!';
+  return 'Booking Confirmed!';
+}
+
+function getEmailTitleColor(data: BookingEmailData): string {
+  if (data.isPaymentConfirmation) return '#1565c0';
+  if (data.isUpdate) return '#1565c0';
+  return '#2e7d32';
+}
+
+function getEmailIntro(data: BookingEmailData): string {
+  if (data.isPaymentConfirmation) {
+    return `Dear <strong style="color: #333333;">${data.fullName}</strong>, your payment has been received and your parking reservation is fully confirmed.`;
+  }
+  if (data.isUpdate) {
+    return `Dear <strong style="color: #333333;">${data.fullName}</strong>, your parking reservation has been successfully updated. Please review your updated booking details below.`;
+  }
+  return `Thank you, <strong style="color: #333333;">${data.fullName}</strong>! Your parking reservation has been successfully created.`;
+}
+
+function generatePaymentStatusHtml(paymentStatus: 'paid' | 'pending'): string {
+  if (paymentStatus === 'paid') {
+    return `
+          <!-- Payment Status: Paid -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f0fdf4; border-radius: 10px; border: 1px solid #86efac;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="margin: 0 0 5px 0; color: #14532d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
+                    <p style="margin: 0; color: #15803d; font-size: 18px; font-weight: 700;">✅ Paid</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+  }
+  return `
+          <!-- Payment Status: Pending -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fffbeb; border-radius: 10px; border: 1px solid #fbbf24;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="margin: 0 0 5px 0; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
+                    <p style="margin: 0 0 10px 0; color: #b45309; font-size: 18px; font-weight: 700;">⏳ Pending</p>
+                    <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">Your booking has been created. You can complete the payment at your convenience.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
 }
 
 function generateBookingConfirmationHtml(data: BookingEmailData): string {
@@ -105,15 +162,12 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
             </td>
           </tr>
           
-          <!-- Success Badge -->
+          <!-- Title Badge -->
           <tr>
             <td align="center" style="padding: 30px 30px 20px 30px;">
-              <h2 style="color: ${data.isUpdate ? '#1565c0' : '#2e7d32'}; margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">${data.isUpdate ? 'Booking Updated!' : 'Booking Confirmed!'}</h2>
+              <h2 style="color: ${getEmailTitleColor(data)}; margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">${getEmailTitle(data)}</h2>
               <p style="color: #666666; margin: 0; font-size: 16px; line-height: 1.6;">
-                ${data.isUpdate 
-                  ? `Dear <strong style="color: #333333;">${data.fullName}</strong>, your parking reservation has been successfully updated. Please review your updated booking details below.`
-                  : `Thank you, <strong style="color: #333333;">${data.fullName}</strong>! Your parking reservation has been successfully created.`
-                }
+                ${getEmailIntro(data)}
               </p>
             </td>
           </tr>
@@ -259,28 +313,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
           </tr>
           ` : ""}
           
-          ${data.paymentPending ? `
-          <!-- Payment Pending Section -->
-          <tr>
-            <td style="padding: 0 30px 30px 30px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fffbeb; border-radius: 10px; border: 1px solid #fbbf24;">
-                <tr>
-                  <td style="padding: 20px 25px;">
-                    <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                      <tr>
-                        <td>
-                          <p style="margin: 0 0 5px 0; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
-                          <p style="margin: 0 0 15px 0; color: #b45309; font-size: 16px; font-weight: 700;">⏳ Pending</p>
-                          <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">Your booking has been created.</p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          ` : ""}
+          ${data.paymentStatus ? generatePaymentStatusHtml(data.paymentStatus) : ""}
 
           <!-- Footer -->
           <tr>
@@ -312,10 +345,18 @@ function generateBookingConfirmationText(data: BookingEmailData): string {
     ? `${data.vehicleBrand} ${data.vehicleModel}`
     : data.vehicleBrand;
 
-  const title = data.isUpdate ? 'BOOKING UPDATED' : 'BOOKING CONFIRMATION';
-  const message = data.isUpdate 
-    ? `Dear ${data.fullName}, your parking reservation has been successfully updated.`
-    : `Thank you, ${data.fullName}! Your parking reservation has been successfully created.`;
+  let title: string;
+  let message: string;
+  if (data.isPaymentConfirmation) {
+    title = 'PAYMENT CONFIRMED';
+    message = `Dear ${data.fullName}, your payment has been received and your parking reservation is fully confirmed.`;
+  } else if (data.isUpdate) {
+    title = 'BOOKING UPDATED';
+    message = `Dear ${data.fullName}, your parking reservation has been successfully updated.`;
+  } else {
+    title = 'BOOKING CONFIRMATION';
+    message = `Thank you, ${data.fullName}! Your parking reservation has been successfully created.`;
+  }
 
   let text = `
 ${title} - Park & Travel
@@ -360,17 +401,24 @@ TOTAL AMOUNT
 `;
   }
 
-  if (data.paymentPending) {
+  if (data.paymentStatus) {
     text += `
 PAYMENT STATUS
 --------------
-Pending
-
-Your booking has been created.
+${data.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
 `;
+    if (data.paymentStatus === 'pending') {
+      text += `Your booking has been created. You can complete the payment at your convenience.\n`;
+    }
   }
 
   return text;
+}
+
+function getEmailSubject(data: BookingEmailData): string {
+  if (data.isPaymentConfirmation) return "💳 Payment Confirmed - Park & Travel";
+  if (data.isUpdate) return "📝 Booking Updated - Park & Travel";
+  return "✅ Booking Confirmed - Park & Travel";
 }
 
 export async function sendBookingConfirmationEmail(
@@ -384,9 +432,7 @@ export async function sendBookingConfirmationEmail(
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     
-    sendSmtpEmail.subject = data.isUpdate 
-      ? "📝 Booking Updated - Park & Travel" 
-      : "✅ Booking Confirmed - Park & Travel";
+    sendSmtpEmail.subject = getEmailSubject(data);
     sendSmtpEmail.htmlContent = generateBookingConfirmationHtml(data);
     sendSmtpEmail.textContent = generateBookingConfirmationText(data);
     sendSmtpEmail.sender = {

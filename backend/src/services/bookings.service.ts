@@ -614,7 +614,7 @@ export async function createGuestBooking(
         pickUpOption: params.pickUpOption || undefined,
         finalPrice: finalPrice,
         emailDescription,
-        paymentPending: !priceSettings.mandatoryPrePayment,
+        paymentStatus: (!priceSettings.mandatoryPrePayment && finalPrice !== null) ? 'pending' : null,
       }).then((result) => {
         if (result.success) {
           console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
