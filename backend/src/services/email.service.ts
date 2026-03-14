@@ -271,7 +271,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                         <td>
                           <p style="margin: 0 0 5px 0; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
                           <p style="margin: 0 0 15px 0; color: #b45309; font-size: 16px; font-weight: 700;">⏳ Pending</p>
-                          <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">Your booking has been created. To confirm your reservation, please complete the payment.</p>
+                          <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">Your booking has been created.</p>
                         </td>
                       </tr>
                     </table>
@@ -366,7 +366,7 @@ PAYMENT STATUS
 --------------
 Pending
 
-Your booking has been created. To confirm your reservation, please complete the payment.
+Your booking has been created.
 `;
   }
 
