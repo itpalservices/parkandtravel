@@ -351,10 +351,6 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   }
 
   submitBooking(): void {
-    if (this.mandatoryPrePayment) {
-      return;
-    }
-
     if (this.bookingForm.invalid) {
       Object.keys(this.bookingForm.controls).forEach((key) => {
         this.bookingForm.get(key)?.markAsTouched();
@@ -372,6 +368,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         timer: 4000,
         timerProgressBar: true,
       });
+      return;
+    }
+
+    if (this.mandatoryPrePayment) {
       return;
     }
 
