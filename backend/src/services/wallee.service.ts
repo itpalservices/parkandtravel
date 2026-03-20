@@ -89,11 +89,18 @@ export async function createWalleeTransaction(params: {
   const givenName = nameParts[0] || 'Customer';
   const familyName = nameParts.slice(1).join(' ') || givenName;
 
+  const metaData: Record<string, string> = {
+    bookingReference: params.merchantReference,
+  };
+  if (params.fullName) metaData['customerName'] = params.fullName;
+  if (params.customerEmail) metaData['customerEmail'] = params.customerEmail;
+
   const body: any = {
     currency: params.currency,
     merchantReference: params.merchantReference,
     successUrl: params.successUrl,
     failedUrl: params.failedUrl,
+    metaData,
     lineItems: [
       {
         name: params.description,
