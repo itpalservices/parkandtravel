@@ -80,6 +80,8 @@ export async function createWalleeTransaction(params: {
   description: string;
   successUrl: string;
   failedUrl: string;
+  plateNo?: string;
+  carBrand?: string;
 }): Promise<number> {
   const requestPath = `/api/v2.0/payment/transactions`;
   const token = generateJWT(requestPath, 'POST');
@@ -94,6 +96,8 @@ export async function createWalleeTransaction(params: {
   };
   if (params.fullName) metaData['customerName'] = params.fullName;
   if (params.customerEmail) metaData['customerEmail'] = params.customerEmail;
+  if (params.plateNo) metaData['plateNo'] = params.plateNo;
+  if (params.carBrand) metaData['carBrand'] = params.carBrand;
 
   const body: any = {
     currency: params.currency,

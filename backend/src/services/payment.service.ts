@@ -274,6 +274,8 @@ export async function initiatePaymentForPending(formData: GuestFormData): Promis
     description: 'Parking Reservation - Park & Travel',
     successUrl: `${domain}/payment/success?ref=${merchantReference}`,
     failedUrl: `${domain}/payment/failed?ref=${merchantReference}`,
+    plateNo: formData.licensePlate,
+    carBrand: formData.vehicleBrand,
   });
 
   await prisma.pendingBooking.update({
@@ -309,6 +311,8 @@ export async function initiatePaymentForBooking(bookingId: string, source?: stri
     description: 'Parking Reservation - Park & Travel',
     successUrl: `${domain}/payment/success?ref=${merchantReference}${source ? `&source=${source}` : ''}`,
     failedUrl: `${domain}/payment/failed?ref=${merchantReference}${source ? `&source=${source}` : ''}`,
+    plateNo: booking.plateNo || undefined,
+    carBrand: booking.carBrand || undefined,
   });
 
   await prisma.booking.update({
