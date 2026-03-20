@@ -33,3 +33,26 @@ export interface WashServiceReportItem {
   checkOutDate: string;
   checkOutTime: string;
 }
+
+export interface WalleeResponse {
+  data: WalleeTransaction[];
+  hasMore: boolean;
+  limit: number;
+  offset: number;
+}
+
+export interface WalleeTransaction {
+  id: number;
+  createdOn: string;
+  authorizationAmount: number;
+  currency: string;
+  state: string;
+  metaData: {
+    customerName: string;
+    carBrand: string;
+    plateNo: string;
+  };
+  merchantReference?: string;
+  failureReason?: { name?: { 'en-US': string } };
+  [key: string]: any;
+}

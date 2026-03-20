@@ -84,6 +84,8 @@
             <tr>
               <th>Transaction ID</th>
               <th>Date</th>
+              <th>Full Name</th>
+              <th>Car Details</th>
               <th>Amount</th>
               <th>Status</th>
             </tr>
@@ -93,6 +95,8 @@
               <tr>
                 <td class="td-id">{{ item.id }}</td>
                 <td>{{ formatCreatedOn(item.createdOn) }}</td>
+                <td>{{ item.metaData.customerName }}</td>
+                <td>{{ item.metaData.carBrand }} - {{ item.metaData.plateNo }}</td>
                 <td class="td-amount">{{ formatAmount(item.authorizationAmount, item.currency) }}</td>
                 <td>
                   <span class="status-badge" [ngClass]="getStatusClass(item.state)">

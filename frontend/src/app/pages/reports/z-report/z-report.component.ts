@@ -4,24 +4,7 @@ import { RouterLink } from '@angular/router';
 import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
-
-export interface WalleeTransaction {
-  id: number;
-  createdOn: string;
-  authorizationAmount: number;
-  currency: string;
-  state: string;
-  merchantReference?: string;
-  failureReason?: { name?: { 'en-US': string } };
-  [key: string]: any;
-}
-
-interface WalleeResponse {
-  data: WalleeTransaction[];
-  hasMore: boolean;
-  limit: number;
-  offset: number;
-}
+import { WalleeResponse } from '../../../shared/models/reports.model';
 
 @Component({
   selector: 'app-z-report',
