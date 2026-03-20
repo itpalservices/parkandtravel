@@ -285,22 +285,24 @@ export async function initiatePaymentForPending(formData: GuestFormData): Promis
   return { paymentUrl };
 }
 
-export async function initiatePaymentForBooking(bookingId: string, source?: string): Promise<{ paymentUrl: string }> {
+export async function initiatePaymentForBooking(bookingId: string, source?: string, customAmount?: number): Promise<{ paymentUrl: string }> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) throw new Error('Booking not found');
   if (booking.deleteflag !== 0) throw new Error('Booking not found');
 
   const finalPrice = booking.finalPrice ? Number(booking.finalPrice) : null;
-  if (finalPrice === null) {
+  if (finalPrice === null && customAmount === undefined) {
     throw new Error('Cannot process payment: no price calculated for this booking.');
   }
+
+  const amount = customAmount !== undefined ? customAmount : finalPrice!;
 
   const domain = getAppDomain();
   const merchantReference = `booking_${bookingId}`;
 
   const transactionId = await createWalleeTransaction({
     merchantReference,
-    amount: finalPrice,
+    amount,
     currency: 'EUR',
     customerEmail: booking.email || undefined,
     fullName: `${booking.name} ${booking.surname}`.trim(),

@@ -33,6 +33,7 @@ export interface Booking {
   userId: string | null;
   createdAt: string;
   updatedAt: string;
+  paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
 }
 
@@ -114,6 +115,7 @@ export interface BookingDetails {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
 }
 

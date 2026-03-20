@@ -446,6 +446,7 @@ export async function updateBooking(
       pickUpOption,
       userId,
       finalPrice,
+      isRegularUser,
     });
 
     if (!result) {

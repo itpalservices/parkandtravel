@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking, DateRangeFilter } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import Swal from 'sweetalert2';
@@ -19,7 +19,7 @@ import { ImageCarouselComponent } from '../../../../shared/components/image-caro
 @Component({
   selector: 'app-bookings-list',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule, CurrencyPipe, RouterModule, ImageCarouselComponent],
+  imports: [CommonModule, NgbDropdownModule, NgbTooltipModule, CurrencyPipe, RouterModule, ImageCarouselComponent],
   templateUrl: './bookings-list.component.html',
   styleUrls: ['./bookings-list.component.scss'],
 })

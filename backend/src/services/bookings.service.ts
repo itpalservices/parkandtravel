@@ -62,6 +62,7 @@ interface BookingResponse {
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;
+  paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
 }
 
@@ -289,6 +290,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    paidAmount: parseFloat(b.paidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')
@@ -385,6 +387,7 @@ export async function getBookingById(
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    paidAmount: parseFloat(b.paidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')
@@ -791,12 +794,13 @@ export interface UpdateBookingParams {
   pickUpOption?: string | null;
   userId?: string | null;
   finalPrice?: number | null;
+  isRegularUser?: boolean;
 }
 
 export async function updateBooking(
   id: string,
   params: UpdateBookingParams,
-): Promise<{ id: string; finalPrice: number | null } | null> {
+): Promise<{ id: string; finalPrice: number | null; requiresPayment: boolean; differenceAmount: number } | null> {
   if (!isValidUUID(id)) return null;
 
   const existingBooking = await prisma.booking.findUnique({
@@ -951,7 +955,22 @@ export async function updateBooking(
     });
   }
 
-  return { id: updatedBooking.id, finalPrice };
+  let requiresPayment = false;
+  let differenceAmount = 0;
+
+  if (params.isRegularUser && finalPrice !== null && finalPrice > 0) {
+    const paidResult = await prisma.$queryRawUnsafe<{ total: string }[]>(
+      `SELECT COALESCE(SUM(amount), 0)::text as total FROM wallee_transactions WHERE "bookingId" = $1`,
+      id
+    );
+    const paidAmount = parseFloat(paidResult[0]?.total ?? '0');
+    if (paidAmount < finalPrice) {
+      requiresPayment = true;
+      differenceAmount = parseFloat((finalPrice - paidAmount).toFixed(2));
+    }
+  }
+
+  return { id: updatedBooking.id, finalPrice, requiresPayment, differenceAmount };
 }
 
 export interface ParkingTypesResponse {
@@ -1135,6 +1154,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    paidAmount: parseFloat(b.paidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application designed as an admin panel for a "Park & Travel" parking booking system. It features an Angular frontend and an Express.js backend, organized in a monorepo structure. The application allows administrators to manage bookings, customers, and reports, while also providing functionalities for guest users to book parking and authenticated users to manage their profiles and car details. The project aims to provide a comprehensive, responsive, and role-based access controlled platform for parking management.
+This is a full-stack web application serving as an admin panel for a "Park & Travel" parking booking system. It facilitates the management of bookings, customers, and reports for administrators, while enabling guest and authenticated users to book parking and manage personal details. The project aims to deliver a comprehensive, responsive, and role-based access controlled platform for efficient parking management. Key features include booking management with progressive pricing, user profile and car management, and advanced configuration settings.
 
 ## User Preferences
 
@@ -11,125 +11,104 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend
-- **Framework**: Angular 21 with standalone components.
-- **Styling**: SCSS with Bootstrap 5.3 and ng-bootstrap for UI components.
-- **UI/UX**: Responsive design with a blue header, left sidebar navigation (Home, Bookings, Customers, Reports), and a main content area. Features a unified bookings list component adaptable for desktop tables and mobile cards, and a shared date range picker.
+- **Framework**: Angular 21 (standalone components).
+- **Styling**: SCSS, Bootstrap 5.3, ng-bootstrap.
+- **UI/UX**: Responsive design with a blue header, left sidebar navigation, and a main content area. Features unified list components and a shared date range picker.
 - **Routing**: Angular Router with lazy-loaded feature modules and layout wrapper.
-- **Modules**: Modular structure including Layout, Core (API service, HTTP interceptor), Shared (reusable components), and specific feature modules (e.g., Bookings, User Profile).
+- **Modules**: Modular structure including Layout, Core (API service, HTTP interceptor), Shared, and feature-specific modules.
 
 ### Backend
 - **Framework**: Express.js with TypeScript.
-- **API**: RESTful API with a `/api` prefix, handling public and protected endpoints.
-- **CORS**: Enabled for cross-origin requests.
+- **API**: RESTful API (`/api` prefix) with public and protected endpoints.
+- **CORS**: Enabled.
 
 ### Database
 - **Type**: PostgreSQL.
-- **ORM**: Drizzle ORM for type-safe SQL queries.
+- **ORM**: Drizzle ORM.
 - **Schema**: Managed in `backend/src/db/index.ts`.
-- **Tables**: Includes `bookings`, `booking_statuses`, `cars`, `configuration_settings`, `phone_codes`, `parking_types`.
+- **Tables**: `bookings`, `booking_statuses`, `cars`, `configuration_settings`, `phone_codes`, `parking_types`, `wallee_transactions`.
 
 ### Authentication & Authorization
-- **Provider**: Auth0 for user authentication.
+- **Provider**: Auth0.
 - **Integration**: `@auth0/auth0-angular` SDK.
-- **Roles**: Supports `admin`, `driver`, and `user` roles with role-based access control (RBAC) implemented via Auth0 custom claims and Angular route guards.
+- **Roles**: `admin`, `driver`, `user` with RBAC via Auth0 custom claims and Angular route guards.
   - **Admin**: Full access.
-  - **Driver**: Access to bookings (sees all).
-  - **User**: Access to bookings (sees only their own) and car management.
-- **Features**: Landing page with guest/login options, protected admin routes, user profile management (including email verification status and resending verification emails), and car management for regular users.
+  - **Driver**: Access to all bookings.
+  - **User**: Access to personal bookings and car management.
+- **Features**: Guest/login landing page, protected admin routes, user profile management (including email verification), and car management.
 
 ### Core Features
-- **Booking Management**: Guest and authenticated user booking creation, listing with filters, soft deletion. Includes options for car wash service and car transport (self-drive, airport pickup/delivery).
-- **Booking Statuses**: Each booking has a status (Created, Parked, Completed) stored in the `booking_statuses` table. New bookings default to "Created" status. Status is displayed as the first column in the bookings list with color-coded badges (yellow for Created, blue for Parked, green for Completed). Admins and drivers can click the status badge to see a dropdown menu for updating the status. Status transitions are one-way: Created → Parked → Completed. When a booking status is "Parked", the edit option is hidden. API endpoint: PATCH /api/bookings/:id/status.
-- **Park Place**: When changing a booking status from Created to Parked, a modal prompts the user to enter the parking place (e.g., A-15, B-22). This field is required and stored in the `parkPlace` column. The parking place is included in all booking responses. The `actualCheckIn` timestamp is also recorded at this point.
-- **Print Tag**: Admins and drivers can print a small parking tag for bookings with "Parked" status via the 3-dots menu. The tag includes: plateNo, returnFlight, dateTo, timeTo, actualCheckIn, full name, adults, finalPrice, parkPlace, keys (KK/P&T), and pick-up option (Airport in blue / P in red). Sized at 80mm wide for small tag printing.
-- **User Profile**: Users can view and update their name, surname, and phone number. Email is displayed but not editable.
-- **Car Management**: Regular users can add, edit, and delete their cars.
-- **Configuration Settings**: Admin users can manage parking availability, base prices, progressive price increments, car wash service options, delivery fee (car delivery from/to airport), email description text, and mandatory pre-payment toggle.
-- **Authenticated Booking Payment Flow**: For regular (non-admin, non-driver) users creating a new booking, the system checks `configurationSetting_mandatoryPrePayment`. If true, the submit button becomes "Proceed to Payment" and clicking it creates the booking then immediately initiates a Wallee payment redirect. If false, a SweetAlert2 dialog asks "Pay Now or Pay Later": Pay Now follows the same payment redirect flow; Pay Later creates the booking normally with a success toast. If the price is TBC (return details not filled in), payment is skipped and the booking is created normally regardless of the setting. After payment, Wallee redirects to `/payment/success?ref=booking_XXX&source=auth` or `/payment/failed?ref=booking_XXX&source=auth`. The `source=auth` parameter causes the success/failed pages to redirect to `/admin/bookings` with an appropriate toast instead of showing the standalone payment result pages.
-- **Wallee Transactions Table**: Successful payments are recorded in the `wallee_transactions` table (`id` = Wallee transaction ID as BigInt PK, `amount` as Decimal 10,2, `bookingId` as UUID FK to bookings). A booking can have 0-to-many wallee_transaction records. Payment status is derived dynamically: `sum(amount) == finalPrice` → **Paid**; `sum < finalPrice` → **Partial**; `sum > finalPrice` → **Overpaid**; `sum == 0` → **Unpaid**; `finalPrice is null` → no badge. Badges are displayed in the bookings list alongside the price. The old `wl_transaction_id` and `payment_status` columns on the `bookings` table have been removed.
+- **Booking Management**: Create, list (with filters), soft delete bookings. Includes car wash and transport options.
+- **Booking Statuses**: `Created`, `Parked`, `Completed`. Status updates are one-way (Created → Parked → Completed). "Parked" status triggers a prompt for `parkPlace` and records `actualCheckIn`.
+- **Print Tag**: Admins/drivers can print a parking tag for "Parked" bookings, containing key booking details.
+- **User Profile**: Users can manage name, surname, phone.
+- **Car Management**: Users can add, edit, delete cars.
+- **Configuration Settings**: Admin users manage parking availability, base prices, progressive price increments, service options, delivery fees, email description text, and mandatory pre-payment toggle.
+- **Authenticated Booking Payment Flow**: Integrates with Wallee. If `mandatoryPrePayment` is true, payment is initiated directly. Otherwise, user chooses "Pay Now / Pay Later". Payment is skipped if price is TBC. Payment results redirect to `/admin/bookings`.
+- **Wallee Transactions**: Successful payments are recorded in `wallee_transactions`. Booking payment status (Paid, Partial, Overpaid, Unpaid) is derived dynamically from these transactions.
+- **Payment for Booking Update (Difference)**: If a booking edit increases the `finalPrice`, the user pays the difference via Wallee.
+- **Paid Amount Tooltip**: Bookings list displays a tooltip showing the total amount paid.
 
 ### Progressive Pricing
-- **Logic**: Day 1 uses the base price (`configurationSetting_priceCovered` or `configurationSetting_priceUncovered`). Each subsequent day adds an increment from a configurable array. The last increment repeats for all days beyond the defined ones. The final price is the resulting value for the total day count (not a sum of daily rates).
-- **Storage**: `configurationSetting_priceIncrementsCovered` and `configurationSetting_priceIncrementsUncovered` — JSON arrays of numbers (e.g., `[2, 2, 4, 3, 1, 2]`).
-- **Example**: Base = €10, increments = [2, 2, 4, 3, 1, 2] → 1 day = €10, 2 days = €12, 3 days = €14, 4 days = €18, 5 days = €21, 6 days = €22, 7+ days keep adding €2.
-- **Extra Fee**: When a customer overstays, the extra fee is the sum of increments for the extra days, continuing from where the original booking ended (e.g., 2-day booking + 2 extra days = increment[2] + increment[3]).
-- **Admin UI**: Editable increment lists in the Settings page (user-profile component) under "Price Increments", with "Copy from Covered/Uncovered" buttons.
-- **Applies to**: All booking operations (guest create, authenticated create, update, parked update) on both frontend and backend.
+- **Logic**: Base price for day 1, with configurable increments for subsequent days. The last increment repeats. Final price is for the total duration, not a sum of daily rates.
+- **Storage**: `configurationSetting_priceIncrementsCovered` and `configurationSetting_priceIncrementsUncovered` (JSON arrays).
+- **Extra Fee**: For overstay, extra fee is calculated using subsequent increments from the original booking end.
+- **Admin UI**: Editable increment lists in Settings.
+- **Application**: Applied across all booking operations (guest, authenticated, updates).
 
 ### Booking Form Features
-- **Regular Users**: Personal info (email, phone, fullName) auto-filled from profile and disabled when values exist. Car selection dropdown to choose from saved vehicles. Add New Car modal if no saved vehicles exist.
-- **Admin/Driver Users**: Email field enabled initially, phone and fullName fields disabled. When email is entered and focus leaves, system searches Auth0 for matching regular users (excluding admin/driver roles). If found, fields are auto-filled, userId is set, and the user's saved cars are loaded in a dropdown. Phone search also supported: when phone number + phone code are entered and focus leaves the phone field, system searches Auth0 by phone metadata. If found via phone, email is auto-filled and disabled. Admin/driver can add new cars to the found user's account. If not found, fields are enabled for manual entry and userId is null.
-- Toast notifications for success/error messages using SweetAlert2.
+- **Regular Users**: Auto-filled personal info from profile; car selection from saved vehicles; option to add new car.
+- **Admin/Driver Users**: Search Auth0 by email or phone to auto-fill user details and load saved cars; ability to add new cars to found user's account.
+- **Notifications**: SweetAlert2 for success/error messages.
 
 ### Customers Management
-- **Admin Only**: Only admin users can view the customers list.
-- **Data Source**: Fetches all regular users from Auth0 (excludes admins and drivers based on app_metadata.role).
-- **Display**: Shows email, name, surname, phone code (with country flag), and phone number.
-- **Phone Flags**: Phone codes are matched against the phone_codes database table to display country flags from flagcdn.com.
-- **Responsive**: Desktop table view and mobile card view matching the bookings list styling.
+- **Admin Only**: View list of regular users fetched from Auth0.
+- **Display**: Shows email, name, surname, phone code (with country flag), phone number.
+- **Phone Flags**: Uses `phone_codes` database table for country flag display.
+- **Responsiveness**: Desktop table and mobile card views.
+
+### Parking Availability Check
+- **Real-time Validation**: Checks availability for selected dates/parking type during booking creation/update.
+- **Backend Service**: `availability.service.ts` counts active overlapping bookings and compares against configured availability.
+- **API Endpoints**: For checking specific parking types or both.
+- **Frontend Integration**: Provides visual feedback, disables submit if unavailable, and uses `excludeBookingId` for edit mode.
+
+### Vehicle Photo Upload (S3)
+- **Storage**: DigitalOcean Spaces (S3-compatible).
+- **Backend Service**: `upload.service.ts` handles S3 operations.
+- **API Endpoint**: `POST /api/upload/:bookingId/images` (multipart, max 10 files, 10MB each, JPG/PNG/WEBP).
+- **Authorization**: Admin and driver roles only.
+- **Frontend Integration**: Drag-and-drop upload area in the "Parked" status change modal.
 
 ## External Dependencies
 
 ### Database
-- **PostgreSQL**: Relational database.
-- **Drizzle ORM**: TypeScript ORM for PostgreSQL.
+- **PostgreSQL**
+- **Drizzle ORM**
 
 ### Frontend Libraries
-- **Bootstrap 5.3**: CSS framework.
-- **@ng-bootstrap/ng-bootstrap**: Angular-native Bootstrap components.
-- **SweetAlert2**: For dialogs and notifications.
-- **@auth0/auth0-angular**: Auth0 SDK for Angular SPAs.
-- **zone.js**: Required for Angular change detection.
+- **Bootstrap 5.3**
+- **@ng-bootstrap/ng-bootstrap**
+- **SweetAlert2**
+- **@auth0/auth0-angular**
+- **zone.js**
 
 ### Backend Libraries
-- **Express.js**: Web application framework.
-- **http-proxy-middleware**: For proxying requests in development.
-- **cors**: Middleware for enabling Cross-Origin Resource Sharing.
+- **Express.js**
+- **http-proxy-middleware**
+- **cors**
 
 ### Services
-- **Auth0**: Identity management platform for authentication and authorization.
-- **flagcdn.com**: For country flag icons used in phone code selection.
-- **Brevo**: Transactional email service for booking confirmation emails.
+- **Auth0**: Identity management.
+- **flagcdn.com**: Country flag icons.
+- **Brevo**: Transactional email service.
 
 ### Email Integration
-- **Provider**: Brevo (formerly Sendinblue) for transactional emails.
+- **Provider**: Brevo (formerly Sendinblue).
 - **Library**: `@getbrevo/brevo` SDK.
-- **Endpoints**:
-  - `POST /api/email/send-booking-confirmation` - Send booking confirmation email manually.
-  - `GET /api/email/test` - Test Brevo connection.
-- **Auto-trigger**: Booking confirmation emails are sent automatically on every booking creation and update (guest and authenticated).
-- **Templates**:
-  - **New Booking**: Green header with "Booking Confirmed!" title, subject "Booking Confirmed - Park & Travel".
-  - **Updated Booking**: Blue header with "Booking Updated!" title, subject "Booking Updated - Park & Travel".
-- **Required Secrets**:
-  - `BREVO_API_KEY` - Brevo API key (required).
-  - `BREVO_SENDER_EMAIL` - Verified sender email address (optional, defaults to it.pal.service@gmail.com).
-  - `BREVO_REPLY_TO_EMAIL` - Reply-to email address (optional, defaults to support@parkandtravel.com).
-
-### Parking Availability Check
-- **Real-time Validation**: When creating or updating a booking (guest or authenticated), the system checks parking availability for the selected dates and parking type.
-- **Backend Service**: `backend/src/services/availability.service.ts` provides `checkAvailability()` function that:
-  - Counts existing active bookings (deleteflag=0) that overlap with the requested date range
-  - Supports optional `excludeBookingId` parameter to exclude current booking from count when editing
-  - Compares against configured availability (availableCovered or availableUncovered from configuration_settings)
-  - Returns availability status, unavailable dates, and remaining spots
-- **API Endpoints**:
-  - `GET /api/availability/check?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&parkingTypeId=parkingType_covered|parkingType_uncovered&excludeBookingId=id` - Check availability for specific parking type
-  - `GET /api/availability/both?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD` - Check availability for both parking types
-- **Frontend Integration**:
-  - Availability is checked automatically when dates or parking type change in booking forms (both create and edit modes)
-  - In edit mode, the current booking is excluded from availability count using excludeBookingId
-  - Visual feedback shows: "Checking availability...", "Parking available (X spots remaining)", or error message with unavailable dates
-  - Submit button is disabled when parking is not available
-  - Backend validation also prevents booking creation/update if no spots available
-- **Booking Validation**: `createBooking`, `createGuestBooking`, and `updateBooking` services validate availability before inserting/updating bookings
+- **Endpoints**: `POST /api/email/send-booking-confirmation`, `GET /api/email/test`.
+- **Auto-trigger**: Confirmation emails sent on booking creation and update.
+- **Templates**: "New Booking" and "Updated Booking" templates.
 
 ### Vehicle Photo Upload (S3)
-- **Storage**: DigitalOcean Spaces (S3-compatible) for vehicle photo storage.
-- **Backend Service**: `backend/src/services/upload.service.ts` handles upload/delete operations.
-- **S3 Config**: `backend/src/config/s3.config.ts` - S3 client configuration with virtual-host style URLs.
-- **API Endpoint**: `POST /api/upload/:bookingId/images` - Multipart upload (multer), max 10 files, 10MB each, JPG/PNG/WEBP only.
-- **Public URL Format**: `https://{bucket}.{region}.digitaloceanspaces.com/bookings/{bookingId}/{uniqueId}.{ext}`
-- **Authorization**: Only admin and driver roles can upload images. Booking must exist.
-- **Frontend Integration**: When changing booking status to "Parked", the modal includes a drag-and-drop image upload area. Images are uploaded after the status update succeeds. Upload failures show a toast error but don't block the status change.
-- **Required Secrets**: `DO_SPACE_ENDPOINT`, `DO_SPACE_REGION`, `DO_SPACE_KEY`, `DO_SPACE_SECRET`, `DO_SPACE_BUCKET`.
+- **DigitalOcean Spaces**: S3-compatible object storage.

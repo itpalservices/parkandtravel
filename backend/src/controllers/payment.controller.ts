@@ -18,12 +18,13 @@ export async function initiateHandler(req: Request, res: Response): Promise<void
 
 export async function initiateForBookingHandler(req: Request, res: Response): Promise<void> {
   try {
-    const { bookingId, source } = req.body;
+    const { bookingId, source, amount } = req.body;
     if (!bookingId) {
       res.status(400).json({ message: 'bookingId is required' });
       return;
     }
-    const result = await initiatePaymentForBooking(bookingId, source);
+    const customAmount = typeof amount === 'number' && amount > 0 ? amount : undefined;
+    const result = await initiatePaymentForBooking(bookingId, source, customAmount);
     res.json(result);
   } catch (err: any) {
     console.error('initiateForBookingHandler error:', err?.response?.data || err.message);

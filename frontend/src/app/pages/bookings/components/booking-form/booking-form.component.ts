@@ -1543,19 +1543,23 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     if (this.isEditMode && this.bookingId) {
       this.submitting = true;
-      this.apiService.put(`/bookings/${this.bookingId}`, booking).subscribe({
-        next: () => {
+      this.apiService.put<{ success: boolean; data: { id: string; finalPrice: number | null; requiresPayment: boolean; differenceAmount: number } }>(`/bookings/${this.bookingId}`, booking).subscribe({
+        next: (res) => {
           this.submitting = false;
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Booking updated successfully',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-          this.router.navigate(['/admin/bookings']);
+          if (this.isRegularUser && res.data?.requiresPayment && res.data.differenceAmount > 0) {
+            this.handlePaymentDifference(res.data.id, res.data.differenceAmount);
+          } else {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Booking updated successfully',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            this.router.navigate(['/admin/bookings']);
+          }
         },
         error: (err) => {
           this.submitting = false;
@@ -1670,6 +1674,63 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             timer: 4000,
             timerProgressBar: true,
           });
+        },
+      });
+  }
+
+  private handlePaymentDifference(bookingId: string, differenceAmount: number): void {
+    if (this.mandatoryPrePayment) {
+      this.initiatePaymentForDifference(bookingId, differenceAmount);
+    } else {
+      Swal.fire({
+        title: 'Additional Payment Required',
+        html: `Your booking has been updated. An additional payment of <strong>€${differenceAmount.toFixed(2)}</strong> is required.<br><br>Would you like to pay now or later?`,
+        icon: 'info',
+        showConfirmButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Pay Now',
+        denyButtonText: 'Pay Later',
+        confirmButtonColor: '#006B8F',
+        denyButtonColor: '#6c757d',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.initiatePaymentForDifference(bookingId, differenceAmount);
+        } else {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Booking updated successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+        }
+      });
+    }
+  }
+
+  private initiatePaymentForDifference(bookingId: string, amount: number): void {
+    this.paymentInitiating = true;
+    this.apiService
+      .post<{ paymentUrl: string }>('/payment/initiate-for-booking', { bookingId, source: 'auth', amount })
+      .subscribe({
+        next: (payRes) => {
+          window.location.href = payRes.paymentUrl;
+        },
+        error: (err) => {
+          this.paymentInitiating = false;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: err.error?.message || 'Failed to initiate payment. Please try again.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
         },
       });
   }

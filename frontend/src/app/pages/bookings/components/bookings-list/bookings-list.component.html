@@ -250,7 +250,7 @@
                   </span>
                 </td>
               }
-              <td>
+              <td [ngbTooltip]="'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2')" placement="top" container="body">
                 @if (!booking.dateTo) {
                   <span class="text-muted fst-italic">TBC</span>
                 } @else if (booking.extraFee) {
@@ -424,7 +424,7 @@
             </div>
           </div>
           <div class="mobile-card-footer">
-            <div class="mobile-price">
+            <div class="mobile-price" [ngbTooltip]="'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2')" placement="top" container="body">
               @if (!booking.dateTo) {
                 <span class="text-muted fst-italic">TBC</span>
               } @else if (booking.extraFee) {
