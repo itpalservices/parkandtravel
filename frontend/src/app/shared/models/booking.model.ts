@@ -33,6 +33,7 @@ export interface Booking {
   userId: string | null;
   createdAt: string;
   updatedAt: string;
+  paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
 }
 
 export interface BookingsResponse {
@@ -113,6 +114,7 @@ export interface BookingDetails {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
 }
 
 export interface DateRangeFilter {

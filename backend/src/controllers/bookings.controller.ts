@@ -279,7 +279,6 @@ export async function createBooking(
       dropOffOption,
       pickUpOption,
       userId: requestUserId,
-      paymentIntended,
     } = req.body;
 
     if (
@@ -306,7 +305,6 @@ export async function createBooking(
       userId = authUser?.sub || null;
     }
 
-    const isRegularUser = !isAdmin;
     const result = await createBookingService({
       fullName,
       email,
@@ -326,7 +324,6 @@ export async function createBooking(
       dropOffOption: dropOffOption || null,
       pickUpOption: pickUpOption || null,
       userId,
-      paymentStatus: (isRegularUser && paymentIntended === true) ? 'pending' : null,
     });
 
     res.status(201).json({

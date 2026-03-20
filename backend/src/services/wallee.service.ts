@@ -157,3 +157,28 @@ export async function getWalleeTransactionById(transactionId: number): Promise<a
 
   return response.data;
 }
+
+export async function searchWalleeTransactionsByMerchantRef(merchantReference: string): Promise<any[]> {
+  const requestPath = `/api/v2.0/payment/transactions/search?limit=10&offset=0`;
+  const token = generateJWT(requestPath, 'POST');
+  const url = `${WALLEE_BASE_URL}${requestPath}`;
+
+  const response = await axios.post(url, {
+    filter: {
+      type: 'LEAF',
+      fieldName: 'merchantReference',
+      operator: 'EQUALS',
+      value: merchantReference,
+    },
+    numberOfEntities: 10,
+    orderBys: [{ field: 'id', sorting: 'DESC' }],
+  }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Space: WALLEE_SPACE_ID,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return Array.isArray(response.data) ? response.data : [];
+}

@@ -1605,9 +1605,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private processNewBooking(booking: Record<string, unknown>, paymentIntended: boolean): void {
-    if (paymentIntended) {
-      booking['paymentIntended'] = true;
-    }
     this.apiService
       .post<{ success: boolean; data: { id: string; finalPrice: number | null } }>('/bookings', booking)
       .subscribe({

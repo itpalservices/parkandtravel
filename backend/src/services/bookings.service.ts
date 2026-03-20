@@ -62,6 +62,18 @@ interface BookingResponse {
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;
+  paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
+}
+
+function derivePaymentStatus(
+  finalPrice: number | null,
+  paidAmount: number
+): 'paid' | 'partial' | 'overpaid' | 'unpaid' | null {
+  if (finalPrice === null) return null;
+  if (paidAmount === 0) return 'unpaid';
+  if (paidAmount === finalPrice) return 'paid';
+  if (paidAmount < finalPrice) return 'partial';
+  return 'overpaid';
 }
 
 function formatDate(date: Date | null): string | null {
@@ -232,7 +244,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."parkingComments",
       b."actualCheckIn",
       b."actualCheckOut",
-      b."extraFee"
+      b."extraFee",
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -276,6 +289,10 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    paymentStatus: derivePaymentStatus(
+      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      parseFloat(b.paidAmount ?? '0')
+    ),
   }));
 
   return {
@@ -323,7 +340,8 @@ export async function getBookingById(
       b."actualCheckIn",
       b."actualCheckOut",
       b."extraFee",
-      b.deleteflag
+      b.deleteflag,
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -367,6 +385,10 @@ export async function getBookingById(
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    paymentStatus: derivePaymentStatus(
+      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      parseFloat(b.paidAmount ?? '0')
+    ),
   };
 }
 
@@ -414,7 +436,6 @@ interface CreateGuestBookingParams {
 
 export interface CreateBookingParams extends CreateGuestBookingParams {
   userId?: string | null;
-  paymentStatus?: 'pending' | null;
 }
 
 function parseTimeToDate(timeStr: string): Date {
@@ -704,7 +725,6 @@ export async function createBooking(
       dropOffOption: params.dropOffOption || null,
       pickUpOption: params.pickUpOption || null,
       deleteflag: 0,
-      paymentStatus: params.paymentStatus ?? null,
     },
   });
 
@@ -734,7 +754,6 @@ export async function createBooking(
         pickUpOption: params.pickUpOption || undefined,
         finalPrice: finalPrice,
         emailDescription,
-        paymentStatus: params.paymentStatus ?? null,
       }).then((result) => {
         if (result.success) {
           console.log(`Email sent successfully to ${params.email}, messageId: ${result.messageId}`);
@@ -1073,7 +1092,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."actualCheckIn",
       b."actualCheckOut",
       b."extraFee",
-      b.deleteflag
+      b.deleteflag,
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -1115,6 +1135,10 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    paymentStatus: derivePaymentStatus(
+      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      parseFloat(b.paidAmount ?? '0')
+    ),
   }));
 }
 

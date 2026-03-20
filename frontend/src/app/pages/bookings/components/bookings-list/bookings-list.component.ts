@@ -350,6 +350,36 @@ export class BookingsListComponent {
     }
   }
 
+  getPaymentBadgeClass(paymentStatus: string | null): string {
+    switch (paymentStatus) {
+      case 'paid':
+        return 'bg-success';
+      case 'partial':
+        return 'bg-warning text-dark';
+      case 'overpaid':
+        return 'bg-info';
+      case 'unpaid':
+        return 'bg-danger';
+      default:
+        return '';
+    }
+  }
+
+  getPaymentBadgeLabel(paymentStatus: string | null): string {
+    switch (paymentStatus) {
+      case 'paid':
+        return 'Paid';
+      case 'partial':
+        return 'Partial';
+      case 'overpaid':
+        return 'Overpaid';
+      case 'unpaid':
+        return 'Unpaid';
+      default:
+        return '';
+    }
+  }
+
   onStatusChange(booking: Booking, newStatusId: string): void {
     const statusLabels: Record<string, string> = {
       bookingStatus_created: 'Created',

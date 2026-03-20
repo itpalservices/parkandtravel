@@ -57,14 +57,23 @@ model Booking {
   extraFee        Decimal?   @db.Decimal(10, 2)
   deleteflag      Int        @default(0)
   createdAt       DateTime   @default(now())
-  wlTransactionId BigInt?    @map("wl_transaction_id")
-  paymentStatus   String?    @map("payment_status") @db.VarChar(20)
-
-  parkingType  ParkingType? @relation(fields: [parkingTypeId], references: [id])
-  phoneCode    PhoneCode?   @relation(fields: [phoneCodeId], references: [id])
-  bookingStatus BookingStatus? @relation(fields: [bookingStatusId], references: [id])
+  parkingType       ParkingType?       @relation(fields: [parkingTypeId], references: [id])
+  phoneCode         PhoneCode?         @relation(fields: [phoneCodeId], references: [id])
+  bookingStatus     BookingStatus?     @relation(fields: [bookingStatusId], references: [id])
+  walleeTransactions WalleeTransaction[]
 
   @@map("bookings")
+}
+
+model WalleeTransaction {
+  id        BigInt   @id
+  amount    Decimal  @db.Decimal(10, 2)
+  bookingId String   @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("wallee_transactions")
 }
 
 model PendingBooking {
