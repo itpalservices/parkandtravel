@@ -1,0 +1,408 @@
+Creating Wallee transaction URL: https://app-wallee.com/api/v2.0/payment/transactions merchantReference: booking_68aacd3d-1fd6-4cc5-a7c0-fc97fdfd001b
+Wallee transaction created, id: 498721830
+Failed to search Wallee transactions by merchantRef: AxiosError: Request failed with status code 405
+    at settle (C:\wamp64\www\parkandtravel\backend\node_modules\axios\dist\node\axios.cjs:2106:12)
+    at IncomingMessage.handleStreamEnd (C:\wamp64\www\parkandtravel\backend\node_modules\axios\dist\node\axios.cjs:3491:11)
+    at IncomingMessage.emit (node:events:530:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (C:\wamp64\www\parkandtravel\backend\node_modules\axios\dist\node\axios.cjs:4731:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async searchWalleeTransactionsByMerchantRef (C:\wamp64\www\parkandtravel\backend\dist\services\wallee.service.js:168:22)
+    at async verifyAndFinalizePayment (C:\wamp64\www\parkandtravel\backend\dist\services\payment.service.js:396:28)
+    at async verifyHandler (C:\wamp64\www\parkandtravel\backend\dist\controllers\payment.controller.js:45:24) {
+  code: 'ERR_BAD_REQUEST',
+  config: {
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    adapter: [ 'xhr', 'http', 'fetch' ],
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    env: { FormData: [Function], Blob: [class Blob] },
+    validateStatus: [Function: validateStatus],
+    headers: Object [AxiosHeaders] {
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QiLCJ2ZXIiOjF9.eyJzdWIiOiIxNjM1MDQiLCJpYXQiOjE3NzM5OTc1NzQsInJlcXVlc3RQYXRoIjoiL2FwaS92Mi4wL3BheW1lbnQvdHJhbnNhY3Rpb25zL3NlYXJjaD9saW1pdD0xMCZvZmZzZXQ9MCIsInJlcXVlc3RNZXRob2QiOiJQT1NUIn0.eAM8MFInGUw5Jh3LWdJAEiW-tlH0PDmz38uPgTS2jKY',
+      Space: '93067',
+      'User-Agent': 'axios/1.13.2',
+      'Content-Length': '200',
+      'Accept-Encoding': 'gzip, compress, deflate, br'
+    },
+    method: 'post',
+    url: 'https://app-wallee.com/api/v2.0/payment/transactions/search?limit=10&offset=0',
+    data: '{"filter":{"type":"LEAF","fieldName":"merchantReference","operator":"EQUALS","value":"booking_68aacd3d-1fd6-4cc5-a7c0-fc97fdfd001b"},"numberOfEntities":10,"orderBys":[{"field":"id","sorting":"DESC"}]}',
+    allowAbsoluteUrls: true
+  },
+  request: <ref *1> ClientRequest {
+    _events: [Object: null prototype] {
+      abort: [Function (anonymous)],
+      aborted: [Function (anonymous)],
+      connect: [Function (anonymous)],
+      error: [Function (anonymous)],
+      socket: [Function (anonymous)],
+      timeout: [Function (anonymous)],
+      finish: [Function: requestOnFinish]
+    },
+    _eventsCount: 7,
+    _maxListeners: undefined,
+    outputData: [],
+    outputSize: 0,
+    writable: true,
+    destroyed: true,
+    _last: false,
+    chunkedEncoding: false,
+    shouldKeepAlive: true,
+    maxRequestsOnConnectionReached: false,
+    _defaultKeepAlive: true,
+    useChunkedEncodingByDefault: true,
+    sendDate: false,
+    _removedConnection: false,
+    _removedContLen: false,
+    _removedTE: false,
+    strictContentLength: false,
+    _contentLength: 200,
+    _hasBody: true,
+    _trailer: '',
+    finished: true,
+    _headerSent: true,
+    _closed: true,
+    _header: 'POST /api/v2.0/payment/transactions/search?limit=10&offset=0 HTTP/1.1\r\n' +
+      'Accept: application/json, text/plain, */*\r\n' +
+      'Content-Type: application/json\r\n' +
+      'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QiLCJ2ZXIiOjF9.eyJzdWIiOiIxNjM1MDQiLCJpYXQiOjE3NzM5OTc1NzQsInJlcXVlc3RQYXRoIjoiL2FwaS92Mi4wL3BheW1lbnQvdHJhbnNhY3Rpb25zL3NlYXJjaD9saW1pdD0xMCZvZmZzZXQ9MCIsInJlcXVlc3RNZXRob2QiOiJQT1NUIn0.eAM8MFInGUw5Jh3LWdJAEiW-tlH0PDmz38uPgTS2jKY\r\n' +
+      'Space: 93067\r\n' +
+      'User-Agent: axios/1.13.2\r\n' +
+      'Content-Length: 200\r\n' +
+      'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+      'Host: app-wallee.com\r\n' +
+      'Connection: keep-alive\r\n' +
+      '\r\n',
+    _keepAliveTimeout: 0,
+    _onPendingData: [Function: nop],
+    agent: Agent {
+      _events: [Object: null prototype],
+      _eventsCount: 2,
+      _maxListeners: undefined,
+      defaultPort: 443,
+      protocol: 'https:',
+      options: [Object: null prototype],
+      requests: [Object: null prototype] {},
+      sockets: [Object: null prototype] {},
+      freeSockets: [Object: null prototype],
+      keepAliveMsecs: 1000,
+      keepAlive: true,
+      maxSockets: Infinity,
+      maxFreeSockets: 256,
+      scheduling: 'lifo',
+      maxTotalSockets: Infinity,
+      totalSocketCount: 1,
+      maxCachedSessions: 100,
+      _sessionCache: [Object],
+      [Symbol(shapeMode)]: false,
+      [Symbol(kCapture)]: false
+    },
+    socketPath: undefined,
+    method: 'POST',
+    maxHeaderSize: undefined,
+    insecureHTTPParser: undefined,
+    joinDuplicateHeaders: undefined,
+    path: '/api/v2.0/payment/transactions/search?limit=10&offset=0',
+    _ended: true,
+    res: IncomingMessage {
+      _events: [Object],
+      _readableState: [ReadableState],
+      _maxListeners: undefined,
+      socket: null,
+      httpVersionMajor: 1,
+      httpVersionMinor: 1,
+      httpVersion: '1.1',
+      complete: true,
+      rawHeaders: [Array],
+      rawTrailers: [],
+      joinDuplicateHeaders: undefined,
+      aborted: false,
+      upgrade: false,
+      url: '',
+      method: null,
+      statusCode: 405,
+      statusMessage: 'Method Not Allowed',
+      client: [TLSSocket],
+      _consuming: true,
+      _dumped: false,
+      req: [Circular *1],
+      _eventsCount: 4,
+      responseUrl: 'https://app-wallee.com/api/v2.0/payment/transactions/search?limit=10&offset=0',
+      redirects: [],
+      [Symbol(shapeMode)]: true,
+      [Symbol(kCapture)]: false,
+      [Symbol(kHeaders)]: [Object],
+      [Symbol(kHeadersCount)]: 26,
+      [Symbol(kTrailers)]: null,
+      [Symbol(kTrailersCount)]: 0
+    },
+    aborted: false,
+    timeoutCb: null,
+    upgradeOrConnect: false,
+    parser: null,
+    maxHeadersCount: null,
+    reusedSocket: false,
+    host: 'app-wallee.com',
+    protocol: 'https:',
+    _redirectable: Writable {
+      _events: [Object],
+      _writableState: [WritableState],
+      _maxListeners: undefined,
+      _options: [Object],
+      _ended: true,
+      _ending: true,
+      _redirectCount: 0,
+      _redirects: [],
+      _requestBodyLength: 200,
+      _requestBodyBuffers: [],
+      _eventsCount: 3,
+      _onNativeResponse: [Function (anonymous)],
+      _currentRequest: [Circular *1],
+      _currentUrl: 'https://app-wallee.com/api/v2.0/payment/transactions/search?limit=10&offset=0',
+      _timeout: null,
+      [Symbol(shapeMode)]: true,
+      [Symbol(kCapture)]: false
+    },
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false,
+    [Symbol(kBytesWritten)]: 0,
+    [Symbol(kNeedDrain)]: false,
+    [Symbol(corked)]: 0,
+    [Symbol(kChunkedBuffer)]: [],
+    [Symbol(kChunkedLength)]: 0,
+    [Symbol(kSocket)]: TLSSocket {
+      _tlsOptions: [Object],
+      _secureEstablished: true,
+      _securePending: false,
+      _newSessionPending: false,
+      _controlReleased: true,
+      secureConnecting: false,
+      _SNICallback: null,
+      servername: 'app-wallee.com',
+      alpnProtocol: false,
+      authorized: true,
+      authorizationError: null,
+      encrypted: true,
+      _events: [Object: null prototype],
+      _eventsCount: 9,
+      connecting: false,
+      _hadError: false,
+      _parent: null,
+      _host: 'app-wallee.com',
+      _closeAfterHandlingError: false,
+      _readableState: [ReadableState],
+      _writableState: [WritableState],
+      allowHalfOpen: false,
+      _maxListeners: undefined,
+      _sockname: null,
+      _pendingData: null,
+      _pendingEncoding: '',
+      server: undefined,
+      _server: null,
+      ssl: [TLSWrap],
+      _requestCert: true,
+      _rejectUnauthorized: true,
+      timeout: 5000,
+      parser: null,
+      _httpMessage: null,
+      autoSelectFamilyAttemptedAddresses: [Array],
+      [Symbol(alpncallback)]: null,
+      [Symbol(res)]: [TLSWrap],
+      [Symbol(verified)]: true,
+      [Symbol(pendingSession)]: null,
+      [Symbol(async_id_symbol)]: -1,
+      [Symbol(kHandle)]: [TLSWrap],
+      [Symbol(lastWriteQueueSize)]: 0,
+      [Symbol(timeout)]: Timeout {
+        _idleTimeout: 5000,
+        _idlePrev: [TimersList],
+        _idleNext: [TimersList],
+        _idleStart: 273137,
+        _onTimeout: [Function: bound ],
+        _timerArgs: undefined,
+        _repeat: null,
+        _destroyed: false,
+        [Symbol(refed)]: false,
+        [Symbol(kHasPrimitive)]: false,
+        [Symbol(asyncId)]: 919,
+        [Symbol(triggerId)]: 917,
+        [Symbol(kAsyncContextFrame)]: undefined
+      },
+      [Symbol(kBuffer)]: null,
+      [Symbol(kBufferCb)]: null,
+      [Symbol(kBufferGen)]: null,
+      [Symbol(shapeMode)]: true,
+      [Symbol(kCapture)]: false,
+      [Symbol(kSetNoDelay)]: false,
+      [Symbol(kSetKeepAlive)]: true,
+      [Symbol(kSetKeepAliveInitialDelay)]: 1,
+      [Symbol(kBytesRead)]: 0,
+      [Symbol(kBytesWritten)]: 0,
+      [Symbol(connect-options)]: [Object]
+    },
+    [Symbol(kOutHeaders)]: [Object: null prototype] {
+      accept: [Array],
+      'content-type': [Array],
+      authorization: [Array],
+      space: [Array],
+      'user-agent': [Array],
+      'content-length': [Array],
+      'accept-encoding': [Array],
+      host: [Array]
+    },
+    [Symbol(errored)]: null,
+    [Symbol(kHighWaterMark)]: 16384,
+    [Symbol(kRejectNonStandardBodyWrites)]: false,
+    [Symbol(kUniqueHeaders)]: null
+  },
+  response: {
+    status: 405,
+    statusText: 'Method Not Allowed',
+    headers: Object [AxiosHeaders] {
+      date: 'Fri, 20 Mar 2026 09:06:14 GMT',
+      'content-type': 'text/html;charset=utf-8',
+      'transfer-encoding': 'chunked',
+      connection: 'keep-alive',
+      'x-svid': '0d82cae9f19eb9cd5',
+      allow: 'GET, PATCH',
+      'x-url': 'http://app-wallee.com:80/api/v2.0/payment/transactions/search?limit=10&offset=0',
+      'cf-cache-status': 'DYNAMIC',
+      'x-content-type-options': 'nosniff',
+      'strict-transport-security': 'max-age=15552000; includeSubDomains; preload',
+      server: 'cloudflare',
+      'cf-ray': '9df38f4ae95c6ada-LCA',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    config: {
+      transitional: [Object],
+      adapter: [Array],
+      transformRequest: [Array],
+      transformResponse: [Array],
+      timeout: 0,
+      xsrfCookieName: 'XSRF-TOKEN',
+      xsrfHeaderName: 'X-XSRF-TOKEN',
+      maxContentLength: -1,
+      maxBodyLength: -1,
+      env: [Object],
+      validateStatus: [Function: validateStatus],
+      headers: [Object [AxiosHeaders]],
+      method: 'post',
+      url: 'https://app-wallee.com/api/v2.0/payment/transactions/search?limit=10&offset=0',
+      data: '{"filter":{"type":"LEAF","fieldName":"merchantReference","operator":"EQUALS","value":"booking_68aacd3d-1fd6-4cc5-a7c0-fc97fdfd001b"},"numberOfEntities":10,"orderBys":[{"field":"id","sorting":"DESC"}]}',
+      allowAbsoluteUrls: true
+    },
+    request: <ref *1> ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: true,
+      _last: false,
+      chunkedEncoding: false,
+      shouldKeepAlive: true,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: true,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      strictContentLength: false,
+      _contentLength: 200,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: true,
+      _header: 'POST /api/v2.0/payment/transactions/search?limit=10&offset=0 HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'Content-Type: application/json\r\n' +
+        'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cGUiOiJKV1QiLCJ2ZXIiOjF9.eyJzdWIiOiIxNjM1MDQiLCJpYXQiOjE3NzM5OTc1NzQsInJlcXVlc3RQYXRoIjoiL2FwaS92Mi4wL3BheW1lbnQvdHJhbnNhY3Rpb25zL3NlYXJjaD9saW1pdD0xMCZvZmZzZXQ9MCIsInJlcXVlc3RNZXRob2QiOiJQT1NUIn0.eAM8MFInGUw5Jh3LWdJAEiW-tlH0PDmz38uPgTS2jKY\r\n' +
+        'Space: 93067\r\n' +
+        'User-Agent: axios/1.13.2\r\n' +
+        'Content-Length: 200\r\n' +
+        'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+        'Host: app-wallee.com\r\n' +
+        'Connection: keep-alive\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'POST',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      joinDuplicateHeaders: undefined,
+      path: '/api/v2.0/payment/transactions/search?limit=10&offset=0',
+      _ended: true,
+      res: [IncomingMessage],
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'app-wallee.com',
+      protocol: 'https:',
+      _redirectable: [Writable],
+      [Symbol(shapeMode)]: false,
+      [Symbol(kCapture)]: false,
+      [Symbol(kBytesWritten)]: 0,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kChunkedBuffer)]: [],
+      [Symbol(kChunkedLength)]: 0,
+      [Symbol(kSocket)]: [TLSSocket],
+      [Symbol(kOutHeaders)]: [Object: null prototype],
+      [Symbol(errored)]: null,
+      [Symbol(kHighWaterMark)]: 16384,
+      [Symbol(kRejectNonStandardBodyWrites)]: false,
+      [Symbol(kUniqueHeaders)]: null
+    },
+    data: '<!DOCTYPE html>\n' +
+      '<html>\n' +
+      '<head>\n' +
+      '    <meta charset="utf-8"/>\n' +
+      '    <meta http-equiv="Content-type" content="text/html; charset=utf-8">\n' +
+      '    <meta name="viewport"\n' +
+      '          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">\n' +
+      '    <title>Unsupported HTTP Request Method</title>\n' +
+      '    <link rel="icon" href="/assets/images/favicon.svg">\n' +
+      '            <link type="text/css" rel="stylesheet" media="all" href="/error-page-assets/bootstrap.css"/>\n' +
+      '        <link type="text/css" rel="stylesheet" media="all" href="/error-page-assets/layout.css"/>\n' +
+      '    </head>\n' +
+      '<body class="error">\n' +
+      '<div class="container">\n' +
+      '        <div class="container-error">\n' +
+      '        <div class="col-sm-6 col-xs-12">\n' +
+      '            <h1>Ooops!</h1>\n' +
+      '            <h2>Sorry, we are not supporting the HTTP request method &#39;POST&#39; on this URL.</h2>\n' +
+      '            <span>Error code: 405</span>\n' +
+      '            <span>Please contact us and we will try to solve this issue.</span>\n' +
+      '        </div>\n' +
+      '        <div class="col-sm-6 hidden-xs">\n' +
+      '            <img src="/assets/images/error/not-found.svg" class="img-responsive"/>\n' +
+      '        </div>\n' +
+      '    </div>\n' +
+      '</div>\n' +
+      '    <script type="text/javascript" src="/error-page-assets/error.js"></script>\n' +
+      '</body>\n' +
+      '</html>'
+  },
+  status: 405
+}
