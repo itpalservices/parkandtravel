@@ -309,6 +309,11 @@ export async function initiatePaymentForBooking(bookingId: string, source?: stri
     failedUrl: `${domain}/payment/failed?ref=${merchantReference}${source ? `&source=${source}` : ''}`,
   });
 
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { pendingWlTransactionId: BigInt(transactionId) },
+  });
+
   const paymentUrl = await buildPaymentPageUrl(transactionId);
   return { paymentUrl };
 }
@@ -478,29 +483,38 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
       return { status: 'success', bookingId };
     }
 
-    const merchantReference = `booking_${bookingId}`;
-    let transactions: any[] = [];
-    try {
-      transactions = await searchWalleeTransactionsByMerchantRef(merchantReference);
-    } catch (err) {
-      console.error('Failed to search Wallee transactions by merchantRef:', err);
+    const wlTxId = booking.pendingWlTransactionId;
+    if (!wlTxId) {
+      console.log(`verify: no pendingWlTransactionId on booking ${bookingId}`);
+      return { status: 'pending', message: 'Payment not yet initiated.' };
     }
 
-    const successTx = transactions.find((t: any) => WALLEE_SUCCESS_STATES.includes(t.state));
-    if (successTx) {
-      const existing = await prisma.walleeTransaction.findUnique({ where: { id: BigInt(successTx.id) } });
+    let transaction: any;
+    try {
+      transaction = await getWalleeTransactionById(Number(wlTxId));
+    } catch (err) {
+      console.error(`verify: failed to fetch Wallee transaction ${wlTxId}:`, err);
+      return { status: 'pending', message: 'Could not verify payment status. Please try again.' };
+    }
+
+    const state: string = transaction.state;
+    console.log(`verify: booking ${bookingId} wlTxId=${wlTxId} state=${state}`);
+
+    if (WALLEE_SUCCESS_STATES.includes(state)) {
+      const existing = await prisma.walleeTransaction.findUnique({ where: { id: BigInt(wlTxId) } });
       if (!existing) {
-        const amount = successTx.authorizationAmount ?? (finalPrice ?? 0);
+        const amount = transaction.authorizationAmount
+          ? Number(transaction.authorizationAmount)
+          : (finalPrice ?? 0);
         await prisma.walleeTransaction.create({
-          data: { id: BigInt(successTx.id), amount: Number(amount), bookingId },
+          data: { id: BigInt(wlTxId), amount, bookingId },
         }).catch((err) => console.error('Failed to record wallee_transaction on verify:', err));
         await sendPaidConfirmationEmailForBooking(bookingId);
       }
       return { status: 'success', bookingId };
     }
 
-    const failedTx = transactions.find((t: any) => WALLEE_FAILED_STATES.includes(t.state));
-    if (failedTx && transactions.every((t: any) => WALLEE_FAILED_STATES.includes(t.state))) {
+    if (WALLEE_FAILED_STATES.includes(state)) {
       return { status: 'failed', message: 'Payment was declined. Please try again.' };
     }
 

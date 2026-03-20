@@ -54,9 +54,10 @@ model Booking {
   parkingComments String?   @db.Text
   actualCheckIn  DateTime?  @db.Timestamptz(6)
   actualCheckOut DateTime?  @db.Timestamptz(6)
-  extraFee        Decimal?   @db.Decimal(10, 2)
-  deleteflag      Int        @default(0)
-  createdAt       DateTime   @default(now())
+  extraFee             Decimal?   @db.Decimal(10, 2)
+  deleteflag           Int        @default(0)
+  pendingWlTransactionId BigInt?  @map("pending_wl_transaction_id")
+  createdAt            DateTime   @default(now())
   parkingType       ParkingType?       @relation(fields: [parkingTypeId], references: [id])
   phoneCode         PhoneCode?         @relation(fields: [phoneCodeId], references: [id])
   bookingStatus     BookingStatus?     @relation(fields: [bookingStatusId], references: [id])
