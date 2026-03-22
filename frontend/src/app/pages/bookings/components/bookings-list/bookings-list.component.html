@@ -268,7 +268,7 @@
                       : '-'
                   }}
                 }
-                @if (booking.paymentStatus) {
+                @if (booking.paymentStatus && (isAdmin || isDriver)) {
                   <div class="mt-1">
                     <span class="badge" [ngClass]="getPaymentBadgeClass(booking.paymentStatus)">
                       {{ getPaymentBadgeLabel(booking.paymentStatus) }}
@@ -444,7 +444,7 @@
                     : '-'
                 }}
               }
-              @if (booking.paymentStatus) {
+              @if (booking.paymentStatus && (isAdmin || isDriver)) {
                 <span class="badge ms-2" [ngClass]="getPaymentBadgeClass(booking.paymentStatus)">
                   {{ getPaymentBadgeLabel(booking.paymentStatus) }}
                 </span>
