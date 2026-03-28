@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 import { Driver } from '../../shared/models/driver.model';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
@@ -9,7 +10,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-drivers',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NgbDropdownModule],
   templateUrl: './drivers.component.html',
   styleUrl: './drivers.component.scss'
 })
