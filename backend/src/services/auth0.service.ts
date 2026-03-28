@@ -25,9 +25,12 @@ interface Auth0User {
   family_name?: string;
   nickname?: string;
   picture?: string;
+  blocked?: boolean;
   user_metadata?: {
     phone_number?: string;
     phone_code?: string;
+    name?: string;
+    surname?: string;
   };
   app_metadata?: {
     role?: string;
@@ -294,4 +297,51 @@ export async function searchRegularUserByPhone(phone: string, phoneCode: string)
   }
 
   return formatUserResult(regularUser);
+}
+
+export async function getAllDriverUsers(page: number, perPage: number): Promise<{
+  users: {
+    userId: string;
+    email: string;
+    name: string;
+    surname: string;
+    phone: string;
+    phoneCode: string;
+    blocked: boolean;
+  }[];
+  total: number;
+}> {
+  const token = await getManagementToken();
+
+  const response = await axios.get<{ users: Auth0User[]; total: number }>(
+    `https://${AUTH0_DOMAIN}/api/v2/users`,
+    {
+      params: {
+        q: 'app_metadata.role:"driver"',
+        search_engine: 'v3',
+        page,
+        per_page: perPage,
+        include_totals: true,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const users: Auth0User[] = response.data.users || [];
+  const total: number = response.data.total || 0;
+
+  return {
+    users: users.map(user => ({
+      userId: user.user_id,
+      email: user.email,
+      name: user.user_metadata?.name || user.given_name || '',
+      surname: user.user_metadata?.surname || user.family_name || '',
+      phone: user.user_metadata?.phone_number || '',
+      phoneCode: user.user_metadata?.phone_code || '',
+      blocked: user.blocked || false,
+    })),
+    total,
+  };
 }

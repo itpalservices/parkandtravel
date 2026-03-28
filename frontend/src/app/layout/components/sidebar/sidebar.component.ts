@@ -23,7 +23,8 @@ export class SidebarComponent implements OnInit {
     { label: 'Home', route: '/admin/dashboard', icon: 'home', adminOnly: true },
     { label: 'Bookings', route: '/admin/bookings', icon: 'bookings' },
     { label: 'Customers', route: '/admin/customers', icon: 'customers', adminOnly: true },
-    { label: 'Reports', route: '/admin/reports', icon: 'reports', adminOnly: true }
+    { label: 'Reports', route: '/admin/reports', icon: 'reports', adminOnly: true },
+    { label: 'Drivers', route: '/admin/reports/drivers', icon: 'drivers', adminOnly: true }
   ];
 
   navItems$: Observable<NavItem[]> = of([]);

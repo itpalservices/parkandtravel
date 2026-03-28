@@ -1,0 +1,223 @@
+<div class="drivers-page">
+  <div class="page-header d-none d-md-block">
+    <div class="header-row">
+      <div class="header-left">
+        <h1 class="page-title">Drivers</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-controls d-md-none">
+    <div class="mobile-header-row">
+      <h1 class="page-title mb-2">Drivers</h1>
+    </div>
+  </div>
+
+  <div class="drivers-content">
+    @if (loading) {
+      <div class="loading-spinner text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    } @else if (error) {
+      <div class="error-message text-center py-5">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        <button class="btn btn-primary" (click)="loadDrivers()">Try Again</button>
+      </div>
+    } @else if (drivers.length === 0) {
+      <div class="no-drivers text-center py-5">
+        <div class="placeholder-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <p class="text-muted mb-0">No drivers found</p>
+      </div>
+    } @else {
+      <div class="desktop-view d-none d-md-block">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="actions-col"></th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (driver of drivers; track driver.userId) {
+                <tr>
+                  <td class="actions-col">
+                    <div class="dropdown">
+                      <button class="btn-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="12" cy="5" r="1.5"></circle>
+                          <circle cx="12" cy="12" r="1.5"></circle>
+                          <circle cx="12" cy="19" r="1.5"></circle>
+                        </svg>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <button class="dropdown-item" type="button" disabled>
+                            {{ driver.blocked ? 'Activate' : 'Deactivate' }}
+                          </button>
+                        </li>
+                        <li>
+                          <button class="dropdown-item text-danger" type="button" disabled>Delete</button>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                      </div>
+                      <span>{{ (driver.name || driver.surname) ? ((driver.name || '') + ' ' + (driver.surname || '')).trim() : '-' }}</span>
+                    </div>
+                  </td>
+                  <td>{{ driver.email }}</td>
+                  <td>
+                    @if (driver.phoneCode || driver.phone) {
+                      <div class="phone-cell">
+                        @if (driver.phoneCode && getCountryFlag(driver.phoneCode)) {
+                          <img [src]="getCountryFlag(driver.phoneCode)" [alt]="getIsoCode(driver.phoneCode)" class="country-flag">
+                        }
+                        @if (driver.phoneCode) {
+                          <span class="phone-code">{{ driver.phoneCode }}</span>
+                        }
+                        <span>{{ driver.phone || '-' }}</span>
+                      </div>
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td>
+                    @if (driver.blocked) {
+                      <span class="badge bg-danger">Inactive</span>
+                    } @else {
+                      <span class="badge bg-success">Active</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mobile-view d-block d-md-none">
+        <div class="drivers-cards">
+          @for (driver of drivers; track driver.userId) {
+            <div class="driver-item">
+              <div class="driver-top">
+                <div class="driver-left">
+                  <div class="avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <div class="driver-info">
+                    <span class="driver-name">{{ (driver.name || driver.surname) ? ((driver.name || '') + ' ' + (driver.surname || '')).trim() : '-' }}</span>
+                    <span class="driver-email">{{ driver.email }}</span>
+                  </div>
+                </div>
+                <div class="dropdown">
+                  <button class="btn-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="5" r="1.5"></circle>
+                      <circle cx="12" cy="12" r="1.5"></circle>
+                      <circle cx="12" cy="19" r="1.5"></circle>
+                    </svg>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <button class="dropdown-item" type="button" disabled>
+                        {{ driver.blocked ? 'Activate' : 'Deactivate' }}
+                      </button>
+                    </li>
+                    <li>
+                      <button class="dropdown-item text-danger" type="button" disabled>Delete</button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="driver-details">
+                <div class="detail-row">
+                  <span class="detail-label">Phone:</span>
+                  <span class="detail-value">
+                    @if (driver.phoneCode || driver.phone) {
+                      @if (driver.phoneCode && getCountryFlag(driver.phoneCode)) {
+                        <img [src]="getCountryFlag(driver.phoneCode)" [alt]="getIsoCode(driver.phoneCode)" class="country-flag">
+                      }
+                      @if (driver.phoneCode) {
+                        <span class="phone-code">{{ driver.phoneCode }}</span>
+                      }
+                      {{ driver.phone || '-' }}
+                    } @else {
+                      -
+                    }
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Status:</span>
+                  <span class="detail-value">
+                    @if (driver.blocked) {
+                      <span class="badge bg-danger">Inactive</span>
+                    } @else {
+                      <span class="badge bg-success">Active</span>
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <button class="pagination-btn prev" [disabled]="currentPage === 1" (click)="onPrevious()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Previous
+        </button>
+
+        <div class="page-numbers">
+          @for (page of pageNumbers; track $index) {
+            @if (page === -1) {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button
+                class="page-number"
+                [class.active]="page === currentPage"
+                (click)="onPageChange(page)"
+              >
+                {{ page }}
+              </button>
+            }
+          }
+        </div>
+
+        <button class="pagination-btn next" [disabled]="currentPage === totalPages" (click)="onNext()">
+          Next
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
+</div>

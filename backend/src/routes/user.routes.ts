@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -147,6 +147,33 @@ router.post("/resend-verification", checkJwt, async (req: Request, res: Response
   } catch (error: any) {
     console.error("Error sending verification email:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+router.get("/drivers", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can view drivers" });
+      return;
+    }
+
+    const page = Math.max(0, parseInt(req.query.page as string) || 0);
+    const perPage = 10;
+
+    const result = await getAllDriverUsers(page, perPage);
+
+    res.json({
+      success: true,
+      data: result.users,
+      total: result.total,
+      page,
+      perPage,
+    });
+  } catch (error: any) {
+    console.error("Error fetching drivers:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch drivers" });
   }
 });
 
