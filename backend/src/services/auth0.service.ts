@@ -333,9 +333,8 @@ export async function createDriverUser(params: {
 
   const userId = createResponse.data.user_id;
 
-  const AUTH0_APP_CLIENT_ID = process.env.AUTH0_CLIENT_ID || 'EhWlMzGUVKbSj5Ya5IIjzEMlFfFojoLJ';
   await axios.post(`https://${AUTH0_DOMAIN}/dbconnections/change_password`, {
-    client_id: AUTH0_APP_CLIENT_ID,
+    client_id: process.env.AUTH0_CLIENT_ID,
     email: params.email,
     connection: 'Username-Password-Authentication',
   });
