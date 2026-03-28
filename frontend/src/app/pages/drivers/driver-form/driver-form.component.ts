@@ -37,6 +37,7 @@ export class DriverFormComponent implements OnInit {
   ngOnInit(): void {
     this.driverId = this.route.snapshot.paramMap.get('userId');
     this.isEditMode = !!this.driverId;
+    this.loadingDriver = this.isEditMode;
 
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(1)]],

@@ -80,10 +80,12 @@ export class DriversComponent implements OnInit {
             title: 'Driver deleted successfully',
             showConfirmButton: false, timer: 3000, timerProgressBar: true,
           });
-          if (this.drivers.length === 1 && this.currentPage > 1) {
+          this.drivers = this.drivers.filter(d => d.userId !== driver.userId);
+          this.totalItems = Math.max(0, this.totalItems - 1);
+          if (this.drivers.length === 0 && this.currentPage > 1) {
             this.currentPage--;
+            this.loadDrivers();
           }
-          this.loadDrivers();
         },
         error: (err) => {
           Swal.fire({ icon: 'error', title: 'Error', text: err.error?.error || 'Failed to delete driver' });
