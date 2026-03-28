@@ -356,27 +356,39 @@ export async function getAllDriverUsers(page: number, perPage: number): Promise<
 }> {
   const token = await getManagementToken();
 
-  const response = await axios.get<{ users: Auth0User[]; total: number }>(
-    `https://${AUTH0_DOMAIN}/api/v2/users`,
-    {
-      params: {
-        q: 'app_metadata.role:"driver"',
-        search_engine: 'v3',
-        page,
-        per_page: perPage,
-        include_totals: true,
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  // Fetch all users without Lucene search to avoid Auth0's indexing delay
+  // (newly created users can take minutes to appear in q= search results)
+  const allDrivers: Auth0User[] = [];
+  const batchSize = 100;
+  let authPage = 0;
 
-  const users: Auth0User[] = response.data.users || [];
-  const total: number = response.data.total || 0;
+  while (true) {
+    const response = await axios.get<Auth0User[]>(
+      `https://${AUTH0_DOMAIN}/api/v2/users`,
+      {
+        params: {
+          page: authPage,
+          per_page: batchSize,
+          include_fields: 'user_id,email,given_name,family_name,user_metadata,app_metadata,blocked',
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const batch: Auth0User[] = response.data || [];
+    const drivers = batch.filter(u => u.app_metadata?.role?.toLowerCase() === 'driver');
+    allDrivers.push(...drivers);
+
+    if (batch.length < batchSize) break;
+    authPage++;
+  }
+
+  const total = allDrivers.length;
+  const startIndex = page * perPage;
+  const paginatedDrivers = allDrivers.slice(startIndex, startIndex + perPage);
 
   return {
-    users: users.map(user => ({
+    users: paginatedDrivers.map(user => ({
       userId: user.user_id,
       email: user.email,
       name: user.user_metadata?.name || user.given_name || '',
