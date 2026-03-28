@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import { PhoneCode } from '../../../shared/models/phone-codes.model';
+import { Driver } from '../../../shared/models/driver.model';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -21,19 +22,27 @@ export class DriverFormComponent implements OnInit {
   selectedPhoneCode: PhoneCode | null = null;
   phoneCodeSearch = '';
   submitting = false;
+  loadingDriver = false;
+
+  isEditMode = false;
+  driverId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private api: ApiService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.driverId = this.route.snapshot.paramMap.get('userId');
+    this.isEditMode = !!this.driverId;
+
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(1)]],
       surname: ['', [Validators.required, Validators.minLength(1)]],
       phone: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      email: [{ value: '', disabled: this.isEditMode }, [Validators.required, Validators.email]],
     });
 
     this.loadPhoneCodes();
@@ -43,14 +52,56 @@ export class DriverFormComponent implements OnInit {
     this.api.get<PhoneCode[]>('/phone-codes').subscribe({
       next: (codes) => {
         this.phoneCodes = codes;
-        const cyprus = codes.find(c => c.isoCode === 'CY');
-        this.selectedPhoneCode = cyprus || codes[0] || null;
+        if (!this.isEditMode) {
+          const cyprus = codes.find(c => c.isoCode === 'CY');
+          this.selectedPhoneCode = cyprus || codes[0] || null;
+        } else {
+          this.loadDriverData();
+        }
       },
       error: () => {
         this.phoneCodes = [{ id: 'default', isoCode: 'CY', phoneCode: '+357' }];
         this.selectedPhoneCode = this.phoneCodes[0];
+        if (this.isEditMode) this.loadDriverData();
       }
     });
+  }
+
+  loadDriverData(): void {
+    if (!this.driverId) return;
+    this.loadingDriver = true;
+
+    this.api.get<{ success: boolean; data: Driver[] }>(`/user/drivers?page=0`).subscribe({
+      next: (response) => {
+        const driver = response.data.find(d => d.userId === this.driverId);
+        if (driver) {
+          this.prefillForm(driver);
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Driver not found' });
+          this.router.navigate(['/admin/drivers']);
+        }
+        this.loadingDriver = false;
+      },
+      error: () => {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load driver data' });
+        this.loadingDriver = false;
+        this.router.navigate(['/admin/drivers']);
+      }
+    });
+  }
+
+  prefillForm(driver: Driver): void {
+    this.form.patchValue({
+      name: driver.name,
+      surname: driver.surname,
+      phone: driver.phone,
+      email: driver.email,
+    });
+
+    if (driver.phoneCode && this.phoneCodes.length) {
+      const match = this.phoneCodes.find(c => c.phoneCode === driver.phoneCode);
+      this.selectedPhoneCode = match || null;
+    }
   }
 
   get filteredPhoneCodes(): PhoneCode[] {
@@ -95,34 +146,55 @@ export class DriverFormComponent implements OnInit {
 
     this.submitting = true;
 
-    const payload = {
-      name: this.form.value.name.trim(),
-      surname: this.form.value.surname.trim(),
-      email: this.form.value.email.trim().toLowerCase(),
-      phone: this.form.value.phone.trim(),
-      phoneCode: this.selectedPhoneCode.phoneCode,
-    };
+    if (this.isEditMode) {
+      const payload = {
+        name: this.form.value.name.trim(),
+        surname: this.form.value.surname.trim(),
+        phone: this.form.value.phone.trim(),
+        phoneCode: this.selectedPhoneCode.phoneCode,
+      };
 
-    this.api.post<{ success: boolean }>('/user/drivers', payload).subscribe({
-      next: () => {
-        this.submitting = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Driver created successfully. A password reset email has been sent.',
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true,
-        });
-        this.router.navigate(['/admin/drivers']);
-      },
-      error: (err) => {
-        this.submitting = false;
-        const message = err.error?.error || 'Failed to create driver. Please try again.';
-        Swal.fire({ icon: 'error', title: 'Error', text: message });
-      }
-    });
+      this.api.put<{ success: boolean }>(`/user/drivers/${this.driverId}`, payload).subscribe({
+        next: () => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'Driver updated successfully',
+            showConfirmButton: false, timer: 3000, timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/drivers']);
+        },
+        error: (err) => {
+          this.submitting = false;
+          Swal.fire({ icon: 'error', title: 'Error', text: err.error?.error || 'Failed to update driver. Please try again.' });
+        }
+      });
+    } else {
+      const payload = {
+        name: this.form.value.name.trim(),
+        surname: this.form.value.surname.trim(),
+        email: this.form.value.email.trim().toLowerCase(),
+        phone: this.form.value.phone.trim(),
+        phoneCode: this.selectedPhoneCode.phoneCode,
+      };
+
+      this.api.post<{ success: boolean }>('/user/drivers', payload).subscribe({
+        next: () => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'Driver created successfully. A password reset email has been sent.',
+            showConfirmButton: false, timer: 4000, timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/drivers']);
+        },
+        error: (err) => {
+          this.submitting = false;
+          const message = err.error?.error || 'Failed to create driver. Please try again.';
+          Swal.fire({ icon: 'error', title: 'Error', text: message });
+        }
+      });
+    }
   }
 
   onCancel(): void {

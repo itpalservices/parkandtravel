@@ -107,6 +107,18 @@
   color: #ef4444;
 }
 
+.field-disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
 .phone-input-group {
   display: flex;
   align-items: stretch;

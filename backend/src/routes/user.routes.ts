@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -179,6 +179,71 @@ router.post("/drivers", checkJwt, async (req: Request, res: Response) => {
     const status = error.response?.status === 409 ? 409 : 500;
     const message = error.response?.data?.message || error.message || "Failed to create driver";
     res.status(status).json({ error: message });
+  }
+});
+
+router.put("/drivers/:userId", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can update drivers" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const { name, surname, phone, phoneCode } = req.body;
+
+    if (!name || !surname || !phone || !phoneCode) {
+      res.status(400).json({ error: "Name, surname, phone and phone code are required" });
+      return;
+    }
+
+    await updateDriverUser(userId, { name, surname, phone, phoneCode });
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error updating driver:", error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.message || "Failed to update driver" });
+  }
+});
+
+router.delete("/drivers/:userId", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can delete drivers" });
+      return;
+    }
+
+    const { userId } = req.params;
+    await deleteDriverUser(userId);
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error deleting driver:", error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.message || "Failed to delete driver" });
+  }
+});
+
+router.patch("/drivers/:userId/block", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can block/unblock drivers" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const { blocked } = req.body;
+
+    if (typeof blocked !== "boolean") {
+      res.status(400).json({ error: "blocked must be a boolean" });
+      return;
+    }
+
+    await setDriverBlockStatus(userId, blocked);
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error updating driver block status:", error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.message || "Failed to update driver status" });
   }
 });
 

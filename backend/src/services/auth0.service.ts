@@ -299,6 +299,45 @@ export async function searchRegularUserByPhone(phone: string, phoneCode: string)
   return formatUserResult(regularUser);
 }
 
+export async function updateDriverUser(
+  userId: string,
+  params: { name: string; surname: string; phone: string; phoneCode: string }
+): Promise<void> {
+  const token = await getManagementToken();
+  await axios.patch(
+    `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
+    {
+      given_name: params.name,
+      family_name: params.surname,
+      name: `${params.name} ${params.surname}`.trim(),
+      user_metadata: {
+        name: params.name,
+        surname: params.surname,
+        phone_number: params.phone,
+        phone_code: params.phoneCode,
+      },
+    },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export async function deleteDriverUser(userId: string): Promise<void> {
+  const token = await getManagementToken();
+  await axios.delete(
+    `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export async function setDriverBlockStatus(userId: string, blocked: boolean): Promise<void> {
+  const token = await getManagementToken();
+  await axios.patch(
+    `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
+    { blocked },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
 export async function createDriverUser(params: {
   name: string;
   surname: string;

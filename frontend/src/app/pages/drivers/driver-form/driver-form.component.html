@@ -6,9 +6,16 @@
         <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
     </button>
-    <h1 class="page-title">Add Driver</h1>
+    <h1 class="page-title">{{ isEditMode ? 'Edit Driver' : 'Add Driver' }}</h1>
   </div>
 
+  @if (loadingDriver) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else {
   <div class="form-card">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="form-grid">
@@ -43,15 +50,22 @@
         </div>
 
         <div class="form-group">
-          <label for="email" class="form-label">Email <span class="required">*</span></label>
+          <label for="email" class="form-label">
+            Email
+            @if (!isEditMode) { <span class="required">*</span> }
+          </label>
           <input
             type="email"
             id="email"
             class="form-control"
             [class.is-invalid]="hasError('email')"
+            [class.field-disabled]="isEditMode"
             formControlName="email"
             placeholder="Enter email address"
           />
+          @if (isEditMode) {
+            <div class="field-hint">Email cannot be changed after account creation.</div>
+          }
           @if (hasError('email')) {
             <div class="invalid-feedback">{{ getError('email') }}</div>
           }
@@ -119,26 +133,29 @@
         </div>
       </div>
 
-      <div class="info-box">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-        A password reset email will be automatically sent to the driver so they can set their own password.
-      </div>
+      @if (!isEditMode) {
+        <div class="info-box">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          A password reset email will be automatically sent to the driver so they can set their own password.
+        </div>
+      }
 
       <div class="form-actions">
         <button type="button" class="btn btn-cancel" (click)="onCancel()">Cancel</button>
         <button type="submit" class="btn btn-submit" [disabled]="submitting">
           @if (submitting) {
             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-            Creating...
+            {{ isEditMode ? 'Saving...' : 'Creating...' }}
           } @else {
-            Create Driver
+            {{ isEditMode ? 'Save Changes' : 'Create Driver' }}
           }
         </button>
       </div>
     </form>
   </div>
+  }
 </div>
