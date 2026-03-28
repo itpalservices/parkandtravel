@@ -53,6 +53,12 @@ export const appRoutes: Routes = [
           import('./pages/reports/reports.routes').then((m) => m.reportsRoutes),
       },
       {
+        path: 'drivers',
+        canActivate: [adminOnlyGuard],
+        loadComponent: () =>
+          import('./pages/drivers/drivers.component').then((m) => m.DriversComponent),
+      },
+      {
         path: 'user-profile',
         loadComponent: () =>
           import('./pages/user-profile/user-profile.component').then((m) => m.UserProfileComponent),

@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../../core/services/api.service';
-import { Driver } from '../../../shared/models/driver.model';
-import { PhoneCode } from '../../../shared/models/phone-codes.model';
+import { ApiService } from '../../core/services/api.service';
+import { Driver } from '../../shared/models/driver.model';
+import { PhoneCode } from '../../shared/models/phone-codes.model';
 
 @Component({
   selector: 'app-drivers',
