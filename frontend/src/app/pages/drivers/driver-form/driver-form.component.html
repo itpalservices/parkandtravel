@@ -1,0 +1,146 @@
+<div class="driver-form-page">
+  <div class="page-header">
+    <div class="header-row">
+      <a routerLink="/admin/drivers" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back to Drivers
+      </a>
+      <h1 class="page-title">Add Driver</h1>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="name" class="form-label">Name <span class="required">*</span></label>
+          <input
+            type="text"
+            id="name"
+            class="form-control"
+            [class.is-invalid]="hasError('name')"
+            formControlName="name"
+            placeholder="Enter first name"
+          />
+          @if (hasError('name')) {
+            <div class="invalid-feedback">{{ getError('name') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="surname" class="form-label">Surname <span class="required">*</span></label>
+          <input
+            type="text"
+            id="surname"
+            class="form-control"
+            [class.is-invalid]="hasError('surname')"
+            formControlName="surname"
+            placeholder="Enter last name"
+          />
+          @if (hasError('surname')) {
+            <div class="invalid-feedback">{{ getError('surname') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email <span class="required">*</span></label>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            [class.is-invalid]="hasError('email')"
+            formControlName="email"
+            placeholder="Enter email address"
+          />
+          @if (hasError('email')) {
+            <div class="invalid-feedback">{{ getError('email') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone <span class="required">*</span></label>
+          <div class="phone-input-group" [class.is-invalid-group]="hasError('phone')">
+            <div ngbDropdown class="phone-code-dropdown">
+              <button
+                type="button"
+                class="btn btn-outline-secondary dropdown-toggle phone-code-btn"
+                ngbDropdownToggle
+              >
+                @if (selectedPhoneCode) {
+                  <img
+                    [src]="getFlagUrl(selectedPhoneCode.isoCode)"
+                    [alt]="selectedPhoneCode.isoCode"
+                    class="flag-icon"
+                  />
+                  <span>{{ selectedPhoneCode.phoneCode }}</span>
+                } @else {
+                  <span>Select</span>
+                }
+              </button>
+              <div ngbDropdownMenu class="phone-code-menu">
+                <div class="phone-search-container">
+                  <input
+                    type="text"
+                    class="phone-search-input"
+                    placeholder="Search country or code..."
+                    [(ngModel)]="phoneCodeSearch"
+                    [ngModelOptions]="{ standalone: true }"
+                    (click)="$event.stopPropagation()"
+                  />
+                </div>
+                <div class="phone-codes-list">
+                  @for (code of filteredPhoneCodes; track code.id) {
+                    <button
+                      type="button"
+                      ngbDropdownItem
+                      (click)="selectPhoneCode(code)"
+                      class="phone-code-item"
+                    >
+                      <img [src]="getFlagUrl(code.isoCode)" [alt]="code.isoCode" class="flag-icon" />
+                      <span class="phone-code-text">{{ code.phoneCode }}</span>
+                      <span class="country-code-text">{{ code.isoCode }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+            <input
+              type="tel"
+              id="phone"
+              class="form-control phone-number-input"
+              [class.is-invalid]="hasError('phone')"
+              formControlName="phone"
+              placeholder="99123456"
+            />
+          </div>
+          @if (hasError('phone')) {
+            <div class="invalid-feedback d-block">{{ getError('phone') }}</div>
+          }
+        </div>
+      </div>
+
+      <div class="info-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        A password reset email will be automatically sent to the driver so they can set their own password.
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="btn btn-submit" [disabled]="submitting">
+          @if (submitting) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Creating...
+          } @else {
+            Create Driver
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

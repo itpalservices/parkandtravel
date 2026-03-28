@@ -59,6 +59,12 @@ export const appRoutes: Routes = [
           import('./pages/drivers/drivers.component').then((m) => m.DriversComponent),
       },
       {
+        path: 'drivers/add',
+        canActivate: [adminOnlyGuard],
+        loadComponent: () =>
+          import('./pages/drivers/driver-form/driver-form.component').then((m) => m.DriverFormComponent),
+      },
+      {
         path: 'user-profile',
         loadComponent: () =>
           import('./pages/user-profile/user-profile.component').then((m) => m.UserProfileComponent),

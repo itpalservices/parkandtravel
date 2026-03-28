@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -147,6 +147,38 @@ router.post("/resend-verification", checkJwt, async (req: Request, res: Response
   } catch (error: any) {
     console.error("Error sending verification email:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+router.post("/drivers", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can create drivers" });
+      return;
+    }
+
+    const { name, surname, email, phone, phoneCode } = req.body;
+
+    if (!name || !surname || !email || !phone || !phoneCode) {
+      res.status(400).json({ error: "Name, surname, email, phone and phone code are required" });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ error: "Invalid email address" });
+      return;
+    }
+
+    const result = await createDriverUser({ name, surname, email, phone, phoneCode });
+
+    res.status(201).json({ success: true, data: result });
+  } catch (error: any) {
+    console.error("Error creating driver:", error.response?.data || error.message);
+    const status = error.response?.status === 409 ? 409 : 500;
+    const message = error.response?.data?.message || error.message || "Failed to create driver";
+    res.status(status).json({ error: message });
   }
 });
 

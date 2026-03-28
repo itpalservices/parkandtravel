@@ -299,6 +299,50 @@ export async function searchRegularUserByPhone(phone: string, phoneCode: string)
   return formatUserResult(regularUser);
 }
 
+export async function createDriverUser(params: {
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  phoneCode: string;
+}): Promise<{ userId: string; email: string }> {
+  const token = await getManagementToken();
+  const crypto = require('crypto');
+  const tempPassword = `Dr!${crypto.randomBytes(8).toString('hex')}1A`;
+
+  const createResponse = await axios.post(
+    `https://${AUTH0_DOMAIN}/api/v2/users`,
+    {
+      email: params.email,
+      given_name: params.name,
+      family_name: params.surname,
+      name: `${params.name} ${params.surname}`.trim(),
+      connection: 'Username-Password-Authentication',
+      password: tempPassword,
+      email_verified: false,
+      app_metadata: { role: 'driver' },
+      user_metadata: {
+        name: params.name,
+        surname: params.surname,
+        phone_number: params.phone,
+        phone_code: params.phoneCode,
+      },
+    },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  const userId = createResponse.data.user_id;
+
+  const AUTH0_APP_CLIENT_ID = process.env.AUTH0_CLIENT_ID || 'EhWlMzGUVKbSj5Ya5IIjzEMlFfFojoLJ';
+  await axios.post(`https://${AUTH0_DOMAIN}/dbconnections/change_password`, {
+    client_id: AUTH0_APP_CLIENT_ID,
+    email: params.email,
+    connection: 'Username-Password-Authentication',
+  });
+
+  return { userId, email: params.email };
+}
+
 export async function getAllDriverUsers(page: number, perPage: number): Promise<{
   users: {
     userId: string;
