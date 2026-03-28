@@ -408,7 +408,8 @@ export async function getAllDriverUsers(page: number, perPage: number): Promise<
         params: {
           page: authPage,
           per_page: batchSize,
-          include_fields: 'user_id,email,given_name,family_name,user_metadata,app_metadata,blocked',
+          fields: 'user_id,email,given_name,family_name,user_metadata,app_metadata,blocked',
+          include_fields: true,
         },
         headers: { Authorization: `Bearer ${token}` },
       }
