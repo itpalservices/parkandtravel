@@ -1,11 +1,15 @@
-import * as brevo from "@getbrevo/brevo";
+import nodemailer from "nodemailer";
 
-const apiInstance = new brevo.TransactionalEmailsApi();
-
-apiInstance.setApiKey(
-  brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY || ""
-);
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+  port: parseInt(process.env.SMTP_PORT || "587", 10),
+  secure: false,
+  requireTLS: true,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_KEY,
+  },
+});
 
 interface BookingEmailData {
   email: string;
@@ -95,7 +99,7 @@ function generatePaymentStatusHtml(paymentStatus: 'paid' | 'pending'): string {
                 <tr>
                   <td style="padding: 20px 25px;">
                     <p style="margin: 0 0 5px 0; color: #14532d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
-                    <p style="margin: 0; color: #15803d; font-size: 18px; font-weight: 700;">✅ Paid</p>
+                    <p style="margin: 0; color: #15803d; font-size: 18px; font-weight: 700;">&#x2705; Paid</p>
                   </td>
                 </tr>
               </table>
@@ -110,7 +114,7 @@ function generatePaymentStatusHtml(paymentStatus: 'paid' | 'pending'): string {
                 <tr>
                   <td style="padding: 20px 25px;">
                     <p style="margin: 0 0 5px 0; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Payment Status</p>
-                    <p style="margin: 0 0 10px 0; color: #b45309; font-size: 18px; font-weight: 700;">⏳ Pending</p>
+                    <p style="margin: 0 0 10px 0; color: #b45309; font-size: 18px; font-weight: 700;">&#x23F3; Pending</p>
                     <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">Your booking has been created. You can complete the payment at your convenience.</p>
                   </td>
                 </tr>
@@ -181,7 +185,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 <tr>
                   <td colspan="2" style="padding: 20px 25px 15px 25px; border-bottom: 1px solid #e2e8f0;">
                     <h3 style="margin: 0; color: #006B8F; font-size: 18px; font-weight: 600;">
-                      📅 Reservation Details
+                      &#x1F4C5; Reservation Details
                     </h3>
                   </td>
                 </tr>
@@ -235,7 +239,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                   <td style="padding: 15px 25px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
                     <p style="margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Car Wash</p>
                     <p style="margin: 0; color: ${data.washService ? "#2e7d32" : "#64748b"}; font-size: 15px; font-weight: 600;">
-                      ${data.washService ? "✓ Included" : "No"}
+                      ${data.washService ? "&#x2713; Included" : "No"}
                     </p>
                   </td>
                 </tr>
@@ -252,7 +256,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 <tr>
                   <td colspan="2" style="padding: 15px 25px;">
                     <p style="margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Return Flight</p>
-                    <p style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 600;">✈️ ${data.flightNumber}</p>
+                    <p style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 600;">&#x2708;&#xFE0F; ${data.flightNumber}</p>
                   </td>
                 </tr>
                 ` : ""}
@@ -305,7 +309,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 <tr>
                   <td style="padding: 25px; text-align: center;">
                     <p style="margin: 0 0 5px 0; color: rgba(255, 255, 255, 0.8); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Total Amount</p>
-                    <p style="margin: 0; color: #ffffff; font-size: 36px; font-weight: 700;">€${data.finalPrice.toFixed(2)}</p>
+                    <p style="margin: 0; color: #ffffff; font-size: 36px; font-weight: 700;">&#x20AC;${data.finalPrice.toFixed(2)}</p>
                   </td>
                 </tr>
               </table>
@@ -322,10 +326,10 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 Have questions? We're here to help!
               </p>
               <p style="margin: 0 0 20px 0; color: #006B8F; font-size: 16px; font-weight: 600;">
-                📞 Contact Park & Travel
+                &#x1F4DE; Contact Park & Travel
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                © ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
+                &copy; ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
                 Secure Airport Parking Services
               </p>
             </td>
@@ -397,7 +401,7 @@ Car Wash: ${data.washService ? "Included" : "Not selected"}
     text += `
 TOTAL AMOUNT
 ------------
-€${data.finalPrice.toFixed(2)}
+EUR ${data.finalPrice.toFixed(2)}
 `;
   }
 
@@ -405,7 +409,7 @@ TOTAL AMOUNT
     text += `
 PAYMENT STATUS
 --------------
-${data.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
+${data.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
 `;
     if (data.paymentStatus === 'pending') {
       text += `Your booking has been created. You can complete the payment at your convenience.\n`;
@@ -416,78 +420,52 @@ ${data.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
 }
 
 function getEmailSubject(data: BookingEmailData): string {
-  if (data.isPaymentConfirmation) return "💳 Payment Confirmed - Park & Travel";
-  if (data.isUpdate) return "📝 Booking Updated - Park & Travel";
-  return "✅ Booking Confirmed - Park & Travel";
+  if (data.isPaymentConfirmation) return "Payment Confirmed - Park & Travel";
+  if (data.isUpdate) return "Booking Updated - Park & Travel";
+  return "Booking Confirmed - Park & Travel";
 }
 
 export async function sendBookingConfirmationEmail(
   data: BookingEmailData
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  if (!process.env.BREVO_API_KEY) {
-    console.error("BREVO_API_KEY not configured");
+  if (!process.env.SMTP_USER || !process.env.SMTP_KEY) {
+    console.error("SMTP credentials not configured");
     return { success: false, error: "Email service not configured" };
   }
 
-  try {
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    
-    sendSmtpEmail.subject = getEmailSubject(data);
-    sendSmtpEmail.htmlContent = generateBookingConfirmationHtml(data);
-    sendSmtpEmail.textContent = generateBookingConfirmationText(data);
-    sendSmtpEmail.sender = {
-      name: "Park & Travel",
-      email: process.env.BREVO_SENDER_EMAIL || "it.pal.service@gmail.com",
-    };
-    sendSmtpEmail.to = [
-      {
-        email: data.email,
-        name: data.fullName,
-      },
-    ];
-    sendSmtpEmail.replyTo = {
-      email: process.env.BREVO_REPLY_TO_EMAIL || "support@parkandtravel.com",
-      name: "Park & Travel",
-    };
+  const fromName = process.env.FROM_NAME || "Park & Travel";
+  const fromEmail = process.env.BREVO_SENDER_EMAIL || "";
+  const replyTo = process.env.BREVO_REPLY_TO_EMAIL || fromEmail;
 
-    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    
-    console.log("Email sent successfully:", result.body);
-    return { 
-      success: true, 
-      messageId: result.body?.messageId 
-    };
+  try {
+    const info = await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to: `"${data.fullName}" <${data.email}>`,
+      replyTo: replyTo,
+      subject: getEmailSubject(data),
+      html: generateBookingConfirmationHtml(data),
+      text: generateBookingConfirmationText(data),
+    });
+
+    console.log("Email sent successfully:", info.messageId);
+    return { success: true, messageId: info.messageId };
   } catch (error: any) {
-    const errorDetails = error.body || error.response?.data || { message: error.message };
-    console.error("Failed to send email. Error details:", errorDetails);
-    console.error("Sender email used:", process.env.BREVO_SENDER_EMAIL || "it.pal.service@gmail.com");
-    return { 
-      success: false, 
-      error: errorDetails?.message || error.message || "Failed to send email" 
-    };
+    console.error("Failed to send email:", error.message);
+    return { success: false, error: error.message || "Failed to send email" };
   }
 }
 
 export async function testEmailConnection(): Promise<{ success: boolean; error?: string }> {
-  if (!process.env.BREVO_API_KEY) {
-    return { success: false, error: "BREVO_API_KEY not configured" };
+  if (!process.env.SMTP_USER || !process.env.SMTP_KEY) {
+    return { success: false, error: "SMTP credentials not configured" };
   }
 
   try {
-    const accountApi = new brevo.AccountApi();
-    accountApi.setApiKey(
-      brevo.AccountApiApiKeys.apiKey,
-      process.env.BREVO_API_KEY
-    );
-    
-    const result = await accountApi.getAccount();
-    console.log("Brevo account connected:", result.body?.email);
+    await transporter.verify();
+    console.log("SMTP connection verified successfully");
     return { success: true };
   } catch (error: any) {
-    console.error("Failed to connect to Brevo:", error.body || error.message);
-    return { 
-      success: false, 
-      error: error.body?.message || error.message || "Connection failed" 
-    };
+    console.error("SMTP connection failed:", error.message);
+    return { success: false, error: error.message || "SMTP connection failed" };
   }
 }

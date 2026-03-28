@@ -104,8 +104,11 @@ Preferred communication style: Simple, everyday language.
 - **Brevo**: Transactional email service.
 
 ### Email Integration
-- **Provider**: Brevo (formerly Sendinblue).
-- **Library**: `@getbrevo/brevo` SDK.
+- **Provider**: Brevo (formerly Sendinblue) via SMTP.
+- **Library**: `nodemailer`.
+- **SMTP**: Host `smtp-relay.brevo.com`, port `587`, TLS required.
+- **Credentials**: `SMTP_USER` and `SMTP_KEY` secrets; `FROM_NAME`, `SMTP_HOST`, `SMTP_PORT` env vars.
+- **Sender**: `BREVO_SENDER_EMAIL` secret; reply-to from `BREVO_REPLY_TO_EMAIL` secret.
 - **Endpoints**: `POST /api/email/send-booking-confirmation`, `GET /api/email/test`.
 - **Auto-trigger**: Confirmation emails sent on booking creation and update.
 - **Templates**: "New Booking" and "Updated Booking" templates.

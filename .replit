@@ -62,3 +62,6 @@ channel = "stable-25_05"
 
 [userenv.shared]
 AUTH0_CLIENT_ID = "EhWlMzGUVKbSj5Ya5IIjzEMlFfFojoLJ"
+FROM_NAME = "Park&Travel Demo"
+SMTP_HOST = "smtp-relay.brevo.com"
+SMTP_PORT = "587"
