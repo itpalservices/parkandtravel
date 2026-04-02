@@ -511,14 +511,28 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       width: 520,
       didOpen: () => {
         const parkPlaceInput = document.getElementById('swal-park-place') as HTMLInputElement;
-        parkPlaceInput.addEventListener('input', function(this: HTMLInputElement) {
-          const cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-          let result = '';
-          if (cleaned.length >= 1 && /[A-Z]/.test(cleaned[0])) {
-            result = cleaned[0] + '-' + cleaned.slice(1).replace(/[^0-9]/g, '').slice(0, 3);
+        parkPlaceInput.value = '_-___';
+        const EDITABLE = [0, 2, 3, 4];
+        parkPlaceInput.addEventListener('keydown', (e: KeyboardEvent) => {
+          e.preventDefault();
+          const v = parkPlaceInput.value;
+          const chars = (v.length === 5 && v[1] === '-') ? v.split('') : '_-___'.split('');
+          if (e.key === 'Backspace' || e.key === 'Delete') {
+            for (let i = EDITABLE.length - 1; i >= 0; i--) {
+              if (chars[EDITABLE[i]] !== '_') { chars[EDITABLE[i]] = '_'; break; }
+            }
+          } else if (e.key.length === 1) {
+            for (const pos of EDITABLE) {
+              if (chars[pos] === '_') {
+                if (pos === 0 && /[A-Za-z]/.test(e.key)) { chars[0] = e.key.toUpperCase(); }
+                else if (pos !== 0 && /[0-9]/.test(e.key)) { chars[pos] = e.key; }
+                break;
+              }
+            }
           }
-          this.value = result;
+          parkPlaceInput.value = chars.join('');
         });
+        parkPlaceInput.addEventListener('paste', (e: Event) => e.preventDefault());
 
         const uploadArea = document.getElementById('swal-image-upload-area')!;
         const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
@@ -687,15 +701,35 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  onParkPlaceInput(event: Event): void {
+  onParkPlaceFocus(event: FocusEvent): void {
     const input = event.target as HTMLInputElement;
-    const cleaned = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    let result = '';
-    if (cleaned.length >= 1 && /[A-Z]/.test(cleaned[0])) {
-      result = cleaned[0] + '-' + cleaned.slice(1).replace(/[^0-9]/g, '').slice(0, 3);
+    if (!input.value || !(input.value.length === 5 && input.value[1] === '-')) {
+      input.value = '_-___';
+      this.parkPlace = '_-___';
     }
-    input.value = result;
-    this.parkPlace = result;
+  }
+
+  onParkPlaceKeydown(event: KeyboardEvent): void {
+    event.preventDefault();
+    const input = event.target as HTMLInputElement;
+    const v = input.value;
+    const EDITABLE = [0, 2, 3, 4];
+    const chars = (v.length === 5 && v[1] === '-') ? v.split('') : '_-___'.split('');
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      for (let i = EDITABLE.length - 1; i >= 0; i--) {
+        if (chars[EDITABLE[i]] !== '_') { chars[EDITABLE[i]] = '_'; break; }
+      }
+    } else if (event.key.length === 1) {
+      for (const pos of EDITABLE) {
+        if (chars[pos] === '_') {
+          if (pos === 0 && /[A-Za-z]/.test(event.key)) { chars[0] = event.key.toUpperCase(); }
+          else if (pos !== 0 && /[0-9]/.test(event.key)) { chars[pos] = event.key; }
+          break;
+        }
+      }
+    }
+    input.value = chars.join('');
+    this.parkPlace = chars.join('');
   }
 
   private handleImageFiles(
