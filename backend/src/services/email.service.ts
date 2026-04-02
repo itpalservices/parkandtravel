@@ -328,6 +328,17 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
               <p style="margin: 0 0 20px 0; color: #006B8F; font-size: 16px; font-weight: 600;">
                 &#x1F4DE; Contact Park & Travel
               </p>
+              <table role="presentation" style="margin: 0 auto 20px auto; border-collapse: collapse;">
+                <tr>
+                  <td align="center">
+                    <a href="https://www.google.com/maps/place/Park+%26+Travel/@34.8768671,33.599746,17z/data=!3m1!4b1!4m6!3m5!1s0x14e09cc6984f5de5:0x4f64d897eb55fa85!8m2!3d34.8768671!4d33.6023209!16s%2Fg%2F11dxm5p8qt?authuser=0&entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D"
+                       target="_blank"
+                       style="display: inline-block; background-color: #006B8F; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 8px; letter-spacing: 0.3px;">
+                      &#x1F4CD; View Our Location on Google Maps
+                    </a>
+                  </td>
+                </tr>
+              </table>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 &copy; ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
                 Secure Airport Parking Services
@@ -415,6 +426,13 @@ ${data.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
       text += `Your booking has been created. You can complete the payment at your convenience.\n`;
     }
   }
+
+  text += `
+FIND US
+-------
+View our location on Google Maps:
+https://www.google.com/maps/place/Park+%26+Travel/@34.8768671,33.599746,17z/data=!3m1!4b1!4m6!3m5!1s0x14e09cc6984f5de5:0x4f64d897eb55fa85!8m2!3d34.8768671!4d33.6023209!16s%2Fg%2F11dxm5p8qt?authuser=0&entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D
+`;
 
   return text;
 }
