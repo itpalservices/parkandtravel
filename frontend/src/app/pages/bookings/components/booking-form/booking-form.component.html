@@ -391,6 +391,7 @@
                   <input
                     class="form-control date-input"
                     [class.is-invalid]="hasError('checkInDate')"
+                    [class.disabled-field]="isBookingParked"
                     [value]="formatDate(bookingForm.get('checkInDate')?.value)"
                     placeholder="dd/MM/yyyy"
                     ngbDatepicker
@@ -407,6 +408,7 @@
                     type="button"
                     (click)="dpCheckIn.toggle()"
                     [disabled]="isBookingParked"
+                    [class.disabled-field]="isBookingParked"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
