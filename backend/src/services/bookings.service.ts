@@ -1382,4 +1382,19 @@ export async function updateParkedBooking(
   };
 }
 
+export async function checkParkPlaceAvailability(
+  parkPlace: string,
+  excludeBookingId: string,
+): Promise<{ available: boolean }> {
+  const existing = await prisma.booking.findFirst({
+    where: {
+      parkPlace,
+      bookingStatusId: 'bookingStatus_parked',
+      id: { not: excludeBookingId },
+      deleteflag: 0,
+    },
+  });
+  return { available: !existing };
+}
+
 export { isValidDateFormat, isDateInPast, isValidUUID };

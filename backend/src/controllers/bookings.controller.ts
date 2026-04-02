@@ -464,6 +464,25 @@ export async function updateBooking(
   }
 }
 
+export async function checkParkPlaceAvailability(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const { parkPlace, excludeBookingId } = req.query as { parkPlace?: string; excludeBookingId?: string };
+    if (!parkPlace || !excludeBookingId) {
+      res.status(400).json({ error: 'parkPlace and excludeBookingId are required' });
+      return;
+    }
+    const { checkParkPlaceAvailability: checkFn } = await import('../services/bookings.service');
+    const result = await checkFn(parkPlace, excludeBookingId);
+    res.json({ success: true, available: result.available });
+  } catch (error) {
+    console.error('Error checking park place availability:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function updateParkedBooking(
   req: Request,
   res: Response,

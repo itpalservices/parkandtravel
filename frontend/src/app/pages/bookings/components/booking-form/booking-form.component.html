@@ -81,7 +81,9 @@
                   class="form-control park-place-input"
                   [(ngModel)]="parkPlace"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="e.g., A15, B22"
+                  placeholder="_-___"
+                  maxlength="5"
+                  (input)="onParkPlaceInput($event)"
                 />
               </div>
             }

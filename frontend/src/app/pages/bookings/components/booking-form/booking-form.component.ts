@@ -20,7 +20,7 @@ import {
 import { ApiService } from '../../../../core/services/api.service';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { FormFieldErrorComponent } from '../../../../shared/components/form-field-error/form-field-error.component';
-import { Subscription, take } from 'rxjs';
+import { Subscription, take, firstValueFrom } from 'rxjs';
 import { BookingDetails, ParkingType, ParkingTypesResponse } from '../../../../shared';
 import { PhoneCode } from '../../../../shared/models/phone-codes.model';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
@@ -457,7 +457,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           <div style="display: flex; gap: 12px; margin-bottom: 16px;">
             <div style="flex: 1;">
               <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
-              <input id="swal-park-place" class="swal2-input" placeholder="e.g., A15, B22" style="margin: 0; width: 100%; box-sizing: border-box;" />
+              <input id="swal-park-place" class="swal2-input" placeholder="_-___" maxlength="5" style="margin: 0; width: 100%; box-sizing: border-box;" />
             </div>
             <div style="flex: 1;">
               <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Km</label>
@@ -510,6 +510,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       confirmButtonColor: '#006B8F',
       width: 520,
       didOpen: () => {
+        const parkPlaceInput = document.getElementById('swal-park-place') as HTMLInputElement;
+        parkPlaceInput.addEventListener('input', function(this: HTMLInputElement) {
+          const cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+          let result = '';
+          if (cleaned.length >= 1 && /[A-Z]/.test(cleaned[0])) {
+            result = cleaned[0] + '-' + cleaned.slice(1).replace(/[^0-9]/g, '').slice(0, 3);
+          }
+          this.value = result;
+        });
+
         const uploadArea = document.getElementById('swal-image-upload-area')!;
         const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
         const previewContainer = document.getElementById('swal-image-preview')!;
@@ -551,16 +561,32 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           }
         });
       },
-      preConfirm: () => {
+      preConfirm: async () => {
         const parkPlace = (
           document.getElementById('swal-park-place') as HTMLInputElement
         ).value.trim();
-        const adultsStr = (document.getElementById('swal-adults') as HTMLInputElement).value.trim();
-        const adults = parseInt(adultsStr, 10);
         if (!parkPlace) {
           Swal.showValidationMessage('Parking place is required');
           return false;
         }
+        if (!/^[A-Z]-\d{3}$/.test(parkPlace)) {
+          Swal.showValidationMessage('Parking place must be in format A-000 (e.g., A-001)');
+          return false;
+        }
+        try {
+          const check = await firstValueFrom(
+            this.bookingsService.checkParkPlaceAvailability(parkPlace, this.bookingId ?? '')
+          );
+          if (!check.available) {
+            Swal.showValidationMessage('This parking place is already occupied by another vehicle');
+            return false;
+          }
+        } catch {
+          Swal.showValidationMessage('Could not verify parking place availability');
+          return false;
+        }
+        const adultsStr = (document.getElementById('swal-adults') as HTMLInputElement).value.trim();
+        const adults = parseInt(adultsStr, 10);
         if (!adultsStr || isNaN(adults) || adults < 1) {
           Swal.showValidationMessage('Adults is required (minimum 1)');
           return false;
@@ -659,6 +685,17 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         });
       },
     });
+  }
+
+  onParkPlaceInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    let result = '';
+    if (cleaned.length >= 1 && /[A-Z]/.test(cleaned[0])) {
+      result = cleaned[0] + '-' + cleaned.slice(1).replace(/[^0-9]/g, '').slice(0, 3);
+    }
+    input.value = result;
+    this.parkPlace = result;
   }
 
   private handleImageFiles(

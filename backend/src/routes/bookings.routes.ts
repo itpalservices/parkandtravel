@@ -8,6 +8,7 @@ import {
   updateBooking,
   updateBookingStatus,
   updateParkedBooking,
+  checkParkPlaceAvailability,
 } from "../controllers/bookings.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -15,6 +16,7 @@ const router = Router();
 
 router.get("/", checkJwt, listBookings);
 router.post("/", checkJwt, createBooking);
+router.get("/check-park-place", checkJwt, checkParkPlaceAvailability);
 router.get("/:id", checkJwt, getBooking);
 router.put("/:id", checkJwt, updateBooking);
 router.patch("/:id/status", checkJwt, updateBookingStatus);

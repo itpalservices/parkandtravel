@@ -90,4 +90,11 @@ export class BookingsService {
       `${getApiBaseUrl()}/upload/${bookingId}/images`
     );
   }
+
+  checkParkPlaceAvailability(parkPlace: string, excludeBookingId: string): Observable<{ success: boolean; available: boolean }> {
+    return this.http.get<{ success: boolean; available: boolean }>(
+      `${this.baseUrl}/check-park-place`,
+      { params: { parkPlace, excludeBookingId } }
+    );
+  }
 }
