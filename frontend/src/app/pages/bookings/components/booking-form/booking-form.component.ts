@@ -1806,14 +1806,34 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  saveParkedBooking(): void {
+  async saveParkedBooking(): Promise<void> {
     if (!this.bookingId || !this.isBookingParked) return;
+
+    const parkPlace = this.parkPlace?.trim() ?? '';
+    if (!parkPlace || parkPlace === '_-___') {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Parking place is required', showConfirmButton: false, timer: 3500, timerProgressBar: true });
+      return;
+    }
+    if (!/^[A-Z]-\d{3}$/.test(parkPlace)) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Parking place must be in format A-000 (e.g., A-001)', showConfirmButton: false, timer: 3500, timerProgressBar: true });
+      return;
+    }
+    try {
+      const check = await firstValueFrom(this.bookingsService.checkParkPlaceAvailability(parkPlace, this.bookingId));
+      if (!check.available) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'This parking place is already occupied by another vehicle', showConfirmButton: false, timer: 3500, timerProgressBar: true });
+        return;
+      }
+    } catch {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Could not verify parking place availability', showConfirmButton: false, timer: 3500, timerProgressBar: true });
+      return;
+    }
 
     this.submitting = true;
     const formValue = this.bookingForm.getRawValue();
 
     const updateData: Record<string, any> = {
-      parkPlace: this.parkPlace.trim(),
+      parkPlace: parkPlace,
       pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
       flightNumber: this.returnDetailsEnabled ? formValue.flightNumber?.trim() || null : null,
       checkOutDate:
