@@ -1373,6 +1373,62 @@ export async function updateParkedBooking(
     data: updateData,
   });
 
+  const emailToSend = existingBooking.email;
+  if (emailToSend) {
+    const fullName = `${existingBooking.name} ${existingBooking.surname}`.trim();
+    const checkInDate = existingBooking.dateFrom.toISOString().split("T")[0];
+    const checkInTime = existingBooking.timeFrom
+      ? existingBooking.timeFrom.toISOString().split("T")[1].substring(0, 5)
+      : "12:00";
+    const resolvedCheckOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
+    const checkOutDateStr = resolvedCheckOutDate ? resolvedCheckOutDate.toISOString().split("T")[0] : undefined;
+    const resolvedCheckOutTime = (updateData.timeTo !== undefined ? updateData.timeTo : existingBooking.timeTo) as Date | null;
+    const checkOutTimeStr = resolvedCheckOutTime
+      ? resolvedCheckOutTime.toISOString().split("T")[1].substring(0, 5)
+      : undefined;
+    const resolvedFlightNumber = (updateData.returnFlight !== undefined ? updateData.returnFlight : existingBooking.returnFlight) as string | null;
+    const resolvedPickUpOption = (updateData.pickUpOption !== undefined ? updateData.pickUpOption : existingBooking.pickUpOption) as string | null;
+
+    const parkingType = existingBooking.parkingTypeId
+      ? await prisma.parkingType.findUnique({
+          where: { id: existingBooking.parkingTypeId },
+          select: { name: true },
+        })
+      : null;
+
+    console.log(`Sending parked booking update email to: ${emailToSend}`);
+    getEmailDescription().then((emailDescription) => {
+      sendBookingConfirmationEmail({
+        email: emailToSend,
+        fullName,
+        checkInDate,
+        checkInTime,
+        checkOutDate: checkOutDateStr,
+        checkOutTime: checkOutTimeStr,
+        licensePlate: existingBooking.plateNo || "",
+        vehicleBrand: existingBooking.carBrand || "",
+        vehicleModel: existingBooking.carModel || undefined,
+        vehicleColor: existingBooking.carColor || undefined,
+        parkingType: parkingType?.name || existingBooking.parkingTypeId || "",
+        washService: (updateData.washService as boolean) ?? existingBooking.washService,
+        flightNumber: resolvedFlightNumber || undefined,
+        dropOffOption: existingBooking.dropOffOption || undefined,
+        pickUpOption: resolvedPickUpOption || undefined,
+        finalPrice,
+        isUpdate: true,
+        emailDescription,
+      }).then((result) => {
+        if (result.success) {
+          console.log(`Parked booking update email sent successfully to ${emailToSend}, messageId: ${result.messageId}`);
+        } else {
+          console.error(`Failed to send parked booking update email to ${emailToSend}: ${result.error}`);
+        }
+      });
+    }).catch((err) => {
+      console.error("Failed to send parked booking update email:", err);
+    });
+  }
+
   return {
     id: updatedBooking.id,
     parkPlace: updatedBooking.parkPlace,
