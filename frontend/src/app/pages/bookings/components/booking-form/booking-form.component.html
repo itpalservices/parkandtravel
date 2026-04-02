@@ -82,8 +82,10 @@
                   [(ngModel)]="parkPlace"
                   [ngModelOptions]="{ standalone: true }"
                   maxlength="5"
-                  (focus)="onParkPlaceFocus($event)"
-                  (keydown)="onParkPlaceKeydown($event)"
+                  [disabled]="isRegularUser"
+                  [class.disabled-field]="isRegularUser"
+                  (focus)="!isRegularUser && onParkPlaceFocus($event)"
+                  (keydown)="!isRegularUser && onParkPlaceKeydown($event)"
                   (paste)="$event.preventDefault()"
                 />
               </div>

@@ -27,9 +27,7 @@
           @for (booking of bookings; track booking.id) {
             <tr>
               @if (
-                (((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') ||
-                  (!isAdmin && !isDriver && booking.bookingStatusId === 'bookingStatus_created') ||
-                  (!isAdmin && !isDriver && !booking.dateTo))
+                booking.bookingStatusId !== 'bookingStatus_completed'
               ) {
                 <td class="actions-col">
                   <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
@@ -457,9 +455,7 @@
               }
             </div>
             @if (
-              (((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') ||
-                (!isAdmin && !isDriver && booking.bookingStatusId === 'bookingStatus_created') ||
-                (!isAdmin && !isDriver && !booking.dateTo))
+              booking.bookingStatusId !== 'bookingStatus_completed'
             ) {
               <div class="actions-wrapper" ngbDropdown placement="bottom-end" container="body">
                 <button class="btn btn-icon" ngbDropdownToggle>
