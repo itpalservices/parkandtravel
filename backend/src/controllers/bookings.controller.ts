@@ -268,11 +268,6 @@ export async function createBooking(
   try {
     const authUser = req.authUser as AuthUser | undefined;
     
-    if (authUser?.role === "driver") {
-      res.status(403).json({ message: "Drivers are not allowed to create bookings" });
-      return;
-    }
-
     const {
       fullName,
       email,

@@ -208,21 +208,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.roleService
       .getUserRole()
       .pipe(take(1))
-      .subscribe((roleInfo) => {
-        if (roleInfo.isDriver && !this.isEditMode) {
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'warning',
-            title: 'Drivers cannot create bookings',
-            showConfirmButton: false,
-            timer: 4000,
-            timerProgressBar: true,
-          });
-          this.router.navigate(['/admin/bookings']);
-          return;
-        }
-
+      .subscribe(() => {
         this.loadParkingTypes();
         this.loadPhoneCodes();
         this.setupCheckInDateListener();
