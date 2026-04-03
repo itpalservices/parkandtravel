@@ -125,7 +125,10 @@ export async function updateSettingsHandler(
       priceIncrementsCovered: undefined,
       priceIncrementsUncovered: undefined,
       mandatoryPayment: data.mandatoryPayment,
-      airportDelivery: data.airportDelivery !== undefined ? Boolean(data.airportDelivery) : true
+      airportDelivery: data.airportDelivery !== undefined ? Boolean(data.airportDelivery) : true,
+      availableAfter: data.availableAfter !== null && data.availableAfter !== undefined
+        ? Math.max(0, Math.floor(Number(data.availableAfter)))
+        : 0
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {

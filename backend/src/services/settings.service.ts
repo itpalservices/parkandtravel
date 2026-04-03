@@ -13,6 +13,7 @@ export interface ConfigurationSettings {
   priceIncrementsUncovered: number[] | null;
   mandatoryPayment: boolean;
   airportDelivery: boolean;
+  availableAfter: number;
 }
 
 const SETTING_KEYS = {
@@ -27,7 +28,8 @@ const SETTING_KEYS = {
   priceIncrementsCovered: "configurationSetting_priceIncrementsCovered",
   priceIncrementsUncovered: "configurationSetting_priceIncrementsUncovered",
   mandatoryPayment: "configurationSetting_mandatoryPrePayment",
-  airportDelivery: "configurationSetting_delivery"
+  airportDelivery: "configurationSetting_delivery",
+  availableAfter: "configurationSetting_availableAfter"
 };
 
 interface SettingRow {
@@ -61,7 +63,8 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsCovered)),
     priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsUncovered)),
     mandatoryPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryPayment)),
-    airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery))
+    airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery)),
+    availableAfter: parseIntOrNull(settingsMap.get(SETTING_KEYS.availableAfter)) ?? 0
   };
 }
 
@@ -158,6 +161,13 @@ export async function updateSettings(
     });
   }
 
+  if (data.availableAfter !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.availableAfter,
+      value: data.availableAfter !== null ? String(Math.max(0, Math.floor(Number(data.availableAfter)))) : "0",
+    });
+  }
+
   for (const update of updates) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO configuration_settings (id, value) VALUES ($1, $2)
@@ -191,6 +201,16 @@ function parseBoolean(value: string | null | undefined): boolean {
   if (normalized === "false" || normalized === "0") return false;
 
   return false;
+}
+
+export async function getAvailableAfterDays(): Promise<number> {
+  const result = await prisma.$queryRawUnsafe<{ value: string | null }[]>(
+    `SELECT value FROM configuration_settings WHERE id = $1`,
+    'configurationSetting_availableAfter'
+  );
+  if (!result.length || result[0].value === null) return 0;
+  const parsed = parseInt(result[0].value, 10);
+  return isNaN(parsed) || parsed < 0 ? 0 : parsed;
 }
 
 function parseJsonArrayOrNull(value: string | null | undefined): number[] | null {

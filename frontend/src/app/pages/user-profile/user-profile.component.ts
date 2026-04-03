@@ -64,6 +64,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   settingsSubmitted = false;
   mandatoryPayment = false;
   airportDelivery = true;
+  availableAfter = 0;
   priceIncrementsCovered: number[] = [];
   priceIncrementsUncovered: number[] = [];
   newIncrementCovered: number | null = null;
@@ -151,6 +152,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       priceCovered: [null, [Validators.min(1)]],
       priceWash: [null, [Validators.min(1)]],
       dayEnd: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
+      availableAfter: [0, [Validators.min(0), Validators.pattern(/^\d*$/)]],
       deliveryFee: [null, [Validators.min(0)]],
       emailDescription: [null],
       mandatoryPayment: [false]
@@ -196,6 +198,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           priceCovered: settings.priceCovered?.toFixed(2),
           priceWash: settings.priceWash?.toFixed(2),
           dayEnd: settings.dayEnd,
+          availableAfter: settings.availableAfter ?? 0,
           deliveryFee: settings.deliveryFee?.toFixed(2),
           emailDescription: settings.emailDescription,
           mandatoryPayment: settings.mandatoryPayment
@@ -325,7 +328,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       priceIncrementsCovered: this.priceIncrementsCovered.length > 0 ? this.priceIncrementsCovered : null,
       priceIncrementsUncovered: this.priceIncrementsUncovered.length > 0 ? this.priceIncrementsUncovered : null,
       mandatoryPayment: this.mandatoryPayment,
-      airportDelivery: this.airportDelivery
+      airportDelivery: this.airportDelivery,
+      availableAfter: formValue.availableAfter !== '' && formValue.availableAfter !== null
+        ? Math.max(0, Math.floor(Number(formValue.availableAfter)))
+        : 0
     };
 
     this.settingsService.updateSettings(data).subscribe({

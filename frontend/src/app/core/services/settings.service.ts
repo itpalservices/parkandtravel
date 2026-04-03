@@ -15,6 +15,7 @@ export interface ConfigurationSettings {
   priceIncrementsUncovered: number[] | null;
   mandatoryPayment: boolean;
   airportDelivery: boolean;
+  availableAfter: number;
 }
 
 @Injectable({

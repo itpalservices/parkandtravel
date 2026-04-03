@@ -441,6 +441,7 @@
                   [class.is-invalid]="hasError('checkInTime')"
                   formControlName="checkInTime"
                   step="60"
+                  [min]="minCheckInTime"
                 />
                 <app-form-field-error [control]="f['checkInTime']" fieldName="Check-in Time">
                 </app-form-field-error>

@@ -12,6 +12,7 @@ import {
   updateBookingStatus as updateBookingStatusService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
+import { getAvailableAfterDays } from "../services/settings.service";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
   try {
@@ -218,6 +219,18 @@ export async function createGuestBooking(
       return;
     }
 
+    const availableAfterDays = await getAvailableAfterDays();
+    const daysRequired = Math.max(1, availableAfterDays);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const minDate = new Date(today);
+    minDate.setDate(minDate.getDate() + daysRequired);
+    const minDateStr = minDate.toISOString().split('T')[0];
+    if (checkInDate < minDateStr) {
+      res.status(400).json({ error: `Bookings must be made at least ${daysRequired} day(s) in advance` });
+      return;
+    }
+
     const result = await createGuestBookingService({
       fullName,
       email,
@@ -294,6 +307,21 @@ export async function createBooking(
     ) {
       res.status(400).json({ error: "Missing required fields" });
       return;
+    }
+
+    if (authUser?.role === "user") {
+      const availableAfterDays = await getAvailableAfterDays();
+      if (availableAfterDays > 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const minDate = new Date(today);
+        minDate.setDate(minDate.getDate() + availableAfterDays);
+        const minDateStr = minDate.toISOString().split('T')[0];
+        if (checkInDate < minDateStr) {
+          res.status(400).json({ error: `Bookings must be made at least ${availableAfterDays} day(s) in advance` });
+          return;
+        }
+      }
     }
 
     const isAdmin = authUser?.role === "admin";

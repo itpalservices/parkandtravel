@@ -58,6 +58,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   deliveryFee: number | null = null;
   mandatoryPrePayment = false;
   airportDeliveryEnabled = true;
+  availableAfterDays = 0;
+  minCheckInTime = '';
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -127,6 +129,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
           if (checkOutDate && this.compareDates(checkOutDate, nextDay) < 0) {
             this.bookingForm.patchValue({ checkOutDate: nextDay });
           }
+          this.updateMinCheckInTime();
           this.checkAvailability();
         }
       });
@@ -191,7 +194,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.deliveryFee = response.deliveryFee;
         this.mandatoryPrePayment = response.mandatoryPrePayment ?? false;
         this.airportDeliveryEnabled = response.airportDeliveryEnabled ?? true;
+        this.availableAfterDays = response.availableAfter ?? 0;
         this.applyAirportDeliveryState();
+        this.applyAvailableAfterRestriction();
         if (response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
           this.checkAvailability();
@@ -222,6 +227,55 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     } else {
       dropOff?.enable();
       pickUp?.enable();
+    }
+  }
+
+  private applyAvailableAfterRestriction(): void {
+    const today = this.calendar.getToday();
+    const daysAhead = Math.max(1, this.availableAfterDays);
+    const newMinDate = this.calendar.getNext(today, 'd', daysAhead);
+
+    this.minDate = newMinDate;
+    this.checkOutMinDate = this.calendar.getNext(newMinDate, 'd', 1);
+
+    const currentCheckIn = this.bookingForm.get('checkInDate')?.value;
+    if (!currentCheckIn || this.compareDates(currentCheckIn, newMinDate) < 0) {
+      const newDefaultCheckOut = this.calendar.getNext(newMinDate, 'd', 1);
+      this.bookingForm.patchValue({
+        checkInDate: newMinDate,
+        checkOutDate: newDefaultCheckOut,
+      });
+    }
+
+    if (this.availableAfterDays > 0) {
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      this.bookingForm.patchValue({ checkInTime: currentTime });
+    }
+
+    this.updateMinCheckInTime();
+  }
+
+  private updateMinCheckInTime(): void {
+    if (this.availableAfterDays === 0) {
+      this.minCheckInTime = '';
+      return;
+    }
+    const selectedDate = this.bookingForm.get('checkInDate')?.value;
+    if (!selectedDate) {
+      this.minCheckInTime = '';
+      return;
+    }
+    const minD = this.minDate;
+    if (
+      selectedDate.year === minD.year &&
+      selectedDate.month === minD.month &&
+      selectedDate.day === minD.day
+    ) {
+      const now = new Date();
+      this.minCheckInTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    } else {
+      this.minCheckInTime = '';
     }
   }
 

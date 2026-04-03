@@ -440,6 +440,26 @@
               </div>
 
               <div class="settings-group">
+                <h4>Booking Lead Time</h4>
+
+                <div class="form-group">
+                  <label for="availableAfter">Days in Advance</label>
+                  <div class="input-group" style="max-width: 200px;">
+                    <input
+                      type="number"
+                      id="availableAfter"
+                      class="form-control"
+                      formControlName="availableAfter"
+                      placeholder="0"
+                      min="0"
+                    />
+                    <span class="input-group-text">days</span>
+                  </div>
+                  <small class="form-text text-muted">Minimum number of days in advance that customers can make a booking. Set to 0 to allow same-day bookings.</small>
+                </div>
+              </div>
+
+              <div class="settings-group">
                 <h4>Car Wash Service</h4>
 
                 <div class="wash-service-toggle">

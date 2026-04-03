@@ -980,6 +980,7 @@ export interface ParkingTypesResponse {
   deliveryFee: number | null;
   mandatoryPrePayment: boolean;
   airportDeliveryEnabled: boolean;
+  availableAfter: number;
 }
 
 export async function getParkingTypes(): Promise<ParkingTypesResponse> {
@@ -988,7 +989,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   });
 
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
@@ -998,7 +999,8 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     'configurationSetting_priceIncrementsCovered',
     'configurationSetting_priceIncrementsUncovered',
     'configurationSetting_mandatoryPrePayment',
-    'configurationSetting_delivery'
+    'configurationSetting_delivery',
+    'configurationSetting_availableAfter'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -1031,6 +1033,12 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   const airportDeliveryEnabled = deliveryRaw !== null && deliveryRaw !== undefined
     ? parseBooleanSetting(deliveryRaw)
     : true;
+  const availableAfterRaw = settingsMap.get('configurationSetting_availableAfter');
+  const availableAfter = (() => {
+    if (availableAfterRaw === null || availableAfterRaw === undefined) return 0;
+    const parsed = parseInt(availableAfterRaw, 10);
+    return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+  })();
 
   const filteredTypes = types.filter((type) => {
     if (type.id === 'parkingType_uncovered') {
@@ -1058,6 +1066,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     deliveryFee,
     mandatoryPrePayment,
     airportDeliveryEnabled,
+    availableAfter,
   };
 }
 
