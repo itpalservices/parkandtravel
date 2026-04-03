@@ -979,6 +979,7 @@ export interface ParkingTypesResponse {
   washPrice: number | null;
   deliveryFee: number | null;
   mandatoryPrePayment: boolean;
+  airportDeliveryEnabled: boolean;
 }
 
 export async function getParkingTypes(): Promise<ParkingTypesResponse> {
@@ -987,7 +988,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   });
 
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
@@ -996,7 +997,8 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     'configurationSetting_deliveryFee',
     'configurationSetting_priceIncrementsCovered',
     'configurationSetting_priceIncrementsUncovered',
-    'configurationSetting_mandatoryPrePayment'
+    'configurationSetting_mandatoryPrePayment',
+    'configurationSetting_delivery'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -1025,6 +1027,10 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   const incrementsCovered = parseJsonArray(settingsMap.get('configurationSetting_priceIncrementsCovered'));
   const incrementsUncovered = parseJsonArray(settingsMap.get('configurationSetting_priceIncrementsUncovered'));
   const mandatoryPrePayment = parseBooleanSetting(settingsMap.get('configurationSetting_mandatoryPrePayment'));
+  const deliveryRaw = settingsMap.get('configurationSetting_delivery');
+  const airportDeliveryEnabled = deliveryRaw !== null && deliveryRaw !== undefined
+    ? parseBooleanSetting(deliveryRaw)
+    : true;
 
   const filteredTypes = types.filter((type) => {
     if (type.id === 'parkingType_uncovered') {
@@ -1051,6 +1057,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     washPrice: priceWash,
     deliveryFee,
     mandatoryPrePayment,
+    airportDeliveryEnabled,
   };
 }
 

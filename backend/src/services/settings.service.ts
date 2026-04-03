@@ -12,6 +12,7 @@ export interface ConfigurationSettings {
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
   mandatoryPayment: boolean;
+  airportDelivery: boolean;
 }
 
 const SETTING_KEYS = {
@@ -25,7 +26,8 @@ const SETTING_KEYS = {
   emailDescription: "configurationSetting_emailDescription",
   priceIncrementsCovered: "configurationSetting_priceIncrementsCovered",
   priceIncrementsUncovered: "configurationSetting_priceIncrementsUncovered",
-  mandatoryPayment: "configurationSetting_mandatoryPrePayment"
+  mandatoryPayment: "configurationSetting_mandatoryPrePayment",
+  airportDelivery: "configurationSetting_delivery"
 };
 
 interface SettingRow {
@@ -58,7 +60,8 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     emailDescription: settingsMap.get(SETTING_KEYS.emailDescription) ?? null,
     priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsCovered)),
     priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsUncovered)),
-    mandatoryPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryPayment))
+    mandatoryPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryPayment)),
+    airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery))
   };
 }
 
@@ -145,6 +148,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.mandatoryPayment,
       value: data.mandatoryPayment !== null ? JSON.stringify(data.mandatoryPayment) : null,
+    });
+  }
+
+  if (data.airportDelivery !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.airportDelivery,
+      value: JSON.stringify(data.airportDelivery),
     });
   }
 

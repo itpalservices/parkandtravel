@@ -14,6 +14,7 @@ export interface ConfigurationSettings {
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
   mandatoryPayment: boolean;
+  airportDelivery: boolean;
 }
 
 @Injectable({

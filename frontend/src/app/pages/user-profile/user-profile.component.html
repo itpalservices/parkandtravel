@@ -480,6 +480,28 @@
               </div>
 
               <div class="settings-group">
+                <h4>Airport Delivery</h4>
+
+                <div class="wash-service-toggle">
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      [checked]="airportDelivery"
+                      (change)="airportDelivery=!airportDelivery"
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">
+                    @if (airportDelivery) {
+                      Airport delivery is enabled
+                    } @else {
+                      Airport delivery is disabled
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="settings-group">
                 <h4>Delivery Fee</h4>
                 <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
                   Fee for delivering a car from/to the airport. Leave empty if not applicable.

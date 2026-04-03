@@ -57,6 +57,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   returnDetailsEnabled= false;
   deliveryFee: number | null = null;
   mandatoryPrePayment = false;
+  airportDeliveryEnabled = true;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -189,6 +190,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.washPrice = response.washPrice;
         this.deliveryFee = response.deliveryFee;
         this.mandatoryPrePayment = response.mandatoryPrePayment ?? false;
+        this.airportDeliveryEnabled = response.airportDeliveryEnabled ?? true;
+        this.applyAirportDeliveryState();
         if (response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
           this.checkAvailability();
@@ -206,6 +209,20 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.checkAvailability();
       },
     });
+  }
+
+  private applyAirportDeliveryState(): void {
+    const dropOff = this.bookingForm.get('dropOffOption');
+    const pickUp = this.bookingForm.get('pickUpOption');
+    if (!this.airportDeliveryEnabled) {
+      dropOff?.setValue('self_drive');
+      dropOff?.disable();
+      pickUp?.setValue('self_pickup');
+      pickUp?.disable();
+    } else {
+      dropOff?.enable();
+      pickUp?.enable();
+    }
   }
 
   toggleWashService(): void {
@@ -379,7 +396,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const formValue = this.bookingForm.value;
+    const formValue = this.bookingForm.getRawValue();
     const bookingData: Record<string, any> = {
       fullName: formValue.fullName.trim(),
       email: formValue.email.trim(),

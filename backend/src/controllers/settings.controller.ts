@@ -124,7 +124,8 @@ export async function updateSettingsHandler(
         : null,
       priceIncrementsCovered: undefined,
       priceIncrementsUncovered: undefined,
-      mandatoryPayment: data.mandatoryPayment
+      mandatoryPayment: data.mandatoryPayment,
+      airportDelivery: data.airportDelivery !== undefined ? Boolean(data.airportDelivery) : true
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {

@@ -88,6 +88,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   washServiceEnabled = false;
   returnDetailsEnabled = false;
   deliveryFee: number | null = null;
+  airportDeliveryEnabled = true;
 
   minDate: NgbDateStruct;
   checkOutMinDate: NgbDateStruct;
@@ -845,6 +846,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         } else if (newStatusId === 'bookingStatus_created') {
           this.parkPlace = '';
           this.enableFieldsForNonParkedBooking();
+          this.applyAirportDeliveryState();
         } else if (newStatusId === 'bookingStatus_completed') {
           Swal.fire({
             toast: true,
@@ -1375,6 +1377,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.washPrice = response.washPrice;
         this.deliveryFee = response.deliveryFee;
         this.mandatoryPrePayment = response.mandatoryPrePayment ?? false;
+        this.airportDeliveryEnabled = response.airportDeliveryEnabled ?? true;
+        this.applyAirportDeliveryState();
 
         if (this.existingBooking?.parkingTypeId) {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
@@ -1396,6 +1400,20 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         }
       },
     });
+  }
+
+  private applyAirportDeliveryState(): void {
+    const dropOff = this.bookingForm.get('dropOffOption');
+    const pickUp = this.bookingForm.get('pickUpOption');
+    if (!this.airportDeliveryEnabled) {
+      dropOff?.setValue('self_drive');
+      dropOff?.disable();
+      pickUp?.setValue('self_pickup');
+      pickUp?.disable();
+    } else {
+      dropOff?.enable();
+      pickUp?.enable();
+    }
   }
 
   toggleWashService(): void {

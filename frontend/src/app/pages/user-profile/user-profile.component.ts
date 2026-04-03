@@ -63,6 +63,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   offerWashService = false;
   settingsSubmitted = false;
   mandatoryPayment = false;
+  airportDelivery = true;
   priceIncrementsCovered: number[] = [];
   priceIncrementsUncovered: number[] = [];
   newIncrementCovered: number | null = null;
@@ -200,6 +201,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           mandatoryPayment: settings.mandatoryPayment
         });
         this.mandatoryPayment = settings.mandatoryPayment;
+        this.airportDelivery = settings.airportDelivery ?? true;
         this.offerWashService = settings.priceWash !== null;
         this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
         this.priceIncrementsUncovered = settings.priceIncrementsUncovered || [];
@@ -322,7 +324,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           : null,
       priceIncrementsCovered: this.priceIncrementsCovered.length > 0 ? this.priceIncrementsCovered : null,
       priceIncrementsUncovered: this.priceIncrementsUncovered.length > 0 ? this.priceIncrementsUncovered : null,
-      mandatoryPayment: this.mandatoryPayment
+      mandatoryPayment: this.mandatoryPayment,
+      airportDelivery: this.airportDelivery
     };
 
     this.settingsService.updateSettings(data).subscribe({

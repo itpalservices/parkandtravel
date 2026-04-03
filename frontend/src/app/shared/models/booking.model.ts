@@ -66,6 +66,7 @@ export interface ParkingTypesResponse {
   washPrice: number | null;
   deliveryFee: number | null;
   mandatoryPrePayment: boolean;
+  airportDeliveryEnabled: boolean;
 }
 
 export interface HistoryBooking {
