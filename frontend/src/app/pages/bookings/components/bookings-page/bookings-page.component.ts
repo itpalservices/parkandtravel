@@ -128,6 +128,7 @@ export class BookingsPageComponent implements OnInit {
           fullName,
           booking.email,
           booking.phone,
+          booking.mobile,
           booking.plateNo,
           booking.returnFlight,
           booking.parkingType,

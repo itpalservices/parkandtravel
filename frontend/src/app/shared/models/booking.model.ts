@@ -4,6 +4,7 @@ export interface Booking {
   surname: string;
   email: string;
   phone: string | null;
+  mobile: string | null;
   plateNo: string;
   carBrand: string | null;
   carModel: string | null;
