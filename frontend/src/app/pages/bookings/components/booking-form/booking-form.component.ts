@@ -1481,12 +1481,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const pickUp = this.bookingForm.get('pickUpOption');
     if (!this.airportDeliveryEnabled) {
       dropOff?.setValue('self_drive', { emitEvent: false });
-      dropOff?.disable();
+      dropOff?.disable({ emitEvent: false });
       pickUp?.setValue('self_pickup', { emitEvent: false });
-      pickUp?.disable();
+      pickUp?.disable({ emitEvent: false });
     } else {
-      dropOff?.enable();
-      pickUp?.enable();
+      dropOff?.enable({ emitEvent: false });
+      pickUp?.enable({ emitEvent: false });
     }
   }
 
