@@ -32,6 +32,7 @@ router.get("/profile", checkJwt, async (req: Request, res: Response) => {
         phoneCode: user.user_metadata?.phone_code || "",
         emailVerified: user.email_verified,
         picture: user.picture,
+        discountPercentage: user.app_metadata?.discount_percentage ?? null,
       },
     });
   } catch (error: any) {
@@ -332,8 +333,8 @@ router.get("/search", checkJwt, async (req: Request, res: Response) => {
 router.get("/:userId/discount", checkJwt, async (req: Request, res: Response) => {
   try {
     const authUser = req.authUser;
-    if (!authUser || authUser.role !== "admin") {
-      res.status(403).json({ error: "Only admins can view customer discounts" });
+    if (!authUser || (authUser.role !== "admin" && authUser.role !== "driver")) {
+      res.status(403).json({ error: "Only admins and drivers can view customer discounts" });
       return;
     }
 

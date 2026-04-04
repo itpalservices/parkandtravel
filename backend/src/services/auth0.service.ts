@@ -236,6 +236,7 @@ interface UserSearchResult {
   fullName?: string;
   phone?: string;
   phoneCode?: string;
+  discountPercentage?: number | null;
 }
 
 function formatUserResult(user: Auth0User): UserSearchResult {
@@ -250,6 +251,7 @@ function formatUserResult(user: Auth0User): UserSearchResult {
     fullName,
     phone: user.user_metadata?.phone_number || "",
     phoneCode: user.user_metadata?.phone_code || "",
+    discountPercentage: user.app_metadata?.discount_percentage ?? null,
   };
 }
 

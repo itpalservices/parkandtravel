@@ -673,18 +673,29 @@
                   <span>Total</span>
                   @if (displayedFinalPrice() !== null && calculateDays() > 0) {
                     @if (isAdmin) {
-                      <input
-                        type="number"
-                        class="admin-price-input"
-                        [(ngModel)]="adminFinalPrice"
-                        [ngModelOptions]="{ standalone: true }"
-                        min="0"
-                        step="0.01"
-                      />
+                      <div class="admin-price-wrapper">
+                        @if (customerDiscountPercentage && customerDiscountPercentage > 0 && calculateTotalPrice() !== null) {
+                          <span class="price-before-discount">Before discount: {{ calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                        }
+                        <input
+                          type="number"
+                          class="admin-price-input"
+                          [(ngModel)]="adminFinalPrice"
+                          [ngModelOptions]="{ standalone: true }"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
                     } @else {
-                      <span class="total-amount">{{
-                        displayedFinalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
-                      }}</span>
+                      @if (customerDiscountPercentage && customerDiscountPercentage > 0 && calculateTotalPrice() !== null) {
+                        <span class="total-amount">
+                          {{ calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }} &rarr; {{ displayedFinalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }} ({{ customerDiscountPercentage }}% off)
+                        </span>
+                      } @else {
+                        <span class="total-amount">{{
+                          displayedFinalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
+                        }}</span>
+                      }
                     }
                   } @else {
                     <span class="total-amount">TBC</span>

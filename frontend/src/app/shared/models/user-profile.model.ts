@@ -6,6 +6,7 @@ export interface UserProfile {
   phoneCode: string;
   emailVerified: boolean;
   picture?: string;
+  discountPercentage?: number | null;
 }
 
 export interface Car {

@@ -43,6 +43,7 @@ interface UserSearchResponse {
     fullName?: string;
     phone?: string;
     phoneCode?: string;
+    discountPercentage?: number | null;
   };
 }
 
@@ -109,6 +110,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   isAdminOrDriver = false;
   isAdmin = false;
   adminFinalPrice: number | null = null;
+  customerDiscountPercentage: number | null = null;
   storedFinalPrice: number | null | undefined = undefined;
   userProfile: UserProfile | null = null;
   cars: Car[] = [];
@@ -940,6 +942,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.initAdminDriverForm();
           if (this.isEditMode && this.foundUserId) {
             this.loadFoundUserCars(this.existingBooking?.plateNo || undefined);
+            this.loadUserDiscountById(this.foundUserId);
           }
         }
       },
@@ -1030,7 +1033,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
           if (response.success && response.data.found) {
             this.foundUserId = response.data.userId || null;
+            this.customerDiscountPercentage = response.data.discountPercentage ?? null;
             this.applyFoundUserData(response.data, 'email');
+            this.refreshAdminPrice();
           } else {
             this.clearFoundUser();
           }
@@ -1069,7 +1074,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
         if (response.success && response.data.found) {
           this.foundUserId = response.data.userId || null;
+          this.customerDiscountPercentage = response.data.discountPercentage ?? null;
           this.applyFoundUserData(response.data, 'phone');
+          this.refreshAdminPrice();
         } else {
           this.clearFoundUser('phone');
         }
@@ -1084,6 +1091,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private resetAdminSearch(): void {
     this.foundUserId = null;
+    this.customerDiscountPercentage = null;
     this.cars = [];
     this.selectedCar = null;
     this.searchingUser = false;
@@ -1100,6 +1108,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private clearFoundUser(source: 'email' | 'phone' = 'email'): void {
     this.foundUserId = null;
+    this.customerDiscountPercentage = null;
     this.cars = [];
     this.selectedCar = null;
     this.bookingForm.get('fullName')?.enable();
@@ -1135,6 +1144,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private fillUserProfileFields(): void {
     if (!this.userProfile) return;
+
+    this.customerDiscountPercentage = this.userProfile.discountPercentage ?? null;
 
     const fullName = `${this.userProfile.name} ${this.userProfile.surname}`.trim();
 
@@ -1214,6 +1225,22 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         error: () => {
           this.carsLoading = false;
         },
+      });
+  }
+
+  private loadUserDiscountById(userId: string): void {
+    this.apiService
+      .get<{ success: boolean; data: { discountPercentage: number | null } }>(`/user/${userId}/discount`)
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.customerDiscountPercentage = response.data.discountPercentage;
+            if (this.isAdmin) {
+              this.refreshAdminPrice();
+            }
+          }
+        },
+        error: () => {},
       });
   }
 
@@ -1549,16 +1576,22 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return total;
   }
 
+  applyDiscount(price: number | null): number | null {
+    if (price === null) return null;
+    if (!this.customerDiscountPercentage || this.customerDiscountPercentage <= 0) return price;
+    return Math.round(price * (1 - this.customerDiscountPercentage / 100) * 100) / 100;
+  }
+
   displayedFinalPrice(): number | null {
     if (this.isEditMode && this.storedFinalPrice !== null && this.storedFinalPrice !== undefined) {
       return this.storedFinalPrice;
     }
-    return this.calculateTotalPrice();
+    return this.applyDiscount(this.calculateTotalPrice());
   }
 
   refreshAdminPrice(): void {
     if (!this.isAdmin) return;
-    this.adminFinalPrice = this.calculateTotalPrice();
+    this.adminFinalPrice = this.applyDiscount(this.calculateTotalPrice());
   }
 
   loadPhoneCodes(): void {
@@ -1952,7 +1985,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       washService: this.washServiceEnabled,
       finalPrice: this.returnDetailsEnabled
-        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.calculateTotalPrice())
+        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.applyDiscount(this.calculateTotalPrice()))
         : null,
     };
 
