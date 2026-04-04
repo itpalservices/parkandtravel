@@ -76,6 +76,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   private modalService = inject(NgbModal);
   private checkInDateSubscription?: Subscription;
 
+  editEmail: string | null = null;
+
   @ViewChild('addCarModal') addCarModal!: TemplateRef<unknown>;
 
   bookingForm!: FormGroup;
@@ -296,6 +298,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     const hasReturnDetails = !!(booking.dateTo || booking.returnFlight || booking.pickUpOption);
     this.returnDetailsEnabled = hasReturnDetails;
+
+    this.editEmail = booking.email;
 
     this.bookingForm.patchValue({
       fullName: fullName,
@@ -1014,6 +1018,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const emailControl = this.bookingForm.get('email');
     const email = emailControl?.value?.trim().toLowerCase();
 
+    if (this.isEditMode && this.editEmail == "" && email == "") {
+      return;
+    }
+
     if (!email) {
       this.resetAdminSearch();
       return;
@@ -1728,7 +1736,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const formValue = this.bookingForm.getRawValue();
     const booking: Record<string, unknown> = {
       fullName: formValue.fullName.trim(),
-      email: formValue.email.trim(),
+      email: formValue.email?.trim(),
       phoneCodeId: formValue.phoneCodeId,
       phone: formValue.phone.trim(),
       licensePlate: formValue.licensePlate.trim(),
