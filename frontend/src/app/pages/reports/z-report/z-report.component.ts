@@ -2,9 +2,15 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { firstValueFrom } from 'rxjs';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
-import { WalleeResponse } from '../../../shared/models/reports.model';
+import { WalleeResponse, WalleeTransaction } from '../../../shared/models/reports.model';
+
+const SUCCESS_STATES = ['FULFILL', 'AUTHORIZED', 'CONFIRMED', 'COMPLETED'];
+const FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
 
 @Component({
   selector: 'app-z-report',
@@ -22,18 +28,37 @@ export class ZReportComponent {
   selectedPreset: string | null = 'today';
 
   loading = false;
+  exporting = false;
   error: string | null = null;
 
   walleeData: WalleeResponse | null = null;
   currentOffset = 0;
   readonly pageSize = 10;
 
+  private logoBase64: string = '';
+
   constructor() {
     const today = this.calendar.getToday();
     const todayDate = new Date(today.year, today.month - 1, today.day);
     this.dateFrom = todayDate;
     this.dateTo = todayDate;
+    this.loadLogo();
     this.loadReport();
+  }
+
+  private loadLogo(): void {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        this.logoBase64 = canvas.toDataURL('image/png');
+      }
+    };
+    img.src = 'assets/img/park-and-travel-logo.png';
   }
 
   onDateRangeChange(range: DateRange): void {
@@ -60,7 +85,7 @@ export class ZReportComponent {
           this.walleeData = data;
           this.loading = false;
         },
-        error: (err) => {
+        error: () => {
           this.error = 'Failed to load report. Please try again.';
           this.loading = false;
         },
@@ -81,6 +106,133 @@ export class ZReportComponent {
 
   get currentPage(): number {
     return Math.floor(this.currentOffset / this.pageSize) + 1;
+  }
+
+  async exportPDF(): Promise<void> {
+    if (!this.dateFrom || !this.dateTo || this.exporting) return;
+
+    this.exporting = true;
+
+    try {
+      const allTransactions: WalleeTransaction[] = [];
+      let offset = 0;
+      let hasMore = true;
+      const dateFromStr = this.formatDateForApi(this.dateFrom);
+      const dateToStr = this.formatDateForApi(this.dateTo);
+
+      while (hasMore) {
+        const page = await firstValueFrom(
+          this.apiService.get<WalleeResponse>(
+            `/reports/z-report?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=${offset}`
+          )
+        );
+        allTransactions.push(...page.data);
+        hasMore = page.hasMore;
+        offset += this.pageSize;
+      }
+
+      const doc = new jsPDF('portrait');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 15;
+
+      if (this.logoBase64) {
+        const logoWidth = 50;
+        const logoHeight = 20;
+        const logoX = (pageWidth - logoWidth) / 2;
+        doc.addImage(this.logoBase64, 'PNG', logoX, yPos, logoWidth, logoHeight);
+        yPos += logoHeight + 10;
+      }
+
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 107, 143);
+      const title = 'Z-Report';
+      doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, yPos);
+      yPos += 10;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(55, 65, 81);
+      const sameDay = this.formatDisplayDate(this.dateFrom) === this.formatDisplayDate(this.dateTo);
+      const dateLabel = sameDay
+        ? `Date: ${this.formatDisplayDate(this.dateFrom)}`
+        : `Period: ${this.formatDisplayDate(this.dateFrom)} \u2013 ${this.formatDisplayDate(this.dateTo)}`;
+      doc.text(dateLabel, (pageWidth - doc.getTextWidth(dateLabel)) / 2, yPos);
+      yPos += 8;
+
+      const totalCountText = `Total Transactions: ${allTransactions.length}`;
+      doc.text(totalCountText, (pageWidth - doc.getTextWidth(totalCountText)) / 2, yPos);
+      yPos += 12;
+
+      const tableData = allTransactions.map((item) => [
+        item.id?.toString() || '-',
+        this.formatCreatedOn(item.createdOn),
+        item.metaData?.customerName || '-',
+        [item.metaData?.carBrand, item.metaData?.plateNo].filter(Boolean).join(' - ') || '-',
+        this.formatAmount(item.authorizationAmount, item.currency),
+        this.getStatusLabel(item.state),
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Transaction ID', 'Date', 'Full Name', 'Car Details', 'Amount', 'Status']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [0, 107, 143],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 8,
+        },
+        bodyStyles: {
+          fontSize: 7,
+          textColor: [55, 65, 81],
+        },
+        alternateRowStyles: {
+          fillColor: [249, 250, 251],
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          4: { halign: 'right' },
+        },
+        margin: { left: 10, right: 10 },
+        didParseCell: (data: any) => {
+          if (data.section === 'body' && data.column.index === 5) {
+            const state = allTransactions[data.row.index]?.state?.toUpperCase();
+            if (FAILED_STATES.includes(state)) {
+              data.cell.styles.textColor = [220, 38, 38];
+            } else if (SUCCESS_STATES.includes(state)) {
+              data.cell.styles.textColor = [22, 163, 74];
+            }
+          }
+        },
+      });
+
+      const successfulTotal = allTransactions
+        .filter((t) => SUCCESS_STATES.includes(t.state?.toUpperCase()))
+        .reduce((sum, t) => sum + (Number(t.authorizationAmount) || 0), 0);
+
+      const currency = allTransactions[0]?.currency || '';
+      const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 107, 143);
+      doc.text(
+        `Total (successful transactions): ${currency} ${successfulTotal.toFixed(2)}`,
+        10,
+        finalY
+      );
+
+      const fileSuffix = sameDay
+        ? dateFromStr
+        : `${dateFromStr}-to-${dateToStr}`;
+      doc.save(`z-report-${fileSuffix}.pdf`);
+    } catch (err) {
+      console.error('Error exporting Z-Report PDF:', err);
+    } finally {
+      this.exporting = false;
+    }
   }
 
   formatCreatedOn(dateStr: string): string {
