@@ -287,6 +287,7 @@ export async function createBooking(
       dropOffOption,
       pickUpOption,
       userId: requestUserId,
+      finalPrice: requestFinalPrice,
     } = req.body;
 
     if (
@@ -347,6 +348,9 @@ export async function createBooking(
       dropOffOption: dropOffOption || null,
       pickUpOption: pickUpOption || null,
       userId,
+      ...(isAdmin && requestFinalPrice !== undefined && requestFinalPrice !== null
+        ? { finalPrice: Number(requestFinalPrice) }
+        : {}),
     });
 
     res.status(201).json({

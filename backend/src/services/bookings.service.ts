@@ -449,6 +449,7 @@ interface CreateGuestBookingParams {
 
 export interface CreateBookingParams extends CreateGuestBookingParams {
   userId?: string | null;
+  finalPrice?: number | null;
 }
 
 function parseTimeToDate(timeStr: string): Date {
@@ -690,7 +691,9 @@ export async function createBooking(
   const checkOutTime = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
 
   let finalPrice: number | null = null;
-  if (checkOutDate) {
+  if (params.finalPrice !== undefined) {
+    finalPrice = params.finalPrice;
+  } else if (checkOutDate) {
     const days = calculateDays(checkInDate, checkOutDate);
     const priceSettings = await getPriceSettings();
     
