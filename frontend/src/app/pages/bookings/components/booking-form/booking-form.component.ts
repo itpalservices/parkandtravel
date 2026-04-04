@@ -311,7 +311,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkOutTime: checkOutTime || '10:00',
       pickUpOption: booking.pickUpOption || 'self_pickup',
       parkingType: booking.parkingTypeId || '',
-    });
+    }, { emitEvent: false });
 
     if (hasReturnDetails) {
       this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
