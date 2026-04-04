@@ -114,11 +114,21 @@ export class ZReportComponent {
     this.exporting = true;
 
     try {
-      const allTransactions: WalleeTransaction[] = [];
-      let offset = 0;
-      let hasMore = true;
       const dateFromStr = this.formatDateForApi(this.dateFrom);
       const dateToStr = this.formatDateForApi(this.dateTo);
+
+      const [settingsData, firstPage] = await Promise.all([
+        firstValueFrom(this.apiService.get<{ tax: number | null }>('/settings')),
+        firstValueFrom(
+          this.apiService.get<WalleeResponse>(
+            `/reports/z-report?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=0`
+          )
+        ),
+      ]);
+
+      const allTransactions: WalleeTransaction[] = [...firstPage.data];
+      let offset = this.pageSize;
+      let hasMore = firstPage.hasMore;
 
       while (hasMore) {
         const page = await firstValueFrom(
@@ -130,6 +140,19 @@ export class ZReportComponent {
         hasMore = page.hasMore;
         offset += this.pageSize;
       }
+
+      const taxRate: number | null = settingsData.tax ?? null;
+      const hasTax = taxRate !== null && taxRate > 0;
+
+      const grossAmount = allTransactions
+        .filter((t) => SUCCESS_STATES.includes(t.state?.toUpperCase()))
+        .reduce((sum, t) => sum + (Number(t.authorizationAmount) || 0), 0);
+
+      const netAmount = hasTax
+        ? grossAmount - grossAmount * (taxRate! / 100)
+        : null;
+
+      const currency = allTransactions[0]?.currency || '';
 
       const doc = new jsPDF('portrait');
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -153,7 +176,8 @@ export class ZReportComponent {
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(55, 65, 81);
-      const sameDay = this.formatDisplayDate(this.dateFrom) === this.formatDisplayDate(this.dateTo);
+      const sameDay =
+        this.formatDisplayDate(this.dateFrom) === this.formatDisplayDate(this.dateTo);
       const dateLabel = sameDay
         ? `Date: ${this.formatDisplayDate(this.dateFrom)}`
         : `Period: ${this.formatDisplayDate(this.dateFrom)} \u2013 ${this.formatDisplayDate(this.dateTo)}`;
@@ -164,7 +188,7 @@ export class ZReportComponent {
       doc.text(totalCountText, (pageWidth - doc.getTextWidth(totalCountText)) / 2, yPos);
       yPos += 12;
 
-      const tableData = allTransactions.map((item) => [
+      const transactionRows = allTransactions.map((item) => [
         item.id?.toString() || '-',
         this.formatCreatedOn(item.createdOn),
         item.metaData?.customerName || '-',
@@ -173,10 +197,21 @@ export class ZReportComponent {
         this.getStatusLabel(item.state),
       ]);
 
+      const footerStartIndex = transactionRows.length;
+      const tableBody: string[][] = [...transactionRows];
+
+      if (hasTax) {
+        tableBody.push(['Gross Amount', '', '', '', `${currency} ${grossAmount.toFixed(2)}`, '']);
+        tableBody.push(['Tax %', '', '', '', `${taxRate}%`, '']);
+        tableBody.push(['Net Amount', '', '', '', `${currency} ${netAmount!.toFixed(2)}`, '']);
+      } else {
+        tableBody.push(['Net Amount', '', '', '', `${currency} ${grossAmount.toFixed(2)}`, '']);
+      }
+
       autoTable(doc, {
         startY: yPos,
         head: [['Transaction ID', 'Date', 'Full Name', 'Car Details', 'Amount', 'Status']],
-        body: tableData,
+        body: tableBody,
         theme: 'striped',
         headStyles: {
           fillColor: [0, 107, 143],
@@ -197,7 +232,18 @@ export class ZReportComponent {
         },
         margin: { left: 10, right: 10 },
         didParseCell: (data: any) => {
-          if (data.section === 'body' && data.column.index === 5) {
+          if (data.section !== 'body') return;
+
+          if (data.row.index >= footerStartIndex) {
+            data.cell.styles.fillColor = [255, 255, 255];
+            data.cell.styles.textColor = [0, 107, 143];
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 8;
+            if (data.row.index === footerStartIndex) {
+              data.cell.styles.lineWidth = { top: 0.5, bottom: 0, left: 0, right: 0 };
+              data.cell.styles.lineColor = [0, 107, 143];
+            }
+          } else if (data.column.index === 5) {
             const state = allTransactions[data.row.index]?.state?.toUpperCase();
             if (FAILED_STATES.includes(state)) {
               data.cell.styles.textColor = [220, 38, 38];
@@ -207,22 +253,6 @@ export class ZReportComponent {
           }
         },
       });
-
-      const successfulTotal = allTransactions
-        .filter((t) => SUCCESS_STATES.includes(t.state?.toUpperCase()))
-        .reduce((sum, t) => sum + (Number(t.authorizationAmount) || 0), 0);
-
-      const currency = allTransactions[0]?.currency || '';
-      const finalY = (doc as any).lastAutoTable.finalY + 10;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 107, 143);
-      doc.text(
-        `Total (successful transactions): ${currency} ${successfulTotal.toFixed(2)}`,
-        10,
-        finalY
-      );
 
       const fileSuffix = sameDay
         ? dateFromStr
