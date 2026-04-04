@@ -562,7 +562,7 @@
                 </div>
               </div>
 
-              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+              <div class="settings-group">
                 <h4>Payment</h4>
                 <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
                   This toggle is to set mandatory payment for customers on booking creation.
@@ -580,6 +580,29 @@
                   <span class="toggle-label">
                     Mandatory Payment on booking creation
                   </span>
+                </div>
+              </div>
+
+              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+                <h4>Tax</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  Tax to be used to calculate the totals in Z-Report.
+                </small>
+
+                <div class="form-group">
+                  <label for="deliveryFee">Tax Percentage</label>
+                  <div class="input-group" style="max-width: 250px;">
+                    <span class="input-group-text">%</span>
+                    <input
+                      type="number"
+                      id="tax"
+                      class="form-control"
+                      formControlName="tax"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
                 </div>
               </div>
 

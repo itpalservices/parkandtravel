@@ -119,6 +119,9 @@ export async function updateSettingsHandler(
       deliveryFee: data.deliveryFee !== null && data.deliveryFee !== undefined
         ? Number(data.deliveryFee)
         : null,
+      tax: data.tax !== null && data.tax !== undefined
+        ? Number(data.tax)
+        : null,
       emailDescription: data.emailDescription !== null && data.emailDescription !== undefined
         ? String(data.emailDescription)
         : null,

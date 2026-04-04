@@ -154,6 +154,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       dayEnd: [null, [Validators.min(0), Validators.pattern(/^\d*$/)]],
       availableAfter: [0, [Validators.min(0), Validators.pattern(/^\d*$/)]],
       deliveryFee: [null, [Validators.min(0)]],
+      tax: [0, [Validators.min(0), Validators.max(100)]],
       emailDescription: [null],
       mandatoryPayment: [false]
     });
@@ -200,6 +201,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           dayEnd: settings.dayEnd,
           availableAfter: settings.availableAfter ?? 0,
           deliveryFee: settings.deliveryFee?.toFixed(2),
+          tax: settings.tax,
           emailDescription: settings.emailDescription,
           mandatoryPayment: settings.mandatoryPayment
         });
@@ -321,6 +323,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         formValue.deliveryFee !== '' && formValue.deliveryFee !== null
           ? Number(formValue.deliveryFee)
           : null,
+      tax:
+        formValue.tax !== '' && formValue.tax !== null
+          ? Number(formValue.tax)
+          :null,
       emailDescription:
         formValue.emailDescription !== '' && formValue.emailDescription !== null
           ? formValue.emailDescription

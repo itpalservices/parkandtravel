@@ -8,6 +8,7 @@ export interface ConfigurationSettings {
   priceWash: number | null;
   dayEnd: number | null;
   deliveryFee: number | null;
+  tax: number | null;
   emailDescription: string | null;
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
@@ -24,6 +25,7 @@ const SETTING_KEYS = {
   priceWash: "configurationSetting_priceWash",
   dayEnd: "configurationSetting_dayEnd",
   deliveryFee: "configurationSetting_deliveryFee",
+  tax: "configurationSetting_tax",
   emailDescription: "configurationSetting_emailDescription",
   priceIncrementsCovered: "configurationSetting_priceIncrementsCovered",
   priceIncrementsUncovered: "configurationSetting_priceIncrementsUncovered",
@@ -59,6 +61,7 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     priceWash: parseFloatOrNull(settingsMap.get(SETTING_KEYS.priceWash)),
     dayEnd: parseIntOrNull(settingsMap.get(SETTING_KEYS.dayEnd)),
     deliveryFee: parseFloatOrNull(settingsMap.get(SETTING_KEYS.deliveryFee)),
+    tax: parseFloatOrNull(settingsMap.get(SETTING_KEYS.tax)),
     emailDescription: settingsMap.get(SETTING_KEYS.emailDescription) ?? null,
     priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsCovered)),
     priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsUncovered)),
@@ -123,6 +126,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.deliveryFee,
       value: data.deliveryFee !== null ? String(data.deliveryFee) : null,
+    });
+  }
+
+  if (data.tax !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.tax,
+      value: data.tax !== null ? String(data.tax) : null,
     });
   }
 

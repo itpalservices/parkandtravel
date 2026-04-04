@@ -85,6 +85,7 @@ async function main() {
       { id: "configurationSetting_mandatoryPrePayment", value: null },
       { id: "configurationSetting_delivery", value: "true" },
       { id: "configurationSetting_availableAfter", value: "0" },
+      { id: "configurationSetting_tax", value: "0" },
     ],
     skipDuplicates: true,
   });
