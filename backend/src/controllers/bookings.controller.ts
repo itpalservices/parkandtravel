@@ -208,7 +208,6 @@ export async function createGuestBooking(
 
     if (
       !fullName ||
-      !email ||
       !phone ||
       !licensePlate ||
       !checkInDate ||
@@ -294,7 +293,6 @@ export async function createBooking(
 
     if (
       !fullName ||
-      !email ||
       !phone ||
       !licensePlate ||
       !checkInDate ||

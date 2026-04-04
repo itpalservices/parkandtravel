@@ -88,7 +88,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   private initForm(defaultCheckIn: NgbDateStruct, defaultCheckOut: NgbDateStruct): void {
     this.bookingForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.email]],
       phoneCodeId: ['', Validators.required],
       phone: ['', [Validators.required, Validators.pattern(/^[0-9]{6,15}$/)]],
       licensePlate: ['', [Validators.required, Validators.minLength(2)]],

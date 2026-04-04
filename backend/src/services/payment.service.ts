@@ -467,6 +467,7 @@ async function sendPaidConfirmationEmailForBooking(bookingId: string): Promise<v
     ? booking.timeTo.toISOString().split('T')[1].substring(0, 5)
     : undefined;
 
+  if (!booking.email) return;
   sendBookingConfirmationEmail({
     email: booking.email,
     fullName: `${booking.name} ${booking.surname}`.trim(),
