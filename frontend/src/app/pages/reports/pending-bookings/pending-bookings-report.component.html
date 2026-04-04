@@ -1,0 +1,143 @@
+<div class="page-container">
+  <div class="page-header">
+    <a routerLink="/admin/reports" class="back-link">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>Back to Reports</span>
+    </a>
+    <div class="title-row">
+      <h1 class="page-title">Pending Bookings Report</h1>
+    </div>
+  </div>
+
+  <div class="report-content">
+    @if (loading) {
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <span>Loading report...</span>
+      </div>
+    } @else if (reportData.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M19 20h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 13.6 16 13 16 13s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 14.3 1 15.1 1 16v3c0 .6.4 1 1 1h2"
+            />
+            <circle cx="7" cy="20" r="2" />
+            <circle cx="17" cy="20" r="2" />
+            <path d="M4 1h8v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V1z" />
+            <line x1="5" y1="5" x2="5" y2="8" />
+            <line x1="8" y1="5" x2="8" y2="9" />
+            <line x1="11" y1="5" x2="11" y2="8" />
+          </svg>
+        </div>
+        <h3>No pending bookings found</h3>
+        <p>There are no pending bookings currently on {{ formatDisplayDate(today) }}</p>
+      </div>
+    } @else {
+      <div class="results-summary">
+        <div class="summary-left">
+          <span class="count-badge"
+            >{{ reportData.length }} car{{ reportData.length !== 1 ? 's' : '' }}</span
+          >
+          pending bookings
+        </div>
+        <button class="export-btn" (click)="exportPDF()" [disabled]="exporting">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          {{ exporting ? 'Exporting...' : 'Export PDF' }}
+        </button>
+      </div>
+
+      <div class="desktop-table">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Plate No.</th>
+              <th>Vehicle / Model</th>
+              <th>Vehicle Color</th>
+              <th>Check Out</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of reportData; track item.id) {
+              <tr>
+                <td>{{ item.fullName }} ({{ item.mobile }})</td>
+                <td>
+                  <span class="plate-badge">{{ item.plateNo }}</span>
+                </td>
+                <td>{{ item.vehicleModel }}</td>
+                <td>{{ item.vehicleColor }}</td>
+                <td>
+                  @if (item.checkOutDate) {
+                    {{ item.checkOutDate }} {{ item.checkOutTime }}
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-cards">
+        @for (item of reportData; track item.id) {
+          <div class="report-card">
+            <div class="card-header">
+              <span class="customer-name">{{ item.fullName }}</span>
+              <span class="plate-badge">{{ item.plateNo }}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-row">
+                <span class="label">Vehicle</span>
+                <span class="value">{{ item.vehicleModel }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Color</span>
+                <span class="value">{{ item.vehicleColor }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Check Out</span>
+                <span class="value">{{ item.checkOutDate }} {{ item.checkOutTime }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

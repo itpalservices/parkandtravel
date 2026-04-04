@@ -34,6 +34,17 @@ export interface WashServiceReportItem {
   checkOutTime: string;
 }
 
+export interface PendingBookingsReportItem {
+  id: string;
+  fullName: string;
+  mobile: string;
+  plateNo: string;
+  vehicleModel: string;
+  vehicleColor: string;
+  checkOutDate: string;
+  checkOutTime: string;
+}
+
 export interface WalleeResponse {
   data: WalleeTransaction[];
   hasMore: boolean;

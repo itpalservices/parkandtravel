@@ -26,6 +26,11 @@ export class ReportsComponent {
       id: 'wash-service',
       title: 'Wash Service Report',
       description: 'Monitor car wash service statistics'
+    },
+    {
+      id: 'pending-bookings',
+      title: 'Pending Bookings Report',
+      description: 'Pending bookings which they don\'t have check-out date or they don\'t checked-out at the correct date'
     }
   ];
 }

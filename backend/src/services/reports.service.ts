@@ -15,6 +15,17 @@ export interface WashServiceReportItem {
   checkOutTime: string;
 }
 
+export interface PendingBookingsReportItem {
+  id: string;
+  fullName: string;
+  mobile: string;
+  plateNo: string;
+  vehicleModel: string;
+  vehicleColor: string;
+  checkOutDate: string;
+  checkOutTime: string;
+}
+
 function formatDisplayDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -38,6 +49,19 @@ interface WashServiceRow {
   carModel: string | null;
   carColor: string | null;
   pickUpOption: string | null;
+  dateTo: Date;
+  timeTo: Date | null;
+}
+
+interface PendingBookingRow {
+  id: string;
+  name: string;
+  surname: string;
+  mobile: string;
+  plateNo: string | null;
+  carBrand: string | null;
+  carModel: string | null;
+  carColor: string | null;
   dateTo: Date;
   timeTo: Date | null;
 }
@@ -218,6 +242,31 @@ export async function getWashServiceReport(
       carPickup: b.pickUpOption || "-",
       checkOutDate: formatDisplayDate(new Date(b.dateTo)),
       checkOutTime: formatTime(b.timeTo),
+    };
+  });
+}
+
+export async function getPendingBookingsReport(): Promise<PendingBookingsReportItem[]> {  
+  const bookings = await prisma.$queryRawUnsafe<PendingBookingRow[]>(`
+    SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "carColor", "dateTo", "timeTo"
+    FROM bookings 
+    WHERE deleteflag = 0 
+      AND ("dateTo" IS NULL OR "dateTo" < CURRENT_TIMESTAMP)
+      AND "bookingStatusId" = 'bookingStatus_parked'
+    ORDER BY "timeTo" ASC NULLS LAST, name ASC
+  `);
+
+  return bookings.map((b) => {
+    const vehicleParts = [b.carBrand, b.carModel].filter(Boolean);
+    return {
+      id: b.id,
+      fullName: `${b.name} ${b.surname}`.trim(),
+      mobile: b.mobile,
+      plateNo: b.plateNo || "",
+      vehicleModel: vehicleParts.join(" ") || "-",
+      vehicleColor: b.carColor || "-",
+      checkOutDate: b.dateTo ? formatDisplayDate(new Date(b.dateTo)) : '',
+      checkOutTime: b.dateTo ? formatTime(b.timeTo) : '',
     };
   });
 }

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getWashServiceReport, getDailyInOutReport } from "../services/reports.service";
+import { getWashServiceReport, getDailyInOutReport, getPendingBookingsReport } from "../services/reports.service";
 import { getWalleeTransactions } from "../services/wallee.service";
 
 export async function dailyInOutReport(
@@ -40,6 +40,19 @@ export async function washServiceReport(
   } catch (error) {
     console.error("Error fetching wash service report:", error);
     res.status(500).json({ error: "Failed to fetch wash service report" });
+  }
+}
+
+export async function pendingBookingsReport(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const report = await getPendingBookingsReport();
+    res.json(report);
+  } catch (error) {
+    console.error("Error fetching pending bookings report:", error);
+    res.status(500).json({ error: "Failed to fetch pending bookings report" });
   }
 }
 
