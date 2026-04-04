@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { NgbDropdownModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking, DateRangeFilter } from '../../../../shared/models/booking.model';
 import { BookingsService } from '../../../../core/services/bookings.service';
+import { UserProfileService } from '../../../../core/services/user-profile.service';
 import Swal from 'sweetalert2';
 import {
   CAR_PICK_UP_OPTIONS,
@@ -41,7 +42,10 @@ export class BookingsListComponent {
   carouselImages: string[] = [];
   carouselStartIndex = 0;
 
-  constructor(private bookingsService: BookingsService) {}
+  constructor(
+    private bookingsService: BookingsService,
+    private userProfileService: UserProfileService,
+  ) {}
 
   printBookingTag(booking: Booking): void {
     const checkIn = booking.actualCheckIn
@@ -711,8 +715,9 @@ export class BookingsListComponent {
     applyExtraFee?: boolean,
     extraFields?: { keepKeys?: boolean; mileageKm?: number; parkingComments?: string; plateNo?: string; carModel?: string; adults?: number },
   ): void {
+    const actorName = this.userProfileService.getDisplayName() || undefined;
     this.bookingsService
-      .updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee, extraFields)
+      .updateBookingStatus(booking.id, newStatusId, parkPlace, applyExtraFee, extraFields, actorName)
       .subscribe({
         next: (response) => {
           if (response.success) {

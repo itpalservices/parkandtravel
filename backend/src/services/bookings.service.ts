@@ -1193,6 +1193,7 @@ export async function updateBookingStatus(
   parkPlace?: string,
   applyExtraFee?: boolean,
   extraFields?: ParkExtraFields,
+  actorName?: string,
 ): Promise<{ id: string; bookingStatusId: string; bookingStatus: string; parkPlace?: string; actualCheckIn?: string; actualCheckOut?: string; extraFee?: number } | null> {
   if (!isValidUUID(id)) return null;
 
@@ -1219,6 +1220,7 @@ export async function updateBookingStatus(
   if (bookingStatusId === 'bookingStatus_parked' && parkPlace) {
     updateData.parkPlace = parkPlace;
     updateData.actualCheckIn = new Date();
+    updateData.checkInBy = actorName || null;
     if (extraFields) {
       if (extraFields.keepKeys !== undefined) updateData.keepKeys = extraFields.keepKeys;
       if (extraFields.mileageKm !== undefined) updateData.mileageKm = extraFields.mileageKm;
@@ -1235,6 +1237,7 @@ export async function updateBookingStatus(
     updateData.keepKeys = null;
     updateData.mileageKm = null;
     updateData.parkingComments = null;
+    updateData.checkInBy = null;
   }
 
   let calculatedExtraFee: number | undefined = undefined;
@@ -1243,6 +1246,7 @@ export async function updateBookingStatus(
   if (bookingStatusId === 'bookingStatus_completed') {
     actualCheckOutDate = new Date();
     updateData.actualCheckOut = actualCheckOutDate;
+    updateData.checkOutBy = actorName || null;
 
     const checkOutDate = existingBooking.dateTo ? new Date(existingBooking.dateTo) : null;
     if (checkOutDate) {

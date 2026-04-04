@@ -558,7 +558,7 @@ export async function updateBookingStatus(
     }
 
     const { id } = req.params;
-    const { bookingStatusId, parkPlace, applyExtraFee, keepKeys, mileageKm, parkingComments, plateNo, carModel, adults } = req.body;
+    const { bookingStatusId, parkPlace, applyExtraFee, keepKeys, mileageKm, parkingComments, plateNo, carModel, adults, actorName } = req.body;
 
     if (!isValidUUID(id)) {
       res.status(400).json({ error: "Invalid booking ID format" });
@@ -582,7 +582,7 @@ export async function updateBookingStatus(
       plateNo,
       carModel,
       adults,
-    });
+    }, actorName);
 
     if (!result) {
       res.status(404).json({ error: "Booking not found or invalid status" });
