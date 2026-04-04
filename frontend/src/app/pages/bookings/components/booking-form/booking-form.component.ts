@@ -1713,7 +1713,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
       finalPrice: this.returnDetailsEnabled
-        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.calculateTotalPrice())
+        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.displayedFinalPrice())
         : null,
     };
 
