@@ -109,6 +109,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   isAdminOrDriver = false;
   isAdmin = false;
   adminFinalPrice: number | null = null;
+  priceFieldChanged = false;
   userProfile: UserProfile | null = null;
   cars: Car[] = [];
   selectedCar: Car | null = null;
@@ -283,6 +284,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private populateFormWithBookingData(booking: BookingDetails): void {
+    this.priceFieldChanged = false;
     const fullName = `${booking.name} ${booking.surname}`.trim();
 
     const checkInDate = this.parseApiDate(booking.dateFrom);
@@ -1313,19 +1315,28 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           }
           this.updateMinCheckInTime();
           this.checkAvailability();
+          this.priceFieldChanged = true;
           this.refreshAdminPrice();
         }
       });
 
     this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(() => {
+      this.priceFieldChanged = true;
       this.refreshAdminPrice();
     });
 
     this.bookingForm.get('parkingType')?.valueChanges.subscribe(() => {
+      this.priceFieldChanged = true;
       this.refreshAdminPrice();
     });
 
     this.bookingForm.get('pickUpOption')?.valueChanges.subscribe(() => {
+      this.priceFieldChanged = true;
+      this.refreshAdminPrice();
+    });
+
+    this.bookingForm.get('dropOffOption')?.valueChanges.subscribe(() => {
+      this.priceFieldChanged = true;
       this.refreshAdminPrice();
     });
   }
@@ -1481,6 +1492,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   toggleWashService(): void {
     this.washServiceEnabled = !this.washServiceEnabled;
+    this.priceFieldChanged = true;
     this.refreshAdminPrice();
   }
 
@@ -1537,7 +1549,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   displayedFinalPrice(): number | null {
-    if (this.isEditMode && this.existingBooking?.finalPrice !== null && this.existingBooking?.finalPrice !== undefined) {
+    if (this.isEditMode && !this.priceFieldChanged && this.existingBooking?.finalPrice !== null && this.existingBooking?.finalPrice !== undefined) {
       return this.existingBooking.finalPrice;
     }
     return this.calculateTotalPrice();
