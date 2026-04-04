@@ -1455,7 +1455,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.applyAvailableAfterRestriction();
 
         if (this.existingBooking?.parkingTypeId) {
-          this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId });
+          this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId }, { emitEvent: false });
         } else if (!this.isEditMode && response.parkingTypes.length > 0) {
           this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
           this.checkAvailability();
@@ -1480,9 +1480,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const dropOff = this.bookingForm.get('dropOffOption');
     const pickUp = this.bookingForm.get('pickUpOption');
     if (!this.airportDeliveryEnabled) {
-      dropOff?.setValue('self_drive');
+      dropOff?.setValue('self_drive', { emitEvent: false });
       dropOff?.disable();
-      pickUp?.setValue('self_pickup');
+      pickUp?.setValue('self_pickup', { emitEvent: false });
       pickUp?.disable();
     } else {
       dropOff?.enable();
