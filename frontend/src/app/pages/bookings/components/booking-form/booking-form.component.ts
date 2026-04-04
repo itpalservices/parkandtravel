@@ -362,9 +362,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     allFormFields.forEach((field) => {
       if (!fieldsToKeepEnabled.includes(field)) {
-        this.bookingForm.get(field)?.disable();
+        this.bookingForm.get(field)?.disable({ emitEvent: false });
       } else {
-        this.bookingForm.get(field)?.enable();
+        this.bookingForm.get(field)?.enable({ emitEvent: false });
       }
     });
   }
@@ -398,9 +398,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const fieldsAlwaysDisabled = ['fullName', 'email', 'phone', 'phoneCodeId'];
     const allFormFields = Object.keys(this.bookingForm.controls);
 
+    this.storedFinalPrice = null;
     allFormFields.forEach((field) => {
       if (!fieldsAlwaysDisabled.includes(field)) {
-        this.bookingForm.get(field)?.enable();
+        this.bookingForm.get(field)?.enable({ emitEvent: false });
       }
     });
   }
