@@ -1235,7 +1235,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success) {
             this.customerDiscountPercentage = response.data.discountPercentage;
-            if (this.isAdmin) {
+            if (this.isAdmin && !this.isEditMode) {
               this.refreshAdminPrice();
             }
           }
