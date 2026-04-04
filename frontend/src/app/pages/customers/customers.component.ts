@@ -40,7 +40,7 @@ export class CustomersComponent implements OnInit {
 
   discountCustomer: Customer | null = null;
   discountPercentage: number | null = null;
-  discountInput: string = '';
+  discountInput: number | string = '';
   discountLoading = false;
   discountSaving = false;
   discountError: string | null = null;
@@ -200,7 +200,7 @@ export class CustomersComponent implements OnInit {
     this.api.get<{ success: boolean; data: { discountPercentage: number | null } }>(`/user/${customer.userId}/discount`).subscribe({
       next: (response) => {
         this.discountPercentage = response.data.discountPercentage;
-        this.discountInput = this.discountPercentage !== null ? String(this.discountPercentage) : '';
+        this.discountInput = this.discountPercentage !== null ? this.discountPercentage : '';
         this.discountLoading = false;
       },
       error: (err) => {
@@ -214,10 +214,10 @@ export class CustomersComponent implements OnInit {
     this.discountError = null;
     this.discountSuccess = false;
 
-    const raw = this.discountInput.trim();
+    const raw = this.discountInput !== null && this.discountInput !== undefined ? String(this.discountInput).trim() : '';
     let valueToSave: number | null = null;
 
-    if (raw !== '') {
+    if (raw !== '' && raw !== 'null') {
       const parsed = Number(raw);
       if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
         this.discountError = 'Please enter an integer between 0 and 100';
