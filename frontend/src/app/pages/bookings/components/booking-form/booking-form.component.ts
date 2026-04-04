@@ -107,6 +107,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   isRegularUser = false;
   isAdminOrDriver = false;
+  isAdmin = false;
+  adminFinalPrice: number | null = null;
   userProfile: UserProfile | null = null;
   cars: Car[] = [];
   selectedCar: Car | null = null;
@@ -387,6 +389,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     returnFields.forEach((field) => {
       this.bookingForm.get(field)?.updateValueAndValidity();
     });
+    this.refreshAdminPrice();
   }
 
   private enableFieldsForNonParkedBooking(): void {
@@ -917,7 +920,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       next: (roleInfo: UserRoleInfo) => {
         this.isRegularUser = roleInfo.isUser;
         this.isAdminOrDriver = roleInfo.isAdmin || roleInfo.isDriver;
+        this.isAdmin = roleInfo.isAdmin;
         this.applyAvailableAfterRestriction();
+        if (this.isAdmin) {
+          this.refreshAdminPrice();
+        }
 
         if (this.isRegularUser) {
           this.loadUserProfile();
@@ -1302,8 +1309,21 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           }
           this.updateMinCheckInTime();
           this.checkAvailability();
+          this.refreshAdminPrice();
         }
       });
+
+    this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(() => {
+      this.refreshAdminPrice();
+    });
+
+    this.bookingForm.get('parkingType')?.valueChanges.subscribe(() => {
+      this.refreshAdminPrice();
+    });
+
+    this.bookingForm.get('pickUpOption')?.valueChanges.subscribe(() => {
+      this.refreshAdminPrice();
+    });
   }
 
   private applyAvailableAfterRestriction(): void {
@@ -1457,6 +1477,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   toggleWashService(): void {
     this.washServiceEnabled = !this.washServiceEnabled;
+    this.refreshAdminPrice();
   }
 
   getSelectedParkingType(): ParkingType | undefined {
@@ -1509,6 +1530,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       total += this.deliveryFee;
     }
     return total;
+  }
+
+  refreshAdminPrice(): void {
+    if (!this.isAdmin) return;
+    this.adminFinalPrice = this.calculateTotalPrice();
   }
 
   loadPhoneCodes(): void {
@@ -1662,7 +1688,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
-      finalPrice: this.returnDetailsEnabled ? this.calculateTotalPrice() : null,
+      finalPrice: this.returnDetailsEnabled
+        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.calculateTotalPrice())
+        : null,
     };
 
     if (this.isAdminOrDriver) {
@@ -1899,7 +1927,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       washService: this.washServiceEnabled,
-      finalPrice: this.returnDetailsEnabled ? this.calculateTotalPrice() : null,
+      finalPrice: this.returnDetailsEnabled
+        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.calculateTotalPrice())
+        : null,
     };
 
     this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({

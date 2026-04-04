@@ -672,9 +672,20 @@
                 <div class="price-total">
                   <span>Total</span>
                   @if (calculateTotalPrice() !== null && calculateDays() > 0) {
-                    <span class="total-amount">{{
-                      calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
-                    }}</span>
+                    @if (isAdmin) {
+                      <input
+                        type="number"
+                        class="admin-price-input"
+                        [(ngModel)]="adminFinalPrice"
+                        [ngModelOptions]="{ standalone: true }"
+                        min="0"
+                        step="0.01"
+                      />
+                    } @else {
+                      <span class="total-amount">{{
+                        calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
+                      }}</span>
+                    }
                   } @else {
                     <span class="total-amount">TBC</span>
                   }
