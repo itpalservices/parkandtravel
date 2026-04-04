@@ -13,6 +13,7 @@ import {
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
+import { getUserDiscount } from "../services/auth0.service";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
   try {
@@ -329,6 +330,13 @@ export async function createBooking(
       userId = authUser?.sub || null;
     }
 
+    let discountPercentage: number | null = null;
+    if (!isAdmin && userId) {
+      try {
+        discountPercentage = await getUserDiscount(userId);
+      } catch (e) {}
+    }
+
     const result = await createBookingService({
       fullName,
       email,
@@ -351,6 +359,7 @@ export async function createBooking(
       ...(isAdmin && requestFinalPrice !== undefined && requestFinalPrice !== null
         ? { finalPrice: Number(requestFinalPrice) }
         : {}),
+      discountPercentage: discountPercentage ?? undefined,
     });
 
     res.status(201).json({

@@ -450,6 +450,7 @@ interface CreateGuestBookingParams {
 export interface CreateBookingParams extends CreateGuestBookingParams {
   userId?: string | null;
   finalPrice?: number | null;
+  discountPercentage?: number | null;
 }
 
 function parseTimeToDate(timeStr: string): Date {
@@ -715,6 +716,10 @@ export async function createBooking(
       if (hasAirportDelivery(params.dropOffOption, params.pickUpOption) && priceSettings.deliveryFee !== null) {
         finalPrice += priceSettings.deliveryFee;
       }
+    }
+
+    if (params.discountPercentage && params.discountPercentage > 0 && finalPrice !== null) {
+      finalPrice = Math.round(finalPrice * (1 - params.discountPercentage / 100) * 100) / 100;
     }
   }
 
