@@ -140,6 +140,17 @@
                         <polyline points="12 6 12 12 16 14"></polyline>
                       </svg>
                     </button>
+                    <button 
+                      class="btn-action ms-1" 
+                      (click)="openDiscountModal(customer, discountModal)"
+                      title="Discount"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="5" x2="5" y2="19"></line>
+                        <circle cx="6.5" cy="6.5" r="2.5"></circle>
+                        <circle cx="17.5" cy="17.5" r="2.5"></circle>
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               }
@@ -205,6 +216,17 @@
                         <polyline points="12 6 12 12 16 14"></polyline>
                       </svg>
                     </button>
+                    <button 
+                      class="btn-action-mobile ms-1" 
+                      (click)="openDiscountModal(customer, discountModal)"
+                      title="Discount"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="5" x2="5" y2="19"></line>
+                        <circle cx="6.5" cy="6.5" r="2.5"></circle>
+                        <circle cx="17.5" cy="17.5" r="2.5"></circle>
+                      </svg>
+                    </button>
                   </span>
                 </div>
               </div>
@@ -267,6 +289,65 @@
     }
   </div>
 </div>
+
+<ng-template #discountModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      Discount
+      @if (discountCustomer) {
+        <span class="customer-label">- {{ discountCustomer.name }} {{ discountCustomer.surname }} ({{ discountCustomer.email }})</span>
+      }
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (discountLoading) {
+      <div class="text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    } @else {
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Discount Percentage</label>
+        <div class="input-group">
+          <input
+            type="number"
+            class="form-control"
+            placeholder="Enter 0 – 100"
+            [(ngModel)]="discountInput"
+            min="0"
+            max="100"
+            step="1"
+            [disabled]="discountSaving"
+          />
+          <span class="input-group-text">%</span>
+        </div>
+        <div class="form-text text-muted">Leave empty to remove the discount.</div>
+      </div>
+      @if (discountError) {
+        <div class="alert alert-danger py-2 mb-2">{{ discountError }}</div>
+      }
+      @if (discountSuccess) {
+        <div class="alert alert-success py-2 mb-2">Discount saved successfully.</div>
+      }
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="discountSaving">Cancel</button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="saveDiscount(modal)"
+      [disabled]="discountLoading || discountSaving || discountSuccess"
+    >
+      @if (discountSaving) {
+        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+      }
+      Save
+    </button>
+  </div>
+</ng-template>
 
 <ng-template #historyModal let-modal>
   <div class="modal-header">

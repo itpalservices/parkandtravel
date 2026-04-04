@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -326,6 +326,52 @@ router.get("/search", checkJwt, async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error searching user:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to search for user" });
+  }
+});
+
+router.get("/:userId/discount", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can view customer discounts" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const discount = await getUserDiscount(userId);
+    res.json({ success: true, data: { discountPercentage: discount } });
+  } catch (error: any) {
+    console.error("Error fetching user discount:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch user discount" });
+  }
+});
+
+router.patch("/:userId/discount", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can set customer discounts" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const { discountPercentage } = req.body;
+
+    if (discountPercentage !== null && discountPercentage !== undefined) {
+      const val = Number(discountPercentage);
+      if (!Number.isInteger(val) || val < 0 || val > 100) {
+        res.status(400).json({ error: "Discount percentage must be an integer between 0 and 100" });
+        return;
+      }
+      await setUserDiscount(userId, val);
+    } else {
+      await setUserDiscount(userId, null);
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error setting user discount:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to set user discount" });
   }
 });
 

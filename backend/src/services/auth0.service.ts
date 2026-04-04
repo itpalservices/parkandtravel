@@ -34,6 +34,7 @@ interface Auth0User {
   };
   app_metadata?: {
     role?: string;
+    discount_percentage?: number | null;
   };
 }
 
@@ -379,6 +380,22 @@ export async function createDriverUser(params: {
   });
 
   return { userId, email: params.email };
+}
+
+export async function getUserDiscount(userId: string): Promise<number | null> {
+  const user = await getUserById(userId);
+  if (!user) return null;
+  const val = user.app_metadata?.discount_percentage;
+  return val !== undefined && val !== null ? val : null;
+}
+
+export async function setUserDiscount(userId: string, discountPercentage: number | null): Promise<void> {
+  const token = await getManagementToken();
+  await axios.patch(
+    `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
+    { app_metadata: { discount_percentage: discountPercentage } },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
 }
 
 export async function getAllDriverUsers(page: number, perPage: number): Promise<{

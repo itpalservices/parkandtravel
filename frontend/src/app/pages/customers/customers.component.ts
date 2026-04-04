@@ -38,6 +38,14 @@ export class CustomersComponent implements OnInit {
   historyPageSize = 5;
   historyTotalPages = 1;
 
+  discountCustomer: Customer | null = null;
+  discountPercentage: number | null = null;
+  discountInput: string = '';
+  discountLoading = false;
+  discountSaving = false;
+  discountError: string | null = null;
+  discountSuccess = false;
+
   constructor(
     private api: ApiService,
     private modalService: NgbModal
@@ -177,6 +185,61 @@ export class CustomersComponent implements OnInit {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  openDiscountModal(customer: Customer, content: any): void {
+    this.discountCustomer = customer;
+    this.discountPercentage = null;
+    this.discountInput = '';
+    this.discountError = null;
+    this.discountSuccess = false;
+    this.discountLoading = true;
+
+    this.modalService.open(content, { size: 'sm', centered: true });
+
+    this.api.get<{ success: boolean; data: { discountPercentage: number | null } }>(`/user/${customer.userId}/discount`).subscribe({
+      next: (response) => {
+        this.discountPercentage = response.data.discountPercentage;
+        this.discountInput = this.discountPercentage !== null ? String(this.discountPercentage) : '';
+        this.discountLoading = false;
+      },
+      error: (err) => {
+        this.discountError = err.error?.error || 'Failed to load discount';
+        this.discountLoading = false;
+      }
+    });
+  }
+
+  saveDiscount(modal: any): void {
+    this.discountError = null;
+    this.discountSuccess = false;
+
+    const raw = this.discountInput.trim();
+    let valueToSave: number | null = null;
+
+    if (raw !== '') {
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+        this.discountError = 'Please enter an integer between 0 and 100';
+        return;
+      }
+      valueToSave = parsed;
+    }
+
+    if (!this.discountCustomer) return;
+    this.discountSaving = true;
+
+    this.api.patch<{ success: boolean }>(`/user/${this.discountCustomer.userId}/discount`, { discountPercentage: valueToSave }).subscribe({
+      next: () => {
+        this.discountSaving = false;
+        this.discountSuccess = true;
+        setTimeout(() => modal.close(), 1200);
+      },
+      error: (err) => {
+        this.discountSaving = false;
+        this.discountError = err.error?.error || 'Failed to save discount';
+      }
+    });
   }
 
   openHistoryModal(customer: Customer, content: any): void {
