@@ -13,6 +13,8 @@ export interface Booking {
   dateTo: string;
   timeFrom: string | null;
   timeTo: string | null;
+  checkInBy: string | null;
+  checkOutBy: string | null;
   adults: number;
   returnFlight: string | null;
   parkingTypeId: string;

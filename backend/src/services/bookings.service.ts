@@ -63,6 +63,8 @@ interface BookingResponse {
   extraFee: number | null;
   deleteflag: number;
   paidAmount: number;
+  checkInBy: string | null;
+  checkOutBy: string | null;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
 }
 
@@ -246,6 +248,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."actualCheckIn",
       b."actualCheckOut",
       b."extraFee",
+      b."checkInBy",
+      b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -291,6 +295,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
     paidAmount: parseFloat(b.paidAmount ?? '0'),
+    checkInBy: b.checkInBy,
+    checkOutBy: b.checkOutBy,
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')
@@ -343,6 +349,8 @@ export async function getBookingById(
       b."actualCheckOut",
       b."extraFee",
       b.deleteflag,
+      b."checkInBy",
+      b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -387,6 +395,8 @@ export async function getBookingById(
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    checkInBy: b.checkInBy,
+    checkOutBy: b.checkOutBy,
     paidAmount: parseFloat(b.paidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
@@ -1128,6 +1138,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."actualCheckOut",
       b."extraFee",
       b.deleteflag,
+      b."checkInBy",
+      b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -1170,6 +1182,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
+    checkInBy: b.checkInBy,
+    checkOutBy: b.checkOutBy,
     paidAmount: parseFloat(b.paidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,

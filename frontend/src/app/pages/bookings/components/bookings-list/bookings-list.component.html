@@ -11,8 +11,14 @@
             <th>Vehicle / Model</th>
             <th>Vehicle Color</th>
             <th>Check In</th>
+            @if (isAdmin) {
+              <th>Check In By</th>
+            }
             <th>Car Drop-off</th>
             <th>Check Out</th>
+            @if (isAdmin) {
+              <th>Check Out By</th>
+            }
             <th>Car Pick-up</th>
             <th>Flight No.</th>
             <th>Parking Type</th>
@@ -211,7 +217,14 @@
               </td>
               <td>{{ formatVehicle(booking) }}</td>
               <td>{{ booking.carColor }}</td>
-              <td>{{ formatCheckIn(booking) }}</td>
+              <td>{{ formatCheckIn(booking) }}</td>              
+              @if (isAdmin) {
+                <td>
+                  {{
+                    booking.checkInBy || '-'
+                  }}
+                </td>
+              }
               <td>{{ formatDropOff(booking.dropOffOption) }}</td>
               <td>
                 @if (booking.actualCheckOut) {
@@ -223,6 +236,13 @@
                   {{ formatArrival(booking) }}
                 }
               </td>
+              @if (isAdmin) {
+                <td>
+                  {{
+                    booking.checkOutBy || '-'
+                  }}
+                </td>
+              }
               <td>{{ formatPickUp(booking.pickUpOption) }}</td>
               <td>{{ booking.returnFlight || '-' }}</td>
               <td>
@@ -248,7 +268,8 @@
                   </span>
                 </td>
               }
-              <td [ngbTooltip]="'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2')" placement="top" container="body">
+              
+              <td [ngbTooltip]="isAdmin || isDriver ? 'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2') : ''" placement="top" container="body">
                 @if (!booking.dateTo) {
                   <span class="text-muted fst-italic">TBC</span>
                 } @else if (booking.extraFee) {
@@ -363,10 +384,19 @@
                 <span class="mobile-label">Vehicle</span>
                 <span class="mobile-value">{{ formatVehicle(booking) }}</span>
               </div>
+              @if (isAdmin) {
+                <div class="mobile-info-item"></div>
+              }
               <div class="mobile-info-item">
                 <span class="mobile-label">Check In</span>
                 <span class="mobile-value">{{ formatCheckIn(booking) }}</span>
               </div>
+              @if (isAdmin) {
+                <div class="mobile-info-item">
+                  <span class="mobile-label">Check In By</span>
+                  <span class="mobile-value">{{ booking.checkInBy || '-' }}</span>
+                </div>
+              }
               <div class="mobile-info-item">
                 <span class="mobile-label">Check Out</span>
                 <span class="mobile-value">
@@ -382,6 +412,12 @@
                   }
                 </span>
               </div>
+              @if (isAdmin) {
+                <div class="mobile-info-item">
+                  <span class="mobile-label">Check Out By</span>
+                  <span class="mobile-value">{{ booking.checkOutBy || '-' }}</span>
+                </div>
+              }
               <div class="mobile-info-item">
                 <span class="mobile-label">Drop-off</span>
                 <span class="mobile-value">{{ formatDropOff(booking.dropOffOption) }}</span>
