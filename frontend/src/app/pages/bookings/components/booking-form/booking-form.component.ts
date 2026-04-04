@@ -1536,6 +1536,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return total;
   }
 
+  displayedFinalPrice(): number | null {
+    if (this.isEditMode && this.existingBooking?.finalPrice !== null && this.existingBooking?.finalPrice !== undefined) {
+      return this.existingBooking.finalPrice;
+    }
+    return this.calculateTotalPrice();
+  }
+
   refreshAdminPrice(): void {
     if (!this.isAdmin) return;
     this.adminFinalPrice = this.calculateTotalPrice();

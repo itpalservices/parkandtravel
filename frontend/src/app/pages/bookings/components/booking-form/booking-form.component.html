@@ -671,7 +671,7 @@
                 </div>
                 <div class="price-total">
                   <span>Total</span>
-                  @if (calculateTotalPrice() !== null && calculateDays() > 0) {
+                  @if (displayedFinalPrice() !== null && calculateDays() > 0) {
                     @if (isAdmin) {
                       <input
                         type="number"
@@ -683,7 +683,7 @@
                       />
                     } @else {
                       <span class="total-amount">{{
-                        calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
+                        displayedFinalPrice() | currency: 'EUR' : 'symbol' : '1.2-2'
                       }}</span>
                     }
                   } @else {
