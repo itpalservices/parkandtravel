@@ -319,7 +319,7 @@ export async function getCardDetails(
     plateNo: b.plateNo || "",
     vehicleModel: `${b.carBrand || ""} ${b.carModel || ""}`.trim(),
     checkIn: `${formatDisplayDate(new Date(b.dateFrom))} ${formatTime(b.timeFrom)}`,
-    checkOut: `${formatDisplayDate(new Date(b.dateTo))} ${formatTime(b.timeTo)}`,
+    checkOut: b.dateTo ? `${formatDisplayDate(new Date(b.dateTo))} ${formatTime(b.timeTo)}` : '',
     parkPlace: b.parkPlace || undefined,
   }));
 }
