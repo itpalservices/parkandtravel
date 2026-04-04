@@ -923,7 +923,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.isAdmin = roleInfo.isAdmin;
         this.applyAvailableAfterRestriction();
         if (this.isAdmin) {
-          this.refreshAdminPrice();
+          if (this.isEditMode && this.existingBooking?.finalPrice !== null && this.existingBooking?.finalPrice !== undefined) {
+            this.adminFinalPrice = this.existingBooking.finalPrice;
+          } else {
+            this.refreshAdminPrice();
+          }
         }
 
         if (this.isRegularUser) {
