@@ -319,7 +319,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
       this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
       ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'].forEach((field) => {
-        this.bookingForm.get(field)?.updateValueAndValidity();
+        this.bookingForm.get(field)?.updateValueAndValidity({ emitEvent: false });
       });
     }
 
