@@ -991,6 +991,65 @@ export async function updateBooking(
   return { id: updatedBooking.id, finalPrice, requiresPayment, differenceAmount };
 }
 
+export interface StageBookingUpdateParams {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  phoneCodeId?: string | null;
+  licensePlate?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehicleColor?: string;
+  flightNumber?: string | null;
+  checkInDate?: string;
+  checkInTime?: string;
+  checkOutDate?: string;
+  checkOutTime?: string;
+  parkingTypeId?: string;
+  washService?: boolean;
+  dropOffOption?: string | null;
+  pickUpOption?: string | null;
+  userId?: string | null;
+  finalPrice?: number | null;
+}
+
+export async function stageBookingUpdate(
+  bookingId: string,
+  params: StageBookingUpdateParams,
+): Promise<{ requiresPayment: false } | { requiresPayment: true; pendingId: string; differenceAmount: number }> {
+  if (!isValidUUID(bookingId)) throw new Error('Invalid booking ID');
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking || booking.deleteflag !== 0) throw new Error('Booking not found');
+
+  const newFinalPrice = params.finalPrice ?? null;
+  if (newFinalPrice === null || newFinalPrice <= 0) {
+    return { requiresPayment: false };
+  }
+
+  const paidResult = await prisma.$queryRawUnsafe<{ total: string }[]>(
+    `SELECT COALESCE(SUM(amount), 0)::text as total FROM wallee_transactions WHERE "bookingId" = $1`,
+    bookingId
+  );
+  const paidAmount = parseFloat(paidResult[0]?.total ?? '0');
+  const differenceAmount = parseFloat((newFinalPrice - paidAmount).toFixed(2));
+
+  if (differenceAmount <= 0) {
+    return { requiresPayment: false };
+  }
+
+  const formData = { bookingId, ...params, differenceAmount };
+
+  const pending = await prisma.pendingBooking.create({
+    data: {
+      formData: formData as any,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    },
+  });
+
+  return { requiresPayment: true, pendingId: pending.id, differenceAmount };
+}
+
 export interface ParkingTypesResponse {
   parkingTypes: { id: string; name: string; pricePerDay: number | null; priceIncrements: number[] | null }[];
   washAvailable: boolean;

@@ -324,6 +324,98 @@ export async function initiatePaymentForBooking(bookingId: string, source?: stri
   return { paymentUrl };
 }
 
+export async function initiatePaymentForPendingUpdate(pendingId: string, amount: number): Promise<{ paymentUrl: string }> {
+  const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
+  if (!pending) throw new Error('Pending update not found');
+
+  const formData = pending.formData as any;
+  const bookingId = formData.bookingId as string;
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) throw new Error('Booking not found');
+
+  const domain = getAppDomain();
+  const merchantReference = `update_${pendingId}`;
+
+  const transactionId = await createWalleeTransaction({
+    merchantReference,
+    amount,
+    currency: 'EUR',
+    customerEmail: formData.email || booking.email || undefined,
+    fullName: formData.fullName || `${booking.name} ${booking.surname}`.trim(),
+    description: 'Parking Reservation Update - Park & Travel',
+    successUrl: `${domain}/payment/success?ref=${merchantReference}`,
+    failedUrl: `${domain}/payment/failed?ref=${merchantReference}`,
+    plateNo: formData.licensePlate || booking.plateNo || undefined,
+    carBrand: formData.vehicleBrand || booking.carBrand || undefined,
+  });
+
+  await prisma.pendingBooking.update({
+    where: { id: pendingId },
+    data: { wlTransactionId: BigInt(transactionId) },
+  });
+
+  const paymentUrl = await buildPaymentPageUrl(transactionId);
+  return { paymentUrl };
+}
+
+async function applyPendingBookingUpdate(pending: { id: string; formData: any }, wlTransactionId: number): Promise<string> {
+  const formData = pending.formData as any;
+  const bookingId = formData.bookingId as string;
+  const differenceAmount = formData.differenceAmount as number;
+  const newFinalPrice = formData.finalPrice as number | null;
+
+  if (formData.processedBookingId) {
+    return formData.processedBookingId;
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (formData.fullName !== undefined) {
+    const parts = String(formData.fullName).trim().split(' ');
+    updateData.name = parts[0] || '';
+    updateData.surname = parts.slice(1).join(' ') || '';
+  }
+  if (formData.email !== undefined) updateData.email = formData.email;
+  if (formData.phone !== undefined) updateData.mobile = formData.phone;
+  if (formData.phoneCodeId !== undefined) updateData.phoneCodeId = formData.phoneCodeId;
+  if (formData.licensePlate !== undefined) updateData.plateNo = formData.licensePlate;
+  if (formData.vehicleBrand !== undefined) updateData.carBrand = formData.vehicleBrand;
+  if (formData.vehicleModel !== undefined) updateData.carModel = formData.vehicleModel;
+  if (formData.vehicleColor !== undefined) updateData.carColor = formData.vehicleColor;
+  if (formData.flightNumber !== undefined) updateData.returnFlight = formData.flightNumber;
+  if (formData.dropOffOption !== undefined) updateData.dropOffOption = formData.dropOffOption;
+  if (formData.pickUpOption !== undefined) updateData.pickUpOption = formData.pickUpOption;
+  if (formData.washService !== undefined) updateData.washService = formData.washService;
+  if (formData.parkingTypeId !== undefined) updateData.parkingTypeId = formData.parkingTypeId;
+  if (formData.checkInDate !== undefined) updateData.dateFrom = new Date(formData.checkInDate + 'T12:00:00Z');
+  if (formData.checkInTime !== undefined) updateData.timeFrom = parseTimeToDate(formData.checkInTime);
+  if (formData.checkOutDate !== undefined) updateData.dateTo = formData.checkOutDate ? new Date(formData.checkOutDate + 'T12:00:00Z') : null;
+  if (formData.checkOutTime !== undefined) updateData.timeTo = formData.checkOutTime ? parseTimeToDate(formData.checkOutTime) : null;
+  if (newFinalPrice !== undefined) updateData.finalPrice = newFinalPrice;
+
+  await prisma.booking.update({ where: { id: bookingId }, data: updateData });
+
+  const existing = await prisma.walleeTransaction.findUnique({ where: { id: BigInt(wlTransactionId) } });
+  if (!existing) {
+    await prisma.walleeTransaction.create({
+      data: {
+        id: BigInt(wlTransactionId),
+        amount: differenceAmount,
+        bookingId,
+      },
+    }).catch((err) => console.error('Failed to record wallee_transaction for pending update:', err));
+  }
+
+  await sendPaidConfirmationEmailForBooking(bookingId);
+
+  await prisma.pendingBooking.update({
+    where: { id: pending.id },
+    data: { formData: { ...formData, processedBookingId: bookingId } },
+  }).catch(() => {});
+
+  return bookingId;
+}
+
 async function handlePendingPaymentSuccess(merchantReference: string, wlTransactionId: number): Promise<void> {
   const pendingId = merchantReference.replace('pending_', '');
   const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
@@ -337,6 +429,22 @@ async function handlePendingPaymentSuccess(merchantReference: string, wlTransact
     console.log(`Webhook: booking created from pending ${pendingId}`);
   } catch (err) {
     console.error(`Webhook: error creating booking from pending ${pendingId}:`, err);
+  }
+}
+
+async function handlePendingUpdatePaymentSuccess(merchantReference: string, wlTransactionId: number): Promise<void> {
+  const pendingId = merchantReference.replace('update_', '');
+  const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
+  if (!pending) {
+    console.log(`Webhook: pending update ${pendingId} not found (already processed)`);
+    return;
+  }
+
+  try {
+    const bookingId = await applyPendingBookingUpdate(pending, wlTransactionId);
+    console.log(`Webhook: booking ${bookingId} updated from pending update ${pendingId}`);
+  } catch (err) {
+    console.error(`Webhook: error applying pending update ${pendingId}:`, err);
   }
 }
 
@@ -428,6 +536,8 @@ export async function handleWalleeWebhook(body: any): Promise<void> {
   if (WALLEE_SUCCESS_STATES.includes(state)) {
     if (merchantReference.startsWith('pending_')) {
       await handlePendingPaymentSuccess(merchantReference, Number(entityId));
+    } else if (merchantReference.startsWith('update_')) {
+      await handlePendingUpdatePaymentSuccess(merchantReference, Number(entityId));
     } else if (merchantReference.startsWith('booking_')) {
       await handleBookingPaymentSuccess(merchantReference, Number(entityId));
     }
@@ -439,7 +549,44 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
   bookingId?: string;
   message?: string;
 }> {
-  if (ref.startsWith('pending_')) {
+  if (ref.startsWith('update_')) {
+    const pendingId = ref.replace('update_', '');
+    const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
+
+    if (!pending) {
+      return { status: 'failed', message: 'Update session not found or expired.' };
+    }
+
+    const formData = pending.formData as any;
+    if (formData.processedBookingId) {
+      await prisma.pendingBooking.delete({ where: { id: pendingId } }).catch(() => {});
+      return { status: 'success', bookingId: formData.processedBookingId };
+    }
+
+    if (!pending.wlTransactionId) {
+      return { status: 'pending', message: 'Payment not yet initiated.' };
+    }
+
+    let transaction: any;
+    try {
+      transaction = await getWalleeTransactionById(Number(pending.wlTransactionId));
+    } catch (err) {
+      console.error(`verify update: failed to fetch Wallee transaction:`, err);
+      return { status: 'pending', message: 'Could not verify payment status. Please try again.' };
+    }
+
+    const state: string = transaction.state;
+
+    if (WALLEE_SUCCESS_STATES.includes(state)) {
+      const bookingId = await applyPendingBookingUpdate(pending, Number(pending.wlTransactionId));
+      await prisma.pendingBooking.delete({ where: { id: pendingId } }).catch(() => {});
+      return { status: 'success', bookingId };
+    } else if (WALLEE_FAILED_STATES.includes(state)) {
+      return { status: 'failed', message: 'Payment was declined. Please try again.' };
+    } else {
+      return { status: 'pending', message: 'Payment is still processing. Please wait.' };
+    }
+  } else if (ref.startsWith('pending_')) {
     const pendingId = ref.replace('pending_', '');
     const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
 

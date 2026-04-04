@@ -10,6 +10,7 @@ import {
   createBooking as createBookingService,
   updateBooking as updateBookingService,
   updateBookingStatus as updateBookingStatusService,
+  stageBookingUpdate as stageBookingUpdateService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -497,6 +498,69 @@ export async function updateBooking(
   } catch (error) {
     console.error("Error updating booking:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function stageBookingUpdate(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({ error: "Invalid booking ID format" });
+      return;
+    }
+
+    const {
+      fullName,
+      email,
+      phone,
+      phoneCodeId,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      parkingTypeId,
+      washService,
+      dropOffOption,
+      pickUpOption,
+      userId,
+      finalPrice,
+    } = req.body;
+
+    const result = await stageBookingUpdateService(id, {
+      fullName,
+      email,
+      phone,
+      phoneCodeId,
+      licensePlate,
+      vehicleBrand,
+      vehicleModel,
+      vehicleColor,
+      flightNumber,
+      checkInDate,
+      checkInTime,
+      checkOutDate,
+      checkOutTime,
+      parkingTypeId,
+      washService,
+      dropOffOption,
+      pickUpOption,
+      userId,
+      finalPrice,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error("Error staging booking update:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 }
 

@@ -9,6 +9,7 @@ import {
   updateBookingStatus,
   updateParkedBooking,
   checkParkPlaceAvailability,
+  stageBookingUpdate,
 } from "../controllers/bookings.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -22,6 +23,7 @@ router.put("/:id", checkJwt, updateBooking);
 router.patch("/:id/status", checkJwt, updateBookingStatus);
 router.patch("/:id/parked", checkJwt, updateParkedBooking);
 router.put("/:id/delete", checkJwt, deleteBooking);
+router.post("/:id/stage-update", checkJwt, stageBookingUpdate);
 router.post("/guest", createGuestBooking);
 
 export default router;

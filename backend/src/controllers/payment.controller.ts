@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   initiatePaymentForPending,
   initiatePaymentForBooking,
+  initiatePaymentForPendingUpdate,
   handleWalleeWebhook,
   verifyAndFinalizePayment,
 } from '../services/payment.service';
@@ -29,6 +30,21 @@ export async function initiateForBookingHandler(req: Request, res: Response): Pr
   } catch (err: any) {
     console.error('initiateForBookingHandler error:', err?.response?.data || err.message);
     res.status(400).json({ message: err.message || 'Failed to initiate payment' });
+  }
+}
+
+export async function initiateForPendingUpdateHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { pendingId, amount } = req.body;
+    if (!pendingId || typeof amount !== 'number' || amount <= 0) {
+      res.status(400).json({ message: 'pendingId and a positive amount are required' });
+      return;
+    }
+    const result = await initiatePaymentForPendingUpdate(pendingId, amount);
+    res.json(result);
+  } catch (err: any) {
+    console.error('initiateForPendingUpdateHandler error:', err?.response?.data || err.message);
+    res.status(400).json({ message: err.message || 'Failed to initiate payment for update' });
   }
 }
 

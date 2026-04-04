@@ -1756,40 +1756,33 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     if (this.isEditMode && this.bookingId) {
       this.submitting = true;
-      this.apiService.put<{ success: boolean; data: { id: string; finalPrice: number | null; requiresPayment: boolean; differenceAmount: number } }>(`/bookings/${this.bookingId}`, booking).subscribe({
-        next: (res) => {
-          this.submitting = false;
-          if (this.isRegularUser && res.data?.requiresPayment && res.data.differenceAmount > 0) {
-            this.handlePaymentDifference(res.data.id, res.data.differenceAmount);
-          } else {
+      if (this.isRegularUser) {
+        this.apiService.post<{ success: boolean; data: { requiresPayment: boolean; pendingId?: string; differenceAmount?: number } }>(`/bookings/${this.bookingId}/stage-update`, booking).subscribe({
+          next: (stageRes) => {
+            const stageData = stageRes.data;
+            if (stageData?.requiresPayment && stageData.pendingId && stageData.differenceAmount) {
+              this.submitting = false;
+              this.handlePendingUpdatePayment(booking, stageData.pendingId, stageData.differenceAmount);
+            } else {
+              this.performImmediateUpdate(booking);
+            }
+          },
+          error: (err) => {
+            this.submitting = false;
             Swal.fire({
               toast: true,
               position: 'top-end',
-              icon: 'success',
-              title: 'Booking updated successfully',
+              icon: 'error',
+              title: err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
               showConfirmButton: false,
-              timer: 3000,
+              timer: 4000,
               timerProgressBar: true,
             });
-            this.router.navigate(['/admin/bookings']);
-          }
-        },
-        error: (err) => {
-          this.submitting = false;
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'error',
-            title:
-              err.error?.error ||
-              err.error?.message ||
-              'Failed to update booking. Please try again.',
-            showConfirmButton: false,
-            timer: 4000,
-            timerProgressBar: true,
-          });
-        },
-      });
+          },
+        });
+      } else {
+        this.performImmediateUpdate(booking);
+      }
     } else if (this.isRegularUser && !this.isPriceTBC) {
       if (this.mandatoryPrePayment) {
         this.submitting = true;
@@ -1891,13 +1884,43 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private handlePaymentDifference(bookingId: string, differenceAmount: number): void {
+  private performImmediateUpdate(booking: Record<string, unknown>): void {
+    this.apiService.put<{ success: boolean; data: { id: string; finalPrice: number | null } }>(`/bookings/${this.bookingId}`, booking).subscribe({
+      next: () => {
+        this.submitting = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Booking updated successfully',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+        this.router.navigate(['/admin/bookings']);
+      },
+      error: (err) => {
+        this.submitting = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.error || err.error?.message || 'Failed to update booking. Please try again.',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
+  }
+
+  private handlePendingUpdatePayment(booking: Record<string, unknown>, pendingId: string, differenceAmount: number): void {
     if (this.mandatoryPrePayment) {
-      this.initiatePaymentForDifference(bookingId, differenceAmount);
+      this.initiatePaymentForPendingUpdate(pendingId, differenceAmount);
     } else {
       Swal.fire({
         title: 'Additional Payment Required',
-        html: `Your booking has been updated. An additional payment of <strong>€${differenceAmount.toFixed(2)}</strong> is required.<br><br>Would you like to pay now or later?`,
+        html: `An additional payment of <strong>€${differenceAmount.toFixed(2)}</strong> is required for this update.<br><br>Would you like to pay now or update and pay later?`,
         icon: 'info',
         showConfirmButton: true,
         showDenyButton: true,
@@ -1907,27 +1930,19 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         denyButtonColor: '#6c757d',
       }).then((result) => {
         if (result.isConfirmed) {
-          this.initiatePaymentForDifference(bookingId, differenceAmount);
+          this.initiatePaymentForPendingUpdate(pendingId, differenceAmount);
         } else {
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Booking updated successfully',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-          this.router.navigate(['/admin/bookings']);
+          this.submitting = true;
+          this.performImmediateUpdate(booking);
         }
       });
     }
   }
 
-  private initiatePaymentForDifference(bookingId: string, amount: number): void {
+  private initiatePaymentForPendingUpdate(pendingId: string, amount: number): void {
     this.paymentInitiating = true;
     this.apiService
-      .post<{ paymentUrl: string }>('/payment/initiate-for-booking', { bookingId, source: 'auth', amount })
+      .post<{ paymentUrl: string }>('/payment/initiate-for-pending-update', { pendingId, amount })
       .subscribe({
         next: (payRes) => {
           window.location.href = payRes.paymentUrl;
