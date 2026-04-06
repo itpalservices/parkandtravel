@@ -1,9 +1,10 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { HomeScreenPromptComponent } from './components/home-screen-prompt/home-screen-prompt.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, HomeScreenPromptComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

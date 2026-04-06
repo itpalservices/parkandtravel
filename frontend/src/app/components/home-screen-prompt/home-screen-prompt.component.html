@@ -1,0 +1,70 @@
+@if (visible && platform) {
+  <div class="hsp-backdrop" (click)="dismiss()"></div>
+
+  <div class="hsp-card" role="dialog" aria-modal="true" aria-label="Add to Home Screen">
+    <div class="hsp-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+        <line x1="12" y1="18" x2="12.01" y2="18"/>
+      </svg>
+    </div>
+
+    <h2 class="hsp-title">Add to Home Screen</h2>
+    <p class="hsp-subtitle">Access Park &amp; Travel faster — just like a native app.</p>
+
+    <ol class="hsp-steps">
+      @if (platform === 'ios') {
+        <li>
+          Open this page in <strong>Safari</strong> (if not already).
+        </li>
+        <li>
+          Tap the <strong>Share</strong> button
+          <span class="hsp-inline-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </span>
+          at the bottom of your screen.
+        </li>
+        <li>
+          Scroll down and tap <strong>"Add to Home Screen"</strong>.
+        </li>
+        <li>
+          Tap <strong>"Add"</strong> in the top-right corner.
+        </li>
+      }
+      @if (platform === 'android') {
+        <li>
+          Open this page in <strong>Chrome</strong> (if not already).
+        </li>
+        <li>
+          Tap the <strong>menu</strong> button
+          <span class="hsp-inline-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+            </svg>
+          </span>
+          in the top-right corner.
+        </li>
+        <li>
+          Tap <strong>"Add to Home screen"</strong>.
+        </li>
+        <li>
+          Tap <strong>"Add"</strong> to confirm.
+        </li>
+      }
+    </ol>
+
+    <label class="hsp-checkbox-label">
+      <input type="checkbox" [(ngModel)]="dontShowAgain" />
+      <span>Don't show this again</span>
+    </label>
+
+    <button class="hsp-btn" (click)="dismiss()">Got it</button>
+  </div>
+}
