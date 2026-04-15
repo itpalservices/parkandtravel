@@ -694,7 +694,7 @@ export async function getExtraFeeEstimate(req: Request, res: Response): Promise<
 export async function completeBookingHandler(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const { amount, paymentMethod, applyExtraFee, notes } = req.body;
+    const { amount, paymentMethod, applyExtraFee, notes, actorName } = req.body;
     const authUser = req.authUser;
 
     if (amount === undefined || !paymentMethod) {
@@ -707,7 +707,7 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
       paymentMethod,
       applyExtraFee: !!applyExtraFee,
       actorUserId: authUser?.sub || '',
-      actorEmail: authUser?.email || '',
+      actorName: actorName || authUser?.email || '',
       notes,
     });
 

@@ -427,16 +427,17 @@ export class BookingsListComponent {
     if (isLate && extraFee > 0) {
       const lateResult = await Swal.fire({
         title: 'Late Check-out Detected',
-        html: `The actual check-out is later than scheduled.<br>Estimated extra fee: <strong>CHF ${extraFee.toFixed(2)}</strong><br>Do you want to apply it?`,
+        html: `The actual check-out is later than scheduled.<br>Estimated extra fee: <strong>€${extraFee.toFixed(2)}</strong><br>Do you want to apply it?`,
         icon: 'question',
         showDenyButton: true,
         showCancelButton: false,
+        showCloseButton: true,
         confirmButtonText: 'Apply extra fee',
         denyButtonText: 'Skip extra fee',
         confirmButtonColor: '#006B8F',
         denyButtonColor: '#6c757d',
         allowOutsideClick: false,
-        allowEscapeKey: false,
+        allowEscapeKey: true,
       });
       if (!lateResult.isConfirmed && !lateResult.isDenied) return;
       applyExtraFee = lateResult.isConfirmed;
@@ -465,10 +466,10 @@ export class BookingsListComponent {
     if (isPrepaid) {
       paymentMethod = 'online';
       amount = booking.paidAmount ?? totalAmount;
-      notes = `Online payment via Wallee (pre-paid)${applyExtraFee ? ` (includes extra fee: CHF ${extraFee.toFixed(2)})` : ''}`;
+      notes = `Online payment via Wallee (pre-paid)${applyExtraFee ? ` (includes extra fee: €${extraFee.toFixed(2)})` : ''}`;
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
-        html: `Booking was pre-paid online.<br><strong>Wallee amount: CHF ${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: CHF ${extraFee.toFixed(2)}` : ''}`,
+        html: `Booking was pre-paid online.<br><strong>Wallee amount: €${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: €${extraFee.toFixed(2)}` : ''}`,
         icon: 'info',
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
@@ -481,7 +482,7 @@ export class BookingsListComponent {
         title: 'Collect Payment',
         html: `
           <div class="mb-3">
-            <label class="form-label fw-semibold">Amount (CHF)</label>
+            <label class="form-label fw-semibold">Amount (€)</label>
             <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${totalAmount.toFixed(2)}" style="width:100%;margin:0">
           </div>
           <div class="mb-3">
@@ -513,12 +514,15 @@ export class BookingsListComponent {
       paymentMethod = formValues.paymentMethod;
     }
 
+    const actorName = this.userProfileService.getDisplayName() || undefined;
+
     // 4. Call complete endpoint
     this.apiService.post<any>(`/bookings/${booking.id}/complete`, {
       amount,
       paymentMethod,
       applyExtraFee,
       notes,
+      actorName,
     }).subscribe({
       next: () => {
         booking.bookingStatusId = 'bookingStatus_completed';

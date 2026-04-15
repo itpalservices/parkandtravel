@@ -1614,7 +1614,7 @@ export async function completeBooking(
     paymentMethod: string;
     applyExtraFee: boolean;
     actorUserId: string;
-    actorEmail: string;
+    actorName: string;
     notes?: string;
   },
 ): Promise<{ success: boolean; completionTransactionId: string } | null> {
@@ -1632,7 +1632,7 @@ export async function completeBooking(
     const updateData: Record<string, any> = {
       bookingStatus: { connect: { id: 'bookingStatus_completed' } },
       actualCheckOut: new Date(),
-      checkOutBy: params.actorEmail || params.actorUserId,
+      checkOutBy: params.actorName || params.actorUserId,
       extraFee: extraFeeToApply,
     };
 
