@@ -695,7 +695,7 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
   try {
     const { id } = req.params;
     const { amount, paymentMethod, applyExtraFee, notes } = req.body;
-    const authUser = (req as any).user as AuthUser;
+    const authUser = req.authUser;
 
     if (amount === undefined || !paymentMethod) {
       res.status(400).json({ error: "amount and paymentMethod are required" });
