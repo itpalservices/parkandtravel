@@ -66,6 +66,8 @@ interface BookingResponse {
   checkInBy: string | null;
   checkOutBy: string | null;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
+  isPrepaid: boolean;
+  walleePayment: { amount: number; createdAt: string } | null;
 }
 
 function derivePaymentStatus(
@@ -301,6 +303,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')
     ),
+    isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
+    walleePayment: null,
   }));
 
   return {
@@ -351,7 +355,9 @@ export async function getBookingById(
       b.deleteflag,
       b."checkInBy",
       b."checkOutBy",
-      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
+      (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeAmount",
+      (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeCreatedAt"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -402,6 +408,10 @@ export async function getBookingById(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')
     ),
+    isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
+    walleePayment: b.walleeAmount
+      ? { amount: parseFloat(b.walleeAmount), createdAt: (b.walleeCreatedAt as Date).toISOString() }
+      : null,
   };
 }
 
@@ -1256,6 +1266,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
       parseFloat(b.paidAmount ?? '0')
     ),
+    isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
+    walleePayment: null,
   }));
 }
 
@@ -1552,6 +1564,94 @@ export async function checkParkPlaceAvailability(
     },
   });
   return { available: !existing };
+}
+
+export async function estimateExtraFee(
+  bookingId: string,
+): Promise<{ extraFee: number; isLate: boolean } | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) return null;
+
+  const checkOutDate = booking.dateTo ? new Date(booking.dateTo) : null;
+  if (!checkOutDate) return { extraFee: 0, isLate: false };
+
+  checkOutDate.setHours(23, 59, 59, 999);
+  const now = new Date();
+  if (now <= checkOutDate) return { extraFee: 0, isLate: false };
+
+  const actualCheckOutDay = new Date(now);
+  actualCheckOutDay.setHours(0, 0, 0, 0);
+  const checkOutDay = new Date(booking.dateTo!);
+  checkOutDay.setHours(0, 0, 0, 0);
+
+  const diffTime = actualCheckOutDay.getTime() - checkOutDay.getTime();
+  const extraDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (extraDays <= 0 || !booking.parkingTypeId) return { extraFee: 0, isLate: true };
+
+  const priceSettings = await getPriceSettings();
+  let increments: number[] | null = null;
+  if (booking.parkingTypeId === 'parkingType_uncovered') {
+    increments = priceSettings.priceIncrementsUncovered;
+  } else if (booking.parkingTypeId === 'parkingType_covered') {
+    increments = priceSettings.priceIncrementsCovered;
+  }
+
+  const checkInDate = booking.dateFrom ? new Date(booking.dateFrom) : null;
+  if (!checkInDate) return { extraFee: 0, isLate: true };
+
+  const originalDays = calculateDays(checkInDate, checkOutDay);
+  const calculatedExtraFee = calculateExtraFeeProgressive(originalDays, extraDays, increments);
+  return { extraFee: calculatedExtraFee, isLate: true };
+}
+
+export async function completeBooking(
+  bookingId: string,
+  params: {
+    amount: number;
+    paymentMethod: string;
+    applyExtraFee: boolean;
+    actorUserId: string;
+    actorEmail: string;
+    notes?: string;
+  },
+): Promise<{ success: boolean; completionTransactionId: string } | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  let extraFeeToApply: number | null = null;
+  if (params.applyExtraFee) {
+    const estimate = await estimateExtraFee(bookingId);
+    if (estimate && estimate.extraFee > 0) {
+      extraFeeToApply = estimate.extraFee;
+    }
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updateData: Record<string, any> = {
+      bookingStatus: { connect: { id: 'bookingStatus_completed' } },
+      actualCheckOut: new Date(),
+      checkOutBy: params.actorEmail || params.actorUserId,
+      extraFee: extraFeeToApply,
+    };
+
+    await tx.booking.update({ where: { id: bookingId }, data: updateData });
+
+    const completion = await tx.completionTransaction.create({
+      data: {
+        bookingId,
+        amount: params.amount,
+        userId: params.actorUserId,
+        paymentMethod: params.paymentMethod,
+        notes: params.notes || null,
+      },
+    });
+
+    return completion;
+  });
+
+  return { success: true, completionTransactionId: result.id };
 }
 
 export { isValidDateFormat, isDateInPast, isValidUUID };

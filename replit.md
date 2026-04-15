@@ -46,6 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Configuration Settings**: Admin users manage parking availability, base prices, progressive price increments, service options, delivery fees, email description text, and mandatory pre-payment toggle.
 - **Authenticated Booking Payment Flow**: Integrates with Wallee. If `mandatoryPrePayment` is true, payment is initiated directly. Otherwise, user chooses "Pay Now / Pay Later". Payment is skipped if price is TBC. Payment results redirect to `/admin/bookings`.
 - **Wallee Transactions**: Successful payments are recorded in `wallee_transactions`. Booking payment status (Paid, Partial, Overpaid, Unpaid) is derived dynamically from these transactions.
+- **Completion Transactions**: `completion_transactions` table records payment at checkout. `GET /api/bookings/:id/extra-fee-estimate` estimates late-checkout extra fee (read-only). `POST /api/bookings/:id/complete` atomically sets status to Completed, records `actualCheckOut`/`checkOutBy`, optionally applies extra fee, and creates a `CompletionTransaction`. Frontend "Mark as Completed" flow: fetches estimate → prompts about extra fee if late → shows Cash/Card popup (non-prepaid) or auto-records Wallee payment (prepaid) → calls complete endpoint.
 - **Payment for Booking Update (Difference)**: If a booking edit increases the `finalPrice`, the user pays the difference via Wallee.
 - **Paid Amount Tooltip**: Bookings list displays a tooltip showing the total amount paid.
 

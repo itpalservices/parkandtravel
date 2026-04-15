@@ -10,6 +10,8 @@ import {
   updateParkedBooking,
   checkParkPlaceAvailability,
   stageBookingUpdate,
+  getExtraFeeEstimate,
+  completeBookingHandler,
 } from "../controllers/bookings.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -24,6 +26,8 @@ router.patch("/:id/status", checkJwt, updateBookingStatus);
 router.patch("/:id/parked", checkJwt, updateParkedBooking);
 router.put("/:id/delete", checkJwt, deleteBooking);
 router.post("/:id/stage-update", checkJwt, stageBookingUpdate);
+router.get("/:id/extra-fee-estimate", checkJwt, getExtraFeeEstimate);
+router.post("/:id/complete", checkJwt, completeBookingHandler);
 router.post("/guest", createGuestBooking);
 
 export default router;

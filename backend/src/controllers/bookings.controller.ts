@@ -11,6 +11,8 @@ import {
   updateBooking as updateBookingService,
   updateBookingStatus as updateBookingStatusService,
   stageBookingUpdate as stageBookingUpdateService,
+  estimateExtraFee as estimateExtraFeeService,
+  completeBooking as completeBookingService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -670,6 +672,53 @@ export async function updateBookingStatus(
     });
   } catch (error) {
     console.error("Error updating booking status:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getExtraFeeEstimate(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const result = await estimateExtraFeeService(id);
+    if (!result) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    res.json({ data: result });
+  } catch (error) {
+    console.error("Error estimating extra fee:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function completeBookingHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { amount, paymentMethod, applyExtraFee, notes } = req.body;
+    const authUser = (req as any).user as AuthUser;
+
+    if (amount === undefined || !paymentMethod) {
+      res.status(400).json({ error: "amount and paymentMethod are required" });
+      return;
+    }
+
+    const result = await completeBookingService(id, {
+      amount: parseFloat(amount),
+      paymentMethod,
+      applyExtraFee: !!applyExtraFee,
+      actorUserId: authUser?.sub || '',
+      actorEmail: authUser?.email || '',
+      notes,
+    });
+
+    if (!result) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error completing booking:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

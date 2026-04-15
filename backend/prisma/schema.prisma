@@ -63,7 +63,8 @@ model Booking {
   parkingType       ParkingType?       @relation(fields: [parkingTypeId], references: [id])
   phoneCode         PhoneCode?         @relation(fields: [phoneCodeId], references: [id])
   bookingStatus     BookingStatus?     @relation(fields: [bookingStatusId], references: [id])
-  walleeTransactions WalleeTransaction[]
+  walleeTransactions     WalleeTransaction[]
+  completionTransactions CompletionTransaction[]
 
   @@map("bookings")
 }
@@ -77,6 +78,19 @@ model WalleeTransaction {
   booking Booking @relation(fields: [bookingId], references: [id])
 
   @@map("wallee_transactions")
+}
+
+model CompletionTransaction {
+  id            String   @id @default(uuid()) @db.Uuid
+  bookingId     String   @map("booking_id") @db.Uuid
+  datetime      DateTime @default(now()) @db.Timestamptz(6)
+  amount        Decimal  @db.Decimal(10, 2)
+  userId        String   @map("user_id") @db.VarChar(255)
+  paymentMethod String   @map("payment_method") @db.VarChar(20)
+  notes         String?  @db.Text
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+
+  @@map("completion_transactions")
 }
 
 model PendingBooking {

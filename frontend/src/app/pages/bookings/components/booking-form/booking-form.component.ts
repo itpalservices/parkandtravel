@@ -779,17 +779,28 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  private handleCompletedStatus(newStatusId: string, newStatusLabel: string): void {
-    if (!this.existingBooking) return;
+  private async handleCompletedStatus(_newStatusId: string, _newStatusLabel: string): Promise<void> {
+    if (!this.existingBooking || !this.bookingId) return;
 
-    const checkOutDate = new Date(this.existingBooking.dateTo);
-    checkOutDate.setHours(23, 59, 59, 999);
-    const now = new Date();
+    this.updatingStatus = true;
+    let extraFee = 0;
+    let isLate = false;
+    try {
+      const estimateResp: any = await firstValueFrom(
+        this.apiService.get<any>(`/bookings/${this.bookingId}/extra-fee-estimate`)
+      );
+      extraFee = estimateResp?.data?.extraFee ?? 0;
+      isLate = estimateResp?.data?.isLate ?? false;
+    } catch {
+      // proceed without extra fee
+    }
+    this.updatingStatus = false;
 
-    if (now > checkOutDate) {
-      Swal.fire({
+    let applyExtraFee = false;
+    if (isLate && extraFee > 0) {
+      const lateResult = await Swal.fire({
         title: 'Late Check-out Detected',
-        text: 'The actual check-out is later than the scheduled date. Do you want to apply an extra fee?',
+        html: `The actual check-out is later than scheduled.<br>Estimated extra fee: <strong>CHF ${extraFee.toFixed(2)}</strong><br>Do you want to apply it?`,
         icon: 'question',
         showCancelButton: true,
         showDenyButton: true,
@@ -798,16 +809,115 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         cancelButtonText: 'Cancel',
         confirmButtonColor: '#006B8F',
         denyButtonColor: '#6c757d',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.performStatusUpdate(newStatusId, newStatusLabel, undefined, true);
-        } else if (result.isDenied) {
-          this.performStatusUpdate(newStatusId, newStatusLabel, undefined, false);
-        }
       });
-    } else {
-      this.performStatusUpdate(newStatusId, newStatusLabel);
+      if (lateResult.isDismissed) return;
+      applyExtraFee = lateResult.isConfirmed;
+    } else if (isLate) {
+      const lateConfirm = await Swal.fire({
+        title: 'Late Check-out',
+        text: 'The actual check-out is later than scheduled. No extra fee will be applied.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Proceed',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#006B8F',
+      });
+      if (!lateConfirm.isConfirmed) return;
     }
+
+    const totalAmount = (this.existingBooking.finalPrice ?? 0) + (applyExtraFee ? extraFee : 0);
+
+    let paymentMethod: string;
+    let amount: number;
+    let notes: string | undefined;
+
+    if (this.existingBooking.isPrepaid) {
+      paymentMethod = 'online';
+      amount = this.existingBooking.walleePayment?.amount ?? totalAmount;
+      const walleeDate = this.existingBooking.walleePayment?.createdAt
+        ? new Date(this.existingBooking.walleePayment.createdAt).toLocaleDateString()
+        : '';
+      notes = `Online payment via Wallee on ${walleeDate}${applyExtraFee ? ` (includes extra fee: CHF ${extraFee.toFixed(2)})` : ''}`;
+      const confirmResult = await Swal.fire({
+        title: 'Confirm Completion',
+        html: `Booking was pre-paid online.<br><strong>Wallee amount: CHF ${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: CHF ${extraFee.toFixed(2)}` : ''}`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Complete Booking',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#006B8F',
+      });
+      if (!confirmResult.isConfirmed) return;
+    } else {
+      const { value: formValues } = await Swal.fire({
+        title: 'Collect Payment',
+        html: `
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Amount (CHF)</label>
+            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${totalAmount.toFixed(2)}" style="width:100%;margin:0">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Payment Method</label>
+            <div class="d-flex gap-3 justify-content-center mt-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="swal-pm" id="pm-cash" value="cash" checked>
+                <label class="form-check-label" for="pm-cash">Cash</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="swal-pm" id="pm-card" value="card">
+                <label class="form-check-label" for="pm-card">Card</label>
+              </div>
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Complete Booking',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#006B8F',
+        preConfirm: () => {
+          const amtEl = document.getElementById('swal-amount') as HTMLInputElement;
+          const pmEl = document.querySelector('input[name="swal-pm"]:checked') as HTMLInputElement;
+          return { amount: parseFloat(amtEl?.value || '0'), paymentMethod: pmEl?.value || 'cash' };
+        },
+      });
+      if (!formValues) return;
+      amount = formValues.amount;
+      paymentMethod = formValues.paymentMethod;
+    }
+
+    this.updatingStatus = true;
+    this.apiService.post<any>(`/bookings/${this.bookingId}/complete`, {
+      amount,
+      paymentMethod,
+      applyExtraFee,
+      notes,
+    }).subscribe({
+      next: () => {
+        this.updatingStatus = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Booking completed successfully',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+        this.router.navigate(['/admin/bookings']);
+      },
+      error: (err) => {
+        this.updatingStatus = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.error || err.error?.message || 'Failed to complete booking',
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
   }
 
   private performStatusUpdate(
@@ -849,18 +959,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.parkPlace = '';
           this.enableFieldsForNonParkedBooking();
           this.applyAirportDeliveryState();
-        } else if (newStatusId === 'bookingStatus_completed') {
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Booking completed successfully',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-          this.router.navigate(['/admin/bookings']);
-          return;
         }
 
         Swal.fire({

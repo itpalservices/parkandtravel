@@ -122,6 +122,8 @@ export interface BookingDetails {
   parkPlace: string | null;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
+  isPrepaid: boolean;
+  walleePayment: { amount: number; createdAt: string } | null;
 }
 
 export interface DateRangeFilter {
