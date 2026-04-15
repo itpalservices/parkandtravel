@@ -802,25 +802,27 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         title: 'Late Check-out Detected',
         html: `The actual check-out is later than scheduled.<br>Estimated extra fee: <strong>CHF ${extraFee.toFixed(2)}</strong><br>Do you want to apply it?`,
         icon: 'question',
-        showCancelButton: true,
         showDenyButton: true,
-        confirmButtonText: 'Yes, apply extra fee',
-        denyButtonText: 'No, skip extra fee',
-        cancelButtonText: 'Cancel',
+        showCancelButton: false,
+        confirmButtonText: 'Apply extra fee',
+        denyButtonText: 'Skip extra fee',
         confirmButtonColor: '#006B8F',
         denyButtonColor: '#6c757d',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
-      if (lateResult.isDismissed) return;
+      if (!lateResult.isConfirmed && !lateResult.isDenied) return;
       applyExtraFee = lateResult.isConfirmed;
     } else if (isLate) {
       const lateConfirm = await Swal.fire({
         title: 'Late Check-out',
         text: 'The actual check-out is later than scheduled. No extra fee will be applied.',
         icon: 'info',
-        showCancelButton: true,
+        showCancelButton: false,
         confirmButtonText: 'Proceed',
-        cancelButtonText: 'Cancel',
         confirmButtonColor: '#006B8F',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
       if (!lateConfirm.isConfirmed) return;
     }
