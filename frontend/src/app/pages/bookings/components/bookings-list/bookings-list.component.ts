@@ -474,7 +474,7 @@ export class BookingsListComponent {
       notes = `Online payment via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''}${applyExtraFee ? ` (includes extra fee: €${extraFee.toFixed(2)})` : ''}`;
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
-        html: `Booking was pre-paid online.<br><strong>Wallee amount: €${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: €${extraFee.toFixed(2)}` : ''}`,
+        html: `Booking was pre-paid online.<br><strong>Final amount: €${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: €${extraFee.toFixed(2)}` : ''}`,
         icon: 'info',
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
