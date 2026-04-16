@@ -17,6 +17,7 @@ import {
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
 import { getUserDiscount } from "../services/auth0.service";
+import { updateShiftActivity } from "../services/shifts.service";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
   try {
@@ -666,6 +667,10 @@ export async function updateBookingStatus(
       return;
     }
 
+    if (bookingStatusId === 'bookingStatus_parked' && authUser?.sub) {
+      updateShiftActivity(authUser.sub);
+    }
+
     res.json({
       success: true,
       data: result,
@@ -714,6 +719,10 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
     if (!result) {
       res.status(404).json({ error: "Booking not found" });
       return;
+    }
+
+    if (authUser?.sub) {
+      updateShiftActivity(authUser.sub);
     }
 
     res.json({ success: true, data: result });
