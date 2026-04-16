@@ -15,9 +15,10 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const isDashboardEndpoint = req.url.includes('/api/dashboard');
   const isReportsEndpoint = req.url.includes('/api/reports');
   const isUploadEndpoint = req.url.includes('/api/upload');
+  const isShiftsEndpoint = req.url.includes('/api/shifts');
   const isPostRequest = req.method === 'POST';
   
-  const shouldAttachToken = isUserEndpoint || isCarsEndpoint || isSettingsEndpoint || isDashboardEndpoint || isReportsEndpoint || isUploadEndpoint || (isBookingsEndpoint && !(isGuestEndpoint && isPostRequest));
+  const shouldAttachToken = isUserEndpoint || isCarsEndpoint || isSettingsEndpoint || isDashboardEndpoint || isReportsEndpoint || isUploadEndpoint || isShiftsEndpoint || (isBookingsEndpoint && !(isGuestEndpoint && isPostRequest));
   
   if (!shouldAttachToken) {
     return next(req);
