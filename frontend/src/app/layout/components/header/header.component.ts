@@ -2,9 +2,11 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '@auth0/auth0-angular';
-import { Observable, of, map, combineLatest } from 'rxjs';
+import { Observable, of, map, combineLatest, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { UserProfileService, UserProfileData } from '../../../core/services/user-profile.service';
+import { ShiftService } from '../../../core/services/shift.service';
+import { RoleService } from '../../../core/services/role.service';
 
 @Component({
   selector: 'app-header',
@@ -20,6 +22,8 @@ export class HeaderComponent {
     ? inject(AuthService, { optional: true }) 
     : null;
   private userProfileService = inject(UserProfileService);
+  private shiftService = inject(ShiftService);
+  private roleService = inject(RoleService);
   
   user$: Observable<User | null | undefined> = this.authService?.user$ || of(null);
   profile$: Observable<UserProfileData | null> = this.userProfileService.profile$;
@@ -41,13 +45,16 @@ export class HeaderComponent {
     this.toggleSidebar.emit();
   }
 
-  logout(): void {
-    if (this.authService) {
-      this.authService.logout({
-        logoutParams: {
-          returnTo: window.location.origin
-        }
+  async logout(): Promise<void> {
+    if (!this.authService) return;
+
+    this.roleService.getUserRole().pipe(take(1)).subscribe(async (roleInfo) => {
+      if (roleInfo.isAdmin || roleInfo.isDriver) {
+        await this.shiftService.endShift();
+      }
+      this.authService!.logout({
+        logoutParams: { returnTo: window.location.origin }
       });
-    }
+    });
   }
 }

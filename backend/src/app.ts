@@ -12,6 +12,7 @@ import emailRoutes from "./routes/email.routes";
 import availabilityRoutes from "./routes/availability.routes";
 import uploadRoutes from "./routes/upload.routes";
 import paymentRoutes from "./routes/payment.routes";
+import shiftsRoutes from "./routes/shifts.routes";
 import { getParkingTypes, getPhoneCodes } from "./services/bookings.service";
 
 dotenv.config();
@@ -55,6 +56,7 @@ app.use("/api/email", emailRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/shifts", shiftsRoutes);
 
 if (process.env.NODE_ENV !== "production") {
   const frontendProxy = createProxyMiddleware({

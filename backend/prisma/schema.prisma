@@ -118,6 +118,20 @@ model BookingStatus {
   @@map("booking_statuses")
 }
 
+model Shift {
+  id             Int       @id @default(autoincrement())
+  userId         String    @map("user_id") @db.VarChar(255)
+  shiftStart     DateTime  @map("shift_start") @db.Timestamptz(6)
+  shiftEnd       DateTime? @map("shift_end") @db.Timestamptz(6)
+  lastActivityAt DateTime  @map("last_activity_at") @db.Timestamptz(6)
+  status         String    @default("open") @db.VarChar(10)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([userId], name: "idx_shifts_user_id")
+  @@index([status], name: "idx_shifts_status")
+  @@map("shifts")
+}
+
 model Car {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String   @db.VarChar(255)

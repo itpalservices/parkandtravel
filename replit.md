@@ -114,5 +114,13 @@ Preferred communication style: Simple, everyday language.
 - **Auto-trigger**: Confirmation emails sent on booking creation and update.
 - **Templates**: "New Booking" and "Updated Booking" templates.
 
+### Shift Tracking
+- **Table**: `shifts` — tracks open/closed shifts per staff user (admin/driver).
+- **Schema**: `id` (serial PK), `user_id` (Auth0 sub string), `shift_start`, `shift_end`, `last_activity_at`, `status` (`open`|`closed`), `created_at`.
+- **Constraint**: Partial unique index `one_open_shift_per_user` ensures only one open shift per user at a time.
+- **API**: `POST /api/shifts/start` (idempotent — opens or reuses existing), `POST /api/shifts/end` (closes open shift). Both require admin or driver role.
+- **Frontend**: `ShiftService` calls these endpoints. `LayoutComponent` starts a shift on app load after Auth0 authentication (admin/driver only). `HeaderComponent` ends the shift before calling Auth0 logout.
+- **Future use**: Intended to power a report linking `completion_transactions` to the shift during which they were recorded.
+
 ### Vehicle Photo Upload (S3)
 - **DigitalOcean Spaces**: S3-compatible object storage.
