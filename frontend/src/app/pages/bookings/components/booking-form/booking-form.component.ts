@@ -838,7 +838,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     if (this.existingBooking.isPrepaid) {
       paymentMethod = 'online';
-      amount = this.existingBooking.walleePayment?.amount ?? totalAmount;
+      amount = totalAmount;
       const walleeDate = this.existingBooking.walleePayment?.createdAt
         ? new Date(this.existingBooking.walleePayment.createdAt).toLocaleDateString()
         : '';

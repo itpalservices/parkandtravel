@@ -1568,18 +1568,29 @@ export async function checkParkPlaceAvailability(
 
 export async function estimateExtraFee(
   bookingId: string,
-): Promise<{ extraFee: number; isLate: boolean } | null> {
+): Promise<{ extraFee: number; isLate: boolean; walleePaymentDate: string | null } | null> {
   if (!isValidUUID(bookingId)) return null;
 
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  const [booking, firstWallee] = await Promise.all([
+    prisma.booking.findUnique({ where: { id: bookingId } }),
+    prisma.walleeTransaction.findFirst({
+      where: { bookingId },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true },
+    }),
+  ]);
   if (!booking) return null;
 
+  const walleePaymentDate = firstWallee?.createdAt
+    ? (firstWallee.createdAt as Date).toISOString()
+    : null;
+
   const checkOutDate = booking.dateTo ? new Date(booking.dateTo) : null;
-  if (!checkOutDate) return { extraFee: 0, isLate: false };
+  if (!checkOutDate) return { extraFee: 0, isLate: false, walleePaymentDate };
 
   checkOutDate.setHours(23, 59, 59, 999);
   const now = new Date();
-  if (now <= checkOutDate) return { extraFee: 0, isLate: false };
+  if (now <= checkOutDate) return { extraFee: 0, isLate: false, walleePaymentDate };
 
   const actualCheckOutDay = new Date(now);
   actualCheckOutDay.setHours(0, 0, 0, 0);
@@ -1589,7 +1600,7 @@ export async function estimateExtraFee(
   const diffTime = actualCheckOutDay.getTime() - checkOutDay.getTime();
   const extraDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (extraDays <= 0 || !booking.parkingTypeId) return { extraFee: 0, isLate: true };
+  if (extraDays <= 0 || !booking.parkingTypeId) return { extraFee: 0, isLate: true, walleePaymentDate };
 
   const priceSettings = await getPriceSettings();
   let increments: number[] | null = null;
@@ -1600,11 +1611,11 @@ export async function estimateExtraFee(
   }
 
   const checkInDate = booking.dateFrom ? new Date(booking.dateFrom) : null;
-  if (!checkInDate) return { extraFee: 0, isLate: true };
+  if (!checkInDate) return { extraFee: 0, isLate: true, walleePaymentDate };
 
   const originalDays = calculateDays(checkInDate, checkOutDay);
   const calculatedExtraFee = calculateExtraFeeProgressive(originalDays, extraDays, increments);
-  return { extraFee: calculatedExtraFee, isLate: true };
+  return { extraFee: calculatedExtraFee, isLate: true, walleePaymentDate };
 }
 
 export async function completeBooking(

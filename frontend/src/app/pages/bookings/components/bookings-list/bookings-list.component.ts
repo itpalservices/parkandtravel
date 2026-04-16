@@ -412,12 +412,14 @@ export class BookingsListComponent {
     // 1. Fetch extra fee estimate
     let extraFee = 0;
     let isLate = false;
+    let walleePaymentDate: string | null = null;
     try {
       const estimateResp: any = await firstValueFrom(
         this.apiService.get<any>(`/bookings/${booking.id}/extra-fee-estimate`)
       );
       extraFee = estimateResp?.data?.extraFee ?? 0;
       isLate = estimateResp?.data?.isLate ?? false;
+      walleePaymentDate = estimateResp?.data?.walleePaymentDate ?? null;
     } catch {
       // proceed without extra fee
     }
@@ -465,8 +467,11 @@ export class BookingsListComponent {
 
     if (isPrepaid) {
       paymentMethod = 'online';
-      amount = booking.paidAmount ?? totalAmount;
-      notes = `Online payment via Wallee (pre-paid)${applyExtraFee ? ` (includes extra fee: €${extraFee.toFixed(2)})` : ''}`;
+      amount = totalAmount;
+      const walleeDateStr = walleePaymentDate
+        ? new Date(walleePaymentDate).toLocaleDateString()
+        : '';
+      notes = `Online payment via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''}${applyExtraFee ? ` (includes extra fee: €${extraFee.toFixed(2)})` : ''}`;
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
         html: `Booking was pre-paid online.<br><strong>Wallee amount: €${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: €${extraFee.toFixed(2)}` : ''}`,
