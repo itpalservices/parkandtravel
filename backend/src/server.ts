@@ -1,6 +1,7 @@
 import app from "./app";
 import { prisma } from "./lib/prisma";
 import { startShiftAutoCloseJob } from "./jobs/shift-auto-close.job";
+import { startFlightSyncJob } from "./jobs/flight-sync.job";
 
 const PORT = process.env.PORT || 5000;
 
@@ -19,6 +20,7 @@ app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
   testDatabaseConnection();
   startShiftAutoCloseJob();
+  startFlightSyncJob();
 });
 
 export { prisma };

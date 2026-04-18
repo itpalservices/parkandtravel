@@ -57,6 +57,7 @@ model Booking {
   checkInBy      String?    @db.VarChar(255)
   checkOutBy     String?    @db.VarChar(255)
   extraFee             Decimal?   @db.Decimal(10, 2)
+  estimatedArrivalTime DateTime?  @map("estimated_arrival_time") @db.Timestamptz(6)
   deleteflag           Int        @default(0)
   pendingWlTransactionId BigInt?  @map("pending_wl_transaction_id")
   createdAt            DateTime   @default(now())
