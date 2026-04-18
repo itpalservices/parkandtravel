@@ -17,7 +17,7 @@ import {
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
 import { getUserDiscount } from "../services/auth0.service";
-import { updateShiftActivity } from "../services/shifts.service";
+import { updateShiftActivity, getOpenShiftId } from "../services/shifts.service";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
   try {
@@ -707,6 +707,8 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
       return;
     }
 
+    const shiftId = authUser?.sub ? await getOpenShiftId(authUser.sub) : null;
+
     const result = await completeBookingService(id, {
       amount: parseFloat(amount),
       paymentMethod,
@@ -714,6 +716,7 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
       actorUserId: authUser?.sub || '',
       actorName: actorName || authUser?.email || '',
       notes,
+      shiftId,
     });
 
     if (!result) {

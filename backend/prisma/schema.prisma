@@ -88,7 +88,9 @@ model CompletionTransaction {
   userId        String   @map("user_id") @db.VarChar(255)
   paymentMethod String   @map("payment_method") @db.VarChar(20)
   notes         String?  @db.Text
+  shiftId       Int?     @map("shift_id")
   booking       Booking  @relation(fields: [bookingId], references: [id])
+  shift         Shift?   @relation(fields: [shiftId], references: [id])
 
   @@map("completion_transactions")
 }
@@ -126,6 +128,8 @@ model Shift {
   lastActivityAt DateTime  @map("last_activity_at") @db.Timestamptz(6)
   status         String    @default("open") @db.VarChar(10)
   createdAt      DateTime  @default(now()) @map("created_at")
+
+  completionTransactions CompletionTransaction[]
 
   @@index([userId], name: "idx_shifts_user_id")
   @@index([status], name: "idx_shifts_status")

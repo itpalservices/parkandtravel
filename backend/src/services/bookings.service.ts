@@ -1627,6 +1627,7 @@ export async function completeBooking(
     actorUserId: string;
     actorName: string;
     notes?: string;
+    shiftId?: number | null;
   },
 ): Promise<{ success: boolean; completionTransactionId: string } | null> {
   if (!isValidUUID(bookingId)) return null;
@@ -1656,6 +1657,7 @@ export async function completeBooking(
         userId: params.actorUserId,
         paymentMethod: params.paymentMethod,
         notes: params.notes || null,
+        shiftId: params.shiftId ?? null,
       },
     });
 
