@@ -81,7 +81,7 @@ export async function employeeZReportByShift(req: Request, res: Response) {
 
     const [transactions, total, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes, b.plate_no
+        SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes, b."plateNo" AS plate_no
         FROM completion_transactions ct
         LEFT JOIN bookings b ON b.id = ct.booking_id
         WHERE ct.shift_id = ${shiftIdNum}
@@ -141,7 +141,7 @@ export async function employeeZReportByDate(req: Request, res: Response) {
 
     const [transactions, countRaw, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes, b.plate_no
+        SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes, b."plateNo" AS plate_no
         FROM completion_transactions ct
         LEFT JOIN bookings b ON b.id = ct.booking_id
         WHERE ct.datetime >= ${fromDate} AND ct.datetime <= ${toDate}
