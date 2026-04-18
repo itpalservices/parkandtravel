@@ -18,6 +18,11 @@ export class ReportsComponent {
       description: 'View daily summary reports grouped'
     },
     {
+      id: 'employee-z-report',
+      title: 'Z-Report by Employee',
+      description: 'View completion transactions by date range or drill down by employee and shift'
+    },
+    {
       id: 'daily-inout',
       title: 'Daily In/Out Report',
       description: 'Track all check-ins and check-outs by date'

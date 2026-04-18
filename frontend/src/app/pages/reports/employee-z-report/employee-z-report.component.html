@@ -1,0 +1,406 @@
+<div class="page-wrapper no-print">
+  <div class="page-header">
+    <div class="header-left">
+      <a routerLink="/admin/reports" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Reports
+      </a>
+      <h1 class="page-title">Z-Report by Employee</h1>
+    </div>
+    <div class="header-actions">
+      @if (canPrint) {
+        <button class="btn-print" (click)="printReport()" [disabled]="isPrinting">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          {{ isPrinting ? 'Preparing...' : 'Print Report' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Mode Toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn" [class.active]="mode === 'date'" (click)="setMode('date')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      Search by Date
+    </button>
+    <button class="mode-btn" [class.active]="mode === 'employee'" (click)="setMode('employee')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      Search by Employee
+    </button>
+  </div>
+
+  <!-- =================== DATE MODE =================== -->
+  @if (mode === 'date') {
+    <div class="section-card">
+      <app-date-range-picker
+        [selectedPreset]="'today'"
+        (dateRangeChange)="onDateRangeChange($event)">
+      </app-date-range-picker>
+    </div>
+
+    @if (dateLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading report...</span>
+      </div>
+    }
+
+    @if (dateError) {
+      <div class="error-state">{{ dateError }}</div>
+    }
+
+    @if (!dateLoading && dateData) {
+      <!-- Totals -->
+      <div class="totals-bar">
+        @for (t of dateData.totals; track t.paymentMethod) {
+          <div class="total-card">
+            <span class="total-label">{{ formatPaymentMethod(t.paymentMethod) }}</span>
+            <span class="total-amount">{{ formatAmount(t.total) }}</span>
+            <span class="total-count">{{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }}</span>
+          </div>
+        }
+        @if (dateData.totals.length > 0) {
+          <div class="total-card grand-total">
+            <span class="total-label">Grand Total</span>
+            <span class="total-amount">{{ formatAmount(grandTotal(dateData.totals)) }}</span>
+            <span class="total-count">{{ dateData.total }} transaction{{ dateData.total !== 1 ? 's' : '' }}</span>
+          </div>
+        }
+        @if (dateData.totals.length === 0) {
+          <div class="no-totals">No transactions in this period.</div>
+        }
+      </div>
+
+      <!-- Table -->
+      @if (dateData.transactions.length > 0) {
+        <div class="table-wrapper">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Plate No</th>
+                <th>Payment Method</th>
+                <th>Amount</th>
+                <th>Employee</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (tx of dateData.transactions; track tx.id) {
+                <tr>
+                  <td>{{ formatDateTime(tx.datetime) }}</td>
+                  <td class="plate-cell">{{ tx.plateNo || '-' }}</td>
+                  <td><span class="badge-method" [attr.data-method]="tx.paymentMethod.toLowerCase()">{{ formatPaymentMethod(tx.paymentMethod) }}</span></td>
+                  <td class="amount-cell">{{ formatAmount(tx.amount) }}</td>
+                  <td>{{ tx.employeeName || '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (dateData.totalPages > 1) {
+          <div class="pagination-wrapper">
+            <button class="pagination-btn prev" [disabled]="datePage === 1" (click)="onDatePrevious()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              Previous
+            </button>
+            <div class="page-numbers">
+              @for (p of getPageNumbers(datePage, dateData.totalPages); track $index) {
+                @if (p === -1) {
+                  <span class="page-ellipsis">...</span>
+                } @else {
+                  <button class="page-number" [class.active]="p === datePage" (click)="onDatePageChange(p)">{{ p }}</button>
+                }
+              }
+            </div>
+            <button class="pagination-btn next" [disabled]="datePage === dateData.totalPages" (click)="onDateNext()">
+              Next
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        }
+      }
+    }
+  }
+
+  <!-- =================== EMPLOYEE MODE =================== -->
+  @if (mode === 'employee') {
+
+    <!-- Step 1: Employee list -->
+    @if (employeeStep === 'employees') {
+      @if (employeesLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Loading employees...</span>
+        </div>
+      }
+      @if (employeesError) {
+        <div class="error-state">{{ employeesError }}</div>
+      }
+      @if (!employeesLoading && employees.length === 0 && !employeesError) {
+        <div class="empty-state">No employees with recorded shifts found.</div>
+      }
+      @if (!employeesLoading && employees.length > 0) {
+        <div class="employee-grid">
+          @for (emp of employees; track emp.userId) {
+            <button class="employee-card" (click)="selectEmployee(emp)">
+              <div class="employee-avatar">{{ emp.name.charAt(0).toUpperCase() }}</div>
+              <div class="employee-info">
+                <span class="employee-name">{{ emp.name }}</span>
+                <span class="employee-shifts">{{ emp.shiftCount }} shift{{ emp.shiftCount !== 1 ? 's' : '' }}</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          }
+        </div>
+      }
+    }
+
+    <!-- Step 2: Shifts for selected employee -->
+    @if (employeeStep === 'shifts') {
+      <div class="breadcrumb-nav">
+        <button class="back-link" (click)="backToEmployees()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          All Employees
+        </button>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">{{ selectedEmployee?.name }}</span>
+      </div>
+
+      @if (shiftsLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Loading shifts...</span>
+        </div>
+      }
+
+      @if (!shiftsLoading && shifts.length === 0) {
+        <div class="empty-state">No shifts found for this employee.</div>
+      }
+
+      @if (!shiftsLoading && shifts.length > 0) {
+        <div class="section-card">
+          <h3 class="section-subtitle">Select a Shift</h3>
+          <div class="shift-list">
+            @for (shift of shifts; track shift.id) {
+              <button class="shift-row" (click)="selectShift(shift)">
+                <div class="shift-dates">
+                  <span class="shift-start">{{ formatDate(shift.shiftStart) }}</span>
+                  <span class="shift-arrow">→</span>
+                  <span class="shift-end">{{ shift.shiftEnd ? formatDate(shift.shiftEnd) : 'Ongoing' }}</span>
+                </div>
+                <div class="shift-meta">
+                  <span class="shift-duration">{{ shiftDuration(shift) }}</span>
+                  <span class="shift-badge" [class.open]="shift.status === 'open'" [class.closed]="shift.status === 'closed'">
+                    {{ shift.status === 'open' ? 'Open' : 'Closed' }}
+                  </span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Step 3: Transactions for selected shift -->
+    @if (employeeStep === 'transactions') {
+      <div class="breadcrumb-nav">
+        <button class="back-link" (click)="backToEmployees()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          All Employees
+        </button>
+        <span class="breadcrumb-sep">/</span>
+        <button class="back-link" (click)="backToShifts()">{{ selectedEmployee?.name }}</button>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">
+          Shift {{ selectedShift ? formatDate(selectedShift.shiftStart) : '' }}
+        </span>
+      </div>
+
+      @if (shiftLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Loading transactions...</span>
+        </div>
+      }
+
+      @if (shiftError) {
+        <div class="error-state">{{ shiftError }}</div>
+      }
+
+      @if (!shiftLoading && shiftData) {
+        <!-- Totals -->
+        <div class="totals-bar">
+          @for (t of shiftData.totals; track t.paymentMethod) {
+            <div class="total-card">
+              <span class="total-label">{{ formatPaymentMethod(t.paymentMethod) }}</span>
+              <span class="total-amount">{{ formatAmount(t.total) }}</span>
+              <span class="total-count">{{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }}</span>
+            </div>
+          }
+          @if (shiftData.totals.length > 0) {
+            <div class="total-card grand-total">
+              <span class="total-label">Grand Total</span>
+              <span class="total-amount">{{ formatAmount(grandTotal(shiftData.totals)) }}</span>
+              <span class="total-count">{{ shiftData.total }} transaction{{ shiftData.total !== 1 ? 's' : '' }}</span>
+            </div>
+          }
+          @if (shiftData.totals.length === 0) {
+            <div class="no-totals">No transactions recorded in this shift.</div>
+          }
+        </div>
+
+        <!-- Table -->
+        @if (shiftData.transactions.length > 0) {
+          <div class="table-wrapper">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Date / Time</th>
+                  <th>Plate No</th>
+                  <th>Payment Method</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (tx of shiftData.transactions; track tx.id) {
+                  <tr>
+                    <td>{{ formatDateTime(tx.datetime) }}</td>
+                    <td class="plate-cell">{{ tx.plateNo || '-' }}</td>
+                    <td><span class="badge-method" [attr.data-method]="tx.paymentMethod.toLowerCase()">{{ formatPaymentMethod(tx.paymentMethod) }}</span></td>
+                    <td class="amount-cell">{{ formatAmount(tx.amount) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          @if (shiftData.totalPages > 1) {
+            <div class="pagination-wrapper">
+              <button class="pagination-btn prev" [disabled]="shiftPage === 1" (click)="onShiftPrevious()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Previous
+              </button>
+              <div class="page-numbers">
+                @for (p of getPageNumbers(shiftPage, shiftData.totalPages); track $index) {
+                  @if (p === -1) {
+                    <span class="page-ellipsis">...</span>
+                  } @else {
+                    <button class="page-number" [class.active]="p === shiftPage" (click)="onShiftPageChange(p)">{{ p }}</button>
+                  }
+                }
+              </div>
+              <button class="pagination-btn next" [disabled]="shiftPage === shiftData.totalPages" (click)="onShiftNext()">
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          }
+        }
+      }
+    }
+  }
+</div>
+
+<!-- =================== PRINT SECTION =================== -->
+<div class="print-only print-report">
+  <div class="print-header">
+    <img src="assets/img/park-and-travel-logo.png" alt="Park & Travel" class="print-logo" />
+    <h1 class="print-title">Z-Report by Employee</h1>
+    <p class="print-subtitle">{{ printTitle }}</p>
+  </div>
+
+  <div class="print-totals">
+    @for (t of printTotals; track t.paymentMethod) {
+      <div class="print-total-item">
+        <span>{{ formatPaymentMethod(t.paymentMethod) }}:</span>
+        <strong>{{ formatAmount(t.total) }}</strong>
+        <span class="print-count">({{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }})</span>
+      </div>
+    }
+    @if (printTotals.length > 0) {
+      <div class="print-total-item grand">
+        <span>Grand Total:</span>
+        <strong>{{ formatAmount(grandTotal(printTotals)) }}</strong>
+      </div>
+    }
+  </div>
+
+  <table class="print-table">
+    <thead>
+      <tr>
+        <th>Date / Time</th>
+        <th>Plate No</th>
+        <th>Payment Method</th>
+        <th>Amount</th>
+        @if (mode === 'date') {
+          <th>Employee</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (tx of printAllTransactions; track tx.id) {
+        <tr>
+          <td>{{ formatDateTime(tx.datetime) }}</td>
+          <td>{{ tx.plateNo || '-' }}</td>
+          <td>{{ formatPaymentMethod(tx.paymentMethod) }}</td>
+          <td>{{ formatAmount(tx.amount) }}</td>
+          @if (mode === 'date') {
+            <td>{{ tx.employeeName || '-' }}</td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="print-footer">
+    <p>Printed on {{ printedOn }}</p>
+  </div>
+</div>
