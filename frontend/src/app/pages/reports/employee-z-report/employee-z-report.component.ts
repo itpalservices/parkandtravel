@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { firstValueFrom } from 'rxjs';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
 
@@ -88,17 +90,32 @@ export class EmployeeZReportComponent implements OnInit {
   shiftError: string | null = null;
   shiftPage = 1;
 
-  // --- Print state ---
-  isPrinting = false;
-  printAllTransactions: TransactionRow[] = [];
-  printTotals: PaymentTotals[] = [];
+  // --- Export state ---
+  exporting = false;
+  private logoBase64 = '';
 
   ngOnInit(): void {
     const today = this.calendar.getToday();
     const todayDate = new Date(today.year, today.month - 1, today.day);
     this.dateFrom = todayDate;
     this.dateTo = todayDate;
+    this.loadLogo();
     this.loadDateReport();
+  }
+
+  private loadLogo(): void {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        this.logoBase64 = canvas.toDataURL('image/png');
+      }
+    };
+    img.src = 'assets/img/park-and-travel-logo.png';
   }
 
   // ===================== MODE TOGGLE =====================
@@ -141,37 +158,22 @@ export class EmployeeZReportComponent implements OnInit {
   }
 
   onDatePrevious(): void {
-    if (this.datePage > 1) {
-      this.datePage--;
-      this.loadDateReport();
-    }
+    if (this.datePage > 1) { this.datePage--; this.loadDateReport(); }
   }
 
   onDateNext(): void {
-    if (this.dateData && this.datePage < this.dateData.totalPages) {
-      this.datePage++;
-      this.loadDateReport();
-    }
+    if (this.dateData && this.datePage < this.dateData.totalPages) { this.datePage++; this.loadDateReport(); }
   }
 
-  onDatePageChange(p: number): void {
-    this.datePage = p;
-    this.loadDateReport();
-  }
+  onDatePageChange(p: number): void { this.datePage = p; this.loadDateReport(); }
 
   // ===================== EMPLOYEE MODE =====================
   loadEmployees(): void {
     this.employeesLoading = true;
     this.employeesError = null;
     this.apiService.get<EmployeeInfo[]>('/reports/employee-z/employees').subscribe({
-      next: (data) => {
-        this.employees = data;
-        this.employeesLoading = false;
-      },
-      error: () => {
-        this.employeesError = 'Failed to load employees. Please try again.';
-        this.employeesLoading = false;
-      },
+      next: (data) => { this.employees = data; this.employeesLoading = false; },
+      error: () => { this.employeesError = 'Failed to load employees. Please try again.'; this.employeesLoading = false; },
     });
   }
 
@@ -183,13 +185,8 @@ export class EmployeeZReportComponent implements OnInit {
     this.apiService
       .get<ShiftInfo[]>(`/reports/employee-z/employees/${encodeURIComponent(emp.userId)}/shifts`)
       .subscribe({
-        next: (data) => {
-          this.shifts = data;
-          this.shiftsLoading = false;
-        },
-        error: () => {
-          this.shiftsLoading = false;
-        },
+        next: (data) => { this.shifts = data; this.shiftsLoading = false; },
+        error: () => { this.shiftsLoading = false; },
       });
   }
 
@@ -207,35 +204,20 @@ export class EmployeeZReportComponent implements OnInit {
     this.apiService
       .get<TransactionsResponse>(`/reports/employee-z/shifts/${this.selectedShift.id}/transactions?page=${this.shiftPage}`)
       .subscribe({
-        next: (data) => {
-          this.shiftData = data;
-          this.shiftLoading = false;
-        },
-        error: () => {
-          this.shiftError = 'Failed to load transactions. Please try again.';
-          this.shiftLoading = false;
-        },
+        next: (data) => { this.shiftData = data; this.shiftLoading = false; },
+        error: () => { this.shiftError = 'Failed to load transactions. Please try again.'; this.shiftLoading = false; },
       });
   }
 
   onShiftPrevious(): void {
-    if (this.shiftPage > 1) {
-      this.shiftPage--;
-      this.loadShiftTransactions();
-    }
+    if (this.shiftPage > 1) { this.shiftPage--; this.loadShiftTransactions(); }
   }
 
   onShiftNext(): void {
-    if (this.shiftData && this.shiftPage < this.shiftData.totalPages) {
-      this.shiftPage++;
-      this.loadShiftTransactions();
-    }
+    if (this.shiftData && this.shiftPage < this.shiftData.totalPages) { this.shiftPage++; this.loadShiftTransactions(); }
   }
 
-  onShiftPageChange(p: number): void {
-    this.shiftPage = p;
-    this.loadShiftTransactions();
-  }
+  onShiftPageChange(p: number): void { this.shiftPage = p; this.loadShiftTransactions(); }
 
   backToEmployees(): void {
     this.employeeStep = 'employees';
@@ -250,62 +232,205 @@ export class EmployeeZReportComponent implements OnInit {
     this.shiftData = null;
   }
 
-  // ===================== PRINT =====================
-  async printReport(): Promise<void> {
-    if (this.isPrinting) return;
-    this.isPrinting = true;
-
+  // ===================== PDF EXPORT =====================
+  async exportPDF(): Promise<void> {
+    if (this.exporting) return;
+    this.exporting = true;
     try {
       if (this.mode === 'date') {
-        await this.printDateReport();
+        await this.exportDatePDF();
       } else {
-        await this.printShiftReport();
+        await this.exportShiftPDF();
       }
     } finally {
-      this.isPrinting = false;
+      this.exporting = false;
     }
   }
 
-  private async printDateReport(): Promise<void> {
+  private async exportDatePDF(): Promise<void> {
     if (!this.dateFrom || !this.dateTo) return;
     const from = this.formatDateForApi(this.dateFrom);
     const to = this.formatDateForApi(this.dateTo);
+
     const all: TransactionRow[] = [];
+    let totals: PaymentTotals[] = [];
     let page = 1;
     let hasMore = true;
     while (hasMore) {
       const data = await firstValueFrom(
-        this.apiService.get<TransactionsResponse>(
-          `/reports/employee-z/by-date?dateFrom=${from}&dateTo=${to}&page=${page}`
-        )
+        this.apiService.get<TransactionsResponse>(`/reports/employee-z/by-date?dateFrom=${from}&dateTo=${to}&page=${page}`)
       );
       all.push(...data.transactions);
-      this.printTotals = data.totals;
+      totals = data.totals;
       hasMore = page < data.totalPages;
       page++;
     }
-    this.printAllTransactions = all;
-    setTimeout(() => window.print(), 100);
+
+    const sameDay = from === to;
+    const periodLabel = sameDay
+      ? `Date: ${this.formatDisplayDate(this.dateFrom!)}`
+      : `Period: ${this.formatDisplayDate(this.dateFrom!)} – ${this.formatDisplayDate(this.dateTo!)}`;
+    const filename = sameDay
+      ? `z-report-by-employee-${from}.pdf`
+      : `z-report-by-employee-${from}-to-${to}.pdf`;
+
+    const rows = all.map((t) => [
+      this.formatDateTime(t.datetime),
+      t.plateNo || '-',
+      this.formatPaymentMethod(t.paymentMethod),
+      this.formatAmount(t.amount),
+      t.employeeName || '-',
+      t.notes || '-',
+    ]);
+
+    this.buildPDF({
+      title: 'Z-Report by Employee',
+      subtitle: periodLabel,
+      headers: ['Date / Time', 'Plate No', 'Payment Method', 'Amount', 'Employee', 'Notes'],
+      rows,
+      totals,
+      total: all.length,
+      filename,
+      colStyles: { 3: { halign: 'right' as const }, 5: { cellWidth: 40 } },
+    });
   }
 
-  private async printShiftReport(): Promise<void> {
-    if (!this.selectedShift) return;
+  private async exportShiftPDF(): Promise<void> {
+    if (!this.selectedShift || !this.selectedEmployee) return;
+
     const all: TransactionRow[] = [];
+    let totals: PaymentTotals[] = [];
     let page = 1;
     let hasMore = true;
     while (hasMore) {
       const data = await firstValueFrom(
-        this.apiService.get<TransactionsResponse>(
-          `/reports/employee-z/shifts/${this.selectedShift.id}/transactions?page=${page}`
-        )
+        this.apiService.get<TransactionsResponse>(`/reports/employee-z/shifts/${this.selectedShift.id}/transactions?page=${page}`)
       );
       all.push(...data.transactions);
-      this.printTotals = data.totals;
+      totals = data.totals;
       hasMore = page < data.totalPages;
       page++;
     }
-    this.printAllTransactions = all;
-    setTimeout(() => window.print(), 100);
+
+    const shiftStart = new Date(this.selectedShift.shiftStart);
+    const shiftStartStr = this.formatDateForApi(shiftStart);
+    const shiftEnd = this.selectedShift.shiftEnd
+      ? this.formatDateTime(this.selectedShift.shiftEnd)
+      : 'Ongoing';
+    const periodLabel = `Employee: ${this.selectedEmployee.name} | Shift: ${this.formatDateTime(this.selectedShift.shiftStart)} → ${shiftEnd}`;
+    const safeName = this.selectedEmployee.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const filename = `z-report-by-employee-${safeName}-shift-${shiftStartStr}.pdf`;
+
+    const rows = all.map((t) => [
+      this.formatDateTime(t.datetime),
+      t.plateNo || '-',
+      this.formatPaymentMethod(t.paymentMethod),
+      this.formatAmount(t.amount),
+      t.notes || '-',
+    ]);
+
+    this.buildPDF({
+      title: 'Z-Report by Employee',
+      subtitle: periodLabel,
+      headers: ['Date / Time', 'Plate No', 'Payment Method', 'Amount', 'Notes'],
+      rows,
+      totals,
+      total: all.length,
+      filename,
+      colStyles: { 3: { halign: 'right' as const }, 4: { cellWidth: 40 } },
+    });
+  }
+
+  private buildPDF(opts: {
+    title: string;
+    subtitle: string;
+    headers: string[];
+    rows: string[][];
+    totals: PaymentTotals[];
+    total: number;
+    filename: string;
+    colStyles?: Record<number, any>;
+  }): void {
+    const doc = new jsPDF('landscape');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = 14;
+
+    if (this.logoBase64) {
+      const logoW = 45, logoH = 18;
+      doc.addImage(this.logoBase64, 'PNG', (pageWidth - logoW) / 2, yPos, logoW, logoH);
+      yPos += logoH + 8;
+    }
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 107, 143);
+    doc.text(opts.title, (pageWidth - doc.getTextWidth(opts.title)) / 2, yPos);
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    doc.text(opts.subtitle, (pageWidth - doc.getTextWidth(opts.subtitle)) / 2, yPos);
+    yPos += 6;
+
+    const totalText = `Total Transactions: ${opts.total}`;
+    doc.text(totalText, (pageWidth - doc.getTextWidth(totalText)) / 2, yPos);
+    yPos += 10;
+
+    // Totals summary block
+    const totalsX = 14;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 107, 143);
+    doc.text('Payment Summary:', totalsX, yPos);
+    yPos += 5;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    let xCursor = totalsX;
+    const grand = this.grandTotal(opts.totals);
+    opts.totals.forEach((t) => {
+      const label = `${this.formatPaymentMethod(t.paymentMethod)}: ${this.formatAmount(t.total)} (${t.count} tx)`;
+      doc.text(label, xCursor, yPos);
+      xCursor += doc.getTextWidth(label) + 10;
+    });
+    if (opts.totals.length > 0) {
+      const grandLabel = `Grand Total: ${this.formatAmount(grand)}`;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 107, 143);
+      doc.text(grandLabel, xCursor, yPos);
+    }
+    yPos += 10;
+
+    const tableBody = [...opts.rows];
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [opts.headers],
+      body: tableBody,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [0, 107, 143],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
+      },
+      bodyStyles: { fontSize: 7.5, textColor: [55, 65, 81] },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+      columnStyles: opts.colStyles,
+      margin: { left: 14, right: 14 },
+    });
+
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      const footerText = `Page ${i} of ${pageCount} — Generated on ${this.formatDateTime(new Date().toISOString())}`;
+      doc.text(footerText, (pageWidth - doc.getTextWidth(footerText)) / 2, doc.internal.pageSize.getHeight() - 8);
+    }
+
+    doc.save(opts.filename);
   }
 
   // ===================== PAGINATION HELPERS =====================
@@ -334,14 +459,11 @@ export class EmployeeZReportComponent implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
-  formatDateTime(dt: string): string {
-    return new Date(dt).toLocaleString('en-GB', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
+  formatDisplayDate(d: Date): string {
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
-  formatDate(dt: string): string {
+  formatDateTime(dt: string): string {
     return new Date(dt).toLocaleString('en-GB', {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
@@ -370,28 +492,8 @@ export class EmployeeZReportComponent implements OnInit {
     return `${hours}h ${mins}m`;
   }
 
-  get printTitle(): string {
-    if (this.mode === 'date') {
-      if (!this.dateFrom || !this.dateTo) return 'Employee Z-Report';
-      const from = this.dateFrom.toLocaleDateString('en-GB');
-      const to = this.dateTo.toLocaleDateString('en-GB');
-      return from === to ? `Employee Z-Report — ${from}` : `Employee Z-Report — ${from} to ${to}`;
-    }
-    if (this.selectedShift && this.selectedEmployee) {
-      const start = this.formatDate(this.selectedShift.shiftStart);
-      return `Employee Z-Report — ${this.selectedEmployee.name} — Shift ${start}`;
-    }
-    return 'Employee Z-Report';
-  }
-
-  get canPrint(): boolean {
-    if (this.mode === 'date') {
-      return !!this.dateData && this.dateData.total > 0;
-    }
+  get canExport(): boolean {
+    if (this.mode === 'date') return !!this.dateData && this.dateData.total > 0;
     return !!this.shiftData && this.shiftData.total > 0;
-  }
-
-  get printedOn(): string {
-    return this.formatDateTime(new Date().toISOString());
   }
 }

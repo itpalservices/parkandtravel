@@ -1,4 +1,4 @@
-<div class="page-wrapper no-print">
+<div class="page-wrapper">
   <div class="page-header">
     <div class="header-left">
       <a routerLink="/admin/reports" class="back-link">
@@ -11,15 +11,15 @@
       <h1 class="page-title">Z-Report by Employee</h1>
     </div>
     <div class="header-actions">
-      @if (canPrint) {
-        <button class="btn-print" (click)="printReport()" [disabled]="isPrinting">
+      @if (canExport) {
+        <button class="btn-export" (click)="exportPDF()" [disabled]="exporting">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 6 2 18 2 18 9"></polyline>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-            <rect x="6" y="14" width="12" height="8"></rect>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          {{ isPrinting ? 'Preparing...' : 'Print Report' }}
+          {{ exporting ? 'Exporting...' : 'Export PDF' }}
         </button>
       }
     </div>
@@ -102,6 +102,7 @@
                 <th>Payment Method</th>
                 <th>Amount</th>
                 <th>Employee</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -112,6 +113,7 @@
                   <td><span class="badge-method" [attr.data-method]="tx.paymentMethod.toLowerCase()">{{ formatPaymentMethod(tx.paymentMethod) }}</span></td>
                   <td class="amount-cell">{{ formatAmount(tx.amount) }}</td>
                   <td>{{ tx.employeeName || '-' }}</td>
+                  <td class="notes-cell">{{ tx.notes || '-' }}</td>
                 </tr>
               }
             </tbody>
@@ -218,9 +220,9 @@
             @for (shift of shifts; track shift.id) {
               <button class="shift-row" (click)="selectShift(shift)">
                 <div class="shift-dates">
-                  <span class="shift-start">{{ formatDate(shift.shiftStart) }}</span>
+                  <span class="shift-start">{{ formatDateTime(shift.shiftStart) }}</span>
                   <span class="shift-arrow">→</span>
-                  <span class="shift-end">{{ shift.shiftEnd ? formatDate(shift.shiftEnd) : 'Ongoing' }}</span>
+                  <span class="shift-end">{{ shift.shiftEnd ? formatDateTime(shift.shiftEnd) : 'Ongoing' }}</span>
                 </div>
                 <div class="shift-meta">
                   <span class="shift-duration">{{ shiftDuration(shift) }}</span>
@@ -253,7 +255,7 @@
         <button class="back-link" (click)="backToShifts()">{{ selectedEmployee?.name }}</button>
         <span class="breadcrumb-sep">/</span>
         <span class="breadcrumb-current">
-          Shift {{ selectedShift ? formatDate(selectedShift.shiftStart) : '' }}
+          Shift {{ selectedShift ? formatDateTime(selectedShift.shiftStart) : '' }}
         </span>
       </div>
 
@@ -300,6 +302,7 @@
                   <th>Plate No</th>
                   <th>Payment Method</th>
                   <th>Amount</th>
+                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,6 +312,7 @@
                     <td class="plate-cell">{{ tx.plateNo || '-' }}</td>
                     <td><span class="badge-method" [attr.data-method]="tx.paymentMethod.toLowerCase()">{{ formatPaymentMethod(tx.paymentMethod) }}</span></td>
                     <td class="amount-cell">{{ formatAmount(tx.amount) }}</td>
+                    <td class="notes-cell">{{ tx.notes || '-' }}</td>
                   </tr>
                 }
               </tbody>
@@ -347,60 +351,4 @@
       }
     }
   }
-</div>
-
-<!-- =================== PRINT SECTION =================== -->
-<div class="print-only print-report">
-  <div class="print-header">
-    <img src="assets/img/park-and-travel-logo.png" alt="Park & Travel" class="print-logo" />
-    <h1 class="print-title">Z-Report by Employee</h1>
-    <p class="print-subtitle">{{ printTitle }}</p>
-  </div>
-
-  <div class="print-totals">
-    @for (t of printTotals; track t.paymentMethod) {
-      <div class="print-total-item">
-        <span>{{ formatPaymentMethod(t.paymentMethod) }}:</span>
-        <strong>{{ formatAmount(t.total) }}</strong>
-        <span class="print-count">({{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }})</span>
-      </div>
-    }
-    @if (printTotals.length > 0) {
-      <div class="print-total-item grand">
-        <span>Grand Total:</span>
-        <strong>{{ formatAmount(grandTotal(printTotals)) }}</strong>
-      </div>
-    }
-  </div>
-
-  <table class="print-table">
-    <thead>
-      <tr>
-        <th>Date / Time</th>
-        <th>Plate No</th>
-        <th>Payment Method</th>
-        <th>Amount</th>
-        @if (mode === 'date') {
-          <th>Employee</th>
-        }
-      </tr>
-    </thead>
-    <tbody>
-      @for (tx of printAllTransactions; track tx.id) {
-        <tr>
-          <td>{{ formatDateTime(tx.datetime) }}</td>
-          <td>{{ tx.plateNo || '-' }}</td>
-          <td>{{ formatPaymentMethod(tx.paymentMethod) }}</td>
-          <td>{{ formatAmount(tx.amount) }}</td>
-          @if (mode === 'date') {
-            <td>{{ tx.employeeName || '-' }}</td>
-          }
-        </tr>
-      }
-    </tbody>
-  </table>
-
-  <div class="print-footer">
-    <p>Printed on {{ printedOn }}</p>
-  </div>
 </div>
