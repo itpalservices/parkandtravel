@@ -473,14 +473,15 @@ export class BookingsListComponent {
 
     if (isPrepaid) {
       paymentMethod = 'online';
-      amount = totalAmount;
+      amount = applyExtraFee ? extraFee : 0;
       const walleeDateStr = walleePaymentDate
         ? new Date(walleePaymentDate).toLocaleDateString()
         : '';
-      notes = `Online payment via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''}${applyExtraFee ? ` (includes extra fee: €${extraFee.toFixed(2)})` : ''}`;
+      const prePaidAmount = (booking.finalPrice ?? 0).toFixed(2);
+      notes = `Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${prePaidAmount})${applyExtraFee ? `. Extra fee collected at desk: €${extraFee.toFixed(2)}` : ''}`;
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
-        html: `Booking was pre-paid online.<br><strong>Final amount: €${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: €${extraFee.toFixed(2)}` : ''}`,
+        html: `Booking was pre-paid online.<br><strong>Pre-paid amount: €${prePaidAmount}</strong>${walleeDateStr ? ` on ${walleeDateStr}` : ''}${applyExtraFee ? `<br>Extra fee to collect at desk: <strong>€${extraFee.toFixed(2)}</strong>` : '<br>No extra fee due.'}`,
         icon: 'info',
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
