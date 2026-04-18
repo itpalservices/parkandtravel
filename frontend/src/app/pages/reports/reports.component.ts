@@ -15,7 +15,7 @@ export class ReportsComponent {
     {
       id: 'z-report',
       title: 'Z-Report',
-      description: 'View daily summary reports grouped'
+      description: 'View daily summary reports'
     },
     {
       id: 'employee-z-report',
