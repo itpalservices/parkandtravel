@@ -33,6 +33,7 @@ import {
   AvailabilityResult,
 } from '../../../../core/services/availability.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
+import { ShiftService } from '../../../../core/services/shift.service';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 
 interface UserSearchResponse {
@@ -104,6 +105,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   mandatoryPrePayment = false;
   private availabilityService = inject(AvailabilityService);
   private userProfileService = inject(UserProfileService);
+  private shiftService = inject(ShiftService);
   private availabilitySubscription?: Subscription;
 
   checkingAvailability = false;
@@ -429,7 +431,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onStatusChange(newStatusId: string): void {
+  async onStatusChange(newStatusId: string): Promise<void> {
     if (!this.bookingId) return;
 
     const statusLabels: Record<string, string> = {
@@ -438,6 +440,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       bookingStatus_completed: 'Completed',
     };
     const newStatusLabel = statusLabels[newStatusId] || newStatusId;
+
+    if (newStatusId === 'bookingStatus_parked' || newStatusId === 'bookingStatus_completed') {
+      await this.shiftService.ensureShift();
+    }
 
     if (newStatusId === 'bookingStatus_parked') {
       this.showParkPlaceAndImagesModal(newStatusId, newStatusLabel);

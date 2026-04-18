@@ -6,6 +6,7 @@ import { Booking, DateRangeFilter } from '../../../../shared/models/booking.mode
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
+import { ShiftService } from '../../../../core/services/shift.service';
 import Swal from 'sweetalert2';
 import {
   CAR_PICK_UP_OPTIONS,
@@ -47,6 +48,7 @@ export class BookingsListComponent {
     private bookingsService: BookingsService,
     private apiService: ApiService,
     private userProfileService: UserProfileService,
+    private shiftService: ShiftService,
   ) {}
 
   printBookingTag(booking: Booking): void {
@@ -387,13 +389,17 @@ export class BookingsListComponent {
     }
   }
 
-  onStatusChange(booking: Booking, newStatusId: string): void {
+  async onStatusChange(booking: Booking, newStatusId: string): Promise<void> {
     const statusLabels: Record<string, string> = {
       bookingStatus_created: 'Created',
       bookingStatus_parked: 'Parked',
       bookingStatus_completed: 'Completed',
     };
     const newStatusLabel = statusLabels[newStatusId] || newStatusId;
+
+    if (newStatusId === 'bookingStatus_parked' || newStatusId === 'bookingStatus_completed') {
+      await this.shiftService.ensureShift();
+    }
 
     if (newStatusId === 'bookingStatus_parked') {
       this.showParkPlaceAndImagesModal(booking, newStatusId, newStatusLabel);

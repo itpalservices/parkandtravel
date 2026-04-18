@@ -14,6 +14,14 @@ export class ShiftService {
     ).subscribe();
   }
 
+  ensureShift(): Promise<void> {
+    return new Promise(resolve => {
+      this.apiService.post<any>('/shifts/start', {}).pipe(
+        catchError(() => of(null))
+      ).subscribe(() => resolve());
+    });
+  }
+
   endShift(): Promise<void> {
     return new Promise(resolve => {
       this.apiService.post<any>('/shifts/end', {}).pipe(
