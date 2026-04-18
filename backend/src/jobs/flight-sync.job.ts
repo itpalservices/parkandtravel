@@ -67,7 +67,7 @@ async function runFlightSync(): Promise<void> {
       console.error(`[Flight Sync] API returned HTTP ${res.status}. Skipping.`);
       return;
     }
-    const json: AirlabsResponse = await res.json();
+    const json = await res.json() as AirlabsResponse;
     flights = json.response ?? [];
   } catch (err) {
     console.error('[Flight Sync] API call failed:', err);
