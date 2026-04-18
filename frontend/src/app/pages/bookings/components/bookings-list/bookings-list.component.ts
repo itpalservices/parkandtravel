@@ -472,23 +472,66 @@ export class BookingsListComponent {
     let notes: string | undefined;
 
     if (isPrepaid) {
-      paymentMethod = 'online';
-      amount = applyExtraFee ? extraFee : 0;
       const walleeDateStr = walleePaymentDate
         ? new Date(walleePaymentDate).toLocaleDateString()
         : '';
       const prePaidAmount = (booking.finalPrice ?? 0).toFixed(2);
-      notes = `Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${prePaidAmount})${applyExtraFee ? `. Extra fee collected at desk: €${extraFee.toFixed(2)}` : ''}`;
-      const confirmResult = await Swal.fire({
-        title: 'Confirm Completion',
-        html: `Booking was pre-paid online.<br><strong>Pre-paid amount: €${prePaidAmount}</strong>${walleeDateStr ? ` on ${walleeDateStr}` : ''}${applyExtraFee ? `<br>Extra fee to collect at desk: <strong>€${extraFee.toFixed(2)}</strong>` : '<br>No extra fee due.'}`,
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Complete Booking',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#006B8F',
-      });
-      if (!confirmResult.isConfirmed) return;
+
+      if (applyExtraFee) {
+        // Extra fee due — ask how it will be collected at the desk
+        const { value: extraFeeValues } = await Swal.fire({
+          title: 'Collect Extra Fee',
+          html: `
+            Booking was pre-paid online (€${prePaidAmount}${walleeDateStr ? ` on ${walleeDateStr}` : ''}).<br>
+            An extra fee is due at the desk.
+            <div class="mb-3 mt-3">
+              <label class="form-label fw-semibold">Extra Fee Amount (€)</label>
+              <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${extraFee.toFixed(2)}" style="width:100%;margin:0">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Payment Method</label>
+              <div class="d-flex gap-3 justify-content-center mt-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="swal-pm" id="pm-cash" value="cash" checked>
+                  <label class="form-check-label" for="pm-cash">Cash</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="swal-pm" id="pm-card" value="card">
+                  <label class="form-check-label" for="pm-card">Card</label>
+                </div>
+              </div>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Complete Booking',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#006B8F',
+          preConfirm: () => {
+            const amtEl = document.getElementById('swal-amount') as HTMLInputElement;
+            const pmEl = document.querySelector('input[name="swal-pm"]:checked') as HTMLInputElement;
+            return { amount: parseFloat(amtEl?.value || '0'), paymentMethod: pmEl?.value || 'cash' };
+          },
+        });
+        if (!extraFeeValues) return;
+        amount = extraFeeValues.amount;
+        paymentMethod = extraFeeValues.paymentMethod;
+        notes = `Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${prePaidAmount}). Extra fee collected at desk: €${amount.toFixed(2)} (${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)})`;
+      } else {
+        // No extra fee — simple confirmation
+        paymentMethod = 'online';
+        amount = 0;
+        notes = `Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${prePaidAmount})`;
+        const confirmResult = await Swal.fire({
+          title: 'Confirm Completion',
+          html: `Booking was pre-paid online.<br><strong>Pre-paid amount: €${prePaidAmount}</strong>${walleeDateStr ? ` on ${walleeDateStr}` : ''}<br>No extra fee due.`,
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Complete Booking',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#006B8F',
+        });
+        if (!confirmResult.isConfirmed) return;
+      }
     } else {
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
