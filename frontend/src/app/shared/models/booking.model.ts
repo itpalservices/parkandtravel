@@ -38,6 +38,7 @@ export interface Booking {
   updatedAt: string;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
+  estimated_arrival_time: string | null;
 }
 
 export interface BookingsResponse {

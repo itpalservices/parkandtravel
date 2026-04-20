@@ -231,9 +231,21 @@
                   <span class="text-decoration-line-through text-muted me-1">{{
                     formatArrival(booking)
                   }}</span>
-                  <span class="text-danger fw-bold">{{ formatActualCheckOut(booking) }}</span>
+                  <span class="text-danger fw-bold">{{ formatNullableDateTime(booking.actualCheckOut) }}</span>
                 } @else {
                   {{ formatArrival(booking) }}
+                }
+                @if (booking.estimated_arrival_time) {
+                  <div>
+                    <div class="badge bg-secondary">
+                      <div>
+                        Estimated Arrival Time:
+                      </div>
+                      <div>
+                        {{ formatNullableDateTime(booking.estimated_arrival_time) }}
+                      </div>
+                    </div>
+                  </div>
                 }
               </td>
               @if (isAdmin) {
@@ -406,9 +418,21 @@
                       style="font-size: 0.75rem"
                       >{{ formatArrival(booking) }}</span
                     >
-                    <span class="text-danger fw-bold">{{ formatActualCheckOut(booking) }}</span>
+                    <span class="text-danger fw-bold">{{ formatNullableDateTime(booking.actualCheckOut) }}</span>
                   } @else {
                     {{ formatArrival(booking) }}
+                  }                  
+                  @if (booking.estimated_arrival_time) {
+                    <div>
+                      <div class="badge bg-secondary">
+                        <div>
+                          Estimated Arrival Time:
+                        </div>
+                        <div>
+                          {{ formatNullableDateTime(booking.estimated_arrival_time) }}
+                        </div>
+                      </div>
+                    </div>
                   }
                 </span>
               </div>

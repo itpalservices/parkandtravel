@@ -68,6 +68,7 @@ interface BookingResponse {
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   isPrepaid: boolean;
   walleePayment: { amount: number; createdAt: string } | null;
+  estimated_arrival_time: string | null;
 }
 
 function derivePaymentStatus(
@@ -252,7 +253,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."extraFee",
       b."checkInBy",
       b."checkOutBy",
-      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
+      b."estimated_arrival_time"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -305,6 +307,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     ),
     isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
     walleePayment: null,
+    estimated_arrival_time: b.estimated_arrival_time
   }));
 
   return {
@@ -357,7 +360,8 @@ export async function getBookingById(
       b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
       (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeAmount",
-      (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeCreatedAt"
+      (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeCreatedAt",
+      b.estimated_arrival_time
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -411,7 +415,8 @@ export async function getBookingById(
     isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
     walleePayment: b.walleeAmount
       ? { amount: parseFloat(b.walleeAmount), createdAt: (b.walleeCreatedAt as Date).toISOString() }
-      : null,
+      : null,      
+    estimated_arrival_time: b.estimated_arrival_time
   };
 }
 
@@ -1217,7 +1222,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b.deleteflag,
       b."checkInBy",
       b."checkOutBy",
-      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount"
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
+      b.estimated_arrival_time
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
@@ -1268,6 +1274,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     ),
     isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
     walleePayment: null,
+    estimated_arrival_time: b.estimated_arrival_time
   }));
 }
 

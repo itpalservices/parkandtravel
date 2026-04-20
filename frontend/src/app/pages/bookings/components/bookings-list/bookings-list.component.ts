@@ -213,9 +213,9 @@ export class BookingsListComponent {
     return `${dateStr} ${time}`;
   }
 
-  formatActualCheckOut(booking: Booking): string {
-    if (!booking.actualCheckOut) return '';
-    const date = new Date(booking.actualCheckOut);
+  formatNullableDateTime(dateTime: string | null): string {
+    if (!dateTime) return '';
+    const date = new Date(dateTime);
     const dateStr = date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
