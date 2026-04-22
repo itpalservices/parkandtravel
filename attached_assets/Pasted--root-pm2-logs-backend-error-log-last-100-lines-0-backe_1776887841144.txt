@@ -1,0 +1,101 @@
+/root/.pm2/logs/backend-error.log last 100 lines:
+0|backend  |
+0|backend  | Unknown field `estimatedArrivalTime` for select statement on model `Booking`. Available options are marked with ?.
+0|backend  |     at tr (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:14:1379)
+0|backend  |     at qr.handleRequestError (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:69:7815)
+0|backend  |     at qr.handleAndLogRequestError (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:69:7467)
+0|backend  |     at qr.request (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:69:7174)
+0|backend  |     at a (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:79:5816)
+0|backend  |     at runFlightSync (/home/deployer/parkandtravel/backend/src/jobs/flight-sync.job.ts:37:20)
+0|backend  |     at /home/deployer/parkandtravel/backend/src/jobs/flight-sync.job.ts:125:7
+0|backend  |     at Timeout._onTimeout (/home/deployer/parkandtravel/backend/node_modules/node-cron/src/scheduler/runner.ts:100:30) {
+0|backend  |   clientVersion: '7.1.0'
+0|backend  | }
+0|backend  | Error starting shift: Cannot read properties of undefined (reading 'findFirst')
+0|backend  | Error ending shift: Cannot read properties of undefined (reading 'updateMany')
+0|backend  | Error starting shift: Cannot read properties of undefined (reading 'findFirst')
+0|backend  | (node:1208512) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+0|backend  | (Use `node --trace-warnings ...` to show where the warning was created)
+0|backend  | Error starting shift: Cannot read properties of undefined (reading 'findFirst')
+0|backend  | [Flight Sync] Job failed: PrismaClientValidationError:
+0|backend  | Invalid `prisma.booking.findMany()` invocation in
+0|backend  | /home/deployer/parkandtravel/backend/src/jobs/flight-sync.job.ts:37:41
+0|backend  |
+0|backend  |   34 const todayStr = getTodayCyprus();
+0|backend  |   35 const todayDate = new Date(todayStr);
+0|backend  |   36
+0|backend  | → 37 const bookings = await prisma.booking.findMany({
+0|backend  |        where: {
+0|backend  |          bookingStatusId: "bookingStatus_parked",
+0|backend  |          dateTo: new Date("2026-04-22T00:00:00.000Z"),
+0|backend  |          returnFlight: {
+0|backend  |            not: null
+0|backend  |          },
+0|backend  |          deleteflag: 0
+0|backend  |        },
+0|backend  |        select: {
+0|backend  |          id: true,
+0|backend  |          returnFlight: true,
+0|backend  |          estimatedArrivalTime: true,
+0|backend  |          ~~~~~~~~~~~~~~~~~~~~
+0|backend  |      ?   userId?: true,
+0|backend  |      ?   name?: true,
+0|backend  |      ?   surname?: true,
+0|backend  |      ?   email?: true,
+0|backend  |      ?   dateFrom?: true,
+0|backend  |      ?   timeFrom?: true,
+0|backend  |      ?   dateTo?: true,
+0|backend  |      ?   timeTo?: true,
+0|backend  |      ?   mobile?: true,
+0|backend  |      ?   phoneCodeId?: true,
+0|backend  |      ?   plateNo?: true,
+0|backend  |      ?   carBrand?: true,
+0|backend  |      ?   carModel?: true,
+0|backend  |      ?   carColor?: true,
+0|backend  |      ?   parkingTypeId?: true,
+0|backend  |      ?   adults?: true,
+0|backend  |      ?   washService?: true,
+0|backend  |      ?   finalPrice?: true,
+0|backend  |      ?   dropOffOption?: true,
+0|backend  |      ?   pickUpOption?: true,
+0|backend  |      ?   bookingStatusId?: true,
+0|backend  |      ?   parkPlace?: true,
+0|backend  |      ?   keepKeys?: true,
+0|backend  |      ?   mileageKm?: true,
+0|backend  |      ?   parkingComments?: true,
+0|backend  |      ?   actualCheckIn?: true,
+0|backend  |      ?   actualCheckOut?: true,
+0|backend  |      ?   checkInBy?: true,
+0|backend  |      ?   checkOutBy?: true,
+0|backend  |      ?   extraFee?: true,
+0|backend  |      ?   deleteflag?: true,
+0|backend  |      ?   pendingWlTransactionId?: true,
+0|backend  |      ?   createdAt?: true,
+0|backend  |      ?   parkingType?: true,
+0|backend  |      ?   phoneCode?: true,
+0|backend  |      ?   bookingStatus?: true,
+0|backend  |      ?   walleeTransactions?: true,
+0|backend  |      ?   _count?: true
+0|backend  |        }
+0|backend  |      })
+0|backend  |
+0|backend  | Unknown field `estimatedArrivalTime` for select statement on model `Booking`. Available options are marked with ?.
+0|backend  |     at tr (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:14:1379)
+0|backend  |     at qr.handleRequestError (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:69:7815)
+0|backend  |     at qr.handleAndLogRequestError (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:69:7467)
+0|backend  |     at qr.request (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:69:7174)
+0|backend  |     at a (/home/deployer/parkandtravel/backend/dist/generated/prisma/runtime/client.js:79:5816)
+0|backend  |     at runFlightSync (/home/deployer/parkandtravel/backend/src/jobs/flight-sync.job.ts:37:20)
+0|backend  |     at /home/deployer/parkandtravel/backend/src/jobs/flight-sync.job.ts:125:7
+0|backend  |     at Timeout._onTimeout (/home/deployer/parkandtravel/backend/node_modules/node-cron/src/scheduler/runner.ts:100:30) {
+0|backend  |   clientVersion: '7.1.0'
+0|backend  | }
+0|backend  | Error ending shift: Cannot read properties of undefined (reading 'updateMany')
+0|backend  | Error starting shift: Cannot read properties of undefined (reading 'findFirst')
+0|backend  | (node:1208734) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+0|backend  | (Use `node --trace-warnings ...` to show where the warning was created)
+0|backend  | Error ending shift: Cannot read properties of undefined (reading 'updateMany')
+0|backend  | Error starting shift: Cannot read properties of undefined (reading 'findFirst')
+0|backend  | (node:1208876) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+0|backend  | (Use `node --trace-warnings ...` to show where the warning was created)
+0|backend  | Error starting shift: Cannot read properties of undefined (reading 'findFirst')
