@@ -281,7 +281,7 @@
                 </td>
               }
               
-              <td [ngbTooltip]="isAdmin || isDriver ? 'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2') : ''" placement="top" container="body">
+              <td [ngbTooltip]="(isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed' ? 'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2') : ''" placement="top" container="body">
                 @if (!booking.dateTo) {
                   <span class="text-muted fst-italic">TBC</span>
                 } @else if (booking.extraFee) {
@@ -299,7 +299,7 @@
                       : '-'
                   }}
                 }
-                @if (booking.paymentStatus && (isAdmin || isDriver)) {
+                @if (booking.paymentStatus && (isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') {
                   <div class="mt-1">
                     <span class="badge" [ngClass]="getPaymentBadgeClass(booking.paymentStatus)">
                       {{ getPaymentBadgeLabel(booking.paymentStatus) }}
@@ -488,7 +488,7 @@
             </div>
           </div>
           <div class="mobile-card-footer">
-            <div class="mobile-price" [ngbTooltip]="'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2')" placement="top" container="body">
+            <div class="mobile-price" [ngbTooltip]="(isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed' ? 'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2') : ''" placement="top" container="body">
               @if (!booking.dateTo) {
                 <span class="text-muted fst-italic">TBC</span>
               } @else if (booking.extraFee) {
@@ -508,7 +508,7 @@
                     : '-'
                 }}
               }
-              @if (booking.paymentStatus && (isAdmin || isDriver)) {
+              @if (booking.paymentStatus && (isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') {
                 <span class="badge ms-2" [ngClass]="getPaymentBadgeClass(booking.paymentStatus)">
                   {{ getPaymentBadgeLabel(booking.paymentStatus) }}
                 </span>
