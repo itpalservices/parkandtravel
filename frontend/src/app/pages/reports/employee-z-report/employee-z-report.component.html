@@ -59,6 +59,17 @@
           (dateRangeChange)="onDateRangeChange($event)">
         </app-date-range-picker>
       </div>
+    } @else {
+      @if (employeeStep === 'shifts') {
+        <div>
+          <app-date-range-picker
+            [selectedPreset]="'today'"
+            [enablePastDates]="true"
+            [showPastOptions]="true"
+            (dateRangeChange)="onShiftsDateRangeChange($event)">
+          </app-date-range-picker>
+        </div>
+      }
     }
   </div>
 
@@ -205,13 +216,6 @@
         </button>
         <span class="breadcrumb-sep">/</span>
         <span class="breadcrumb-current">{{ selectedEmployee?.name }}</span>
-      </div>
-
-      <div class="section-card">
-        <app-date-range-picker
-          [selectedPreset]="'today'"
-          (dateRangeChange)="onShiftsDateRangeChange($event)">
-        </app-date-range-picker>
       </div>
 
       @if (shiftsLoading) {
