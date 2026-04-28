@@ -423,6 +423,38 @@
 .breadcrumb-sep { color: #94a3b8; font-size: 0.85rem; }
 .breadcrumb-current { font-size: 0.85rem; color: #374151; font-weight: 500; }
 
+// =================== SHIFTS SUMMARY BAR ===================
+
+.shifts-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.875rem;
+  color: #374151;
+
+  svg { color: #006b8f; flex-shrink: 0; }
+
+  strong { color: #1e293b; }
+}
+
+.summary-divider {
+  width: 1px;
+  height: 20px;
+  background: #e2e8f0;
+}
+
 // =================== SHIFT LIST ===================
 
 .shift-list {

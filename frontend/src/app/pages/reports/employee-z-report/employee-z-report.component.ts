@@ -84,6 +84,10 @@ export class EmployeeZReportComponent implements OnInit {
   shifts: ShiftInfo[] = [];
   shiftsLoading = false;
 
+  // --- Shifts date filter ---
+  shiftsDateFrom: Date | null = null;
+  shiftsDateTo: Date | null = null;
+
   selectedShift: ShiftInfo | null = null;
   shiftData: TransactionsResponse | null = null;
   shiftLoading = false;
@@ -99,6 +103,8 @@ export class EmployeeZReportComponent implements OnInit {
     const todayDate = new Date(today.year, today.month - 1, today.day);
     this.dateFrom = todayDate;
     this.dateTo = todayDate;
+    this.shiftsDateFrom = todayDate;
+    this.shiftsDateTo = todayDate;
     this.loadLogo();
     this.loadDateReport();
   }
@@ -175,6 +181,54 @@ export class EmployeeZReportComponent implements OnInit {
       next: (data) => { this.employees = data; this.employeesLoading = false; },
       error: () => { this.employeesError = 'Failed to load employees. Please try again.'; this.employeesLoading = false; },
     });
+  }
+
+  onShiftsDateRangeChange(range: DateRange): void {
+    this.shiftsDateFrom = range.from;
+    this.shiftsDateTo = range.to;
+  }
+
+  get filteredShifts(): ShiftInfo[] {
+    if (!this.shiftsDateFrom || !this.shiftsDateTo) return this.shifts;
+
+    const rangeStart = new Date(this.shiftsDateFrom);
+    rangeStart.setHours(0, 0, 0, 0);
+
+    const rangeEnd = new Date(this.shiftsDateTo);
+    rangeEnd.setHours(23, 59, 59, 999);
+
+    return this.shifts.filter(shift => {
+      const start = new Date(shift.shiftStart);
+      const end = shift.shiftEnd ? new Date(shift.shiftEnd) : null;
+      if (start > rangeEnd) return false;
+      if (end && end < rangeStart) return false;
+      return true;
+    });
+  }
+
+  get totalShiftsTime(): string {
+    if (!this.shiftsDateFrom || !this.shiftsDateTo) return '0h 0m';
+
+    const rangeStart = new Date(this.shiftsDateFrom);
+    rangeStart.setHours(0, 0, 0, 0);
+
+    const rangeEnd = new Date(this.shiftsDateTo);
+    rangeEnd.setHours(23, 59, 59, 999);
+
+    const totalMs = this.filteredShifts
+      .filter(s => s.status === 'closed' && s.shiftEnd)
+      .reduce((sum, shift) => {
+        const start = new Date(shift.shiftStart);
+        const end = new Date(shift.shiftEnd!);
+        const clampedStart = start < rangeStart ? rangeStart : start;
+        const clampedEnd = end > rangeEnd ? rangeEnd : end;
+        const duration = clampedEnd.getTime() - clampedStart.getTime();
+        return sum + (duration > 0 ? duration : 0);
+      }, 0);
+
+    const hours = Math.floor(totalMs / 3600000);
+    const mins = Math.floor((totalMs % 3600000) / 60000);
+    return `${hours}h ${mins}m`;
   }
 
   selectEmployee(emp: EmployeeInfo): void {
