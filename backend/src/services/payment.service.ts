@@ -495,8 +495,8 @@ export async function initiatePaymentForPendingUpdate(pendingId: string, amount:
     customerEmail: formData.email || booking.email || undefined,
     fullName: formData.fullName || `${booking.name} ${booking.surname}`.trim(),
     description: 'Parking Reservation Update - Park & Travel',
-    successUrl: `${domain}/payment/success?ref=${merchantReference}`,
-    failedUrl: `${domain}/payment/failed?ref=${merchantReference}`,
+    successUrl: `${domain}/payment/success?ref=${merchantReference}&source=auth_update`,
+    failedUrl: `${domain}/payment/failed?ref=${merchantReference}&source=auth_update`,
     plateNo: formData.licensePlate || booking.plateNo || undefined,
     carBrand: formData.vehicleBrand || booking.carBrand || undefined,
   });

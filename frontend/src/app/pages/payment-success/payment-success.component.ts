@@ -57,6 +57,14 @@ export class PaymentSuccessComponent implements OnInit {
           } else {
             this.redirectAuthWithToast('info', 'Payment is still processing. Your booking will be created once confirmed.');
           }
+        } else if (source === 'auth_update') {
+          if (result.status === 'success') {
+            this.redirectAuthWithToast('success', 'Payment completed! Your booking has been updated.');
+          } else if (result.status === 'failed') {
+            this.redirectAuthWithToast('warning', 'Payment failed. Your booking was not updated.');
+          } else {
+            this.redirectAuthWithToast('info', 'Payment is still processing. Your booking will be updated once confirmed.');
+          }
         } else if (source === 'auth') {
           if (result.status === 'success') {
             this.redirectAuthWithToast('success', 'Payment completed successfully!');
@@ -74,6 +82,8 @@ export class PaymentSuccessComponent implements OnInit {
 
         if (source === 'auth_pending') {
           this.redirectAuthWithToast('error', 'Payment could not be verified. Your booking was not created.');
+        } else if (source === 'auth_update') {
+          this.redirectAuthWithToast('warning', 'Payment could not be verified. Your booking was not updated.');
         } else if (source === 'auth') {
           this.redirectAuthWithToast('warning', 'Booking saved but payment could not be verified.');
         }

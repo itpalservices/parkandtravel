@@ -36,6 +36,20 @@ export class PaymentFailedComponent implements OnInit {
       return;
     }
 
+    if (source === 'auth_update') {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'Payment failed. Your booking was not updated.',
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true,
+      });
+      this.router.navigate(['/admin/bookings']);
+      return;
+    }
+
     if (this.isAuthSource) {
       Swal.fire({
         toast: true,
