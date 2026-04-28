@@ -1906,8 +1906,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       }
     } else if (this.isRegularUser && !this.isPriceTBC) {
       if (this.mandatoryPrePayment) {
-        this.submitting = true;
-        this.processNewBooking(booking, true);
+        this.processAuthPendingPayment(booking);
       } else {
         Swal.fire({
           title: 'Payment Option',
@@ -1933,6 +1932,30 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.submitting = true;
       this.processNewBooking(booking, false);
     }
+  }
+
+  private processAuthPendingPayment(booking: Record<string, unknown>): void {
+    this.submitting = true;
+    this.apiService
+      .post<{ paymentUrl: string }>('/payment/initiate-auth-pending', booking)
+      .subscribe({
+        next: (res) => {
+          this.submitting = false;
+          window.location.href = res.paymentUrl;
+        },
+        error: (err) => {
+          this.submitting = false;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: err.error?.message || 'Failed to initiate payment. Please try again.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+          });
+        },
+      });
   }
 
   private processNewBooking(booking: Record<string, unknown>, paymentIntended: boolean): void {

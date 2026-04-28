@@ -49,7 +49,15 @@ export class PaymentSuccessComponent implements OnInit {
         this.message = result.message || '';
         this.bookingId = result.bookingId || null;
 
-        if (source === 'auth') {
+        if (source === 'auth_pending') {
+          if (result.status === 'success') {
+            this.redirectAuthWithToast('success', 'Payment completed! Your booking has been created.');
+          } else if (result.status === 'failed') {
+            this.redirectAuthWithToast('error', 'Payment failed. Your booking was not created.');
+          } else {
+            this.redirectAuthWithToast('info', 'Payment is still processing. Your booking will be created once confirmed.');
+          }
+        } else if (source === 'auth') {
           if (result.status === 'success') {
             this.redirectAuthWithToast('success', 'Payment completed successfully!');
           } else if (result.status === 'failed') {
@@ -64,7 +72,9 @@ export class PaymentSuccessComponent implements OnInit {
         this.status = 'failed';
         this.message = err.error?.message || 'An error occurred while verifying your payment.';
 
-        if (source === 'auth') {
+        if (source === 'auth_pending') {
+          this.redirectAuthWithToast('error', 'Payment could not be verified. Your booking was not created.');
+        } else if (source === 'auth') {
           this.redirectAuthWithToast('warning', 'Booking saved but payment could not be verified.');
         }
       },

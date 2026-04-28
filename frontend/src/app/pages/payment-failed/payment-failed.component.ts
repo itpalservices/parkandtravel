@@ -22,6 +22,20 @@ export class PaymentFailedComponent implements OnInit {
     const source = this.route.snapshot.queryParamMap.get('source');
     this.isAuthSource = source === 'auth';
 
+    if (source === 'auth_pending') {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Payment failed. Your booking was not created.',
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true,
+      });
+      this.router.navigate(['/admin/bookings']);
+      return;
+    }
+
     if (this.isAuthSource) {
       Swal.fire({
         toast: true,

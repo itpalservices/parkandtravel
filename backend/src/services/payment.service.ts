@@ -123,6 +123,28 @@ interface GuestFormData {
   pickUpOption?: string | null;
 }
 
+interface AuthPendingFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  phoneCodeId?: string | null;
+  licensePlate: string;
+  vehicleBrand: string;
+  vehicleModel?: string | null;
+  vehicleColor?: string | null;
+  flightNumber?: string | null;
+  checkInDate: string;
+  checkInTime: string;
+  checkOutDate?: string | null;
+  checkOutTime?: string | null;
+  parkingTypeId: string;
+  washService?: boolean;
+  dropOffOption?: string | null;
+  pickUpOption?: string | null;
+  userId?: string | null;
+  finalPrice: number;
+}
+
 async function calculateFinalPrice(
   formData: GuestFormData,
   priceSettings: Awaited<ReturnType<typeof getPriceSettings>>
@@ -247,6 +269,95 @@ async function createBookingFromPending(
   return booking.id;
 }
 
+async function createBookingFromAuthPending(
+  pending: { id: string; wlTransactionId: bigint | null; formData: any },
+  wlTransactionId: number
+): Promise<string> {
+  const formData = pending.formData as AuthPendingFormData & { processedBookingId?: string };
+
+  if (formData.processedBookingId) {
+    return formData.processedBookingId;
+  }
+
+  const { name, surname } = parseName(formData.fullName);
+  const checkInDate = new Date(formData.checkInDate + 'T12:00:00Z');
+  const checkOutDate = formData.checkOutDate ? new Date(formData.checkOutDate + 'T12:00:00Z') : null;
+  const checkInTime = formData.checkInTime ? parseTimeToDate(formData.checkInTime) : null;
+  const checkOutTime = formData.checkOutTime ? parseTimeToDate(formData.checkOutTime) : null;
+  const finalPrice = formData.finalPrice;
+
+  const booking = await prisma.booking.create({
+    data: {
+      userId: formData.userId || null,
+      name,
+      surname,
+      email: formData.email,
+      mobile: formData.phone,
+      phoneCodeId: formData.phoneCodeId || null,
+      plateNo: formData.licensePlate,
+      carBrand: formData.vehicleBrand,
+      carModel: formData.vehicleModel || null,
+      carColor: formData.vehicleColor || null,
+      returnFlight: formData.flightNumber || null,
+      dateFrom: checkInDate,
+      timeFrom: checkInTime,
+      dateTo: checkOutDate,
+      timeTo: checkOutTime,
+      parkingTypeId: formData.parkingTypeId,
+      washService: formData.washService || false,
+      finalPrice,
+      dropOffOption: formData.dropOffOption || null,
+      pickUpOption: formData.pickUpOption || null,
+      deleteflag: 0,
+    },
+  });
+
+  await prisma.walleeTransaction.create({
+    data: {
+      id: BigInt(wlTransactionId),
+      amount: finalPrice,
+      bookingId: booking.id,
+    },
+  }).catch((err) => console.error('Failed to record wallee_transaction for auth_pending booking:', err));
+
+  const updatedFormData = { ...formData, processedBookingId: booking.id };
+  await prisma.pendingBooking.update({
+    where: { id: pending.id },
+    data: { formData: updatedFormData },
+  });
+
+  const parkingType = await prisma.parkingType.findUnique({
+    where: { id: formData.parkingTypeId },
+    select: { name: true },
+  });
+
+  if (formData.email) {
+    const emailDescription = await getEmailDescription();
+    sendBookingConfirmationEmail({
+      email: formData.email,
+      fullName: formData.fullName,
+      checkInDate: formData.checkInDate,
+      checkInTime: formData.checkInTime,
+      checkOutDate: formData.checkOutDate || undefined,
+      checkOutTime: formData.checkOutTime || undefined,
+      licensePlate: formData.licensePlate,
+      vehicleBrand: formData.vehicleBrand,
+      vehicleModel: formData.vehicleModel || undefined,
+      vehicleColor: formData.vehicleColor || undefined,
+      parkingType: parkingType?.name || formData.parkingTypeId,
+      washService: formData.washService || false,
+      flightNumber: formData.flightNumber || undefined,
+      dropOffOption: formData.dropOffOption || undefined,
+      pickUpOption: formData.pickUpOption || undefined,
+      finalPrice,
+      emailDescription,
+      paymentStatus: 'paid',
+    }).catch((err) => console.error('Failed to send auth_pending booking confirmation email:', err));
+  }
+
+  return booking.id;
+}
+
 export async function initiatePaymentForPending(formData: GuestFormData): Promise<{ paymentUrl: string }> {
   const priceSettings = await getPriceSettings();
   const finalPrice = await calculateFinalPrice(formData, priceSettings);
@@ -274,6 +385,46 @@ export async function initiatePaymentForPending(formData: GuestFormData): Promis
     description: 'Parking Reservation - Park & Travel',
     successUrl: `${domain}/payment/success?ref=${merchantReference}`,
     failedUrl: `${domain}/payment/failed?ref=${merchantReference}`,
+    plateNo: formData.licensePlate,
+    carBrand: formData.vehicleBrand,
+  });
+
+  await prisma.pendingBooking.update({
+    where: { id: pending.id },
+    data: { wlTransactionId: BigInt(transactionId) },
+  });
+
+  const paymentUrl = await buildPaymentPageUrl(transactionId);
+  return { paymentUrl };
+}
+
+export async function initiatePaymentForAuthPending(formData: AuthPendingFormData, userId: string): Promise<{ paymentUrl: string }> {
+  const finalPrice = formData.finalPrice;
+  if (!finalPrice || finalPrice <= 0) {
+    throw new Error('Cannot process payment without a calculated price.');
+  }
+
+  const dataWithUser = { ...formData, userId };
+
+  const pending = await prisma.pendingBooking.create({
+    data: {
+      formData: dataWithUser as any,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    },
+  });
+
+  const domain = getAppDomain();
+  const merchantReference = `auth_pending_${pending.id}`;
+
+  const transactionId = await createWalleeTransaction({
+    merchantReference,
+    amount: finalPrice,
+    currency: 'EUR',
+    customerEmail: formData.email || undefined,
+    fullName: formData.fullName,
+    description: 'Parking Reservation - Park & Travel',
+    successUrl: `${domain}/payment/success?ref=${merchantReference}&source=auth_pending`,
+    failedUrl: `${domain}/payment/failed?ref=${merchantReference}&source=auth_pending`,
     plateNo: formData.licensePlate,
     carBrand: formData.vehicleBrand,
   });
@@ -491,6 +642,22 @@ async function sendPaidConfirmationEmailForBooking(bookingId: string): Promise<v
   }).catch((err) => console.error('Failed to send paid confirmation email:', err));
 }
 
+async function handleAuthPendingPaymentSuccess(merchantReference: string, wlTransactionId: number): Promise<void> {
+  const pendingId = merchantReference.replace('auth_pending_', '');
+  const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
+  if (!pending) {
+    console.log(`Webhook: auth_pending booking ${pendingId} not found (already processed)`);
+    return;
+  }
+
+  try {
+    const bookingId = await createBookingFromAuthPending(pending, wlTransactionId);
+    console.log(`Webhook: booking ${bookingId} created from auth_pending ${pendingId}`);
+  } catch (err) {
+    console.error(`Webhook: error creating booking from auth_pending ${pendingId}:`, err);
+  }
+}
+
 async function handleBookingPaymentSuccess(merchantReference: string, wlTransactionId: number): Promise<void> {
   const bookingId = merchantReference.replace('booking_', '');
 
@@ -535,7 +702,9 @@ export async function handleWalleeWebhook(body: any): Promise<void> {
   console.log(`Webhook: transaction ${entityId} state=${state} ref=${merchantReference}`);
 
   if (WALLEE_SUCCESS_STATES.includes(state)) {
-    if (merchantReference.startsWith('pending_')) {
+    if (merchantReference.startsWith('auth_pending_')) {
+      await handleAuthPendingPaymentSuccess(merchantReference, Number(entityId));
+    } else if (merchantReference.startsWith('pending_')) {
       await handlePendingPaymentSuccess(merchantReference, Number(entityId));
     } else if (merchantReference.startsWith('update_')) {
       await handlePendingUpdatePaymentSuccess(merchantReference, Number(entityId));
@@ -550,7 +719,44 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
   bookingId?: string;
   message?: string;
 }> {
-  if (ref.startsWith('update_')) {
+  if (ref.startsWith('auth_pending_')) {
+    const pendingId = ref.replace('auth_pending_', '');
+    const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
+
+    if (!pending) {
+      return { status: 'failed', message: 'Booking session not found or expired.' };
+    }
+
+    const formData = pending.formData as any;
+    if (formData.processedBookingId) {
+      await prisma.pendingBooking.delete({ where: { id: pendingId } }).catch(() => {});
+      return { status: 'success', bookingId: formData.processedBookingId };
+    }
+
+    if (!pending.wlTransactionId) {
+      return { status: 'pending', message: 'Payment not yet initiated.' };
+    }
+
+    let transaction: any;
+    try {
+      transaction = await getWalleeTransactionById(Number(pending.wlTransactionId));
+    } catch (err) {
+      console.error(`verify auth_pending: failed to fetch Wallee transaction:`, err);
+      return { status: 'pending', message: 'Could not verify payment status. Please try again.' };
+    }
+
+    const state: string = transaction.state;
+
+    if (WALLEE_SUCCESS_STATES.includes(state)) {
+      const bookingId = await createBookingFromAuthPending(pending, Number(pending.wlTransactionId));
+      await prisma.pendingBooking.delete({ where: { id: pendingId } }).catch(() => {});
+      return { status: 'success', bookingId };
+    } else if (WALLEE_FAILED_STATES.includes(state)) {
+      return { status: 'failed', message: 'Payment was declined. Your booking was not created.' };
+    } else {
+      return { status: 'pending', message: 'Payment is still processing. Please wait.' };
+    }
+  } else if (ref.startsWith('update_')) {
     const pendingId = ref.replace('update_', '');
     const pending = await prisma.pendingBooking.findUnique({ where: { id: pendingId } });
 
