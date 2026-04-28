@@ -14,8 +14,8 @@ export class ReportsComponent {
   reports: ReportCard[] = [
     {
       id: 'z-report',
-      title: 'Z-Report',
-      description: 'View daily summary reports'
+      title: 'Online Payments',
+      description: 'View daily summary reports for online payments'
     },
     {
       id: 'employee-z-report',
