@@ -143,6 +143,17 @@ export class BookingsListComponent {
     return booking.bookingStatusId === 'bookingStatus_parked' || booking.bookingStatusId === 'bookingStatus_completed';
   }
 
+  showParkingNote(booking: Booking, event: MouseEvent): void {
+    event.stopPropagation();
+    Swal.fire({
+      title: 'Parking Note',
+      text: booking.parkingComments ?? '',
+      icon: 'info',
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#006B8F',
+    });
+  }
+
   openCarouselForBooking(bookingId: string, event: MouseEvent): void {
     event.stopPropagation();
     this.bookingsService.getBookingImages(bookingId).subscribe({
