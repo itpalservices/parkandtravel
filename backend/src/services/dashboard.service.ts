@@ -215,6 +215,7 @@ export async function getCheckOuts(
 export interface DashboardDetailItem {
   id: string;
   customerName: string;
+  phoneNumber: string;
   plateNo: string;
   vehicleModel: string;
   checkIn: string;
@@ -226,6 +227,7 @@ interface DetailBookingRow {
   id: string;
   name: string | null;
   surname: string | null;
+  mobile: string | null;
   plateNo: string | null;
   carBrand: string | null;
   carModel: string | null;
@@ -257,7 +259,7 @@ export async function getCardDetails(
   switch (cardType) {
     case "total-cars":
       query = `
-        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
+        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
           AND "dateFrom" <= '${todayStr}'::date 
@@ -267,7 +269,7 @@ export async function getCardDetails(
       break;
     case "today-check-ins":
       query = `
-        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", NULL as "parkPlace"
+        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", NULL as "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
           AND ${todayCheckInCondition}
@@ -277,7 +279,7 @@ export async function getCardDetails(
       break;
     case "today-check-outs":
       query = `
-        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
+        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
           AND ${todayCheckOutCondition}
@@ -287,7 +289,7 @@ export async function getCardDetails(
       break;
     case "wash-today":
       query = `
-        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
+        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
           AND ${todayCheckOutCondition}
@@ -298,7 +300,7 @@ export async function getCardDetails(
       break;
     case "wash-tomorrow":
       query = `
-        SELECT id, name, surname, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
+        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
         FROM bookings 
         WHERE deleteflag = 0 
           AND ${tomorrowCheckOutCondition}
@@ -316,6 +318,7 @@ export async function getCardDetails(
   return bookings.map((b) => ({
     id: b.id,
     customerName: `${b.name || ""} ${b.surname || ""}`.trim(),
+    phoneNumber: b.mobile || "",
     plateNo: b.plateNo || "",
     vehicleModel: `${b.carBrand || ""} ${b.carModel || ""}`.trim(),
     checkIn: `${formatDisplayDate(new Date(b.dateFrom))} ${formatTime(b.timeFrom)}`,

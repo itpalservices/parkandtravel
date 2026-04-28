@@ -4,8 +4,8 @@ import { RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DateRangePickerComponent, DateRange } from '../../shared/components/date-range-picker/date-range-picker.component';
 import { ApiService } from '../../core/services/api.service';
-import { CheckInOutItem, DashboardStats } from '../../shared/models/dashboard.model';
-import { DashboardDetailsComponent, CardType } from './dashboard-details/dashboard-details.component';
+import { CardType, CheckInOutItem, DashboardStats } from '../../shared/models/dashboard.model';
+import { DashboardDetailsComponent } from './dashboard-details/dashboard-details.component';
 
 @Component({
   selector: 'app-dashboard',

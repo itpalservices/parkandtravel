@@ -3,18 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
-
-export interface DashboardDetailItem {
-  id: string;
-  customerName: string;
-  plateNo: string;
-  vehicleModel: string;
-  checkIn: string;
-  checkOut: string;
-  parkPlace?: string;
-}
-
-export type CardType = 'total-cars' | 'today-check-ins' | 'today-check-outs' | 'wash-today' | 'wash-tomorrow';
+import { CardType, DashboardDetailItem } from '../../../shared/models/dashboard.model';
 
 @Component({
   selector: 'app-dashboard-details',
@@ -86,7 +75,8 @@ export class DashboardDetailsComponent implements OnInit {
         item.plateNo.toLowerCase().includes(term) ||
         item.vehicleModel.toLowerCase().includes(term) ||
         item.checkIn.toLowerCase().includes(term) ||
-        item.checkOut.toLowerCase().includes(term)
+        item.checkOut.toLowerCase().includes(term) ||
+        item.phoneNumber.includes(term)
       );
     } else {
       this.filteredItems = [...this.allItems];
