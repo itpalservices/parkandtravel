@@ -215,19 +215,19 @@ export class EmployeeZReportComponent implements OnInit {
     const rangeEnd = new Date(this.shiftsDateTo);
     rangeEnd.setHours(23, 59, 59, 999);
 
-    const totalMs = this.filteredShifts
+    const totalMinutes = this.filteredShifts
       .filter(s => s.status === 'closed' && s.shiftEnd)
       .reduce((sum, shift) => {
         const start = new Date(shift.shiftStart);
         const end = new Date(shift.shiftEnd!);
         const clampedStart = start < rangeStart ? rangeStart : start;
         const clampedEnd = end > rangeEnd ? rangeEnd : end;
-        const duration = clampedEnd.getTime() - clampedStart.getTime();
-        return sum + (duration > 0 ? duration : 0);
+        const durationMs = clampedEnd.getTime() - clampedStart.getTime();
+        return sum + (durationMs > 0 ? Math.floor(durationMs / 60000) : 0);
       }, 0);
 
-    const hours = Math.floor(totalMs / 3600000);
-    const mins = Math.floor((totalMs % 3600000) / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
     return `${hours}h ${mins}m`;
   }
 
