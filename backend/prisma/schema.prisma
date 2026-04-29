@@ -66,6 +66,7 @@ model Booking {
   bookingStatus     BookingStatus?     @relation(fields: [bookingStatusId], references: [id])
   walleeTransactions     WalleeTransaction[]
   completionTransactions CompletionTransaction[]
+  checkinTransactions    CheckinTransaction[]
 
   @@map("bookings")
 }
@@ -131,10 +132,26 @@ model Shift {
   createdAt      DateTime  @default(now()) @map("created_at")
 
   completionTransactions CompletionTransaction[]
+  checkinTransactions    CheckinTransaction[]
 
   @@index([userId], name: "idx_shifts_user_id")
   @@index([status], name: "idx_shifts_status")
   @@map("shifts")
+}
+
+model CheckinTransaction {
+  id            String   @id @default(uuid()) @db.Uuid
+  bookingId     String   @map("booking_id") @db.Uuid
+  datetime      DateTime @default(now()) @db.Timestamptz(6)
+  amount        Decimal  @db.Decimal(10, 2)
+  userId        String   @map("user_id") @db.VarChar(255)
+  paymentMethod String   @map("payment_method") @db.VarChar(20)
+  notes         String?  @db.Text
+  shiftId       Int?     @map("shift_id")
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  shift         Shift?   @relation(fields: [shiftId], references: [id])
+
+  @@map("checkin_transactions")
 }
 
 model Car {

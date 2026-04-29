@@ -13,6 +13,8 @@ import {
   stageBookingUpdate as stageBookingUpdateService,
   estimateExtraFee as estimateExtraFeeService,
   completeBooking as completeBookingService,
+  getCheckinPaymentInfo as getCheckinPaymentInfoService,
+  recordCheckinPayment as recordCheckinPaymentService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -719,6 +721,64 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
     res.json({ success: true, data: result });
   } catch (error) {
     console.error("Error completing booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getCheckinPaymentInfoHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const result = await getCheckinPaymentInfoService(id);
+    if (!result) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    res.json({ data: result });
+  } catch (error) {
+    console.error("Error fetching checkin payment info:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function recordCheckinPaymentHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+
+    if (!authUser || authUser.role === "user") {
+      res.status(403).json({ error: "Admin or driver role required" });
+      return;
+    }
+
+    const { id } = req.params;
+    const { amount, paymentMethod, notes, actorName } = req.body;
+
+    if (amount === undefined || !paymentMethod) {
+      res.status(400).json({ error: "amount and paymentMethod are required" });
+      return;
+    }
+
+    const shiftId = authUser.sub ? await getOpenShiftId(authUser.sub) : null;
+
+    const result = await recordCheckinPaymentService(id, {
+      amount: parseFloat(amount),
+      paymentMethod,
+      actorUserId: authUser.sub || '',
+      notes,
+      shiftId,
+    });
+
+    if (!result) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (authUser.sub) {
+      updateShiftActivity(authUser.sub);
+    }
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error recording checkin payment:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

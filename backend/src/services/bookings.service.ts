@@ -359,8 +359,8 @@ export async function getBookingById(
       b."checkInBy",
       b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
-      (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeAmount",
-      (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" ASC LIMIT 1) as "walleeCreatedAt",
+      (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeAmount",
+      (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeCreatedAt",
       b.estimated_arrival_time
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -1578,18 +1578,18 @@ export async function estimateExtraFee(
 ): Promise<{ extraFee: number; isLate: boolean; walleePaymentDate: string | null } | null> {
   if (!isValidUUID(bookingId)) return null;
 
-  const [booking, firstWallee] = await Promise.all([
+  const [booking, latestWallee] = await Promise.all([
     prisma.booking.findUnique({ where: { id: bookingId } }),
     prisma.walleeTransaction.findFirst({
       where: { bookingId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       select: { createdAt: true },
     }),
   ]);
   if (!booking) return null;
 
-  const walleePaymentDate = firstWallee?.createdAt
-    ? (firstWallee.createdAt as Date).toISOString()
+  const walleePaymentDate = latestWallee?.createdAt
+    ? (latestWallee.createdAt as Date).toISOString()
     : null;
 
   const checkOutDate = booking.dateTo ? new Date(booking.dateTo) : null;
@@ -1672,6 +1672,53 @@ export async function completeBooking(
   });
 
   return { success: true, completionTransactionId: result.id };
+}
+
+export async function getCheckinPaymentInfo(
+  bookingId: string,
+): Promise<{ latestPaymentDate: string | null } | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  const latest = await prisma.walleeTransaction.findFirst({
+    where: { bookingId },
+    orderBy: { createdAt: 'desc' },
+    select: { createdAt: true },
+  });
+
+  return {
+    latestPaymentDate: latest?.createdAt
+      ? (latest.createdAt as Date).toISOString()
+      : null,
+  };
+}
+
+export async function recordCheckinPayment(
+  bookingId: string,
+  params: {
+    amount: number;
+    paymentMethod: string;
+    actorUserId: string;
+    notes?: string;
+    shiftId?: number | null;
+  },
+): Promise<{ success: boolean; id: string } | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking || booking.deleteflag !== 0) return null;
+
+  const record = await prisma.checkinTransaction.create({
+    data: {
+      bookingId,
+      amount: params.amount,
+      userId: params.actorUserId,
+      paymentMethod: params.paymentMethod,
+      notes: params.notes || null,
+      shiftId: params.shiftId ?? null,
+    },
+  });
+
+  return { success: true, id: record.id };
 }
 
 export { isValidDateFormat, isDateInPast, isValidUUID };

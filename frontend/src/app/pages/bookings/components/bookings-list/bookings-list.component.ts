@@ -7,6 +7,7 @@ import { BookingsService } from '../../../../core/services/bookings.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
 import { ShiftService } from '../../../../core/services/shift.service';
+import { SettingsService } from '../../../../core/services/settings.service';
 import Swal from 'sweetalert2';
 import {
   CAR_PICK_UP_OPTIONS,
@@ -49,6 +50,7 @@ export class BookingsListComponent {
     private apiService: ApiService,
     private userProfileService: UserProfileService,
     private shiftService: ShiftService,
+    private settingsService: SettingsService,
   ) {}
 
   printBookingTag(booking: Booking): void {
@@ -618,12 +620,92 @@ export class BookingsListComponent {
     });
   }
 
-  private showParkPlaceAndImagesModal(
+  private async showParkPlaceAndImagesModal(
     booking: Booking,
     newStatusId: string,
     newStatusLabel: string,
-  ): void {
+  ): Promise<void> {
     const modalSelectedFiles: File[] = [];
+
+    let mandatoryCheckInPayment = false;
+    let latestPaymentDate: string | null = null;
+    try {
+      const [settingsResp, paymentInfoResp] = await Promise.all([
+        firstValueFrom(this.settingsService.getSettings()),
+        firstValueFrom(this.apiService.get<any>(`/bookings/${booking.id}/checkin-payment-info`)),
+      ]);
+      mandatoryCheckInPayment = settingsResp.mandatoryCheckInPayment ?? false;
+      latestPaymentDate = paymentInfoResp?.data?.latestPaymentDate ?? null;
+    } catch {
+      // proceed with defaults
+    }
+
+    const finalPrice = booking.finalPrice ?? null;
+    const paidAmount = booking.paidAmount ?? 0;
+    const dateStr = latestPaymentDate ? new Date(latestPaymentDate).toLocaleDateString() : '';
+
+    let paymentSectionHtml = '';
+    let showPaymentFields = false;
+    let prefilledAmount = 0;
+
+    if (finalPrice === null) {
+      paymentSectionHtml = `
+        <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; color:#64748b; font-size:13px; line-height:1.5;">
+            ℹ️ Payment collection is not available because the check-out details are not set.
+          </div>
+        </div>`;
+    } else if (paidAmount >= finalPrice) {
+      paymentSectionHtml = `
+        <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; color:#15803d; font-size:13px; line-height:1.5;">
+            ✓ No payment required — booking was fully paid online (€${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}).
+          </div>
+        </div>`;
+    } else {
+      showPaymentFields = true;
+      let infoHtml = '';
+      if (paidAmount > 0) {
+        const remaining = parseFloat((finalPrice - paidAmount).toFixed(2));
+        prefilledAmount = remaining;
+        infoHtml = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; color:#1d4ed8; font-size:13px; margin-bottom:12px;">
+          ℹ️ Paid online: €${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}. Remaining balance: €${remaining.toFixed(2)}.
+        </div>`;
+      } else {
+        prefilledAmount = finalPrice;
+      }
+      const fieldsHtml = `
+        ${infoHtml}
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Amount (€)${mandatoryCheckInPayment ? ' <span style="color:#dc3545;">*</span>' : ''}</label>
+          <input id="swal-checkin-amount" type="number" step="0.01" min="0" class="swal2-input" value="${prefilledAmount.toFixed(2)}" style="margin:0; width:100%; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Payment Method</label>
+          <div style="display:flex; gap:16px; margin-top:6px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-pm" value="cash" checked style="width:16px;height:16px;"> Cash</label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-pm" value="card" style="width:16px;height:16px;"> Card</label>
+          </div>
+        </div>`;
+      if (mandatoryCheckInPayment) {
+        paymentSectionHtml = `
+          <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
+            <div style="font-weight:600; color:#374151; font-size:14px; margin-bottom:12px;">Check-in Payment <span style="color:#dc3545;">*</span></div>
+            ${fieldsHtml}
+          </div>`;
+      } else {
+        paymentSectionHtml = `
+          <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
+            <div id="swal-checkin-header" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; user-select:none;">
+              <span style="font-weight:600; color:#006B8F; font-size:14px;">Record check-in payment (optional)</span>
+              <span id="swal-checkin-chevron" style="color:#006B8F; font-size:11px; font-weight:bold;">▶</span>
+            </div>
+            <div id="swal-checkin-body" style="display:none; margin-top:12px;">
+              ${fieldsHtml}
+            </div>
+          </div>`;
+      }
+    }
 
     Swal.fire({
       title: 'Parked Details',
@@ -677,6 +759,7 @@ export class BookingsListComponent {
           </div>
           <input type="file" id="swal-image-input" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" />
           <div id="swal-image-preview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
+          ${paymentSectionHtml}
         </div>
       `,
       showCancelButton: true,
@@ -709,36 +792,41 @@ export class BookingsListComponent {
         });
         parkPlaceInput.addEventListener('paste', (e: Event) => e.preventDefault());
 
+        if (!mandatoryCheckInPayment && showPaymentFields) {
+          const header = document.getElementById('swal-checkin-header');
+          const body = document.getElementById('swal-checkin-body');
+          const chevron = document.getElementById('swal-checkin-chevron');
+          if (header && body && chevron) {
+            header.addEventListener('click', () => {
+              const isOpen = body.style.display !== 'none';
+              body.style.display = isOpen ? 'none' : 'block';
+              chevron.textContent = isOpen ? '▶' : '▼';
+            });
+          }
+        }
+
         const uploadArea = document.getElementById('swal-image-upload-area')!;
         const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
         const previewContainer = document.getElementById('swal-image-preview')!;
 
         uploadArea.addEventListener('click', () => fileInput.click());
-
         uploadArea.addEventListener('dragover', (e) => {
           e.preventDefault();
           uploadArea.style.borderColor = '#006B8F';
           uploadArea.style.background = '#f0f9ff';
         });
-
         uploadArea.addEventListener('dragleave', () => {
           uploadArea.style.borderColor = '#d1d5db';
           uploadArea.style.background = '#f9fafb';
         });
-
         uploadArea.addEventListener('drop', (e) => {
           e.preventDefault();
           uploadArea.style.borderColor = '#d1d5db';
           uploadArea.style.background = '#f9fafb';
           if (e.dataTransfer?.files) {
-            this.handleImageFiles(
-              Array.from(e.dataTransfer.files),
-              modalSelectedFiles,
-              previewContainer,
-            );
+            this.handleImageFiles(Array.from(e.dataTransfer.files), modalSelectedFiles, previewContainer);
           }
         });
-
         fileInput.addEventListener('change', () => {
           if (fileInput.files) {
             this.handleImageFiles(Array.from(fileInput.files), modalSelectedFiles, previewContainer);
@@ -748,42 +836,67 @@ export class BookingsListComponent {
       },
       preConfirm: async () => {
         const parkPlace = (document.getElementById('swal-park-place') as HTMLInputElement).value.trim();
-        if (!parkPlace) {
-          Swal.showValidationMessage('Parking place is required');
-          return false;
-        }
+        if (!parkPlace) { Swal.showValidationMessage('Parking place is required'); return false; }
         if (!/^[A-Z]-\d{3}$/.test(parkPlace)) {
           Swal.showValidationMessage('Parking place must be in format A-000 (e.g., A-001)');
           return false;
         }
         try {
           const check = await firstValueFrom(this.bookingsService.checkParkPlaceAvailability(parkPlace, booking.id));
-          if (!check.available) {
-            Swal.showValidationMessage('This parking place is already occupied by another vehicle');
-            return false;
-          }
+          if (!check.available) { Swal.showValidationMessage('This parking place is already occupied by another vehicle'); return false; }
         } catch {
-          Swal.showValidationMessage('Could not verify parking place availability');
-          return false;
+          Swal.showValidationMessage('Could not verify parking place availability'); return false;
         }
         const adultsStr = (document.getElementById('swal-adults') as HTMLInputElement).value.trim();
         const adults = parseInt(adultsStr, 10);
-        if (!adultsStr || isNaN(adults) || adults < 1) {
-          Swal.showValidationMessage('Adults is required (minimum 1)');
-          return false;
+        if (!adultsStr || isNaN(adults) || adults < 1) { Swal.showValidationMessage('Adults is required (minimum 1)'); return false; }
+
+        let checkinPayment: { amount: number; paymentMethod: string; notes: string } | null = null;
+        if (showPaymentFields) {
+          const body = document.getElementById('swal-checkin-body');
+          const isExpanded = mandatoryCheckInPayment || (body !== null && body.style.display !== 'none');
+          if (isExpanded) {
+            const amtEl = document.getElementById('swal-checkin-amount') as HTMLInputElement;
+            const pmEl = document.querySelector('input[name="swal-checkin-pm"]:checked') as HTMLInputElement;
+            const amount = parseFloat(amtEl?.value || '0');
+            const paymentMethod = pmEl?.value || 'cash';
+            if (mandatoryCheckInPayment && (!amtEl?.value || isNaN(amount) || amount <= 0)) {
+              Swal.showValidationMessage('Check-in payment amount is required'); return false;
+            }
+            if (amount > 0) {
+              const pmCap = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
+              const notes = paidAmount > 0 && finalPrice !== null
+                ? `Paid online: €${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
+                : `Full amount collected at check-in: €${amount.toFixed(2)} (${pmCap}).`;
+              checkinPayment = { amount, paymentMethod, notes };
+            }
+          }
         }
+
         const mileageStr = (document.getElementById('swal-mileage') as HTMLInputElement).value.trim();
         const mileageKm = mileageStr ? parseInt(mileageStr, 10) : undefined;
         const plateNo = (document.getElementById('swal-plate-no') as HTMLInputElement).value.trim() || undefined;
         const carModel = (document.getElementById('swal-car-model') as HTMLInputElement).value.trim() || undefined;
         const keepKeys = (document.getElementById('swal-keep-keys') as HTMLInputElement).checked;
         const parkingComments = (document.getElementById('swal-comments') as HTMLTextAreaElement).value.trim() || undefined;
-        return { parkPlace, mileageKm, plateNo, carModel, adults, keepKeys, parkingComments, files: [...modalSelectedFiles] };
+        return { parkPlace, mileageKm, plateNo, carModel, adults, keepKeys, parkingComments, files: [...modalSelectedFiles], checkinPayment };
       },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
-        const { parkPlace, files, ...extraFields } = result.value;
-        this.performStatusUpdate(booking, newStatusId, newStatusLabel, parkPlace, undefined, extraFields);
+        const { parkPlace, files, checkinPayment: payment, ...extraFields } = result.value;
+        const actorName = this.userProfileService.getDisplayName() || undefined;
+        this.performStatusUpdate(booking, newStatusId, newStatusLabel, parkPlace, undefined, extraFields, () => {
+          if (payment) {
+            this.apiService.post<any>(`/bookings/${booking.id}/checkin-payment`, { ...payment, actorName }).subscribe({
+              next: () => {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Check-in payment recorded', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+              },
+              error: () => {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Booking parked but check-in payment could not be recorded', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+              },
+            });
+          }
+        });
         if (files.length > 0) {
           this.uploadBookingImages(booking.id, files);
         }
@@ -897,6 +1010,7 @@ export class BookingsListComponent {
     parkPlace?: string,
     applyExtraFee?: boolean,
     extraFields?: { keepKeys?: boolean; mileageKm?: number; parkingComments?: string; plateNo?: string; carModel?: string; adults?: number },
+    onSuccess?: () => void,
   ): void {
     const actorName = this.userProfileService.getDisplayName() || undefined;
     this.bookingsService
@@ -917,6 +1031,7 @@ export class BookingsListComponent {
               timerProgressBar: true,
             });
             this.bookingUpdated.emit();
+            onSuccess?.();
           }
         },
         error: (error) => {
