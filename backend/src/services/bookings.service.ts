@@ -62,6 +62,7 @@ interface BookingResponse {
   actualCheckOut: string | null;
   extraFee: number | null;
   deleteflag: number;
+  walleePaidAmount: number;
   paidAmount: number;
   checkInBy: string | null;
   checkOutBy: string | null;
@@ -253,7 +254,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."extraFee",
       b."checkInBy",
       b."checkOutBy",
-      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       b."estimated_arrival_time"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -298,14 +300,15 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
-    paidAmount: parseFloat(b.paidAmount ?? '0'),
+    walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
-      parseFloat(b.paidAmount ?? '0')
+      parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
-    isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
+    isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
     walleePayment: null,
     estimated_arrival_time: b.estimated_arrival_time
   }));
@@ -358,7 +361,8 @@ export async function getBookingById(
       b.deleteflag,
       b."checkInBy",
       b."checkOutBy",
-      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeAmount",
       (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeCreatedAt",
       b.estimated_arrival_time
@@ -407,12 +411,13 @@ export async function getBookingById(
     deleteflag: b.deleteflag,
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
-    paidAmount: parseFloat(b.paidAmount ?? '0'),
+    walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
-      parseFloat(b.paidAmount ?? '0')
+      parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
-    isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
+    isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
     walleePayment: b.walleeAmount
       ? { amount: parseFloat(b.walleeAmount), createdAt: (b.walleeCreatedAt as Date).toISOString() }
       : null,      
@@ -1222,7 +1227,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b.deleteflag,
       b."checkInBy",
       b."checkOutBy",
-      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "paidAmount",
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       b.estimated_arrival_time
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
@@ -1267,12 +1273,13 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     deleteflag: b.deleteflag,
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
-    paidAmount: parseFloat(b.paidAmount ?? '0'),
+    walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
-      parseFloat(b.paidAmount ?? '0')
+      parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
-    isPrepaid: parseFloat(b.paidAmount ?? '0') > 0,
+    isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
     walleePayment: null,
     estimated_arrival_time: b.estimated_arrival_time
   }));

@@ -36,6 +36,7 @@ export interface Booking {
   userId: string | null;
   createdAt: string;
   updatedAt: string;
+  walleePaidAmount?: number;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   estimated_arrival_time: string | null;
@@ -121,6 +122,7 @@ export interface BookingDetails {
   bookingStatusId: string | null;
   bookingStatus: string | null;
   parkPlace: string | null;
+  walleePaidAmount?: number;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   isPrepaid: boolean;

@@ -477,6 +477,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     const finalPrice = this.existingBooking?.finalPrice ?? null;
     const paidAmount = this.existingBooking?.paidAmount ?? 0;
+    const walleePaidCI = this.existingBooking?.walleePaidAmount ?? 0;
+    const checkinPaidCI = paidAmount - walleePaidCI;
     const dateStr = latestPaymentDate ? new Date(latestPaymentDate).toLocaleDateString() : '';
 
     let paymentSectionHtml = '';
@@ -491,10 +493,18 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           </div>
         </div>`;
     } else if (paidAmount >= finalPrice) {
+      let paidMsg = '';
+      if (walleePaidCI >= finalPrice) {
+        paidMsg = `✓ No payment required — booking was fully paid online (€${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}).`;
+      } else if (checkinPaidCI >= finalPrice) {
+        paidMsg = `✓ No payment required — booking was fully paid at check-in (€${checkinPaidCI.toFixed(2)}).`;
+      } else {
+        paidMsg = `✓ No payment required — booking is fully paid (online: €${walleePaidCI.toFixed(2)}, check-in: €${checkinPaidCI.toFixed(2)}).`;
+      }
       paymentSectionHtml = `
         <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
           <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; color:#15803d; font-size:13px; line-height:1.5;">
-            ✓ No payment required — booking was fully paid online (€${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}).
+            ${paidMsg}
           </div>
         </div>`;
     } else {
@@ -503,8 +513,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       if (paidAmount > 0) {
         const remaining = parseFloat((finalPrice - paidAmount).toFixed(2));
         prefilledAmount = remaining;
+        const paidInfoParts: string[] = [];
+        if (walleePaidCI > 0) paidInfoParts.push(`Paid online: €${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}`);
+        if (checkinPaidCI > 0) paidInfoParts.push(`Paid at check-in: €${checkinPaidCI.toFixed(2)}`);
         infoHtml = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; color:#1d4ed8; font-size:13px; margin-bottom:12px;">
-          ℹ️ Paid online: €${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}. Remaining balance: €${remaining.toFixed(2)}.
+          ℹ️ ${paidInfoParts.join('. ')}. Remaining balance: €${remaining.toFixed(2)}.
         </div>`;
       } else {
         prefilledAmount = finalPrice;
@@ -699,8 +712,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             }
             if (amount > 0) {
               const pmCap = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
-              const notes = paidAmount > 0 && finalPrice !== null
-                ? `Paid online: €${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
+              const noteParts: string[] = [];
+              if (walleePaidCI > 0) noteParts.push(`Paid online: €${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}`);
+              if (checkinPaidCI > 0) noteParts.push(`Previously collected at check-in: €${checkinPaidCI.toFixed(2)}`);
+              const prevNote = noteParts.join('. ');
+              const notes = prevNote
+                ? `${prevNote}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
                 : `Full amount collected at check-in: €${amount.toFixed(2)} (${pmCap}).`;
               checkinPayment = { amount, paymentMethod, notes };
             }

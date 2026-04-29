@@ -477,81 +477,50 @@ export class BookingsListComponent {
     }
 
     const totalAmount = (booking.finalPrice ?? 0) + (applyExtraFee ? extraFee : 0);
-    const isPrepaid = (booking.paidAmount ?? 0) > 0;
+    const walleePaid = booking.walleePaidAmount ?? 0;
+    const checkinPaid = (booking.paidAmount ?? 0) - walleePaid;
+    const totalAlreadyPaid = booking.paidAmount ?? 0;
+    const remainingBalance = parseFloat((totalAmount - totalAlreadyPaid).toFixed(2));
+    const walleeDateStr = walleePaymentDate ? new Date(walleePaymentDate).toLocaleDateString() : '';
+
+    // Build prior payments summary for notes
+    const priorParts: string[] = [];
+    if (walleePaid > 0) priorParts.push(`Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${walleePaid.toFixed(2)})`);
+    if (checkinPaid > 0) priorParts.push(`Paid at check-in: €${checkinPaid.toFixed(2)}`);
+    const priorNote = priorParts.join('. ');
 
     // 3. Payment collection
     let paymentMethod: string;
     let amount: number;
     let notes: string | undefined;
 
-    if (isPrepaid) {
-      const walleeDateStr = walleePaymentDate
-        ? new Date(walleePaymentDate).toLocaleDateString()
-        : '';
-      const prePaidAmount = (booking.finalPrice ?? 0).toFixed(2);
-
-      if (applyExtraFee) {
-        // Extra fee due — ask how it will be collected at the desk
-        const { value: extraFeeValues } = await Swal.fire({
-          title: 'Collect Extra Fee',
-          html: `
-            Booking was pre-paid online (€${prePaidAmount}${walleeDateStr ? ` on ${walleeDateStr}` : ''}).<br>
-            An extra fee is due at the desk.
-            <div class="mb-3 mt-3">
-              <label class="form-label fw-semibold">Extra Fee Amount (€)</label>
-              <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${extraFee.toFixed(2)}" style="width:100%;margin:0">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Payment Method</label>
-              <div class="d-flex gap-3 justify-content-center mt-2">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="swal-pm" id="pm-cash" value="cash" checked>
-                  <label class="form-check-label" for="pm-cash">Cash</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="swal-pm" id="pm-card" value="card">
-                  <label class="form-check-label" for="pm-card">Card</label>
-                </div>
-              </div>
-            </div>
-          `,
-          showCancelButton: true,
-          confirmButtonText: 'Complete Booking',
-          cancelButtonText: 'Cancel',
-          confirmButtonColor: '#006B8F',
-          preConfirm: () => {
-            const amtEl = document.getElementById('swal-amount') as HTMLInputElement;
-            const pmEl = document.querySelector('input[name="swal-pm"]:checked') as HTMLInputElement;
-            return { amount: parseFloat(amtEl?.value || '0'), paymentMethod: pmEl?.value || 'cash' };
-          },
-        });
-        if (!extraFeeValues) return;
-        amount = extraFeeValues.amount;
-        paymentMethod = extraFeeValues.paymentMethod;
-        notes = `Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${prePaidAmount}). Extra fee collected at desk: €${amount.toFixed(2)} (${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)})`;
-      } else {
-        // No extra fee — simple confirmation
-        paymentMethod = 'online';
-        amount = 0;
-        notes = `Pre-paid online via Wallee${walleeDateStr ? ` on ${walleeDateStr}` : ''} (€${prePaidAmount})`;
-        const confirmResult = await Swal.fire({
-          title: 'Confirm Completion',
-          html: `Booking was pre-paid online.<br><strong>Pre-paid amount: €${prePaidAmount}</strong>${walleeDateStr ? ` on ${walleeDateStr}` : ''}<br>No extra fee due.`,
-          icon: 'info',
-          showCancelButton: true,
-          confirmButtonText: 'Complete Booking',
-          cancelButtonText: 'Cancel',
-          confirmButtonColor: '#006B8F',
-        });
-        if (!confirmResult.isConfirmed) return;
-      }
+    if (remainingBalance <= 0) {
+      // Everything already covered — just confirm
+      paymentMethod = 'online';
+      amount = 0;
+      notes = priorNote ? `${priorNote}. No additional payment required.` : 'No additional payment required.';
+      const confirmResult = await Swal.fire({
+        title: 'Confirm Completion',
+        html: `Booking is fully paid.<br><strong>Total paid: €${totalAlreadyPaid.toFixed(2)}</strong><br>No additional payment required.`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Complete Booking',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#006B8F',
+      });
+      if (!confirmResult.isConfirmed) return;
     } else {
+      // Remaining balance to collect at checkout
+      const priorHtml = priorNote
+        ? `<p style="margin-bottom:12px; color:#374151; font-size:14px;">${priorNote}.</p>`
+        : '';
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
         html: `
+          ${priorHtml}
           <div class="mb-3">
             <label class="form-label fw-semibold">Amount (€)</label>
-            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${totalAmount.toFixed(2)}" style="width:100%;margin:0">
+            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${remainingBalance.toFixed(2)}" style="width:100%;margin:0">
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Payment Method</label>
@@ -580,6 +549,10 @@ export class BookingsListComponent {
       if (!formValues) return;
       amount = formValues.amount;
       paymentMethod = formValues.paymentMethod;
+      const pmCap = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
+      notes = priorNote
+        ? `${priorNote}. Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`
+        : `Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`;
     }
 
     const actorName = this.userProfileService.getDisplayName() || undefined;
@@ -642,6 +615,8 @@ export class BookingsListComponent {
 
     const finalPrice = booking.finalPrice ?? null;
     const paidAmount = booking.paidAmount ?? 0;
+    const walleePaidCI = booking.walleePaidAmount ?? 0;
+    const checkinPaidCI = paidAmount - walleePaidCI;
     const dateStr = latestPaymentDate ? new Date(latestPaymentDate).toLocaleDateString() : '';
 
     let paymentSectionHtml = '';
@@ -656,10 +631,18 @@ export class BookingsListComponent {
           </div>
         </div>`;
     } else if (paidAmount >= finalPrice) {
+      let paidMsg = '';
+      if (walleePaidCI >= finalPrice) {
+        paidMsg = `✓ No payment required — booking was fully paid online (€${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}).`;
+      } else if (checkinPaidCI >= finalPrice) {
+        paidMsg = `✓ No payment required — booking was fully paid at check-in (€${checkinPaidCI.toFixed(2)}).`;
+      } else {
+        paidMsg = `✓ No payment required — booking is fully paid (online: €${walleePaidCI.toFixed(2)}, check-in: €${checkinPaidCI.toFixed(2)}).`;
+      }
       paymentSectionHtml = `
         <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
           <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; color:#15803d; font-size:13px; line-height:1.5;">
-            ✓ No payment required — booking was fully paid online (€${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}).
+            ${paidMsg}
           </div>
         </div>`;
     } else {
@@ -668,8 +651,11 @@ export class BookingsListComponent {
       if (paidAmount > 0) {
         const remaining = parseFloat((finalPrice - paidAmount).toFixed(2));
         prefilledAmount = remaining;
+        const paidInfoParts: string[] = [];
+        if (walleePaidCI > 0) paidInfoParts.push(`Paid online: €${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}`);
+        if (checkinPaidCI > 0) paidInfoParts.push(`Paid at check-in: €${checkinPaidCI.toFixed(2)}`);
         infoHtml = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; color:#1d4ed8; font-size:13px; margin-bottom:12px;">
-          ℹ️ Paid online: €${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}. Remaining balance: €${remaining.toFixed(2)}.
+          ℹ️ ${paidInfoParts.join('. ')}. Remaining balance: €${remaining.toFixed(2)}.
         </div>`;
       } else {
         prefilledAmount = finalPrice;
@@ -865,8 +851,12 @@ export class BookingsListComponent {
             }
             if (amount > 0) {
               const pmCap = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
-              const notes = paidAmount > 0 && finalPrice !== null
-                ? `Paid online: €${paidAmount.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
+              const noteParts: string[] = [];
+              if (walleePaidCI > 0) noteParts.push(`Paid online: €${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}`);
+              if (checkinPaidCI > 0) noteParts.push(`Previously collected at check-in: €${checkinPaidCI.toFixed(2)}`);
+              const prevNote = noteParts.join('. ');
+              const notes = prevNote
+                ? `${prevNote}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
                 : `Full amount collected at check-in: €${amount.toFixed(2)} (${pmCap}).`;
               checkinPayment = { amount, paymentMethod, notes };
             }
