@@ -871,7 +871,7 @@ export async function updateBooking(
 
   if (params.email !== undefined) updateData.email = params.email;
   if (params.phone !== undefined) updateData.mobile = params.phone;
-  if (params.phoneCodeId !== undefined) updateData.phoneCodeId = params.phoneCodeId;
+  if (params.phoneCodeId !== undefined) updateData.phoneCodeId = params.phoneCodeId || null;
   if (params.licensePlate !== undefined) updateData.plateNo = params.licensePlate;
   if (params.vehicleBrand !== undefined) updateData.carBrand = params.vehicleBrand;
   if (params.vehicleModel !== undefined) updateData.carModel = params.vehicleModel;
