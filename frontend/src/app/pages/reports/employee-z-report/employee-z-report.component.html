@@ -115,6 +115,7 @@
               <tr>
                 <th>Date / Time</th>
                 <th>Plate No</th>
+                <th>Type</th>
                 <th>Payment Method</th>
                 <th>Amount</th>
                 <th>Employee</th>
@@ -126,6 +127,7 @@
                 <tr>
                   <td>{{ formatDateTime(tx.datetime) }}</td>
                   <td class="plate-cell">{{ tx.plateNo || '-' }}</td>
+                  <td><span class="badge-tx-type" [attr.data-type]="tx.type">{{ formatTxType(tx.type) }}</span></td>
                   <td><span class="badge-method" [attr.data-method]="tx.paymentMethod.toLowerCase()">{{ formatPaymentMethod(tx.paymentMethod) }}</span></td>
                   <td class="amount-cell">{{ formatAmount(tx.amount) }}</td>
                   <td>{{ tx.employeeName || '-' }}</td>
@@ -343,6 +345,7 @@
                 <tr>
                   <th>Date / Time</th>
                   <th>Plate No</th>
+                  <th>Type</th>
                   <th>Payment Method</th>
                   <th>Amount</th>
                   <th>Notes</th>
@@ -353,6 +356,7 @@
                   <tr>
                     <td>{{ formatDateTime(tx.datetime) }}</td>
                     <td class="plate-cell">{{ tx.plateNo || '-' }}</td>
+                    <td><span class="badge-tx-type" [attr.data-type]="tx.type">{{ formatTxType(tx.type) }}</span></td>
                     <td><span class="badge-method" [attr.data-method]="tx.paymentMethod.toLowerCase()">{{ formatPaymentMethod(tx.paymentMethod) }}</span></td>
                     <td class="amount-cell">{{ formatAmount(tx.amount) }}</td>
                     <td class="notes-cell">{{ tx.notes || '-' }}</td>

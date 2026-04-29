@@ -38,6 +38,7 @@ export interface TransactionRow {
   paymentMethod: string;
   notes: string | null;
   plateNo: string | null;
+  type: 'checkout' | 'checkin';
   employeeName?: string;
 }
 
@@ -331,6 +332,7 @@ export class EmployeeZReportComponent implements OnInit {
     const rows = all.map((t) => [
       this.formatDateTime(t.datetime),
       t.plateNo || '-',
+      this.formatTxType(t.type),
       this.formatPaymentMethod(t.paymentMethod),
       this.formatAmount(t.amount),
       t.employeeName || '-',
@@ -340,12 +342,12 @@ export class EmployeeZReportComponent implements OnInit {
     this.buildPDF({
       title: 'Z-Report by Employee',
       subtitle: periodLabel,
-      headers: ['Date / Time', 'Plate No', 'Payment Method', 'Amount', 'Employee', 'Notes'],
+      headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Employee', 'Notes'],
       rows,
       totals,
       total: all.length,
       filename,
-      colStyles: { 3: { halign: 'right' as const }, 5: { cellWidth: 40 } },
+      colStyles: { 4: { halign: 'right' as const }, 6: { cellWidth: 40 } },
     });
   }
 
@@ -378,6 +380,7 @@ export class EmployeeZReportComponent implements OnInit {
     const rows = all.map((t) => [
       this.formatDateTime(t.datetime),
       t.plateNo || '-',
+      this.formatTxType(t.type),
       this.formatPaymentMethod(t.paymentMethod),
       this.formatAmount(t.amount),
       t.notes || '-',
@@ -386,12 +389,12 @@ export class EmployeeZReportComponent implements OnInit {
     this.buildPDF({
       title: 'Z-Report by Employee',
       subtitle: periodLabel,
-      headers: ['Date / Time', 'Plate No', 'Payment Method', 'Amount', 'Notes'],
+      headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Notes'],
       rows,
       totals,
       total: all.length,
       filename,
-      colStyles: { 3: { halign: 'right' as const }, 4: { cellWidth: 40 } },
+      colStyles: { 4: { halign: 'right' as const }, 5: { cellWidth: 40 } },
     });
   }
 
@@ -531,6 +534,10 @@ export class EmployeeZReportComponent implements OnInit {
   formatPaymentMethod(m: string): string {
     if (!m) return '-';
     return m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+  }
+
+  formatTxType(type: string): string {
+    return type === 'checkin' ? 'Check-in' : 'Check-out';
   }
 
   grandTotal(totals: PaymentTotals[]): number {

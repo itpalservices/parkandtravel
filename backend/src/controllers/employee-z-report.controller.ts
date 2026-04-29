@@ -17,6 +17,7 @@ interface TransactionRow {
   payment_method: string;
   notes: string | null;
   plate_no: string | null;
+  type: string;
 }
 
 interface TotalsRow {
@@ -79,24 +80,45 @@ export async function employeeZReportByShift(req: Request, res: Response) {
   try {
     const shiftIdNum = parseInt(shiftId);
 
-    const [transactions, total, totalsRaw] = await Promise.all([
+    const [transactions, countRaw, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes, b."plateNo" AS plate_no
-        FROM completion_transactions ct
-        LEFT JOIN bookings b ON b.id = ct.booking_id
-        WHERE ct.shift_id = ${shiftIdNum}
-        ORDER BY ct.datetime DESC
+        SELECT id, datetime, amount, user_id, payment_method, notes, plate_no, type
+        FROM (
+          SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes,
+                 b."plateNo" AS plate_no, 'checkout' AS type
+          FROM completion_transactions ct
+          LEFT JOIN bookings b ON b.id = ct.booking_id
+          WHERE ct.shift_id = ${shiftIdNum}
+          UNION ALL
+          SELECT kit.id, kit.datetime, kit.amount, kit.user_id, kit.payment_method, kit.notes,
+                 b."plateNo" AS plate_no, 'checkin' AS type
+          FROM checkin_transactions kit
+          LEFT JOIN bookings b ON b.id = kit.booking_id
+          WHERE kit.shift_id = ${shiftIdNum}
+        ) combined
+        ORDER BY datetime DESC
         LIMIT ${PAGE_SIZE} OFFSET ${offset}
       `.then((r) => r as TransactionRow[]),
-      prisma.completionTransaction.count({ where: { shiftId: shiftIdNum } }),
+      prisma.$queryRaw`
+        SELECT (
+          SELECT COUNT(*) FROM completion_transactions WHERE shift_id = ${shiftIdNum}
+        ) + (
+          SELECT COUNT(*) FROM checkin_transactions WHERE shift_id = ${shiftIdNum}
+        ) AS count
+      `.then((r) => r as CountRow[]),
       prisma.$queryRaw`
         SELECT payment_method, SUM(amount) AS total, COUNT(*) AS count
-        FROM completion_transactions
-        WHERE shift_id = ${shiftIdNum}
+        FROM (
+          SELECT payment_method, amount FROM completion_transactions WHERE shift_id = ${shiftIdNum}
+          UNION ALL
+          SELECT payment_method, amount FROM checkin_transactions WHERE shift_id = ${shiftIdNum}
+        ) combined
         GROUP BY payment_method
         ORDER BY payment_method
       `.then((r) => r as TotalsRow[]),
     ]);
+
+    const total = Number(countRaw[0]?.count || 0);
 
     res.json({
       transactions: transactions.map((t: TransactionRow) => ({
@@ -107,6 +129,7 @@ export async function employeeZReportByShift(req: Request, res: Response) {
         paymentMethod: t.payment_method,
         notes: t.notes,
         plateNo: t.plate_no,
+        type: t.type,
       })),
       total,
       page,
@@ -141,22 +164,41 @@ export async function employeeZReportByDate(req: Request, res: Response) {
 
     const [transactions, countRaw, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes, b."plateNo" AS plate_no
-        FROM completion_transactions ct
-        LEFT JOIN bookings b ON b.id = ct.booking_id
-        WHERE ct.datetime >= ${fromDate} AND ct.datetime <= ${toDate}
-        ORDER BY ct.datetime DESC
+        SELECT id, datetime, amount, user_id, payment_method, notes, plate_no, type
+        FROM (
+          SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes,
+                 b."plateNo" AS plate_no, 'checkout' AS type
+          FROM completion_transactions ct
+          LEFT JOIN bookings b ON b.id = ct.booking_id
+          WHERE ct.datetime >= ${fromDate} AND ct.datetime <= ${toDate}
+          UNION ALL
+          SELECT kit.id, kit.datetime, kit.amount, kit.user_id, kit.payment_method, kit.notes,
+                 b."plateNo" AS plate_no, 'checkin' AS type
+          FROM checkin_transactions kit
+          LEFT JOIN bookings b ON b.id = kit.booking_id
+          WHERE kit.datetime >= ${fromDate} AND kit.datetime <= ${toDate}
+        ) combined
+        ORDER BY datetime DESC
         LIMIT ${PAGE_SIZE} OFFSET ${offset}
       `.then((r) => r as TransactionRow[]),
       prisma.$queryRaw`
-        SELECT COUNT(*) AS count
-        FROM completion_transactions
-        WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+        SELECT (
+          SELECT COUNT(*) FROM completion_transactions
+          WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+        ) + (
+          SELECT COUNT(*) FROM checkin_transactions
+          WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+        ) AS count
       `.then((r) => r as CountRow[]),
       prisma.$queryRaw`
         SELECT payment_method, SUM(amount) AS total, COUNT(*) AS count
-        FROM completion_transactions
-        WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+        FROM (
+          SELECT payment_method, amount FROM completion_transactions
+          WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+          UNION ALL
+          SELECT payment_method, amount FROM checkin_transactions
+          WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+        ) combined
         GROUP BY payment_method
         ORDER BY payment_method
       `.then((r) => r as TotalsRow[]),
@@ -182,6 +224,7 @@ export async function employeeZReportByDate(req: Request, res: Response) {
         paymentMethod: t.payment_method,
         notes: t.notes,
         plateNo: t.plate_no,
+        type: t.type,
         employeeName: userMap[t.user_id] || t.user_id,
       })),
       total,

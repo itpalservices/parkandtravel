@@ -286,6 +286,18 @@
   &[data-method="online"] { background: #f3e8ff; color: #6b21a8; }
 }
 
+.badge-tx-type {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &[data-type="checkin"] { background: #dbeafe; color: #1e40af; }
+  &[data-type="checkout"] { background: #dcfce7; color: #166534; }
+}
+
 // =================== PAGINATION ===================
 
 .pagination-wrapper {
