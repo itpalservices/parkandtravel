@@ -63,6 +63,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   offerWashService = false;
   settingsSubmitted = false;
   mandatoryPayment = false;
+  mandatoryCheckInPayment = false;
   airportDelivery = true;
   availableAfter = 0;
   priceIncrementsCovered: number[] = [];
@@ -156,7 +157,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       deliveryFee: [null, [Validators.min(0)]],
       tax: [0, [Validators.min(0), Validators.max(100)]],
       emailDescription: [null],
-      mandatoryPayment: [false]
+      mandatoryPayment: [false],
+      mandatoryCheckInPayment: [false]
     });
 
     this.settingsForm.get('availableUncovered')!.valueChanges.subscribe((value) => {
@@ -203,9 +205,11 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
           deliveryFee: settings.deliveryFee?.toFixed(2),
           tax: settings.tax,
           emailDescription: settings.emailDescription,
-          mandatoryPayment: settings.mandatoryPayment
+          mandatoryPayment: settings.mandatoryPayment,
+          mandatoryCheckInPayment: settings.mandatoryCheckInPayment
         });
         this.mandatoryPayment = settings.mandatoryPayment;
+        this.mandatoryCheckInPayment = settings.mandatoryCheckInPayment;
         this.airportDelivery = settings.airportDelivery ?? true;
         this.offerWashService = settings.priceWash !== null;
         this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
@@ -334,6 +338,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       priceIncrementsCovered: this.priceIncrementsCovered.length > 0 ? this.priceIncrementsCovered : null,
       priceIncrementsUncovered: this.priceIncrementsUncovered.length > 0 ? this.priceIncrementsUncovered : null,
       mandatoryPayment: this.mandatoryPayment,
+      mandatoryCheckInPayment: this.mandatoryCheckInPayment,
       airportDelivery: this.airportDelivery,
       availableAfter: formValue.availableAfter !== '' && formValue.availableAfter !== null
         ? Math.max(0, Math.floor(Number(formValue.availableAfter)))

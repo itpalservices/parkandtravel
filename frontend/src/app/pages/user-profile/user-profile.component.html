@@ -581,6 +581,24 @@
                     Mandatory Payment on booking creation
                   </span>
                 </div>
+
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  This toggle is to set mandatory check-in payment for customers on booking's check-in.
+                </small>
+
+                <div class="wash-service-toggle">
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      [checked]="mandatoryCheckInPayment"
+                      (change)="mandatoryCheckInPayment=!mandatoryCheckInPayment"
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">
+                    Mandatory Check-In Payment for a booking
+                  </span>
+                </div>
               </div>
 
               <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">

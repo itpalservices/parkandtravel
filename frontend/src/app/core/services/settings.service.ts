@@ -15,6 +15,7 @@ export interface ConfigurationSettings {
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
   mandatoryPayment: boolean;
+  mandatoryCheckInPayment: boolean;
   airportDelivery: boolean;
   availableAfter: number;
 }

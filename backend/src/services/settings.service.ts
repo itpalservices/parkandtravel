@@ -13,6 +13,7 @@ export interface ConfigurationSettings {
   priceIncrementsCovered: number[] | null;
   priceIncrementsUncovered: number[] | null;
   mandatoryPayment: boolean;
+  mandatoryCheckInPayment: boolean;
   airportDelivery: boolean;
   availableAfter: number;
 }
@@ -30,6 +31,7 @@ const SETTING_KEYS = {
   priceIncrementsCovered: "configurationSetting_priceIncrementsCovered",
   priceIncrementsUncovered: "configurationSetting_priceIncrementsUncovered",
   mandatoryPayment: "configurationSetting_mandatoryPrePayment",
+  mandatoryCheckInPayment: "configurationSetting_mandatoryCheckInPayment",
   airportDelivery: "configurationSetting_delivery",
   availableAfter: "configurationSetting_availableAfter"
 };
@@ -66,6 +68,7 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     priceIncrementsCovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsCovered)),
     priceIncrementsUncovered: parseJsonArrayOrNull(settingsMap.get(SETTING_KEYS.priceIncrementsUncovered)),
     mandatoryPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryPayment)),
+    mandatoryCheckInPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryCheckInPayment)),
     airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery)),
     availableAfter: parseIntOrNull(settingsMap.get(SETTING_KEYS.availableAfter)) ?? 0
   };
@@ -161,6 +164,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.mandatoryPayment,
       value: data.mandatoryPayment !== null ? JSON.stringify(data.mandatoryPayment) : null,
+    });
+  }
+
+  if (data.mandatoryCheckInPayment !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.mandatoryCheckInPayment,
+      value: data.mandatoryCheckInPayment !== null ? JSON.stringify(data.mandatoryCheckInPayment) : null,
     });
   }
 
