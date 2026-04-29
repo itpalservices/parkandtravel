@@ -1384,10 +1384,17 @@ export async function updateBookingStatus(
     }
   }
 
-  await prisma.booking.update({
-    where: { id },
-    data: updateData,
-  });
+  if (bookingStatusId === 'bookingStatus_created') {
+    await prisma.$transaction([
+      prisma.checkinTransaction.deleteMany({ where: { bookingId: id } }),
+      prisma.booking.update({ where: { id }, data: updateData }),
+    ]);
+  } else {
+    await prisma.booking.update({
+      where: { id },
+      data: updateData,
+    });
+  }
 
   return {
     id,
