@@ -55,7 +55,7 @@ function generateReceiptHtml(data: ReceiptPdfData, company: CompanySettings): st
   const vatAmount = parseFloat((grossAfterDiscount - net).toFixed(2));
 
   const date = new Date(data.receiptDate);
-  const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const dateStr = date.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
   const phoneLine = company.companyPhone1 && company.companyPhone2
     ? `${company.companyPhone1} &nbsp;|&nbsp; ${company.companyPhone2}`
@@ -218,7 +218,7 @@ function generateReceiptHtml(data: ReceiptPdfData, company: CompanySettings): st
       ${phoneLine ? `<p class="company-detail">Tel: ${phoneLine}</p>` : ''}
     </div>
     <div class="receipt-badge">
-      <h2>Tax Receipt</h2>
+      <h2>Receipt</h2>
       <p class="receipt-meta">Receipt No: <strong>${data.receiptNumber}</strong></p>
       <p class="receipt-meta">Date: <strong>${dateStr}</strong></p>
     </div>
@@ -268,8 +268,124 @@ function generateReceiptHtml(data: ReceiptPdfData, company: CompanySettings): st
   </div>
 
   <div class="footer">
-    <p>This is an official tax receipt${company.companyName ? ` issued by ${company.companyName}` : ''}.</p>
+    <p>This is an official receipt${company.companyName ? ` issued by ${company.companyName}` : ''}.</p>
     <p>Thank you for choosing Park &amp; Travel.</p>
+  </div>
+</body>
+</html>`;
+}
+
+function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettings): string {
+  const taxRate = company.tax ?? 0;
+  const subtotal = data.totalAmount;
+  const net = parseFloat((subtotal / (1 + taxRate / 100)).toFixed(2));
+  const vatAmount = parseFloat((subtotal - net).toFixed(2));
+
+  const date = new Date(data.receiptDate);
+  const dateStr = date.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : (company.companyPhone1 || company.companyPhone2 || '');
+
+  const lineRows = data.lines.map((line) => `
+    <tr>
+      <td class="desc">${line.description}</td>
+      <td class="amt">€${Number(line.amount).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: 80mm auto; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #000;
+      background: #fff;
+      width: 80mm;
+      padding: 6mm 5mm;
+    }
+    .center { text-align: center; }
+    .bold { font-weight: 700; }
+    .company-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .meta { font-size: 9px; color: #333; margin: 1px 0; }
+    .divider { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+    .divider-solid { border: none; border-top: 1px solid #000; margin: 5px 0; }
+    .label { font-size: 8px; text-transform: uppercase; color: #555; margin-bottom: 1px; }
+    .value { font-size: 10px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+    table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+    th { font-size: 8px; text-transform: uppercase; border-bottom: 1px solid #000; padding: 3px 0; text-align: left; }
+    th.amt, td.amt { text-align: right; }
+    td.desc { font-size: 10px; padding: 4px 0; }
+    td.amt { font-size: 10px; padding: 4px 0; white-space: nowrap; }
+    .totals { margin-top: 2px; }
+    .totals-row { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; }
+    .totals-row.small { font-size: 9px; color: #444; }
+    .totals-row.grand { font-size: 13px; font-weight: 700; border-top: 1px solid #000; margin-top: 4px; padding-top: 5px; }
+    .footer { margin-top: 8mm; font-size: 8px; color: #555; text-align: center; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div class="company-name">${company.companyName || 'Park &amp; Travel'}</div>
+    ${company.companyVatNo ? `<div class="meta">VAT: ${company.companyVatNo}</div>` : ''}
+    ${phoneLine ? `<div class="meta">Tel: ${phoneLine}</div>` : ''}
+  </div>
+
+  <hr class="divider-solid">
+
+  <div class="center">
+    <div class="bold" style="font-size:12px; letter-spacing:2px;">RECEIPT</div>
+    <div class="meta">${data.receiptNumber}</div>
+    <div class="meta">${dateStr}</div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="label">Billed To</div>
+  <div class="value">${data.customerName}</div>
+  <div class="label">Booking Ref</div>
+  <div class="value" style="font-size:8px;">${data.bookingId}</div>
+
+  <hr class="divider">
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="amt">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${lineRows}
+    </tbody>
+  </table>
+
+  <hr class="divider-solid">
+
+  <div class="totals">
+    <div class="totals-row small">
+      <span>Net (excl. VAT ${taxRate}%)</span>
+      <span>€${net.toFixed(2)}</span>
+    </div>
+    <div class="totals-row small">
+      <span>VAT (${taxRate}%)</span>
+      <span>€${vatAmount.toFixed(2)}</span>
+    </div>
+    <div class="totals-row grand">
+      <span>TOTAL PAID</span>
+      <span>€${subtotal.toFixed(2)}</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Thank you for choosing Park &amp; Travel.</p>
+    ${company.companyVatNo ? `<p>VAT Reg: ${company.companyVatNo}</p>` : ''}
   </div>
 </body>
 </html>`;
@@ -284,6 +400,21 @@ export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Buffer> 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle' });
     const pdf = await page.pdf({ format: 'A4', printBackground: true });
+    return Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
+}
+
+export async function generateThermalReceiptPdf(data: ReceiptPdfData): Promise<Buffer> {
+  const company = await getCompanySettings();
+  const html = generateThermalReceiptHtml(data, company);
+
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    const pdf = await page.pdf({ width: '80mm', height: 'auto', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
     return Buffer.from(pdf);
   } finally {
     await browser.close();

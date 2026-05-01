@@ -9,6 +9,9 @@ import {
 } from "../utils/dayEnd.utils";
 import { sendBookingConfirmationEmail } from "./email.service";
 import { checkAvailability } from "./availability.service";
+import { createReceipt, ReceiptLineInput } from "./receipt.service";
+import { generateReceiptPdf } from "./pdf.service";
+import { uploadPdfToS3 } from "./upload.service";
 
 async function getEmailDescription(): Promise<string | null> {
   const result = await prisma.$queryRawUnsafe<{ value: string | null }[]>(
@@ -1640,6 +1643,89 @@ export async function estimateExtraFee(
   return { extraFee: calculatedExtraFee, isLate: true, walleePaymentDate };
 }
 
+async function createAndSendReceiptForInPersonPayment(
+  bookingId: string,
+  lineType: 'CHECKIN' | 'CHECKOUT',
+  amount: number,
+): Promise<string | null> {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) return null;
+
+  const lines: ReceiptLineInput[] = [{
+    lineType,
+    description: lineType === 'CHECKIN' ? 'Check-in payment' : 'Check-out payment',
+    amount,
+  }];
+
+  const receipt = await createReceipt({ bookingId, lines })
+    .catch((err) => { console.error('Failed to create receipt for in-person payment:', err); return null; });
+  if (!receipt) return null;
+
+  const receiptId = receipt.id;
+
+  // Fire-and-forget: PDF generation, S3 upload, and email
+  (async () => {
+    let pdfBuffer: Buffer | undefined;
+    try {
+      pdfBuffer = await generateReceiptPdf({
+        receiptNumber: receipt.receiptNumber,
+        receiptDate: receipt.createdAt,
+        bookingId,
+        customerName: `${booking.name} ${booking.surname}`.trim(),
+        totalAmount: receipt.totalAmount,
+        discount: null,
+        lines: receipt.lines,
+      });
+      const s3Key = await uploadPdfToS3(bookingId, pdfBuffer, receipt.receiptNumber);
+      await prisma.receiptHeader.update({ where: { id: receiptId }, data: { pdfKey: s3Key } });
+    } catch (err) {
+      console.error('Failed to generate/upload receipt PDF for in-person payment:', err);
+      pdfBuffer = undefined;
+    }
+
+    if (booking.email) {
+      const parkingType = await prisma.parkingType.findUnique({
+        where: { id: booking.parkingTypeId || '' },
+        select: { name: true },
+      });
+      const emailDescription = await getEmailDescription();
+      const checkInDate = booking.dateFrom.toISOString().split('T')[0];
+      const checkInTime = booking.timeFrom
+        ? (booking.timeFrom as Date).toISOString().split('T')[1].substring(0, 5)
+        : '00:00';
+      const checkOutDate = booking.dateTo ? (booking.dateTo as Date).toISOString().split('T')[0] : undefined;
+      const checkOutTime = booking.timeTo
+        ? (booking.timeTo as Date).toISOString().split('T')[1].substring(0, 5)
+        : undefined;
+
+      sendBookingConfirmationEmail({
+        email: booking.email,
+        fullName: `${booking.name} ${booking.surname}`.trim(),
+        checkInDate,
+        checkInTime,
+        checkOutDate,
+        checkOutTime,
+        licensePlate: booking.plateNo || '',
+        vehicleBrand: booking.carBrand || '',
+        vehicleModel: booking.carModel || undefined,
+        vehicleColor: booking.carColor || undefined,
+        parkingType: parkingType?.name || booking.parkingTypeId || '',
+        washService: booking.washService || false,
+        flightNumber: booking.returnFlight || undefined,
+        dropOffOption: booking.dropOffOption || undefined,
+        pickUpOption: booking.pickUpOption || undefined,
+        finalPrice: amount,
+        emailDescription,
+        paymentStatus: 'paid',
+        isPaymentConfirmation: true,
+        receiptPdfBuffer: pdfBuffer,
+      }).catch((err) => console.error('Failed to send in-person payment email:', err));
+    }
+  })().catch((err) => console.error('Failed to deliver receipt for in-person payment:', err));
+
+  return receiptId;
+}
+
 export async function completeBooking(
   bookingId: string,
   params: {
@@ -1651,7 +1737,7 @@ export async function completeBooking(
     notes?: string;
     shiftId?: number | null;
   },
-): Promise<{ success: boolean; completionTransactionId: string } | null> {
+): Promise<{ success: boolean; completionTransactionId: string; receiptId?: string } | null> {
   if (!isValidUUID(bookingId)) return null;
 
   let extraFeeToApply: number | null = null;
@@ -1686,7 +1772,13 @@ export async function completeBooking(
     return completion;
   });
 
-  return { success: true, completionTransactionId: result.id };
+  let receiptId: string | undefined;
+  if (params.amount > 0) {
+    receiptId = await createAndSendReceiptForInPersonPayment(bookingId, 'CHECKOUT', params.amount)
+      .catch((err) => { console.error('Failed to process checkout receipt:', err); return null; }) ?? undefined;
+  }
+
+  return { success: true, completionTransactionId: result.id, receiptId };
 }
 
 export async function getCheckinPaymentInfo(
@@ -1716,7 +1808,7 @@ export async function recordCheckinPayment(
     notes?: string;
     shiftId?: number | null;
   },
-): Promise<{ success: boolean; id: string } | null> {
+): Promise<{ success: boolean; id: string; receiptId?: string } | null> {
   if (!isValidUUID(bookingId)) return null;
 
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
@@ -1733,7 +1825,13 @@ export async function recordCheckinPayment(
     },
   });
 
-  return { success: true, id: record.id };
+  let receiptId: string | undefined;
+  if (params.amount > 0) {
+    receiptId = await createAndSendReceiptForInPersonPayment(bookingId, 'CHECKIN', params.amount)
+      .catch((err) => { console.error('Failed to process check-in receipt:', err); return null; }) ?? undefined;
+  }
+
+  return { success: true, id: record.id, receiptId };
 }
 
 export { isValidDateFormat, isDateInPast, isValidUUID };

@@ -739,8 +739,25 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.performStatusUpdate(newStatusId, newStatusLabel, parkPlace, undefined, extraFields, () => {
           if (payment && this.bookingId) {
             this.apiService.post<any>(`/bookings/${this.bookingId}/checkin-payment`, { ...payment, actorName }).subscribe({
-              next: () => {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Check-in payment recorded', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+              next: (res: any) => {
+                const receiptId = res?.data?.receiptId;
+                if (receiptId) {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Check-in payment recorded',
+                    text: 'Would you like to print the receipt?',
+                    confirmButtonText: 'Print Receipt',
+                    showDenyButton: true,
+                    denyButtonText: 'Close',
+                    denyButtonColor: '#6c757d',
+                  }).then((r) => {
+                    if (r.isConfirmed) {
+                      this.openThermalReceipt(receiptId);
+                    }
+                  });
+                } else {
+                  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Check-in payment recorded', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+                }
               },
               error: () => {
                 Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Booking parked but check-in payment could not be recorded', showConfirmButton: false, timer: 4000, timerProgressBar: true });
@@ -752,6 +769,21 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.uploadBookingImages(this.bookingId, files);
         }
       }
+    });
+  }
+
+  private openThermalReceipt(receiptId: string): void {
+    this.apiService.getBlob(`/receipts/thermal/${receiptId}`).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const tab = window.open(url, '_blank');
+        if (tab) {
+          setTimeout(() => URL.revokeObjectURL(url), 30000);
+        }
+      },
+      error: () => {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Could not load receipt for printing', showConfirmButton: false, timer: 3000 });
+      },
     });
   }
 
@@ -1010,18 +1042,36 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       notes,
       actorName,
     }).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.updatingStatus = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Booking completed successfully',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
-        this.router.navigate(['/admin/bookings']);
+        const receiptId = res?.data?.receiptId;
+        if (receiptId) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Booking completed successfully',
+            text: 'Would you like to print the receipt?',
+            confirmButtonText: 'Print Receipt',
+            showDenyButton: true,
+            denyButtonText: 'Skip',
+            denyButtonColor: '#6c757d',
+          }).then((r) => {
+            if (r.isConfirmed) {
+              this.openThermalReceipt(receiptId);
+            }
+            this.router.navigate(['/admin/bookings']);
+          });
+        } else {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Booking completed successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.router.navigate(['/admin/bookings']);
+        }
       },
       error: (err) => {
         this.updatingStatus = false;

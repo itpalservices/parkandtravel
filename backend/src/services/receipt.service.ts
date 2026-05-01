@@ -1,6 +1,6 @@
 import { prisma } from '../lib/prisma';
 
-export type ReceiptLineType = 'GUARDING' | 'WASHING' | 'DELIVERY';
+export type ReceiptLineType = 'GUARDING' | 'WASHING' | 'DELIVERY' | 'CHECKIN' | 'CHECKOUT';
 
 export interface ReceiptLineInput {
   lineType: ReceiptLineType;
@@ -19,7 +19,7 @@ export interface ReceiptResult {
 
 export async function createReceipt(params: {
   bookingId: string;
-  transactionId: number;
+  transactionId?: number | null;
   lines: ReceiptLineInput[];
   discountPercentage?: number | null;
 }): Promise<ReceiptResult | null> {
@@ -32,7 +32,7 @@ export async function createReceipt(params: {
     const header = await tx.receiptHeader.create({
       data: {
         bookingId,
-        transactionId: BigInt(transactionId),
+        transactionId: transactionId != null ? BigInt(transactionId) : null,
         totalAmount,
         discount: discountPercentage ?? null,
       },

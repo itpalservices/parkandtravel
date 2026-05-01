@@ -160,7 +160,7 @@ model ReceiptHeader {
   receiptSeq    Int           @default(autoincrement()) @unique @map("receipt_seq")
   receiptNumber String?       @unique @map("receipt_number") @db.VarChar(20)
   bookingId     String        @map("booking_id") @db.Uuid
-  transactionId BigInt        @map("transaction_id")
+  transactionId BigInt?       @map("transaction_id")
   totalAmount   Decimal       @map("total_amount") @db.Decimal(10, 2)
   discount      Int?          @map("discount")
   pdfKey        String?       @map("pdf_key") @db.VarChar(500)
