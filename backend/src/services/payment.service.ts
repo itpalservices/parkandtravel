@@ -6,6 +6,7 @@ import {
   searchWalleeTransactionsByMerchantRef,
 } from './wallee.service';
 import { sendBookingConfirmationEmail } from './email.service';
+import { createReceipt, ReceiptLineInput } from './receipt.service';
 
 const WALLEE_SUCCESS_STATES = ['AUTHORIZED', 'FULFILL', 'COMPLETED'];
 const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
@@ -143,6 +144,7 @@ interface AuthPendingFormData {
   pickUpOption?: string | null;
   userId?: string | null;
   finalPrice: number;
+  discountPercentage?: number | null;
 }
 
 async function calculateFinalPrice(
@@ -175,6 +177,89 @@ async function calculateFinalPrice(
     price += priceSettings.deliveryFee;
   }
   return price;
+}
+
+type PriceSettingsSnapshot = Awaited<ReturnType<typeof getPriceSettings>>;
+
+interface BookingPricingState {
+  dateFrom: Date;
+  dateTo: Date | null;
+  parkingTypeId: string | null;
+  washService: boolean;
+  dropOffOption: string | null;
+  pickUpOption: string | null;
+}
+
+function buildGuardingAmount(state: BookingPricingState, ps: PriceSettingsSnapshot): number {
+  if (!state.dateTo) return 0;
+  const days = calcDays(state.dateFrom, state.dateTo);
+  let base: number | null = null;
+  let increments: number[] | null = null;
+  if (state.parkingTypeId === 'parkingType_uncovered') {
+    base = ps.priceUncovered;
+    increments = ps.priceIncrementsUncovered;
+  } else if (state.parkingTypeId === 'parkingType_covered') {
+    base = ps.priceCovered;
+    increments = ps.priceIncrementsCovered;
+  }
+  if (base === null) return 0;
+  return parseFloat(calcProgressive(base, days, increments).toFixed(2));
+}
+
+function buildLinesForNewBooking(state: BookingPricingState, ps: PriceSettingsSnapshot): ReceiptLineInput[] {
+  const lines: ReceiptLineInput[] = [];
+
+  const guardingAmount = buildGuardingAmount(state, ps);
+  if (guardingAmount > 0 && state.dateTo) {
+    const days = calcDays(state.dateFrom, state.dateTo);
+    lines.push({
+      lineType: 'GUARDING',
+      description: `Parking for ${days} day${days !== 1 ? 's' : ''}`,
+      amount: guardingAmount,
+    });
+  }
+
+  if (state.washService && ps.priceWash !== null && ps.priceWash > 0) {
+    lines.push({ lineType: 'WASHING', description: 'Car wash service', amount: ps.priceWash });
+  }
+
+  if (hasAirportDelivery(state.dropOffOption, state.pickUpOption) && ps.deliveryFee !== null && ps.deliveryFee > 0) {
+    lines.push({ lineType: 'DELIVERY', description: 'Airport delivery', amount: ps.deliveryFee });
+  }
+
+  return lines;
+}
+
+function buildLinesForBookingUpdate(
+  oldState: BookingPricingState,
+  newState: BookingPricingState,
+  ps: PriceSettingsSnapshot,
+): ReceiptLineInput[] {
+  const lines: ReceiptLineInput[] = [];
+
+  const guardingDiff = parseFloat((buildGuardingAmount(newState, ps) - buildGuardingAmount(oldState, ps)).toFixed(2));
+  if (guardingDiff > 0 && newState.dateTo) {
+    const days = calcDays(newState.dateFrom, newState.dateTo);
+    lines.push({
+      lineType: 'GUARDING',
+      description: `Additional parking (${days} day${days !== 1 ? 's' : ''} total)`,
+      amount: guardingDiff,
+    });
+  }
+
+  if (!oldState.washService && newState.washService && ps.priceWash !== null && ps.priceWash > 0) {
+    lines.push({ lineType: 'WASHING', description: 'Car wash service', amount: ps.priceWash });
+  }
+
+  if (
+    !hasAirportDelivery(oldState.dropOffOption, oldState.pickUpOption) &&
+    hasAirportDelivery(newState.dropOffOption, newState.pickUpOption) &&
+    ps.deliveryFee !== null && ps.deliveryFee > 0
+  ) {
+    lines.push({ lineType: 'DELIVERY', description: 'Airport delivery', amount: ps.deliveryFee });
+  }
+
+  return lines;
 }
 
 async function createBookingFromPending(
@@ -229,6 +314,20 @@ async function createBookingFromPending(
         bookingId: booking.id,
       },
     }).catch((err) => console.error('Failed to record wallee_transaction for pending booking:', err));
+
+    const receiptLines = buildLinesForNewBooking(
+      {
+        dateFrom: checkInDate,
+        dateTo: checkOutDate,
+        parkingTypeId: formData.parkingTypeId,
+        washService: formData.washService || false,
+        dropOffOption: formData.dropOffOption || null,
+        pickUpOption: formData.pickUpOption || null,
+      },
+      priceSettings,
+    );
+    createReceipt({ bookingId: booking.id, transactionId: wlTransactionId, lines: receiptLines })
+      .catch((err) => console.error('Failed to create receipt for pending booking:', err));
   }
 
   const updatedFormData = { ...formData, processedBookingId: booking.id };
@@ -319,6 +418,21 @@ async function createBookingFromAuthPending(
       bookingId: booking.id,
     },
   }).catch((err) => console.error('Failed to record wallee_transaction for auth_pending booking:', err));
+
+  const authPriceSettings = await getPriceSettings();
+  const authReceiptLines = buildLinesForNewBooking(
+    {
+      dateFrom: checkInDate,
+      dateTo: checkOutDate,
+      parkingTypeId: formData.parkingTypeId,
+      washService: formData.washService || false,
+      dropOffOption: formData.dropOffOption || null,
+      pickUpOption: formData.pickUpOption || null,
+    },
+    authPriceSettings,
+  );
+  createReceipt({ bookingId: booking.id, transactionId: wlTransactionId, lines: authReceiptLines, discountPercentage: formData.discountPercentage ?? null })
+    .catch((err) => console.error('Failed to create receipt for auth_pending booking:', err));
 
   const updatedFormData = { ...formData, processedBookingId: booking.id };
   await prisma.pendingBooking.update({
@@ -520,6 +634,8 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
     return formData.processedBookingId;
   }
 
+  const oldBooking = await prisma.booking.findUnique({ where: { id: bookingId } });
+
   const updateData: Record<string, unknown> = {};
   if (formData.fullName !== undefined) {
     const parts = String(formData.fullName).trim().split(' ');
@@ -555,6 +671,31 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
         bookingId,
       },
     }).catch((err) => console.error('Failed to record wallee_transaction for pending update:', err));
+
+    if (oldBooking) {
+      const updatePriceSettings = await getPriceSettings();
+      const oldState: BookingPricingState = {
+        dateFrom: oldBooking.dateFrom,
+        dateTo: oldBooking.dateTo,
+        parkingTypeId: oldBooking.parkingTypeId,
+        washService: oldBooking.washService,
+        dropOffOption: oldBooking.dropOffOption as string | null,
+        pickUpOption: oldBooking.pickUpOption as string | null,
+      };
+      const newState: BookingPricingState = {
+        dateFrom: formData.checkInDate ? new Date(formData.checkInDate + 'T12:00:00Z') : oldBooking.dateFrom,
+        dateTo: formData.checkOutDate !== undefined
+          ? (formData.checkOutDate ? new Date(formData.checkOutDate + 'T12:00:00Z') : null)
+          : oldBooking.dateTo,
+        parkingTypeId: formData.parkingTypeId ?? oldBooking.parkingTypeId,
+        washService: formData.washService !== undefined ? formData.washService : oldBooking.washService,
+        dropOffOption: formData.dropOffOption !== undefined ? formData.dropOffOption : (oldBooking.dropOffOption as string | null),
+        pickUpOption: formData.pickUpOption !== undefined ? formData.pickUpOption : (oldBooking.pickUpOption as string | null),
+      };
+      const updateReceiptLines = buildLinesForBookingUpdate(oldState, newState, updatePriceSettings);
+      createReceipt({ bookingId, transactionId: wlTransactionId, lines: updateReceiptLines, discountPercentage: formData.discountPercentage ?? null })
+        .catch((err) => console.error('Failed to create receipt for pending update:', err));
+    }
   }
 
   await sendPaidConfirmationEmailForBooking(bookingId);
@@ -869,6 +1010,7 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
         await prisma.walleeTransaction.create({
           data: { id: BigInt(wlTxId), amount, bookingId },
         }).catch((err) => console.error('Failed to record wallee_transaction on verify:', err));
+
         await sendPaidConfirmationEmailForBooking(bookingId);
       }
       return { status: 'success', bookingId };

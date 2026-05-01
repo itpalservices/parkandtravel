@@ -7,6 +7,7 @@ import {
   handleWalleeWebhook,
   verifyAndFinalizePayment,
 } from '../services/payment.service';
+import { getUserDiscount } from '../services/auth0.service';
 
 export async function initiateHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -41,7 +42,15 @@ export async function initiateAuthPendingHandler(req: Request, res: Response): P
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
-    const result = await initiatePaymentForAuthPending(req.body, authUser.sub);
+
+    let discountPercentage: number | null = null;
+    try {
+      discountPercentage = await getUserDiscount(authUser.sub);
+    } catch (e) {}
+
+    const formData = { ...req.body, discountPercentage };
+
+    const result = await initiatePaymentForAuthPending(formData, authUser.sub);
     res.json(result);
   } catch (err: any) {
     console.error('initiateAuthPendingHandler error:', err?.response?.data || err.message);

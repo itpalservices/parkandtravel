@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { checkJwt } from '../middleware/auth.middleware';
 import {
   initiateHandler,
   initiateForBookingHandler,
@@ -12,7 +13,7 @@ const router = Router();
 
 router.post('/initiate', initiateHandler);
 router.post('/initiate-for-booking', initiateForBookingHandler);
-router.post('/initiate-auth-pending', initiateAuthPendingHandler);
+router.post('/initiate-auth-pending', checkJwt, initiateAuthPendingHandler);
 router.post('/initiate-for-pending-update', initiateForPendingUpdateHandler);
 router.post('/webhook', webhookHandler);
 router.get('/verify', verifyHandler);

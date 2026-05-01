@@ -526,6 +526,17 @@ export async function stageBookingUpdate(
       finalPrice,
     } = req.body;
 
+    const authUser = req.authUser;
+    const isAdmin = authUser?.role === 'admin' || authUser?.role === 'driver';
+    const actingUserId = userId || authUser?.sub || null;
+
+    let discountPercentage: number | null = null;
+    if (!isAdmin && actingUserId) {
+      try {
+        discountPercentage = await getUserDiscount(actingUserId);
+      } catch (e) {}
+    }
+
     const result = await stageBookingUpdateService(id, {
       fullName,
       email,
@@ -546,6 +557,7 @@ export async function stageBookingUpdate(
       pickUpOption,
       userId,
       finalPrice,
+      discountPercentage,
     });
 
     res.json({ success: true, data: result });

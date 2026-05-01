@@ -67,6 +67,7 @@ model Booking {
   walleeTransactions     WalleeTransaction[]
   completionTransactions CompletionTransaction[]
   checkinTransactions    CheckinTransaction[]
+  receipts               ReceiptHeader[]
 
   @@map("bookings")
 }
@@ -152,6 +153,32 @@ model CheckinTransaction {
   shift         Shift?   @relation(fields: [shiftId], references: [id])
 
   @@map("checkin_transactions")
+}
+
+model ReceiptHeader {
+  id            String        @id @default(uuid()) @db.Uuid
+  receiptSeq    Int           @default(autoincrement()) @unique @map("receipt_seq")
+  receiptNumber String?       @unique @map("receipt_number") @db.VarChar(20)
+  bookingId     String        @map("booking_id") @db.Uuid
+  transactionId BigInt        @map("transaction_id")
+  totalAmount   Decimal       @map("total_amount") @db.Decimal(10, 2)
+  discount      Int?          @map("discount")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+  lines         ReceiptLine[]
+
+  @@map("receipts_header")
+}
+
+model ReceiptLine {
+  id          String        @id @default(uuid()) @db.Uuid
+  receiptId   String        @map("receipt_id") @db.Uuid
+  lineType    String        @map("line_type") @db.VarChar(20)
+  description String        @db.VarChar(255)
+  amount      Decimal       @db.Decimal(10, 2)
+  receipt     ReceiptHeader @relation(fields: [receiptId], references: [id])
+
+  @@map("receipts_lines")
 }
 
 model Car {

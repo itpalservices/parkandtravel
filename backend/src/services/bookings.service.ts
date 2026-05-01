@@ -1031,6 +1031,7 @@ export interface StageBookingUpdateParams {
   pickUpOption?: string | null;
   userId?: string | null;
   finalPrice?: number | null;
+  discountPercentage?: number | null;
 }
 
 export async function stageBookingUpdate(
@@ -1042,7 +1043,7 @@ export async function stageBookingUpdate(
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking || booking.deleteflag !== 0) throw new Error('Booking not found');
 
-  const newFinalPrice = params.finalPrice ?? null;
+  let newFinalPrice = params.finalPrice ?? null;
   if (newFinalPrice === null || newFinalPrice <= 0) {
     return { requiresPayment: false };
   }
@@ -1058,7 +1059,7 @@ export async function stageBookingUpdate(
     return { requiresPayment: false };
   }
 
-  const formData = { bookingId, ...params, differenceAmount };
+  const formData = { bookingId, ...params, finalPrice: newFinalPrice, differenceAmount };
 
   const pending = await prisma.pendingBooking.create({
     data: {

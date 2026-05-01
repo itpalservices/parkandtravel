@@ -86,6 +86,10 @@ async function main() {
       { id: "configurationSetting_delivery", value: "true" },
       { id: "configurationSetting_availableAfter", value: "0" },
       { id: "configurationSetting_tax", value: "0" },
+      { id: "configurationSetting_companyVatNo", value: null },
+      { id: "configurationSetting_companyName", value: null },
+      { id: "configurationSetting_companyPhone1", value: null },
+      { id: "configurationSetting_companyPhone2", value: null },
     ],
     skipDuplicates: true,
   });
