@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '@auth0/auth0-angular';
 import { Observable, of, map, combineLatest, take } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { UserProfileService, UserProfileData } from '../../../core/services/user-profile.service';
 import { ShiftService } from '../../../core/services/shift.service';
 import { RoleService } from '../../../core/services/role.service';
+import { LogoutConfirmationService } from '../../../core/services/logout-confirmation.service';
 
 @Component({
   selector: 'app-header',
@@ -18,12 +20,13 @@ import { RoleService } from '../../../core/services/role.service';
 export class HeaderComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
   
-  private authService = environment.auth0.domain && environment.auth0.clientId 
-    ? inject(AuthService, { optional: true }) 
+  private authService = environment.auth0.domain && environment.auth0.clientId
+    ? inject(AuthService, { optional: true })
     : null;
   private userProfileService = inject(UserProfileService);
   private shiftService = inject(ShiftService);
   private roleService = inject(RoleService);
+  private logoutConfirmationService = inject(LogoutConfirmationService);
   
   user$: Observable<User | null | undefined> = this.authService?.user$ || of(null);
   profile$: Observable<UserProfileData | null> = this.userProfileService.profile$;
@@ -45,16 +48,25 @@ export class HeaderComponent {
     this.toggleSidebar.emit();
   }
 
-  async logout(): Promise<void> {
+  logout(): void {
     if (!this.authService) return;
 
-    this.roleService.getUserRole().pipe(take(1)).subscribe(async (roleInfo) => {
+    this.roleService.getUserRole().pipe(take(1)).subscribe((roleInfo) => {
       if (roleInfo.isAdmin || roleInfo.isDriver) {
-        await this.shiftService.endShift();
+        this.logoutConfirmationService.show();
+        this.shiftService.getShiftSummary().pipe(
+          catchError(() => of({ shiftId: null, transactions: [], totals: [] }))
+        ).subscribe((summary) => {
+          if (summary.shiftId === null) {
+            this.logoutConfirmationService.hide();
+            this.authService!.logout({ logoutParams: { returnTo: window.location.origin } });
+          } else {
+            this.logoutConfirmationService.setSummary(summary);
+          }
+        });
+      } else {
+        this.authService!.logout({ logoutParams: { returnTo: window.location.origin } });
       }
-      this.authService!.logout({
-        logoutParams: { returnTo: window.location.origin }
-      });
     });
   }
 }
