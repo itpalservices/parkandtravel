@@ -7,6 +7,8 @@ import {
 } from './wallee.service';
 import { sendBookingConfirmationEmail } from './email.service';
 import { createReceipt, ReceiptLineInput } from './receipt.service';
+import { generateReceiptPdf } from './pdf.service';
+import { uploadPdfToS3 } from './upload.service';
 
 const WALLEE_SUCCESS_STATES = ['AUTHORIZED', 'FULFILL', 'COMPLETED'];
 const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
@@ -234,6 +236,7 @@ function buildLinesForBookingUpdate(
   oldState: BookingPricingState,
   newState: BookingPricingState,
   ps: PriceSettingsSnapshot,
+  alreadyChargedTypes: Set<string>,
 ): ReceiptLineInput[] {
   const lines: ReceiptLineInput[] = [];
 
@@ -247,12 +250,12 @@ function buildLinesForBookingUpdate(
     });
   }
 
-  if (!oldState.washService && newState.washService && ps.priceWash !== null && ps.priceWash > 0) {
+  if (!alreadyChargedTypes.has('WASHING') && newState.washService && ps.priceWash !== null && ps.priceWash > 0) {
     lines.push({ lineType: 'WASHING', description: 'Car wash service', amount: ps.priceWash });
   }
 
   if (
-    !hasAirportDelivery(oldState.dropOffOption, oldState.pickUpOption) &&
+    !alreadyChargedTypes.has('DELIVERY') &&
     hasAirportDelivery(newState.dropOffOption, newState.pickUpOption) &&
     ps.deliveryFee !== null && ps.deliveryFee > 0
   ) {
@@ -306,6 +309,8 @@ async function createBookingFromPending(
     },
   });
 
+  let pdfBuffer: Buffer | undefined;
+
   if (finalPrice !== null) {
     await prisma.walleeTransaction.create({
       data: {
@@ -326,8 +331,28 @@ async function createBookingFromPending(
       },
       priceSettings,
     );
-    createReceipt({ bookingId: booking.id, transactionId: wlTransactionId, lines: receiptLines })
-      .catch((err) => console.error('Failed to create receipt for pending booking:', err));
+
+    const receipt = await createReceipt({ bookingId: booking.id, transactionId: wlTransactionId, lines: receiptLines })
+      .catch((err) => { console.error('Failed to create receipt for pending booking:', err); return null; });
+
+    if (receipt) {
+      try {
+        pdfBuffer = await generateReceiptPdf({
+          receiptNumber: receipt.receiptNumber,
+          receiptDate: receipt.createdAt,
+          bookingId: booking.id,
+          customerName: `${name} ${surname}`.trim(),
+          totalAmount: receipt.totalAmount,
+          discount: receipt.discount,
+          lines: receipt.lines,
+        });
+        const s3Key = await uploadPdfToS3(booking.id, pdfBuffer, receipt.receiptNumber);
+        await prisma.receiptHeader.update({ where: { id: receipt.id }, data: { pdfKey: s3Key } });
+      } catch (err) {
+        console.error('Failed to generate/upload receipt PDF for pending booking:', err);
+        pdfBuffer = undefined;
+      }
+    }
   }
 
   const updatedFormData = { ...formData, processedBookingId: booking.id };
@@ -362,6 +387,7 @@ async function createBookingFromPending(
       finalPrice,
       emailDescription,
       paymentStatus: 'paid',
+      receiptPdfBuffer: pdfBuffer,
     }).catch((err) => console.error('Failed to send payment confirmation email:', err));
   }
 
@@ -431,8 +457,29 @@ async function createBookingFromAuthPending(
     },
     authPriceSettings,
   );
-  createReceipt({ bookingId: booking.id, transactionId: wlTransactionId, lines: authReceiptLines, discountPercentage: formData.discountPercentage ?? null })
-    .catch((err) => console.error('Failed to create receipt for auth_pending booking:', err));
+
+  let authPdfBuffer: Buffer | undefined;
+  const authReceipt = await createReceipt({ bookingId: booking.id, transactionId: wlTransactionId, lines: authReceiptLines, discountPercentage: formData.discountPercentage ?? null })
+    .catch((err) => { console.error('Failed to create receipt for auth_pending booking:', err); return null; });
+
+  if (authReceipt) {
+    try {
+      authPdfBuffer = await generateReceiptPdf({
+        receiptNumber: authReceipt.receiptNumber,
+        receiptDate: authReceipt.createdAt,
+        bookingId: booking.id,
+        customerName: `${name} ${surname}`.trim(),
+        totalAmount: authReceipt.totalAmount,
+        discount: authReceipt.discount,
+        lines: authReceipt.lines,
+      });
+      const s3Key = await uploadPdfToS3(booking.id, authPdfBuffer, authReceipt.receiptNumber);
+      await prisma.receiptHeader.update({ where: { id: authReceipt.id }, data: { pdfKey: s3Key } });
+    } catch (err) {
+      console.error('Failed to generate/upload receipt PDF for auth_pending booking:', err);
+      authPdfBuffer = undefined;
+    }
+  }
 
   const updatedFormData = { ...formData, processedBookingId: booking.id };
   await prisma.pendingBooking.update({
@@ -466,6 +513,7 @@ async function createBookingFromAuthPending(
       finalPrice,
       emailDescription,
       paymentStatus: 'paid',
+      receiptPdfBuffer: authPdfBuffer,
     }).catch((err) => console.error('Failed to send auth_pending booking confirmation email:', err));
   }
 
@@ -674,6 +722,13 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
 
     if (oldBooking) {
       const updatePriceSettings = await getPriceSettings();
+
+      const existingReceiptLines = await prisma.receiptLine.findMany({
+        where: { receipt: { bookingId } },
+        select: { lineType: true },
+      });
+      const alreadyChargedTypes = new Set(existingReceiptLines.map((l) => l.lineType));
+
       const oldState: BookingPricingState = {
         dateFrom: oldBooking.dateFrom,
         dateTo: oldBooking.dateTo,
@@ -692,9 +747,34 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
         dropOffOption: formData.dropOffOption !== undefined ? formData.dropOffOption : (oldBooking.dropOffOption as string | null),
         pickUpOption: formData.pickUpOption !== undefined ? formData.pickUpOption : (oldBooking.pickUpOption as string | null),
       };
-      const updateReceiptLines = buildLinesForBookingUpdate(oldState, newState, updatePriceSettings);
-      createReceipt({ bookingId, transactionId: wlTransactionId, lines: updateReceiptLines, discountPercentage: formData.discountPercentage ?? null })
-        .catch((err) => console.error('Failed to create receipt for pending update:', err));
+      const updateReceiptLines = buildLinesForBookingUpdate(oldState, newState, updatePriceSettings, alreadyChargedTypes);
+
+      const updateReceipt = await createReceipt({ bookingId, transactionId: wlTransactionId, lines: updateReceiptLines, discountPercentage: formData.discountPercentage ?? null })
+        .catch((err) => { console.error('Failed to create receipt for pending update:', err); return null; });
+
+      if (updateReceipt) {
+        try {
+          const updatedBookingForPdf = await prisma.booking.findUnique({ where: { id: bookingId }, select: { name: true, surname: true } });
+          const customerName = updatedBookingForPdf
+            ? `${updatedBookingForPdf.name} ${updatedBookingForPdf.surname}`.trim()
+            : bookingId;
+          const updatePdfBuffer = await generateReceiptPdf({
+            receiptNumber: updateReceipt.receiptNumber,
+            receiptDate: updateReceipt.createdAt,
+            bookingId,
+            customerName,
+            totalAmount: updateReceipt.totalAmount,
+            discount: updateReceipt.discount,
+            lines: updateReceipt.lines,
+          });
+          const s3Key = await uploadPdfToS3(bookingId, updatePdfBuffer, updateReceipt.receiptNumber);
+          await prisma.receiptHeader.update({ where: { id: updateReceipt.id }, data: { pdfKey: s3Key } });
+          await sendPaidConfirmationEmailForBooking(bookingId, updatePdfBuffer);
+          return bookingId;
+        } catch (err) {
+          console.error('Failed to generate/upload receipt PDF for pending update:', err);
+        }
+      }
     }
   }
 
@@ -740,7 +820,7 @@ async function handlePendingUpdatePaymentSuccess(merchantReference: string, wlTr
   }
 }
 
-async function sendPaidConfirmationEmailForBooking(bookingId: string): Promise<void> {
+async function sendPaidConfirmationEmailForBooking(bookingId: string, receiptPdfBuffer?: Buffer): Promise<void> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking || !booking.email) return;
 
@@ -780,6 +860,7 @@ async function sendPaidConfirmationEmailForBooking(bookingId: string): Promise<v
     emailDescription,
     paymentStatus: 'paid',
     isPaymentConfirmation: true,
+    receiptPdfBuffer,
   }).catch((err) => console.error('Failed to send paid confirmation email:', err));
 }
 

@@ -16,10 +16,10 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const isReportsEndpoint = req.url.includes('/api/reports');
   const isUploadEndpoint = req.url.includes('/api/upload');
   const isShiftsEndpoint = req.url.includes('/api/shifts');
-  const isPaymentEndpoint = req.url.includes('/api/payment');
+  const isAuthPaymentEndpoint = req.url.includes('/api/payment/initiate-auth-pending') || req.url.includes('/api/payment/initiate-pending-update');
   const isPostRequest = req.method === 'POST';
 
-  const shouldAttachToken = isUserEndpoint || isCarsEndpoint || isSettingsEndpoint || isDashboardEndpoint || isReportsEndpoint || isUploadEndpoint || isShiftsEndpoint || isPaymentEndpoint || (isBookingsEndpoint && !(isGuestEndpoint && isPostRequest));
+  const shouldAttachToken = isUserEndpoint || isCarsEndpoint || isSettingsEndpoint || isDashboardEndpoint || isReportsEndpoint || isUploadEndpoint || isShiftsEndpoint || isAuthPaymentEndpoint || (isBookingsEndpoint && !(isGuestEndpoint && isPostRequest));
   
   if (!shouldAttachToken) {
     return next(req);

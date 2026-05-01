@@ -98,6 +98,20 @@ export async function listImagesForBooking(bookingId: string): Promise<string[]>
   return urls;
 }
 
+export async function uploadPdfToS3(bookingId: string, pdfBuffer: Buffer, receiptNumber: string): Promise<string> {
+  const key = `bookings/${bookingId}/receipts/${receiptNumber}.pdf`;
+
+  const command = new PutObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: key,
+    Body: pdfBuffer,
+    ContentType: 'application/pdf',
+  });
+
+  await s3Client.send(command);
+  return key;
+}
+
 export async function deleteImageFromS3(imageUrl: string): Promise<void> {
   try {
     const key = extractKeyFromUrl(imageUrl);

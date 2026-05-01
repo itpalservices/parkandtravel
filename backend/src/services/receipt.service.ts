@@ -8,18 +8,27 @@ export interface ReceiptLineInput {
   amount: number;
 }
 
+export interface ReceiptResult {
+  id: string;
+  receiptNumber: string;
+  totalAmount: number;
+  discount: number | null;
+  createdAt: Date;
+  lines: ReceiptLineInput[];
+}
+
 export async function createReceipt(params: {
   bookingId: string;
   transactionId: number;
   lines: ReceiptLineInput[];
   discountPercentage?: number | null;
-}): Promise<void> {
+}): Promise<ReceiptResult | null> {
   const { bookingId, transactionId, lines, discountPercentage } = params;
-  if (lines.length === 0) return;
+  if (lines.length === 0) return null;
 
   const totalAmount = parseFloat(lines.reduce((sum, l) => sum + l.amount, 0).toFixed(2));
 
-  await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const header = await tx.receiptHeader.create({
       data: {
         bookingId,
@@ -32,7 +41,7 @@ export async function createReceipt(params: {
     const year = header.createdAt.getFullYear();
     const receiptNumber = `REC-${year}-${String(header.receiptSeq).padStart(5, '0')}`;
 
-    await tx.receiptHeader.update({
+    const updated = await tx.receiptHeader.update({
       where: { id: header.id },
       data: { receiptNumber },
     });
@@ -45,5 +54,16 @@ export async function createReceipt(params: {
         amount: line.amount,
       })),
     });
+
+    return {
+      id: updated.id,
+      receiptNumber,
+      totalAmount,
+      discount: discountPercentage ?? null,
+      createdAt: updated.createdAt,
+      lines,
+    };
   });
+
+  return result;
 }

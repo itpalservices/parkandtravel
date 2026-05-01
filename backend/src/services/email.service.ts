@@ -32,6 +32,7 @@ interface BookingEmailData {
   isPaymentConfirmation?: boolean;
   emailDescription?: string | null;
   paymentStatus?: 'paid' | 'pending' | null;
+  receiptPdfBuffer?: Buffer;
 }
 
 function formatDate(dateStr: string): string {
@@ -456,14 +457,24 @@ export async function sendBookingConfirmationEmail(
   const replyTo = process.env.BREVO_REPLY_TO_EMAIL || fromEmail;
 
   try {
-    const info = await transporter.sendMail({
+    const mailOptions: Parameters<typeof transporter.sendMail>[0] = {
       from: `"${fromName}" <${fromEmail}>`,
       to: `"${data.fullName}" <${data.email}>`,
       replyTo: replyTo,
       subject: getEmailSubject(data),
       html: generateBookingConfirmationHtml(data),
       text: generateBookingConfirmationText(data),
-    });
+    };
+
+    if (data.receiptPdfBuffer) {
+      mailOptions.attachments = [{
+        filename: 'receipt.pdf',
+        content: data.receiptPdfBuffer,
+        contentType: 'application/pdf',
+      }];
+    }
+
+    const info = await transporter.sendMail(mailOptions);
 
     console.log("Email sent successfully:", info.messageId);
     return { success: true, messageId: info.messageId };

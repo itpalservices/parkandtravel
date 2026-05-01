@@ -163,6 +163,7 @@ model ReceiptHeader {
   transactionId BigInt        @map("transaction_id")
   totalAmount   Decimal       @map("total_amount") @db.Decimal(10, 2)
   discount      Int?          @map("discount")
+  pdfKey        String?       @map("pdf_key") @db.VarChar(500)
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   booking       Booking       @relation(fields: [bookingId], references: [id])
   lines         ReceiptLine[]
