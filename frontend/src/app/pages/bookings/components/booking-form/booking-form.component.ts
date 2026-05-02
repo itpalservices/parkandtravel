@@ -968,16 +968,28 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     let amount: number;
     let notes: string | undefined;
 
-    if (this.existingBooking.isPrepaid) {
-      paymentMethod = 'online';
-      amount = totalAmount;
+    const walleePaid = this.existingBooking.walleePaidAmount ?? 0;
+    const checkinPaid = (this.existingBooking.paidAmount ?? 0) - walleePaid;
+    const totalAlreadyPaid = this.existingBooking.paidAmount ?? 0;
+    const remainingBalance = parseFloat((totalAmount - totalAlreadyPaid).toFixed(2));
+
+    const priorParts: string[] = [];
+    if (walleePaid > 0) {
       const walleeDate = this.existingBooking.walleePayment?.createdAt
         ? new Date(this.existingBooking.walleePayment.createdAt).toLocaleDateString()
         : '';
-      notes = `Online payment via Wallee on ${walleeDate}${applyExtraFee ? ` (includes extra fee: €${extraFee.toFixed(2)})` : ''}`;
+      priorParts.push(`Pre-paid online via Wallee${walleeDate ? ` on ${walleeDate}` : ''} (€${walleePaid.toFixed(2)})`);
+    }
+    if (checkinPaid > 0) priorParts.push(`Paid at check-in: €${checkinPaid.toFixed(2)}`);
+    const priorNote = priorParts.join('. ');
+
+    if (remainingBalance <= 0) {
+      paymentMethod = 'online';
+      amount = 0;
+      notes = priorNote ? `${priorNote}. No additional payment required.` : 'No additional payment required.';
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
-        html: `Booking was pre-paid online.<br><strong>Final amount: €${amount.toFixed(2)}</strong>${applyExtraFee ? `<br>Extra fee: €${extraFee.toFixed(2)}` : ''}`,
+        html: `Booking is fully paid.<br><strong>Total paid: €${totalAlreadyPaid.toFixed(2)}</strong><br>No additional payment required.`,
         icon: 'info',
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
@@ -986,12 +998,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       });
       if (!confirmResult.isConfirmed) return;
     } else {
+      const priorHtml = priorNote
+        ? `<p style="margin-bottom:12px; color:#374151; font-size:14px;">${priorNote}.</p>`
+        : '';
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
         html: `
+          ${priorHtml}
           <div class="mb-3">
             <label class="form-label fw-semibold">Amount (€)</label>
-            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${totalAmount.toFixed(2)}" style="width:100%;margin:0">
+            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${remainingBalance.toFixed(2)}" style="width:100%;margin:0">
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Payment Method</label>
@@ -1020,6 +1036,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       if (!formValues) return;
       amount = formValues.amount;
       paymentMethod = formValues.paymentMethod;
+      const pmCap = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
+      notes = priorNote
+        ? `${priorNote}. Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`
+        : `Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`;
     }
 
     const actorName = this.userProfileService.getDisplayName() || undefined;
