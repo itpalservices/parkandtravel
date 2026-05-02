@@ -15,6 +15,7 @@ import {
   completeBooking as completeBookingService,
   getCheckinPaymentInfo as getCheckinPaymentInfoService,
   recordCheckinPayment as recordCheckinPaymentService,
+  generateAndStoreCheckinReceipt as generateAndStoreCheckinReceiptService,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -791,6 +792,29 @@ export async function recordCheckinPaymentHandler(req: Request, res: Response): 
     res.json({ success: true, data: result });
   } catch (error) {
     console.error("Error recording checkin payment:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function generateCheckinReceiptHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") {
+      res.status(403).json({ error: "Admin or driver role required" });
+      return;
+    }
+
+    const { id } = req.params;
+    const presignedUrl = await generateAndStoreCheckinReceiptService(id);
+
+    if (!presignedUrl) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    res.json({ success: true, data: { presignedUrl } });
+  } catch (error) {
+    console.error("Error generating check-in receipt:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

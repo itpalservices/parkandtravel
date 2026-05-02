@@ -1,4 +1,5 @@
-import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client, S3_BUCKET } from "../config/s3.config";
 import path from "path";
 
@@ -96,6 +97,31 @@ export async function listImagesForBooking(bookingId: string): Promise<string[]>
   }
 
   return urls;
+}
+
+export async function uploadCheckinReceiptToS3(bookingId: string, pdfBuffer: Buffer, checkInDate: Date): Promise<string> {
+  const dateStr = checkInDate.toISOString().slice(0, 10);
+  const key = `bookings/${bookingId}/receipts/check-in-${dateStr}.pdf`;
+
+  const command = new PutObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: key,
+    Body: pdfBuffer,
+    ContentType: 'application/pdf',
+  });
+
+  await s3Client.send(command);
+  return key;
+}
+
+export async function getPresignedUrl(key: string, expiresInSeconds = 900): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: key,
+    ResponseContentDisposition: 'inline',
+    ResponseContentType: 'application/pdf',
+  });
+  return getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
 }
 
 export async function uploadPdfToS3(bookingId: string, pdfBuffer: Buffer, receiptNumber: string): Promise<string> {

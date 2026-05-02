@@ -391,6 +391,148 @@ function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettin
 </html>`;
 }
 
+export interface CheckinReceiptData {
+  bookingId: string;
+  customerName: string;
+  checkInDateTime: Date;
+  scheduledCheckOut: Date | null;
+  licensePlate: string | null;
+  carModel: string | null;
+  adults: number | null;
+  keepKeys: boolean | null;
+  totalPrice: number;
+  walleePaid: number;
+  checkinPaid: number;
+}
+
+function generateCheckinReceiptHtml(data: CheckinReceiptData, company: CompanySettings): string {
+  const remaining = parseFloat((data.totalPrice - data.walleePaid - data.checkinPaid).toFixed(2));
+
+  const checkInDateStr = new Date(data.checkInDateTime).toLocaleString('en-GB', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+
+  const scheduledCheckOutStr = data.scheduledCheckOut
+    ? new Date(data.scheduledCheckOut).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : '—';
+
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : (company.companyPhone1 || company.companyPhone2 || '');
+
+  const vehicleParts = [data.licensePlate, data.carModel].filter(Boolean);
+  const vehicleStr = vehicleParts.length > 0 ? vehicleParts.join(' / ') : '—';
+
+  const financialRows = `
+    <div class="row small"><span>Total price</span><span>€${data.totalPrice.toFixed(2)}</span></div>
+    ${data.walleePaid > 0 ? `<div class="row small"><span>Paid online</span><span>€${data.walleePaid.toFixed(2)}</span></div>` : ''}
+    ${data.checkinPaid > 0 ? `<div class="row small"><span>Paid at check-in</span><span>€${data.checkinPaid.toFixed(2)}</span></div>` : ''}
+    ${remaining > 0
+      ? `<div class="row grand"><span>Balance due at check-out</span><span>€${remaining.toFixed(2)}</span></div>`
+      : `<div class="paid-full">&#10003; PAID IN FULL</div>`
+    }
+  `;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: 80mm auto; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #000;
+      background: #fff;
+      width: 80mm;
+      padding: 6mm 5mm;
+    }
+    .center { text-align: center; }
+    .bold { font-weight: 700; }
+    .company-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .meta { font-size: 9px; color: #333; margin: 1px 0; }
+    .divider { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+    .divider-solid { border: none; border-top: 1px solid #000; margin: 5px 0; }
+    .label { font-size: 8px; text-transform: uppercase; color: #555; margin-bottom: 1px; }
+    .value { font-size: 10px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+    .row { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; }
+    .row.small { font-size: 9px; color: #444; }
+    .row.grand { font-size: 11px; font-weight: 700; border-top: 1px solid #000; margin-top: 4px; padding-top: 5px; }
+    .paid-full { text-align: center; font-size: 11px; font-weight: 700; border-top: 1px solid #000; margin-top: 4px; padding-top: 5px; }
+    .info-grid { display: flex; gap: 4mm; }
+    .info-cell { flex: 1; }
+    .footer { margin-top: 8mm; font-size: 8px; color: #555; text-align: center; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div class="company-name">${company.companyName || 'Park &amp; Travel'}</div>
+    ${company.companyVatNo ? `<div class="meta">VAT: ${company.companyVatNo}</div>` : ''}
+    ${phoneLine ? `<div class="meta">Tel: ${phoneLine}</div>` : ''}
+  </div>
+
+  <hr class="divider-solid">
+
+  <div class="center">
+    <div class="bold" style="font-size:12px; letter-spacing:2px;">CHECK-IN RECEIPT</div>
+    <div class="meta">${checkInDateStr}</div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="label">Customer</div>
+  <div class="value">${data.customerName}</div>
+  <div class="label">Booking Reference</div>
+  <div class="value" style="font-size:8px;">${data.bookingId}</div>
+
+  <hr class="divider">
+
+  <div class="label">Vehicle</div>
+  <div class="value">${vehicleStr}</div>
+  <div class="info-grid">
+    <div class="info-cell">
+      <div class="label">Adults</div>
+      <div class="value">${data.adults ?? '—'}</div>
+    </div>
+    <div class="info-cell">
+      <div class="label">Keys</div>
+      <div class="value">${data.keepKeys ? 'Kept' : 'Returned'}</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="label">Scheduled Check-out</div>
+  <div class="value">${scheduledCheckOutStr}</div>
+
+  <hr class="divider-solid">
+
+  <div>${financialRows}</div>
+
+  <div class="footer">
+    <p>Thank you for choosing Park &amp; Travel.</p>
+    ${company.companyVatNo ? `<p>VAT Reg: ${company.companyVatNo}</p>` : ''}
+  </div>
+</body>
+</html>`;
+}
+
+export async function generateCheckinReceiptPdf(data: CheckinReceiptData): Promise<Buffer> {
+  const company = await getCompanySettings();
+  const html = generateCheckinReceiptHtml(data, company);
+
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    return Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Buffer> {
   const company = await getCompanySettings();
   const html = generateReceiptHtml(data, company);

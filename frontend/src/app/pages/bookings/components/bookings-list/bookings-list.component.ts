@@ -911,15 +911,18 @@ export class BookingsListComponent {
                     if (r.isConfirmed) {
                       window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
                     }
-                  });
+                  }).then(() => this.generateAndShowCheckinReceipt(booking.id));
                 } else {
-                  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Check-in payment recorded', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+                  this.generateAndShowCheckinReceipt(booking.id);
                 }
               },
               error: () => {
                 Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Booking parked but check-in payment could not be recorded', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+                this.generateAndShowCheckinReceipt(booking.id);
               },
             });
+          } else {
+            this.generateAndShowCheckinReceipt(booking.id);
           }
         });
         if (files.length > 0) {
@@ -1025,6 +1028,30 @@ export class BookingsListComponent {
       if (result.isConfirmed) {
         this.performStatusUpdate(booking, 'bookingStatus_created', 'Created');
       }
+    });
+  }
+
+  private generateAndShowCheckinReceipt(bookingId: string): void {
+    this.apiService.post<any>(`/bookings/${bookingId}/checkin-receipt`, {}).subscribe({
+      next: (res: any) => {
+        const presignedUrl = res?.data?.presignedUrl;
+        if (!presignedUrl) return;
+        Swal.fire({
+          icon: 'info',
+          title: 'Check-in Receipt Ready',
+          text: 'Would you like to print the check-in receipt for the customer?',
+          confirmButtonText: 'Print Receipt',
+          showDenyButton: true,
+          denyButtonText: 'Skip',
+          denyButtonColor: '#6c757d',
+          confirmButtonColor: '#006B8F',
+        }).then((r) => {
+          if (r.isConfirmed) {
+            window.open(presignedUrl, '_blank');
+          }
+        });
+      },
+      error: () => { /* silent — check-in is already recorded */ },
     });
   }
 
