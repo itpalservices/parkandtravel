@@ -414,7 +414,7 @@ export async function generateThermalReceiptPdf(data: ReceiptPdfData): Promise<B
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle' });
-    const pdf = await page.pdf({ width: '80mm', height: 'auto', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
     return Buffer.from(pdf);
   } finally {
     await browser.close();

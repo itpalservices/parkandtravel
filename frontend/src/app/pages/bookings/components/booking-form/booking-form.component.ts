@@ -773,18 +773,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private openThermalReceipt(receiptId: string): void {
-    this.apiService.getBlob(`/receipts/thermal/${receiptId}`).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const tab = window.open(url, '_blank');
-        if (tab) {
-          setTimeout(() => URL.revokeObjectURL(url), 30000);
-        }
-      },
-      error: () => {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Could not load receipt for printing', showConfirmButton: false, timer: 3000 });
-      },
-    });
+    window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
   }
 
   openCarousel(index: number): void {

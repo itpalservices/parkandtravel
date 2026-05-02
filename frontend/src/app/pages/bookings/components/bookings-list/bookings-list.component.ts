@@ -565,19 +565,37 @@ export class BookingsListComponent {
       notes,
       actorName,
     }).subscribe({
-      next: () => {
+      next: (res: any) => {
         booking.bookingStatusId = 'bookingStatus_completed';
         booking.bookingStatus = 'Completed';
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Booking completed successfully',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
-        this.bookingUpdated.emit();
+        const receiptId = res?.data?.receiptId;
+        if (receiptId) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Booking completed successfully',
+            text: 'Would you like to print the receipt?',
+            confirmButtonText: 'Print Receipt',
+            showDenyButton: true,
+            denyButtonText: 'Skip',
+            denyButtonColor: '#6c757d',
+          }).then((r) => {
+            if (r.isConfirmed) {
+              window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+            }
+            this.bookingUpdated.emit();
+          });
+        } else {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Booking completed successfully',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          this.bookingUpdated.emit();
+        }
       },
       error: (err) => {
         Swal.fire({
@@ -878,8 +896,25 @@ export class BookingsListComponent {
         this.performStatusUpdate(booking, newStatusId, newStatusLabel, parkPlace, undefined, extraFields, () => {
           if (payment) {
             this.apiService.post<any>(`/bookings/${booking.id}/checkin-payment`, { ...payment, actorName }).subscribe({
-              next: () => {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Check-in payment recorded', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+              next: (res: any) => {
+                const receiptId = res?.data?.receiptId;
+                if (receiptId) {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Check-in payment recorded',
+                    text: 'Would you like to print the receipt?',
+                    confirmButtonText: 'Print Receipt',
+                    showDenyButton: true,
+                    denyButtonText: 'Close',
+                    denyButtonColor: '#6c757d',
+                  }).then((r) => {
+                    if (r.isConfirmed) {
+                      window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+                    }
+                  });
+                } else {
+                  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Check-in payment recorded', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+                }
               },
               error: () => {
                 Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Booking parked but check-in payment could not be recorded', showConfirmButton: false, timer: 4000, timerProgressBar: true });

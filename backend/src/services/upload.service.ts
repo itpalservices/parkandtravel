@@ -89,7 +89,7 @@ export async function listImagesForBooking(bookingId: string): Promise<string[]>
 
   if (response.Contents) {
     for (const obj of response.Contents) {
-      if (obj.Key) {
+      if (obj.Key && !obj.Key.includes('/receipts/')) {
         urls.push(buildPublicUrl(obj.Key));
       }
     }

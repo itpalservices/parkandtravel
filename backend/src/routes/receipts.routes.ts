@@ -1,12 +1,12 @@
 import { Router, Request, Response } from "express";
-import { checkJwt } from "../middleware/auth.middleware";
 import { prisma } from "../lib/prisma";
 import { generateThermalReceiptPdf } from "../services/pdf.service";
 import { ReceiptLineInput } from "../services/receipt.service";
 
 const router = Router();
 
-router.get("/thermal/:receiptId", checkJwt, async (req: Request, res: Response): Promise<void> => {
+// No auth required — the receipt UUID (128-bit random) acts as the access token.
+router.get("/thermal/:receiptId", async (req: Request, res: Response): Promise<void> => {
   try {
     const { receiptId } = req.params;
 
