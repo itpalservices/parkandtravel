@@ -122,6 +122,7 @@ async function runFlightSync(): Promise<void> {
 export function startFlightSyncJob(): void {
   cron.schedule('0 */45 * * * *', async () => {
     try {
+      console.log('[Flight Sync] Running flight sync...');
       await runFlightSync();
     } catch (err) {
       console.error('[Flight Sync] Job failed:', err);
