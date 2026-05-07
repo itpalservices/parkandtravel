@@ -200,17 +200,19 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   let whereClause = whereConditions.join(" AND ");
 
+  const userIdFilter = userId ? ` AND b."userId" = '${userId}'` : '';
+
   if (filterBy === 'both' && dateFrom) {
-    whereClause += ` OR (b."bookingStatusId" = 'bookingStatus_parked' AND b."dateTo" < '${dateFrom}'::date AND b.deleteflag = 0)`;
+    whereClause += ` OR (b."bookingStatusId" = 'bookingStatus_parked' AND b."dateTo" < '${dateFrom}'::date AND b.deleteflag = 0${userIdFilter})`;
   }
 
   if (filterBy === 'both') {
     if (dateFrom && dateTo) {
-      whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b."actualCheckOut"::date <= '${dateTo}'::date AND b.deleteflag = 0)`;
+      whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b."actualCheckOut"::date <= '${dateTo}'::date AND b.deleteflag = 0${userIdFilter})`;
     } else if (dateFrom) {
-      whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b.deleteflag = 0)`;
+      whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date >= '${dateFrom}'::date AND b.deleteflag = 0${userIdFilter})`;
     } else if (dateTo) {
-      whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date <= '${dateTo}'::date AND b.deleteflag = 0)`;
+      whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date <= '${dateTo}'::date AND b.deleteflag = 0${userIdFilter})`;
     }
   }
 

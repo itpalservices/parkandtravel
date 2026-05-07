@@ -132,7 +132,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       email: [{ value: '', disabled: true }],
       name: ['', Validators.required],
       surname: ['', Validators.required],
-      phone: ['', [Validators.pattern(/^\d*$/)]],
+      phone: ['', [Validators.pattern(/^\d*$/), Validators.maxLength(8)]],
     });
   }
 
