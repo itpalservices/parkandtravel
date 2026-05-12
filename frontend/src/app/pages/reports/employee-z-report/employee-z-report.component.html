@@ -53,6 +53,7 @@
     @if (mode === 'date') {
       <div>
         <app-date-range-picker
+          [showTime]="true"
           [selectedPreset]="'today'"
           [enablePastDates]="true"
           [showPastOptions]="true"

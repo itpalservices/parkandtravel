@@ -57,6 +57,12 @@
                 navigation="arrows"
                 (ngModelChange)="onFromDateChange()"
               ></ngb-datepicker>
+              @if (showTime) {
+                <div class="time-picker-row">
+                  <span class="time-label">From</span>
+                  <input type="time" class="time-input" [(ngModel)]="fromTime" />
+                </div>
+              }
             </div>
             <div class="calendar-wrapper">
               <ngb-datepicker
@@ -66,15 +72,25 @@
                 [displayMonths]="1"
                 navigation="arrows"
               ></ngb-datepicker>
+              @if (showTime) {
+                <div class="time-picker-row">
+                  <span class="time-label">To</span>
+                  <input type="time" class="time-input" [(ngModel)]="toTime" />
+                </div>
+              }
             </div>
           </div>
           <div class="custom-range-footer">
             <span class="selected-range">
-              {{
-                formatNgbDate(fromDate) == formatNgbDate(toDate)
-                  ? formatNgbDate(fromDate)
-                  : formatNgbDate(fromDate) + ' - ' + formatNgbDate(toDate)
-              }}
+              @if (showTime) {
+                {{ formatNgbDate(fromDate) }} {{ fromTime }} &ndash; {{ formatNgbDate(toDate) }} {{ toTime }}
+              } @else {
+                {{
+                  formatNgbDate(fromDate) == formatNgbDate(toDate)
+                    ? formatNgbDate(fromDate)
+                    : formatNgbDate(fromDate) + ' - ' + formatNgbDate(toDate)
+                }}
+              }
             </span>
             <button
               class="apply-btn"

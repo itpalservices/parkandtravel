@@ -158,9 +158,7 @@ export async function employeeZReportByDate(req: Request, res: Response) {
 
   try {
     const fromDate = new Date(dateFrom as string);
-    fromDate.setHours(0, 0, 0, 0);
     const toDate = new Date(dateTo as string);
-    toDate.setHours(23, 59, 59, 999);
 
     const [transactions, countRaw, totalsRaw] = await Promise.all([
       prisma.$queryRaw`

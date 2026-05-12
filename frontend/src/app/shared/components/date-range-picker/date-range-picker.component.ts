@@ -33,6 +33,7 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
   @Input() enablePastDates: boolean = false;
   @Input() enableCustomRange: boolean = true;
   @Input() showPastOptions: boolean = false;
+  @Input() showTime: boolean = false;
 
   @Output() dateRangeChange = new EventEmitter<DateRange>();
 
@@ -61,9 +62,13 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
 
   fromDate: NgbDateStruct | null = null;
   toDate: NgbDateStruct | null = null;
+  fromTime: string = '00:00';
+  toTime: string = '23:59';
 
   appliedFromDate: NgbDateStruct | null = null;
   appliedToDate: NgbDateStruct | null = null;
+  appliedFromTime: string = '00:00';
+  appliedToTime: string = '23:59';
 
   minDate?: NgbDateStruct;
   toMinDate?: NgbDateStruct;
@@ -146,11 +151,15 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
       if (this.appliedFromDate && this.appliedToDate) {
         this.fromDate = { ...this.appliedFromDate };
         this.toDate = { ...this.appliedToDate };
+        this.fromTime = this.appliedFromTime;
+        this.toTime = this.appliedToTime;
         this.updateToMinDate();
       } else {
         const today = this.calendar.getToday();
         this.fromDate = today;
         this.toDate = today;
+        this.fromTime = '00:00';
+        this.toTime = '23:59';
         this.toMinDate = today;
       }
     } else {
@@ -187,9 +196,19 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
     if (this.fromDate && this.toDate) {
       this.appliedFromDate = { ...this.fromDate };
       this.appliedToDate = { ...this.toDate };
+      this.appliedFromTime = this.fromTime;
+      this.appliedToTime = this.toTime;
 
       const from = this.ngbDateToDate(this.fromDate);
       const to = this.ngbDateToDate(this.toDate);
+
+      if (this.showTime) {
+        const [fromHours, fromMinutes] = this.fromTime.split(':').map(Number);
+        const [toHours, toMinutes] = this.toTime.split(':').map(Number);
+        from.setHours(fromHours, fromMinutes, 0, 0);
+        to.setHours(toHours, toMinutes, 0, 0);
+      }
+
       this.emitDateRange(from, to, 'custom');
       this.isOpen = false;
       this.showCustomRange = false;
@@ -223,42 +242,69 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
     today.setHours(0, 0, 0, 0);
 
     switch (presetId) {
-      case 'today':
-        return { from: today, to: today };
-      case 'tomorrow':
+      case 'today': {
+        const todayEnd = new Date(today);
+        todayEnd.setHours(23, 59, 59, 999);
+        return { from: today, to: todayEnd };
+      }
+      case 'tomorrow': {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        return { from: tomorrow, to: tomorrow };
-      case 'next2days':
+        const tomorrowEnd = new Date(tomorrow);
+        tomorrowEnd.setHours(23, 59, 59, 999);
+        return { from: tomorrow, to: tomorrowEnd };
+      }
+      case 'next2days': {
         const next2 = new Date(today);
         next2.setDate(next2.getDate() + 2);
+        next2.setHours(23, 59, 59, 999);
         return { from: today, to: next2 };
-      case 'next7days':
+      }
+      case 'next7days': {
         const next7 = new Date(today);
         next7.setDate(next7.getDate() + 7);
+        next7.setHours(23, 59, 59, 999);
         return { from: today, to: next7 };
-      case 'next30days':
+      }
+      case 'next30days': {
         const next30 = new Date(today);
         next30.setDate(next30.getDate() + 30);
+        next30.setHours(23, 59, 59, 999);
         return { from: today, to: next30 };
-      case 'yesterday':
+      }
+      case 'yesterday': {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        return { from: yesterday, to: yesterday };
-      case 'before2days':
+        const yesterdayEnd = new Date(yesterday);
+        yesterdayEnd.setHours(23, 59, 59, 999);
+        return { from: yesterday, to: yesterdayEnd };
+      }
+      case 'before2days': {
         const before2 = new Date(today);
         before2.setDate(before2.getDate() - 2);
-        return { from: before2, to: today };
-      case 'before7days':
+        const todayEnd = new Date(today);
+        todayEnd.setHours(23, 59, 59, 999);
+        return { from: before2, to: todayEnd };
+      }
+      case 'before7days': {
         const before7 = new Date(today);
         before7.setDate(before7.getDate() - 7);
-        return { from: before7, to: today };
-      case 'before30days':
+        const todayEnd = new Date(today);
+        todayEnd.setHours(23, 59, 59, 999);
+        return { from: before7, to: todayEnd };
+      }
+      case 'before30days': {
         const before30 = new Date(today);
         before30.setDate(before30.getDate() - 30);
-        return { from: before30, to: today };
-      default:
-        return { from: today, to: today };
+        const todayEnd = new Date(today);
+        todayEnd.setHours(23, 59, 59, 999);
+        return { from: before30, to: todayEnd };
+      }
+      default: {
+        const defaultEnd = new Date(today);
+        defaultEnd.setHours(23, 59, 59, 999);
+        return { from: today, to: defaultEnd };
+      }
     }
   }
 
@@ -292,9 +338,16 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
 
   get displayRangeText(): string {
     if (this.activePreset === 'custom' && this.appliedFromDate && this.appliedToDate) {
-      return this.formatNgbDate(this.appliedFromDate) === this.formatNgbDate(this.appliedToDate)
-        ? this.formatNgbDate(this.appliedFromDate)
-        : `${this.formatNgbDate(this.appliedFromDate)} - ${this.formatNgbDate(this.appliedToDate)}`;
+      const fromDateStr = this.formatNgbDate(this.appliedFromDate);
+      const toDateStr = this.formatNgbDate(this.appliedToDate);
+
+      if (this.showTime) {
+        const fromStr = `${fromDateStr} ${this.appliedFromTime}`;
+        const toStr = `${toDateStr} ${this.appliedToTime}`;
+        return fromStr === toStr ? fromStr : `${fromStr} - ${toStr}`;
+      }
+
+      return fromDateStr === toDateStr ? fromDateStr : `${fromDateStr} - ${toDateStr}`;
     }
     if (this.activePreset) {
       const preset = (this.showPastOptions ? this.pastPresets : this.presets).find((p) => p.id === this.activePreset);

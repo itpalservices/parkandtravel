@@ -39,9 +39,8 @@ export class ZReportComponent {
 
   constructor() {
     const today = this.calendar.getToday();
-    const todayDate = new Date(today.year, today.month - 1, today.day);
-    this.dateFrom = todayDate;
-    this.dateTo = todayDate;
+    this.dateFrom = new Date(today.year, today.month - 1, today.day, 0, 0, 0, 0);
+    this.dateTo = new Date(today.year, today.month - 1, today.day, 23, 59, 59, 999);
     this.loadLogo();
     this.loadReport();
   }
@@ -75,8 +74,8 @@ export class ZReportComponent {
     this.loading = true;
     this.error = null;
 
-    const dateFromStr = this.formatDateForApi(this.dateFrom);
-    const dateToStr = this.formatDateForApi(this.dateTo);
+    const dateFromStr = this.formatDateTimeForApi(this.dateFrom);
+    const dateToStr = this.formatDateTimeForApi(this.dateTo);
 
     this.apiService
       .get<WalleeResponse>(`/reports/z-report?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=${this.currentOffset}`)
@@ -116,12 +115,14 @@ export class ZReportComponent {
     try {
       const dateFromStr = this.formatDateForApi(this.dateFrom);
       const dateToStr = this.formatDateForApi(this.dateTo);
+      const dateFromApiStr = this.formatDateTimeForApi(this.dateFrom);
+      const dateToApiStr = this.formatDateTimeForApi(this.dateTo);
 
       const [settingsData, firstPage] = await Promise.all([
         firstValueFrom(this.apiService.get<{ tax: number | null }>('/settings')),
         firstValueFrom(
           this.apiService.get<WalleeResponse>(
-            `/reports/z-report?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=0`
+            `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=0`
           )
         ),
       ]);
@@ -133,7 +134,7 @@ export class ZReportComponent {
       while (hasMore) {
         const page = await firstValueFrom(
           this.apiService.get<WalleeResponse>(
-            `/reports/z-report?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=${offset}`
+            `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=${offset}`
           )
         );
         allTransactions.push(...page.data);
@@ -310,5 +311,15 @@ export class ZReportComponent {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private formatDateTimeForApi(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 }

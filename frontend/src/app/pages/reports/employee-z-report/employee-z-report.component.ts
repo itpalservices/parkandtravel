@@ -148,8 +148,8 @@ export class EmployeeZReportComponent implements OnInit {
     if (!this.dateFrom || !this.dateTo) return;
     this.dateLoading = true;
     this.dateError = null;
-    const from = this.formatDateForApi(this.dateFrom);
-    const to = this.formatDateForApi(this.dateTo);
+    const from = this.formatDateTimeForApi(this.dateFrom);
+    const to = this.formatDateTimeForApi(this.dateTo);
     this.apiService
       .get<TransactionsResponse>(`/reports/employee-z/by-date?dateFrom=${from}&dateTo=${to}&page=${this.datePage}`)
       .subscribe({
@@ -304,6 +304,8 @@ export class EmployeeZReportComponent implements OnInit {
 
   private async exportDatePDF(): Promise<void> {
     if (!this.dateFrom || !this.dateTo) return;
+    const fromApi = this.formatDateTimeForApi(this.dateFrom);
+    const toApi = this.formatDateTimeForApi(this.dateTo);
     const from = this.formatDateForApi(this.dateFrom);
     const to = this.formatDateForApi(this.dateTo);
 
@@ -313,7 +315,7 @@ export class EmployeeZReportComponent implements OnInit {
     let hasMore = true;
     while (hasMore) {
       const data = await firstValueFrom(
-        this.apiService.get<TransactionsResponse>(`/reports/employee-z/by-date?dateFrom=${from}&dateTo=${to}&page=${page}`)
+        this.apiService.get<TransactionsResponse>(`/reports/employee-z/by-date?dateFrom=${fromApi}&dateTo=${toApi}&page=${page}`)
       );
       all.push(...data.transactions);
       totals = data.totals;
@@ -514,6 +516,16 @@ export class EmployeeZReportComponent implements OnInit {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private formatDateTimeForApi(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 
   formatDisplayDate(d: Date): string {
