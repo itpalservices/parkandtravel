@@ -1,0 +1,24 @@
+.app-footer {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+
+  a {
+    color: #006B8F;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: #004d66;
+      text-decoration: underline;
+    }
+  }
+}

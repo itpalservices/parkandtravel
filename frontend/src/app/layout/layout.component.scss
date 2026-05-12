@@ -1,12 +1,12 @@
 .app-layout {
-  min-height: 100vh;
+  min-height: 100%;
   background-color: #f5f7fa;
 }
 
 .main-content {
   margin-top: 60px;
   margin-left: 220px;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 94px);
   padding: 1.5rem;
   background-color: #f5f7fa;
 }
