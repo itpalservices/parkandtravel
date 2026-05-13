@@ -489,12 +489,21 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  overflow: hidden;
 
   &:hover {
     background: #eff6ff;
     border-color: #3b82f6;
     color: #3b82f6;
   }
+}
+
+.booking-thumbnail {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
 }
 
 .btn-note-icon {

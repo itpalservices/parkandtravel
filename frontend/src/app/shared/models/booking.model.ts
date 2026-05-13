@@ -40,6 +40,7 @@ export interface Booking {
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   estimated_arrival_time: string | null;
+  thumbnailUrl: string | null;
 }
 
 export interface BookingsResponse {

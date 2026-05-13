@@ -943,6 +943,12 @@ export class BookingsListComponent {
     this.bookingsService.uploadImages(bookingId, files).subscribe({
       next: (response) => {
         if (response.success) {
+          if (response.data.urls.length > 0) {
+            const booking = this.bookings.find(b => b.id === bookingId);
+            if (booking && !booking.thumbnailUrl) {
+              booking.thumbnailUrl = response.data.urls[0];
+            }
+          }
           const uploadedCount = response.data.urls.length;
           const failedCount = response.data.errors.length;
           let message = `${uploadedCount} photo${uploadedCount !== 1 ? 's' : ''} uploaded successfully`;

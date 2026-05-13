@@ -1,6 +1,7 @@
 import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client, S3_BUCKET } from "../config/s3.config";
+import { prisma } from "../lib/prisma";
 import path from "path";
 
 function generateUniqueKey(bookingId: string, originalName: string): string {
@@ -69,6 +70,7 @@ export async function uploadMultipleImages(
     try {
       const url = await uploadImageToS3(bookingId, file.buffer, file.originalname);
       urls.push(url);
+      await prisma.bookingImage.create({ data: { bookingId, url } });
     } catch (error: any) {
       console.error(`Failed to upload ${file.originalname}:`, error.message);
       errors.push(`Failed to upload ${file.originalname}: ${error.message}`);
