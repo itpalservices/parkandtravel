@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount, getUserSettings, setUserSettings } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -330,49 +330,65 @@ router.get("/search", checkJwt, async (req: Request, res: Response) => {
   }
 });
 
-router.get("/:userId/discount", checkJwt, async (req: Request, res: Response) => {
+router.get("/me/settings", checkJwt, async (req: Request, res: Response) => {
   try {
     const authUser = req.authUser;
-    if (!authUser || (authUser.role !== "admin" && authUser.role !== "driver")) {
-      res.status(403).json({ error: "Only admins and drivers can view customer discounts" });
+    if (!authUser?.sub) {
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
-
-    const { userId } = req.params;
-    const discount = await getUserDiscount(userId);
-    res.json({ success: true, data: { discountPercentage: discount } });
+    const user = await getUserById(authUser.sub);
+    const exemptMandatoryPayment = user?.app_metadata?.exempt_mandatory_payment ?? false;
+    res.json({ success: true, data: { exemptMandatoryPayment } });
   } catch (error: any) {
-    console.error("Error fetching user discount:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch user discount" });
+    console.error("Error fetching own settings:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch user settings" });
   }
 });
 
-router.patch("/:userId/discount", checkJwt, async (req: Request, res: Response) => {
+router.get("/:userId/settings", checkJwt, async (req: Request, res: Response) => {
   try {
     const authUser = req.authUser;
-    if (!authUser || authUser.role !== "admin") {
-      res.status(403).json({ error: "Only admins can set customer discounts" });
+    if (!authUser || (authUser.role !== "admin" && authUser.role !== "driver")) {
+      res.status(403).json({ error: "Only admins and drivers can view customer settings" });
       return;
     }
 
     const { userId } = req.params;
-    const { discountPercentage } = req.body;
+    const settings = await getUserSettings(userId);
+    res.json({ success: true, data: settings });
+  } catch (error: any) {
+    console.error("Error fetching user settings:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch user settings" });
+  }
+});
 
+router.patch("/:userId/settings", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can update customer settings" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const { discountPercentage, exemptMandatoryPayment } = req.body;
+
+    let discountToSave: number | null = null;
     if (discountPercentage !== null && discountPercentage !== undefined) {
       const val = Number(discountPercentage);
       if (!Number.isInteger(val) || val < 0 || val > 100) {
         res.status(400).json({ error: "Discount percentage must be an integer between 0 and 100" });
         return;
       }
-      await setUserDiscount(userId, val);
-    } else {
-      await setUserDiscount(userId, null);
+      discountToSave = val;
     }
 
+    await setUserSettings(userId, discountToSave, !!exemptMandatoryPayment);
     res.json({ success: true });
   } catch (error: any) {
-    console.error("Error setting user discount:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to set user discount" });
+    console.error("Error updating user settings:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to update user settings" });
   }
 });
 

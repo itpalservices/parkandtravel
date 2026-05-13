@@ -38,13 +38,14 @@ export class CustomersComponent implements OnInit {
   historyPageSize = 5;
   historyTotalPages = 1;
 
-  discountCustomer: Customer | null = null;
+  settingsCustomer: Customer | null = null;
   discountPercentage: number | null = null;
   discountInput: number | string = '';
-  discountLoading = false;
-  discountSaving = false;
-  discountError: string | null = null;
-  discountSuccess = false;
+  exemptMandatoryPayment = false;
+  settingsLoading = false;
+  settingsSaving = false;
+  settingsError: string | null = null;
+  settingsSuccess = false;
 
   constructor(
     private api: ApiService,
@@ -187,32 +188,34 @@ export class CustomersComponent implements OnInit {
     }
   }
 
-  openDiscountModal(customer: Customer, content: any): void {
-    this.discountCustomer = customer;
+  openSettingsModal(customer: Customer, content: any): void {
+    this.settingsCustomer = customer;
     this.discountPercentage = null;
     this.discountInput = '';
-    this.discountError = null;
-    this.discountSuccess = false;
-    this.discountLoading = true;
+    this.exemptMandatoryPayment = false;
+    this.settingsError = null;
+    this.settingsSuccess = false;
+    this.settingsLoading = true;
 
     this.modalService.open(content, { size: 'sm', centered: true });
 
-    this.api.get<{ success: boolean; data: { discountPercentage: number | null } }>(`/user/${customer.userId}/discount`).subscribe({
+    this.api.get<{ success: boolean; data: { discountPercentage: number | null; exemptMandatoryPayment: boolean } }>(`/user/${customer.userId}/settings`).subscribe({
       next: (response) => {
         this.discountPercentage = response.data.discountPercentage;
         this.discountInput = this.discountPercentage !== null ? this.discountPercentage : '';
-        this.discountLoading = false;
+        this.exemptMandatoryPayment = response.data.exemptMandatoryPayment ?? false;
+        this.settingsLoading = false;
       },
       error: (err) => {
-        this.discountError = err.error?.error || 'Failed to load discount';
-        this.discountLoading = false;
+        this.settingsError = err.error?.error || 'Failed to load settings';
+        this.settingsLoading = false;
       }
     });
   }
 
-  saveDiscount(modal: any): void {
-    this.discountError = null;
-    this.discountSuccess = false;
+  saveSettings(modal: any): void {
+    this.settingsError = null;
+    this.settingsSuccess = false;
 
     const raw = this.discountInput !== null && this.discountInput !== undefined ? String(this.discountInput).trim() : '';
     let valueToSave: number | null = null;
@@ -220,24 +223,27 @@ export class CustomersComponent implements OnInit {
     if (raw !== '' && raw !== 'null') {
       const parsed = Number(raw);
       if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
-        this.discountError = 'Please enter an integer between 0 and 100';
+        this.settingsError = 'Please enter an integer between 0 and 100';
         return;
       }
       valueToSave = parsed;
     }
 
-    if (!this.discountCustomer) return;
-    this.discountSaving = true;
+    if (!this.settingsCustomer) return;
+    this.settingsSaving = true;
 
-    this.api.patch<{ success: boolean }>(`/user/${this.discountCustomer.userId}/discount`, { discountPercentage: valueToSave }).subscribe({
+    this.api.patch<{ success: boolean }>(`/user/${this.settingsCustomer.userId}/settings`, {
+      discountPercentage: valueToSave,
+      exemptMandatoryPayment: this.exemptMandatoryPayment,
+    }).subscribe({
       next: () => {
-        this.discountSaving = false;
-        this.discountSuccess = true;
+        this.settingsSaving = false;
+        this.settingsSuccess = true;
         setTimeout(() => modal.close(), 1200);
       },
       error: (err) => {
-        this.discountSaving = false;
-        this.discountError = err.error?.error || 'Failed to save discount';
+        this.settingsSaving = false;
+        this.settingsError = err.error?.error || 'Failed to save settings';
       }
     });
   }

@@ -35,6 +35,7 @@ interface Auth0User {
   app_metadata?: {
     role?: string;
     discount_percentage?: number | null;
+    exempt_mandatory_payment?: boolean;
   };
 }
 
@@ -396,6 +397,25 @@ export async function setUserDiscount(userId: string, discountPercentage: number
   await axios.patch(
     `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
     { app_metadata: { discount_percentage: discountPercentage } },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+}
+
+export async function getUserSettings(userId: string): Promise<{ discountPercentage: number | null; exemptMandatoryPayment: boolean }> {
+  const user = await getUserById(userId);
+  if (!user) return { discountPercentage: null, exemptMandatoryPayment: false };
+  const discount = user.app_metadata?.discount_percentage;
+  return {
+    discountPercentage: discount !== undefined && discount !== null ? discount : null,
+    exemptMandatoryPayment: user.app_metadata?.exempt_mandatory_payment ?? false,
+  };
+}
+
+export async function setUserSettings(userId: string, discountPercentage: number | null, exemptMandatoryPayment: boolean): Promise<void> {
+  const token = await getManagementToken();
+  await axios.patch(
+    `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
+    { app_metadata: { discount_percentage: discountPercentage, exempt_mandatory_payment: exemptMandatoryPayment } },
     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
   );
 }

@@ -619,17 +619,24 @@ export class BookingsListComponent {
     const modalSelectedFiles: File[] = [];
 
     let mandatoryCheckInPayment = false;
+    let exemptMandatoryPayment = false;
     let latestPaymentDate: string | null = null;
     try {
-      const [settingsResp, paymentInfoResp] = await Promise.all([
+      const requests: Promise<any>[] = [
         firstValueFrom(this.settingsService.getSettings()),
         firstValueFrom(this.apiService.get<any>(`/bookings/${booking.id}/checkin-payment-info`)),
-      ]);
+      ];
+      if (booking.userId) {
+        requests.push(firstValueFrom(this.apiService.get<any>(`/user/${booking.userId}/settings`)));
+      }
+      const [settingsResp, paymentInfoResp, userSettingsResp] = await Promise.all(requests);
       mandatoryCheckInPayment = settingsResp.mandatoryCheckInPayment ?? false;
       latestPaymentDate = paymentInfoResp?.data?.latestPaymentDate ?? null;
+      exemptMandatoryPayment = userSettingsResp?.data?.exemptMandatoryPayment ?? false;
     } catch {
       // proceed with defaults
     }
+    const effectiveMandatory = mandatoryCheckInPayment && !exemptMandatoryPayment;
 
     const finalPrice = booking.finalPrice ?? null;
     const paidAmount = booking.paidAmount ?? 0;
@@ -681,7 +688,7 @@ export class BookingsListComponent {
       const fieldsHtml = `
         ${infoHtml}
         <div style="margin-bottom:12px;">
-          <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Amount (€)${mandatoryCheckInPayment ? ' <span style="color:#dc3545;">*</span>' : ''}</label>
+          <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Amount (€)${effectiveMandatory ? ' <span style="color:#dc3545;">*</span>' : ''}</label>
           <input id="swal-checkin-amount" type="number" step="0.01" min="0" class="swal2-input" value="${prefilledAmount.toFixed(2)}" style="margin:0; width:100%; box-sizing:border-box;">
         </div>
         <div>
@@ -691,7 +698,7 @@ export class BookingsListComponent {
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-pm" value="card" style="width:16px;height:16px;"> Card</label>
           </div>
         </div>`;
-      if (mandatoryCheckInPayment) {
+      if (effectiveMandatory) {
         paymentSectionHtml = `
           <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
             <div style="font-weight:600; color:#374151; font-size:14px; margin-bottom:12px;">Check-in Payment <span style="color:#dc3545;">*</span></div>
@@ -796,7 +803,7 @@ export class BookingsListComponent {
         });
         parkPlaceInput.addEventListener('paste', (e: Event) => e.preventDefault());
 
-        if (!mandatoryCheckInPayment && showPaymentFields) {
+        if (!effectiveMandatory && showPaymentFields) {
           const header = document.getElementById('swal-checkin-header');
           const body = document.getElementById('swal-checkin-body');
           const chevron = document.getElementById('swal-checkin-chevron');
@@ -858,13 +865,13 @@ export class BookingsListComponent {
         let checkinPayment: { amount: number; paymentMethod: string; notes: string } | null = null;
         if (showPaymentFields) {
           const body = document.getElementById('swal-checkin-body');
-          const isExpanded = mandatoryCheckInPayment || (body !== null && body.style.display !== 'none');
+          const isExpanded = effectiveMandatory || (body !== null && body.style.display !== 'none');
           if (isExpanded) {
             const amtEl = document.getElementById('swal-checkin-amount') as HTMLInputElement;
             const pmEl = document.querySelector('input[name="swal-checkin-pm"]:checked') as HTMLInputElement;
             const amount = parseFloat(amtEl?.value || '0');
             const paymentMethod = pmEl?.value || 'cash';
-            if (mandatoryCheckInPayment && (!amtEl?.value || isNaN(amount) || amount <= 0)) {
+            if (effectiveMandatory && (!amtEl?.value || isNaN(amount) || amount <= 0)) {
               Swal.showValidationMessage('Check-in payment amount is required'); return false;
             }
             if (amount > 0) {
