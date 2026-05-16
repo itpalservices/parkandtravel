@@ -327,7 +327,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 Have questions? We're here to help!
               </p>
               <p style="margin: 0 0 20px 0; color: #006B8F; font-size: 16px; font-weight: 600;">
-                &#x1F4DE; Contact Park & Travel
+                &#x1F4DE; +357 99877866
               </p>
               <table role="presentation" style="margin: 0 auto 20px auto; border-collapse: collapse;">
                 <tr>
@@ -341,8 +341,7 @@ function generateBookingConfirmationHtml(data: BookingEmailData): string {
                 </tr>
               </table>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                &copy; ${new Date().getFullYear()} Park & Travel. All rights reserved.<br>
-                Secure Airport Parking Services
+                &copy; ${new Date().getFullYear()} Powered by <a href="https://powersoft365.com" target="_blank" style="color: #94a3b8; text-decoration: none;">Powersoft</a>
               </p>
             </td>
           </tr>
