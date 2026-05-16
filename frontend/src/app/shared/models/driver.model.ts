@@ -6,4 +6,6 @@ export interface Driver {
   phone: string;
   phoneCode: string;
   blocked: boolean;
+  idNumber?: string;
+  address?: string;
 }

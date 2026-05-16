@@ -44,6 +44,8 @@ export class DriverFormComponent implements OnInit {
       surname: ['', [Validators.required, Validators.minLength(1)]],
       phone: ['', [Validators.required]],
       email: [{ value: '', disabled: this.isEditMode }, [Validators.required, Validators.email]],
+      idNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      address: [''],
     });
 
     this.loadPhoneCodes();
@@ -72,15 +74,9 @@ export class DriverFormComponent implements OnInit {
     if (!this.driverId) return;
     this.loadingDriver = true;
 
-    this.api.get<{ success: boolean; data: Driver[] }>(`/user/drivers?page=0`).subscribe({
+    this.api.get<{ success: boolean; data: Driver }>(`/user/drivers/${this.driverId}`).subscribe({
       next: (response) => {
-        const driver = response.data.find(d => d.userId === this.driverId);
-        if (driver) {
-          this.prefillForm(driver);
-        } else {
-          Swal.fire({ icon: 'error', title: 'Error', text: 'Driver not found' });
-          this.router.navigate(['/admin/drivers']);
-        }
+        this.prefillForm(response.data);
         this.loadingDriver = false;
       },
       error: () => {
@@ -97,6 +93,8 @@ export class DriverFormComponent implements OnInit {
       surname: driver.surname,
       phone: driver.phone,
       email: driver.email,
+      idNumber: driver.idNumber || '',
+      address: driver.address || '',
     });
 
     if (driver.phoneCode && this.phoneCodes.length) {
@@ -133,11 +131,12 @@ export class DriverFormComponent implements OnInit {
     if (control.errors['required']) return `${this.fieldLabel(field)} is required`;
     if (control.errors['email']) return 'Please enter a valid email address';
     if (control.errors['minlength']) return `${this.fieldLabel(field)} is too short`;
+    if (control.errors['pattern'] && field === 'idNumber') return 'ID must contain only digits (0-9)';
     return 'Invalid value';
   }
 
   private fieldLabel(field: string): string {
-    const labels: Record<string, string> = { name: 'Name', surname: 'Surname', phone: 'Phone', email: 'Email' };
+    const labels: Record<string, string> = { name: 'Name', surname: 'Surname', phone: 'Phone', email: 'Email', idNumber: 'ID', address: 'Address' };
     return labels[field] || field;
   }
 
@@ -153,6 +152,8 @@ export class DriverFormComponent implements OnInit {
         surname: this.form.value.surname.trim(),
         phone: this.form.value.phone.trim(),
         phoneCode: this.selectedPhoneCode.phoneCode,
+        idNumber: this.form.value.idNumber.trim(),
+        address: this.form.value.address?.trim() || '',
       };
 
       this.api.put<{ success: boolean }>(`/user/drivers/${this.driverId}`, payload).subscribe({
@@ -177,6 +178,8 @@ export class DriverFormComponent implements OnInit {
         email: this.form.value.email.trim().toLowerCase(),
         phone: this.form.value.phone.trim(),
         phoneCode: this.selectedPhoneCode.phoneCode,
+        idNumber: this.form.value.idNumber.trim(),
+        address: this.form.value.address?.trim() || '',
       };
 
       this.api.post<{ success: boolean }>('/user/drivers', payload).subscribe({

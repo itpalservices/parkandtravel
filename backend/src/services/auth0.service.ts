@@ -14,6 +14,8 @@ interface Auth0UserMetadata {
   given_name?: string;
   family_name?: string;
   phone_number?: string;
+  id_number?: string;
+  address?: string;
 }
 
 interface Auth0User {
@@ -31,6 +33,8 @@ interface Auth0User {
     phone_code?: string;
     name?: string;
     surname?: string;
+    id_number?: string;
+    address?: string;
   };
   app_metadata?: {
     role?: string;
@@ -305,7 +309,7 @@ export async function searchRegularUserByPhone(phone: string, phoneCode: string)
 
 export async function updateDriverUser(
   userId: string,
-  params: { name: string; surname: string; phone: string; phoneCode: string }
+  params: { name: string; surname: string; phone: string; phoneCode: string; idNumber: string; address?: string }
 ): Promise<void> {
   const token = await getManagementToken();
   await axios.patch(
@@ -319,6 +323,8 @@ export async function updateDriverUser(
         surname: params.surname,
         phone_number: params.phone,
         phone_code: params.phoneCode,
+        id_number: params.idNumber,
+        address: params.address || '',
       },
     },
     { headers: { Authorization: `Bearer ${token}` } }
@@ -331,6 +337,32 @@ export async function deleteDriverUser(userId: string): Promise<void> {
     `https://${AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(userId)}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
+}
+
+export async function getDriverById(userId: string): Promise<{
+  userId: string;
+  email: string;
+  name: string;
+  surname: string;
+  phone: string;
+  phoneCode: string;
+  blocked: boolean;
+  idNumber: string;
+  address: string;
+} | null> {
+  const user = await getUserById(userId);
+  if (!user || user.app_metadata?.role?.toLowerCase() !== 'driver') return null;
+  return {
+    userId: user.user_id,
+    email: user.email,
+    name: user.user_metadata?.name || user.given_name || '',
+    surname: user.user_metadata?.surname || user.family_name || '',
+    phone: user.user_metadata?.phone_number || '',
+    phoneCode: user.user_metadata?.phone_code || '',
+    blocked: user.blocked || false,
+    idNumber: user.user_metadata?.id_number || '',
+    address: user.user_metadata?.address || '',
+  };
 }
 
 export async function setDriverBlockStatus(userId: string, blocked: boolean): Promise<void> {
@@ -348,6 +380,8 @@ export async function createDriverUser(params: {
   email: string;
   phone: string;
   phoneCode: string;
+  idNumber: string;
+  address?: string;
 }): Promise<{ userId: string; email: string }> {
   const token = await getManagementToken();
   const crypto = require('crypto');
@@ -369,6 +403,8 @@ export async function createDriverUser(params: {
         surname: params.surname,
         phone_number: params.phone,
         phone_code: params.phoneCode,
+        id_number: params.idNumber,
+        address: params.address || '',
       },
     },
     { headers: { Authorization: `Bearer ${token}` } }

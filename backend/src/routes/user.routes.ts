@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount, getUserSettings, setUserSettings } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount, getUserSettings, setUserSettings, getDriverById } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -159,10 +159,15 @@ router.post("/drivers", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    const { name, surname, email, phone, phoneCode } = req.body;
+    const { name, surname, email, phone, phoneCode, idNumber, address } = req.body;
 
-    if (!name || !surname || !email || !phone || !phoneCode) {
-      res.status(400).json({ error: "Name, surname, email, phone and phone code are required" });
+    if (!name || !surname || !email || !phone || !phoneCode || !idNumber) {
+      res.status(400).json({ error: "Name, surname, email, phone, phone code and ID number are required" });
+      return;
+    }
+
+    if (!/^\d+$/.test(idNumber)) {
+      res.status(400).json({ error: "ID number must contain only digits" });
       return;
     }
 
@@ -172,7 +177,7 @@ router.post("/drivers", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await createDriverUser({ name, surname, email, phone, phoneCode });
+    const result = await createDriverUser({ name, surname, email, phone, phoneCode, idNumber, address });
 
     res.status(201).json({ success: true, data: result });
   } catch (error: any) {
@@ -192,14 +197,19 @@ router.put("/drivers/:userId", checkJwt, async (req: Request, res: Response) => 
     }
 
     const { userId } = req.params;
-    const { name, surname, phone, phoneCode } = req.body;
+    const { name, surname, phone, phoneCode, idNumber, address } = req.body;
 
-    if (!name || !surname || !phone || !phoneCode) {
-      res.status(400).json({ error: "Name, surname, phone and phone code are required" });
+    if (!name || !surname || !phone || !phoneCode || !idNumber) {
+      res.status(400).json({ error: "Name, surname, phone, phone code and ID number are required" });
       return;
     }
 
-    await updateDriverUser(userId, { name, surname, phone, phoneCode });
+    if (!/^\d+$/.test(idNumber)) {
+      res.status(400).json({ error: "ID number must contain only digits" });
+      return;
+    }
+
+    await updateDriverUser(userId, { name, surname, phone, phoneCode, idNumber, address });
     res.json({ success: true });
   } catch (error: any) {
     console.error("Error updating driver:", error.response?.data || error.message);
@@ -245,6 +255,29 @@ router.patch("/drivers/:userId/block", checkJwt, async (req: Request, res: Respo
   } catch (error: any) {
     console.error("Error updating driver block status:", error.response?.data || error.message);
     res.status(500).json({ error: error.response?.data?.message || "Failed to update driver status" });
+  }
+});
+
+router.get("/drivers/:userId", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can view driver details" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const driver = await getDriverById(userId);
+
+    if (!driver) {
+      res.status(404).json({ error: "Driver not found" });
+      return;
+    }
+
+    res.json({ success: true, data: driver });
+  } catch (error: any) {
+    console.error("Error fetching driver:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch driver" });
   }
 });
 
