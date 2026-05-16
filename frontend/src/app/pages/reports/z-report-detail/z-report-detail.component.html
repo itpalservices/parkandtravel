@@ -1,0 +1,100 @@
+<div class="page-container">
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && report">
+    <div class="page-header">
+      <div class="header-left">
+        <a routerLink="/admin/reports/z-reports" class="btn-back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Back
+        </a>
+        <h1 class="page-title">Z Report Detail</h1>
+      </div>
+      <button class="btn-export" (click)="exportPDF()" [disabled]="exporting">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        {{ exporting ? 'Exporting...' : 'Export PDF' }}
+      </button>
+    </div>
+
+    <div class="result-meta">
+      <span><strong>Employee:</strong> {{ report.targetUserName }}</span>
+      <span><strong>Run by:</strong> {{ report.runByUserName }}</span>
+      <span><strong>Date:</strong> {{ formatDateTime(report.createdAt) }}</span>
+    </div>
+
+    <div class="reconciliation-table-wrapper">
+      <table class="reconciliation-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Declared</th>
+            <th>Actual</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Cash</td>
+            <td>€{{ report.declaredCash.toFixed(2) }}</td>
+            <td>€{{ report.actualCash.toFixed(2) }}</td>
+            <td><span class="diff-badge" [ngClass]="diffClass(cashDiff)">{{ diffLabel(cashDiff) }}</span></td>
+          </tr>
+          <tr>
+            <td class="row-label">Card</td>
+            <td>€{{ report.declaredCard.toFixed(2) }}</td>
+            <td>€{{ report.actualCard.toFixed(2) }}</td>
+            <td><span class="diff-badge" [ngClass]="diffClass(cardDiff)">{{ diffLabel(cardDiff) }}</span></td>
+          </tr>
+          <tr class="total-row">
+            <td class="row-label">Total</td>
+            <td>€{{ (report.declaredCash + report.declaredCard).toFixed(2) }}</td>
+            <td>€{{ (report.actualCash + report.actualCard).toFixed(2) }}</td>
+            <td><span class="diff-badge" [ngClass]="diffClass(totalDiff)">{{ diffLabel(totalDiff) }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section-title">Transactions ({{ transactions.length }})</h2>
+
+    <div class="table-wrapper" *ngIf="transactions.length > 0; else emptyTransactions">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Plate No</th>
+            <th>Type</th>
+            <th>Payment</th>
+            <th class="text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of transactions">
+            <td>{{ formatDateTime(t.datetime) }}</td>
+            <td>{{ t.plateNo || '-' }}</td>
+            <td>
+              <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+              </span>
+            </td>
+            <td class="capitalize">{{ t.paymentMethod }}</td>
+            <td class="text-right amount">€{{ t.amount.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyTransactions>
+      <div class="empty-state">No transactions in this Z report.</div>
+    </ng-template>
+  </ng-container>
+</div>

@@ -1,0 +1,78 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back
+      </button>
+      <h1 class="page-title">X Report</h1>
+    </div>
+    <button class="btn-export" (click)="exportPDF()" [disabled]="exporting || transactions.length === 0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      {{ exporting ? 'Exporting...' : 'Export PDF' }}
+    </button>
+  </div>
+
+  <div class="subtitle">Unreported transactions — not yet included in a Z Report</div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && data">
+    <div class="summary-cards">
+      <div class="summary-card">
+        <span class="summary-label">Cash</span>
+        <span class="summary-value">€{{ totalCash.toFixed(2) }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Card</span>
+        <span class="summary-value">€{{ totalCard.toFixed(2) }}</span>
+      </div>
+      <div class="summary-card summary-card--total">
+        <span class="summary-label">Total</span>
+        <span class="summary-value">€{{ grandTotal.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="transactions.length > 0; else emptyState">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Plate No</th>
+            <th>Type</th>
+            <th>Payment</th>
+            <th class="text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of transactions">
+            <td>{{ formatDate(t.datetime) }}</td>
+            <td>{{ t.plateNo || '-' }}</td>
+            <td>
+              <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+              </span>
+            </td>
+            <td class="capitalize">{{ t.paymentMethod }}</td>
+            <td class="text-right amount">€{{ t.amount.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No unreported transactions found.</p>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>

@@ -2,27 +2,35 @@
   <div class="page-header d-none d-md-block">
     <div class="header-row header-row-title">
       <h1 class="page-title">Bookings</h1>
-      <button
-        class="btn btn-add-booking"
-        routerLink="/admin/bookings/add"
-        [disabled]="!verifiedEmail"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+      <div class="header-actions">
+        <button class="btn btn-x-report" (click)="goToXReport()">
+          X Report
+        </button>
+        <button *ngIf="isAdmin" class="btn btn-z-report" (click)="goToZReport()">
+          Z Report
+        </button>
+        <button
+          class="btn btn-add-booking"
+          routerLink="/admin/bookings/add"
+          [disabled]="!verifiedEmail"
         >
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Add Booking
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Booking
+        </button>
+      </div>
     </div>
     <div class="header-row header-row-filters">
       <div class="search-box">

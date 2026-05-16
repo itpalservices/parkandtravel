@@ -6,6 +6,14 @@ import {
   employeeSessionReportByShift,
   employeeSessionReportByDate,
 } from "../controllers/employee-session-report.controller";
+import {
+  getXReport,
+  getZReportEmployees,
+  createZReport,
+  getZReportHistory,
+  getZReportById,
+} from "../controllers/x-z-report.controller";
+import { checkJwt } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -18,5 +26,11 @@ router.get("/employee-session/employees", employeeSessionReportEmployees);
 router.get("/employee-session/employees/:userId/shifts", employeeSessionReportShifts);
 router.get("/employee-session/shifts/:shiftId/transactions", employeeSessionReportByShift);
 router.get("/employee-session/by-date", employeeSessionReportByDate);
+
+router.get("/x-report", checkJwt, getXReport);
+router.get("/z-report-new/employees", checkJwt, getZReportEmployees);
+router.post("/z-report-new", checkJwt, createZReport);
+router.get("/z-report-new/history", checkJwt, getZReportHistory);
+router.get("/z-report-new/:id", checkJwt, getZReportById);
 
 export default router;

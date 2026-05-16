@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { NgbDatepickerModule, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { Booking } from '../../../../shared/models/booking.model';
@@ -52,7 +52,16 @@ export class BookingsPageComponent implements OnInit {
     private calendar: NgbCalendar,
     private roleService: RoleService,
     private authService: AuthService,
+    private router: Router,
   ) {}
+
+  goToXReport(): void {
+    this.router.navigate(['/admin/x-report']);
+  }
+
+  goToZReport(): void {
+    this.router.navigate(['/admin/z-report']);
+  }
 
   ngOnInit(): void {
     this.initDefaultDateRange();

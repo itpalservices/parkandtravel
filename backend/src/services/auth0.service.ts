@@ -515,3 +515,49 @@ export async function getAllDriverUsers(page: number, perPage: number): Promise<
     total,
   };
 }
+
+export async function getAllEmployees(): Promise<{
+  userId: string;
+  name: string;
+  surname: string;
+  email: string;
+  role: string;
+}[]> {
+  const token = await getManagementToken();
+  const allEmployees: Auth0User[] = [];
+  const batchSize = 100;
+  let authPage = 0;
+
+  while (true) {
+    const response = await axios.get<Auth0User[]>(
+      `https://${AUTH0_DOMAIN}/api/v2/users`,
+      {
+        params: {
+          page: authPage,
+          per_page: batchSize,
+          fields: 'user_id,email,given_name,family_name,user_metadata,app_metadata',
+          include_fields: true,
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const batch: Auth0User[] = response.data || [];
+    const employees = batch.filter(u => {
+      const role = u.app_metadata?.role?.toLowerCase();
+      return role === 'admin' || role === 'driver';
+    });
+    allEmployees.push(...employees);
+
+    if (batch.length < batchSize) break;
+    authPage++;
+  }
+
+  return allEmployees.map(u => ({
+    userId: u.user_id,
+    name: u.user_metadata?.name || u.given_name || '',
+    surname: u.user_metadata?.surname || u.family_name || '',
+    email: u.email,
+    role: u.app_metadata?.role?.toLowerCase() || 'driver',
+  }));
+}

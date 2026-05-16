@@ -71,6 +71,17 @@ export const appRoutes: Routes = [
           import('./pages/drivers/driver-form/driver-form.component').then((m) => m.DriverFormComponent),
       },
       {
+        path: 'x-report',
+        loadComponent: () =>
+          import('./pages/x-report/x-report.component').then((m) => m.XReportComponent),
+      },
+      {
+        path: 'z-report',
+        canActivate: [adminOnlyGuard],
+        loadComponent: () =>
+          import('./pages/z-report/z-report.component').then((m) => m.ZReportComponent),
+      },
+      {
         path: 'user-profile',
         loadComponent: () =>
           import('./pages/user-profile/user-profile.component').then((m) => m.UserProfileComponent),

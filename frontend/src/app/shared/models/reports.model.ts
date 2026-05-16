@@ -67,3 +67,41 @@ export interface WalleeTransaction {
   failureReason?: { name?: { 'en-US': string } };
   [key: string]: any;
 }
+
+export interface XReportTransaction {
+  id: string;
+  bookingId: string;
+  datetime: string;
+  amount: number;
+  paymentMethod: string;
+  notes: string | null;
+  plateNo: string | null;
+  type: 'checkin' | 'checkout';
+}
+
+export interface XReportData {
+  transactions: XReportTransaction[];
+  totals: Record<string, number>;
+}
+
+export interface ZReportEmployee {
+  userId: string;
+  name: string;
+  surname: string;
+  email: string;
+  role: string;
+}
+
+export interface ZReportData {
+  id: string;
+  targetUserId: string;
+  targetUserName: string;
+  runByUserId: string;
+  runByUserName: string;
+  declaredCash: number;
+  declaredCard: number;
+  actualCash: number;
+  actualCard: number;
+  createdAt: string;
+  transactions: XReportTransaction[];
+}

@@ -32,6 +32,16 @@ export const reportsRoutes: Routes = [
       import('./employee-session-report/employee-session-report.component').then((m) => m.EmployeeSessionReportComponent),
   },
   {
+    path: 'z-reports',
+    loadComponent: () =>
+      import('./z-reports/z-reports.component').then((m) => m.ZReportsComponent),
+  },
+  {
+    path: 'z-reports/:id',
+    loadComponent: () =>
+      import('./z-report-detail/z-report-detail.component').then((m) => m.ZReportDetailComponent),
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./report-detail/report-detail.component').then((m) => m.ReportDetailComponent),

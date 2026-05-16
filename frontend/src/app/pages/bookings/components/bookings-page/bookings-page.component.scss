@@ -26,6 +26,40 @@
   gap: 1rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-x-report,
+.btn-z-report {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-x-report {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  &:hover { background: #e5e7eb; }
+}
+
+.btn-z-report {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  &:hover { background: #fde68a; }
+}
+
 .btn-add-booking {
   display: inline-flex;
   align-items: center;

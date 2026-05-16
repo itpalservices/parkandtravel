@@ -103,8 +103,10 @@ model CompletionTransaction {
   paymentMethod String   @map("payment_method") @db.VarChar(20)
   notes         String?  @db.Text
   shiftId       Int?     @map("shift_id")
+  zReportId     String?  @map("z_report_id") @db.Uuid
   booking       Booking  @relation(fields: [bookingId], references: [id])
   shift         Shift?   @relation(fields: [shiftId], references: [id])
+  zReport       ZReport? @relation(fields: [zReportId], references: [id])
 
   @@map("completion_transactions")
 }
@@ -160,8 +162,10 @@ model CheckinTransaction {
   paymentMethod String   @map("payment_method") @db.VarChar(20)
   notes         String?  @db.Text
   shiftId       Int?     @map("shift_id")
+  zReportId     String?  @map("z_report_id") @db.Uuid
   booking       Booking  @relation(fields: [bookingId], references: [id])
   shift         Shift?   @relation(fields: [shiftId], references: [id])
+  zReport       ZReport? @relation(fields: [zReportId], references: [id])
 
   @@map("checkin_transactions")
 }
@@ -204,4 +208,24 @@ model Car {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@map("cars")
+}
+
+model ZReport {
+  id               String   @id @default(uuid()) @db.Uuid
+  targetUserId     String   @map("target_user_id") @db.VarChar(255)
+  targetUserName   String   @map("target_user_name") @db.VarChar(255)
+  runByUserId      String   @map("run_by_user_id") @db.VarChar(255)
+  runByUserName    String   @map("run_by_user_name") @db.VarChar(255)
+  declaredCash     Decimal  @map("declared_cash") @db.Decimal(10, 2)
+  declaredCard     Decimal  @map("declared_card") @db.Decimal(10, 2)
+  actualCash       Decimal  @map("actual_cash") @db.Decimal(10, 2)
+  actualCard       Decimal  @map("actual_card") @db.Decimal(10, 2)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  completionTransactions CompletionTransaction[]
+  checkinTransactions    CheckinTransaction[]
+
+  @@index([targetUserId], name: "idx_z_reports_target_user_id")
+  @@index([createdAt], name: "idx_z_reports_created_at")
+  @@map("z_reports")
 }
