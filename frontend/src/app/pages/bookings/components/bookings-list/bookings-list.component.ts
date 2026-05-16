@@ -73,68 +73,67 @@ export class BookingsListComponent {
     if (!printWindow) return;
 
     printWindow.document.write(`<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Booking Tag</title>
 <style>
-  @page { size: 80mm 100mm; margin: 0; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; width: 80mm; margin: 0 auto; }
-  .tag { width: 80mm; }
-  .tag-header {
-    background: #1a3c5e;
-    color: #fff;
-    text-align: center;
-    padding: 6mm 3mm 4mm;
+  @page { size: 80mm auto; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #000;
+    background: #fff;
+    width: 80mm;
+    padding: 6mm 5mm;
   }
-  .tag-header img { height: 12mm; margin-bottom: 1mm; }
-  .tag-header .phone { font-size: 8pt; color: #f5c518; }
-  .tag-body {
-    padding: 2mm 3mm;
-    font-size: 7pt;
-    line-height: 1.5;
-  }
-  .plate-row { text-align: center; font-size: 14pt; font-weight: 700; letter-spacing: 1px; padding: 1mm 0 2mm; }
-  .cols { display: flex; gap: 2mm; }
-  .col { flex: 1; }
-  .col table { width: 100%; border-collapse: collapse; }
-  .col td { padding: 0.5mm 0; vertical-align: top; }
-  .col td.lbl { font-weight: 600; color: #555; white-space: nowrap; padding-right: 1mm; width: 1%; }
-  .col td.val { color: #000; }
-  .divider { border-top: 1px dashed #999; margin: 1.5mm 0; }
+  .center { text-align: center; }
+  .bold { font-weight: 700; }
+  .company-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .meta { font-size: 9px; color: #333; margin: 1px 0; }
+  .divider { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+  .divider-solid { border: none; border-top: 1px solid #000; margin: 5px 0; }
+  .label { font-size: 8px; text-transform: uppercase; color: #555; margin-bottom: 1px; }
+  .value { font-size: 10px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; margin: 2px 0; }
+  td.lbl { font-size: 9px; color: #555; padding: 2px 0; white-space: nowrap; padding-right: 4px; width: 1%; }
+  td.val { font-size: 10px; font-weight: 600; padding: 2px 0; }
 </style>
 </head>
 <body>
-<div class="tag">
-  <div class="tag-header">
-    <img src="/assets/img/park-and-travel-logo.png" alt="Park & Travel" />
-    <div class="phone">Phone: 99 877866</div>
+  <div class="center">
+    <div class="company-name">Park &amp; Travel</div>
+    <div class="meta">Tel: 99 877866</div>
   </div>
-  <div class="tag-body">
-    <div class="plate-row">${booking.plateNo || '-'}</div>
-    <div class="divider"></div>
-    <div class="cols">
-      <div class="col">
-        <table>
-          <tr><td class="lbl">Flight:</td><td class="val">${booking.returnFlight || '-'}</td></tr>
-          <tr><td class="lbl">Return:</td><td class="val">${dateTo}</td></tr>
-          <tr><td class="lbl">Time:</td><td class="val">${timeTo}</td></tr>
-          <tr><td class="lbl">Check-in:</td><td class="val">${checkIn}</td></tr>
-          <tr><td class="lbl">Place:</td><td class="val">${booking.parkPlace || '-'}</td></tr>
-        </table>
-      </div>
-      <div class="col">
-        <table>
-          <tr><td class="lbl">Name:</td><td class="val">${fullName}</td></tr>
-          <tr><td class="lbl">Adults:</td><td class="val">${booking.adults ?? '-'}</td></tr>
-          <tr><td class="lbl">Price:</td><td class="val">${booking.finalPrice != null ? '\u20AC' + Number(booking.finalPrice).toFixed(2) : '-'}</td></tr>
-          <tr><td class="lbl">Keys:</td><td class="val">${keysLabel}</td></tr>
-          <tr><td class="lbl">Pick-up:</td><td class="val">${pickUpLabel}</td></tr>
-        </table>
-      </div>
-    </div>
+
+  <hr class="divider-solid">
+
+  <div class="center">
+    <div class="bold" style="font-size:12px; letter-spacing:2px;">BOOKING TAG</div>
   </div>
-</div>
+
+  <hr class="divider">
+
+  <div class="label">Customer</div>
+  <div class="value">${fullName}</div>
+  <div class="label">Plate No</div>
+  <div class="value">${booking.plateNo || '-'}</div>
+
+  <hr class="divider">
+
+  <table>
+    <tr><td class="lbl">Flight:</td><td class="val">${booking.returnFlight || '-'}</td></tr>
+    <tr><td class="lbl">Return:</td><td class="val">${dateTo}</td></tr>
+    <tr><td class="lbl">Time:</td><td class="val">${timeTo}</td></tr>
+    <tr><td class="lbl">Check-in:</td><td class="val">${checkIn}</td></tr>
+    <tr><td class="lbl">Place:</td><td class="val">${booking.parkPlace || '-'}</td></tr>
+    <tr><td class="lbl">Adults:</td><td class="val">${booking.adults ?? '-'}</td></tr>
+    <tr><td class="lbl">Price:</td><td class="val">${booking.finalPrice != null ? '\u20AC' + Number(booking.finalPrice).toFixed(2) : '-'}</td></tr>
+    <tr><td class="lbl">Keys:</td><td class="val">${keysLabel}</td></tr>
+    <tr><td class="lbl">Pick-up:</td><td class="val">${pickUpLabel}</td></tr>
+  </table>
+
 <script>window.onload=function(){window.print();}<\/script>
 </body>
 </html>`);
