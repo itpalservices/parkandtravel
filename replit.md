@@ -46,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Configuration Settings**: Admin users manage parking availability, base prices, progressive price increments, service options, delivery fees, email description text, and mandatory pre-payment toggle.
 - **Authenticated Booking Payment Flow**: Integrates with Wallee. If `mandatoryPrePayment` is true and price is NOT TBC, the booking is NOT saved yet — a `pending_booking` is created and the user is redirected to Wallee. On successful payment, the booking is created and a confirmation email sent (with `paymentStatus: 'paid'`). On failure, the pending record is discarded and the user sees "Payment failed. Your booking was not created." toast. If `mandatoryPrePayment` is false, user chooses "Pay Now" (creates booking then pays via existing `booking_` flow) or "Pay Later" (creates booking immediately). Payment is skipped if price is TBC. Uses `auth_pending_<id>` merchant reference and `source=auth_pending` URL param to distinguish from the legacy `booking_`/`source=auth` flow. Admin/driver users are unaffected and always create bookings directly.
 - **Wallee Transactions**: Successful payments are recorded in `wallee_transactions`. Booking payment status (Paid, Partial, Overpaid, Unpaid) is derived dynamically from these transactions.
-- **Z-Report by Employee**: Admin report at `/admin/reports/employee-z-report` with two modes — (1) Date Range: paginated completion transactions across all employees with totals by payment method; (2) By Employee: drill-down from employee buttons → shift list (open+closed) → shift transactions. Employee names resolved via Auth0 Management API. Printable via `window.print()`. Backend: `GET /api/reports/employee-z/employees`, `/employees/:userId/shifts`, `/shifts/:shiftId/transactions`, `/by-date`.
+- **Income by Employee**: Admin report at `/admin/reports/employee-z-report` with two modes — (1) Date Range: paginated completion transactions across all employees with totals by payment method; (2) By Employee: drill-down from employee buttons → session list (open+closed) → session transactions. Employee names resolved via Auth0 Management API. Printable via `window.print()`. Backend: `GET /api/reports/employee-z/employees`, `/employees/:userId/shifts`, `/shifts/:shiftId/transactions`, `/by-date`.
 - **Completion Transactions**: `completion_transactions` table records payment at checkout. `GET /api/bookings/:id/extra-fee-estimate` estimates late-checkout extra fee (read-only). `POST /api/bookings/:id/complete` atomically sets status to Completed, records `actualCheckOut`/`checkOutBy`, optionally applies extra fee, and creates a `CompletionTransaction`. Frontend "Mark as Completed" flow: fetches estimate → prompts about extra fee if late → shows Cash/Card popup (non-prepaid) or auto-records Wallee payment (prepaid) → calls complete endpoint.
 - **Payment for Booking Update (Difference)**: If a booking edit increases the `finalPrice`, the user pays the difference via Wallee.
 - **Paid Amount Tooltip**: Bookings list displays a tooltip showing the total amount paid.
@@ -115,13 +115,13 @@ Preferred communication style: Simple, everyday language.
 - **Auto-trigger**: Confirmation emails sent on booking creation and update.
 - **Templates**: "New Booking" and "Updated Booking" templates.
 
-### Shift Tracking
-- **Table**: `shifts` — tracks open/closed shifts per staff user (admin/driver).
+### Session Tracking
+- **Table**: `shifts` — tracks open/closed sessions per staff user (admin/driver).
 - **Schema**: `id` (serial PK), `user_id` (Auth0 sub string), `shift_start`, `shift_end`, `last_activity_at`, `status` (`open`|`closed`), `created_at`.
-- **Constraint**: Partial unique index `one_open_shift_per_user` ensures only one open shift per user at a time.
-- **API**: `POST /api/shifts/start` (idempotent — opens or reuses existing), `POST /api/shifts/end` (closes open shift). Both require admin or driver role.
-- **Frontend**: `ShiftService` calls these endpoints. `LayoutComponent` starts a shift on app load after Auth0 authentication (admin/driver only). `HeaderComponent` ends the shift before calling Auth0 logout.
-- **Future use**: Intended to power a report linking `completion_transactions` to the shift during which they were recorded.
+- **Constraint**: Partial unique index `one_open_shift_per_user` ensures only one open session per user at a time.
+- **API**: `POST /api/shifts/start` (idempotent — opens or reuses existing), `POST /api/shifts/end` (closes open session). Both require admin or driver role.
+- **Frontend**: `ShiftService` calls these endpoints. `LayoutComponent` starts a session on app load after Auth0 authentication (admin/driver only). `HeaderComponent` ends the session before calling Auth0 logout.
+- **Future use**: Intended to power a report linking `completion_transactions` to the session during which they were recorded.
 
 ### Vehicle Photo Upload (S3)
 - **DigitalOcean Spaces**: S3-compatible object storage.

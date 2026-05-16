@@ -18,9 +18,9 @@ export class ReportsComponent {
       description: 'View daily summary reports for online payments'
     },
     {
-      id: 'employee-z-report',
-      title: 'Z-Report by Employee',
-      description: 'View completion transactions by date range or drill down by employee and shift'
+      id: 'employee-session-report',
+      title: 'Income by Employee',
+      description: 'View completion transactions by date range or drill down by employee and login/logout sessions'
     },
     {
       id: 'daily-inout',

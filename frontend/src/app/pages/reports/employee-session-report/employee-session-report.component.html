@@ -8,7 +8,7 @@
         </svg>
         Reports
       </a>
-      <h1 class="page-title">Z-Report by Employee</h1>
+      <h1 class="page-title">Income by Employee</h1>
     </div>
     <div class="header-actions">
       @if (canExport) {
@@ -90,11 +90,13 @@
       <!-- Totals -->
       <div class="totals-bar">
         @for (t of dateData.totals; track t.paymentMethod) {
-          <div class="total-card">
-            <span class="total-label">{{ formatPaymentMethod(t.paymentMethod) }}</span>
-            <span class="total-amount">{{ formatAmount(t.total) }}</span>
-            <span class="total-count">{{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }}</span>
-          </div>
+          @if (t.paymentMethod !== 'online') {
+            <div class="total-card">
+              <span class="total-label">{{ formatPaymentMethod(t.paymentMethod) }}</span>
+              <span class="total-amount">{{ formatAmount(t.total) }}</span>
+              <span class="total-count">{{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }}</span>
+            </div>
+          }
         }
         @if (dateData.totals.length > 0) {
           <div class="total-card grand-total">
@@ -186,7 +188,7 @@
         <div class="error-state">{{ employeesError }}</div>
       }
       @if (!employeesLoading && employees.length === 0 && !employeesError) {
-        <div class="empty-state">No employees with recorded shifts found.</div>
+        <div class="empty-state">No employees with recorded sessions found.</div>
       }
       @if (!employeesLoading && employees.length > 0) {
         <div class="employee-grid">
@@ -195,7 +197,7 @@
               <div class="employee-avatar">{{ emp.name.charAt(0).toUpperCase() }}</div>
               <div class="employee-info">
                 <span class="employee-name">{{ emp.name }}</span>
-                <span class="employee-shifts">{{ emp.shiftCount }} shift{{ emp.shiftCount !== 1 ? 's' : '' }}</span>
+                <span class="employee-shifts">{{ emp.shiftCount }} session{{ emp.shiftCount !== 1 ? 's' : '' }}</span>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron">
@@ -207,7 +209,7 @@
       }
     }
 
-    <!-- Step 2: Shifts for selected employee -->
+    <!-- Step 2: Sessions for selected employee -->
     @if (employeeStep === 'shifts') {
       <div class="breadcrumb-nav">
         <button class="back-link" (click)="backToEmployees()">
@@ -224,12 +226,12 @@
       @if (shiftsLoading) {
         <div class="loading-state">
           <div class="spinner"></div>
-          <span>Loading shifts...</span>
+          <span>Loading sessions...</span>
         </div>
       }
 
       @if (!shiftsLoading && shifts.length === 0) {
-        <div class="empty-state">No shifts found for this employee.</div>
+        <div class="empty-state">No sessions found for this employee.</div>
       }
 
       @if (!shiftsLoading && shifts.length > 0) {
@@ -243,7 +245,7 @@
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
-            <span>{{ filteredShifts.length }} shift{{ filteredShifts.length !== 1 ? 's' : '' }}</span>
+            <span>{{ filteredShifts.length }} session{{ filteredShifts.length !== 1 ? 's' : '' }}</span>
           </div>
           <div class="summary-divider"></div>
           <div class="summary-item">
@@ -257,9 +259,9 @@
         </div>
 
         <div class="section-card">
-          <h3 class="section-subtitle">Select a Shift</h3>
+          <h3 class="section-subtitle">Select a Session</h3>
           @if (filteredShifts.length === 0) {
-            <div class="empty-state" style="padding: 16px 0;">No shifts match the selected date range.</div>
+            <div class="empty-state" style="padding: 16px 0;">No sessions match the selected date range.</div>
           } @else {
             <div class="shift-list">
               @for (shift of filteredShifts; track shift.id) {
@@ -287,7 +289,7 @@
       }
     }
 
-    <!-- Step 3: Transactions for selected shift -->
+    <!-- Step 3: Transactions for selected session -->
     @if (employeeStep === 'transactions') {
       <div class="breadcrumb-nav">
         <button class="back-link" (click)="backToEmployees()">
@@ -301,7 +303,7 @@
         <button class="back-link" (click)="backToShifts()">{{ selectedEmployee?.name }}</button>
         <span class="breadcrumb-sep">/</span>
         <span class="breadcrumb-current">
-          Shift {{ selectedShift ? formatDateTime(selectedShift.shiftStart) : '' }}
+          Session {{ selectedShift ? formatDateTime(selectedShift.shiftStart) : '' }}
         </span>
       </div>
 
@@ -320,11 +322,13 @@
         <!-- Totals -->
         <div class="totals-bar">
           @for (t of shiftData.totals; track t.paymentMethod) {
-            <div class="total-card">
-              <span class="total-label">{{ formatPaymentMethod(t.paymentMethod) }}</span>
-              <span class="total-amount">{{ formatAmount(t.total) }}</span>
-              <span class="total-count">{{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }}</span>
-            </div>
+            @if (t.paymentMethod !== 'online') {
+              <div class="total-card">
+                <span class="total-label">{{ formatPaymentMethod(t.paymentMethod) }}</span>
+                <span class="total-amount">{{ formatAmount(t.total) }}</span>
+                <span class="total-count">{{ t.count }} transaction{{ t.count !== 1 ? 's' : '' }}</span>
+              </div>
+            }
           }
           @if (shiftData.totals.length > 0) {
             <div class="total-card grand-total">
@@ -334,7 +338,7 @@
             </div>
           }
           @if (shiftData.totals.length === 0) {
-            <div class="no-totals">No transactions recorded in this shift.</div>
+            <div class="no-totals">No transactions recorded in this session.</div>
           }
         </div>
 

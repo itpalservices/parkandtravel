@@ -27,9 +27,9 @@ export const reportsRoutes: Routes = [
       import('./pending-bookings/pending-bookings-report.component').then((m) => m.PendingBookingsReportComponent),
   },
   {
-    path: 'employee-z-report',
+    path: 'employee-session-report',
     loadComponent: () =>
-      import('./employee-z-report/employee-z-report.component').then((m) => m.EmployeeZReportComponent),
+      import('./employee-session-report/employee-session-report.component').then((m) => m.EmployeeSessionReportComponent),
   },
   {
     path: ':id',

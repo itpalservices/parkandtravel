@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { washServiceReport, dailyInOutReport, zReport, pendingBookingsReport } from "../controllers/reports.controller";
 import {
-  employeeZReportEmployees,
-  employeeZReportShifts,
-  employeeZReportByShift,
-  employeeZReportByDate,
-} from "../controllers/employee-z-report.controller";
+  employeeSessionReportEmployees,
+  employeeSessionReportShifts,
+  employeeSessionReportByShift,
+  employeeSessionReportByDate,
+} from "../controllers/employee-session-report.controller";
 
 const router = Router();
 
@@ -14,9 +14,9 @@ router.get("/daily-in-out", dailyInOutReport);
 router.get("/z-report", zReport);
 router.get("/pending-bookings", pendingBookingsReport);
 
-router.get("/employee-z/employees", employeeZReportEmployees);
-router.get("/employee-z/employees/:userId/shifts", employeeZReportShifts);
-router.get("/employee-z/shifts/:shiftId/transactions", employeeZReportByShift);
-router.get("/employee-z/by-date", employeeZReportByDate);
+router.get("/employee-session/employees", employeeSessionReportEmployees);
+router.get("/employee-session/employees/:userId/shifts", employeeSessionReportShifts);
+router.get("/employee-session/shifts/:shiftId/transactions", employeeSessionReportByShift);
+router.get("/employee-session/by-date", employeeSessionReportByDate);
 
 export default router;

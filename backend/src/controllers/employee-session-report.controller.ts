@@ -30,7 +30,7 @@ interface CountRow {
   count: bigint;
 }
 
-export async function employeeZReportEmployees(_req: Request, res: Response) {
+export async function employeeSessionReportEmployees(_req: Request, res: Response) {
   try {
     const rows = (await prisma.$queryRaw`
       SELECT user_id, COUNT(*) AS shift_count
@@ -52,12 +52,12 @@ export async function employeeZReportEmployees(_req: Request, res: Response) {
 
     res.json(employees);
   } catch (error) {
-    console.error("employeeZReportEmployees error:", error);
+    console.error("employeeSessionReportEmployees error:", error);
     res.status(500).json({ error: "Failed to fetch employees" });
   }
 }
 
-export async function employeeZReportShifts(req: Request, res: Response) {
+export async function employeeSessionReportShifts(req: Request, res: Response) {
   const { userId } = req.params;
 
   try {
@@ -67,12 +67,12 @@ export async function employeeZReportShifts(req: Request, res: Response) {
     });
     res.json(shifts);
   } catch (error) {
-    console.error("employeeZReportShifts error:", error);
+    console.error("employeeSessionReportShifts error:", error);
     res.status(500).json({ error: "Failed to fetch shifts" });
   }
 }
 
-export async function employeeZReportByShift(req: Request, res: Response) {
+export async function employeeSessionReportByShift(req: Request, res: Response) {
   const { shiftId } = req.params;
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const offset = (page - 1) * PAGE_SIZE;
@@ -142,12 +142,12 @@ export async function employeeZReportByShift(req: Request, res: Response) {
       })),
     });
   } catch (error) {
-    console.error("employeeZReportByShift error:", error);
+    console.error("employeeSessionReportByShift error:", error);
     res.status(500).json({ error: "Failed to fetch transactions for shift" });
   }
 }
 
-export async function employeeZReportByDate(req: Request, res: Response) {
+export async function employeeSessionReportByDate(req: Request, res: Response) {
   const { dateFrom, dateTo } = req.query;
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const offset = (page - 1) * PAGE_SIZE;
@@ -236,7 +236,7 @@ export async function employeeZReportByDate(req: Request, res: Response) {
       })),
     });
   } catch (error) {
-    console.error("employeeZReportByDate error:", error);
+    console.error("employeeSessionReportByDate error:", error);
     res.status(500).json({ error: "Failed to fetch transactions by date" });
   }
 }

@@ -55,13 +55,13 @@ type Mode = 'date' | 'employee';
 type EmployeeStep = 'employees' | 'shifts' | 'transactions';
 
 @Component({
-  selector: 'app-employee-z-report',
+  selector: 'app-employee-session-report',
   standalone: true,
   imports: [CommonModule, RouterLink, DateRangePickerComponent],
-  templateUrl: './employee-z-report.component.html',
-  styleUrl: './employee-z-report.component.scss',
+  templateUrl: './employee-session-report.component.html',
+  styleUrl: './employee-session-report.component.scss',
 })
-export class EmployeeZReportComponent implements OnInit {
+export class EmployeeSessionReportComponent implements OnInit {
   private calendar = inject(NgbCalendar);
   private apiService = inject(ApiService);
 
@@ -151,7 +151,7 @@ export class EmployeeZReportComponent implements OnInit {
     const from = this.formatDateTimeForApi(this.dateFrom);
     const to = this.formatDateTimeForApi(this.dateTo);
     this.apiService
-      .get<TransactionsResponse>(`/reports/employee-z/by-date?dateFrom=${from}&dateTo=${to}&page=${this.datePage}`)
+      .get<TransactionsResponse>(`/reports/employee-session/by-date?dateFrom=${from}&dateTo=${to}&page=${this.datePage}`)
       .subscribe({
         next: (data) => {
           this.dateData = data;
@@ -178,7 +178,7 @@ export class EmployeeZReportComponent implements OnInit {
   loadEmployees(): void {
     this.employeesLoading = true;
     this.employeesError = null;
-    this.apiService.get<EmployeeInfo[]>('/reports/employee-z/employees').subscribe({
+    this.apiService.get<EmployeeInfo[]>('/reports/employee-session/employees').subscribe({
       next: (data) => { this.employees = data; this.employeesLoading = false; },
       error: () => { this.employeesError = 'Failed to load employees. Please try again.'; this.employeesLoading = false; },
     });
@@ -238,7 +238,7 @@ export class EmployeeZReportComponent implements OnInit {
     this.shifts = [];
     this.shiftsLoading = true;
     this.apiService
-      .get<ShiftInfo[]>(`/reports/employee-z/employees/${encodeURIComponent(emp.userId)}/shifts`)
+      .get<ShiftInfo[]>(`/reports/employee-session/employees/${encodeURIComponent(emp.userId)}/shifts`)
       .subscribe({
         next: (data) => { this.shifts = data; this.shiftsLoading = false; },
         error: () => { this.shiftsLoading = false; },
@@ -257,7 +257,7 @@ export class EmployeeZReportComponent implements OnInit {
     this.shiftLoading = true;
     this.shiftError = null;
     this.apiService
-      .get<TransactionsResponse>(`/reports/employee-z/shifts/${this.selectedShift.id}/transactions?page=${this.shiftPage}`)
+      .get<TransactionsResponse>(`/reports/employee-session/shifts/${this.selectedShift.id}/transactions?page=${this.shiftPage}`)
       .subscribe({
         next: (data) => { this.shiftData = data; this.shiftLoading = false; },
         error: () => { this.shiftError = 'Failed to load transactions. Please try again.'; this.shiftLoading = false; },
@@ -315,7 +315,7 @@ export class EmployeeZReportComponent implements OnInit {
     let hasMore = true;
     while (hasMore) {
       const data = await firstValueFrom(
-        this.apiService.get<TransactionsResponse>(`/reports/employee-z/by-date?dateFrom=${fromApi}&dateTo=${toApi}&page=${page}`)
+        this.apiService.get<TransactionsResponse>(`/reports/employee-session/by-date?dateFrom=${fromApi}&dateTo=${toApi}&page=${page}`)
       );
       all.push(...data.transactions);
       totals = data.totals;
@@ -342,7 +342,7 @@ export class EmployeeZReportComponent implements OnInit {
     ]);
 
     this.buildPDF({
-      title: 'Z-Report by Employee',
+      title: 'Income by Employee',
       subtitle: periodLabel,
       headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Employee', 'Notes'],
       rows,
@@ -362,7 +362,7 @@ export class EmployeeZReportComponent implements OnInit {
     let hasMore = true;
     while (hasMore) {
       const data = await firstValueFrom(
-        this.apiService.get<TransactionsResponse>(`/reports/employee-z/shifts/${this.selectedShift.id}/transactions?page=${page}`)
+        this.apiService.get<TransactionsResponse>(`/reports/employee-session/shifts/${this.selectedShift.id}/transactions?page=${page}`)
       );
       all.push(...data.transactions);
       totals = data.totals;
@@ -389,7 +389,7 @@ export class EmployeeZReportComponent implements OnInit {
     ]);
 
     this.buildPDF({
-      title: 'Z-Report by Employee',
+      title: 'Income by Employee',
       subtitle: periodLabel,
       headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Notes'],
       rows,
