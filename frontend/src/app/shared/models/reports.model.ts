@@ -92,6 +92,29 @@ export interface ZReportEmployee {
   role: string;
 }
 
+export interface ReceiptReportItem {
+  id: string;
+  receiptNumber: string | null;
+  totalAmount: number;
+  discount: number | null;
+  hasPdf: boolean;
+  createdAt: string;
+  customerName: string;
+  plateNo: string | null;
+  carBrand: string | null;
+  carModel: string | null;
+  dateFrom: string;
+  dateTo: string | null;
+}
+
+export interface ReceiptsReportResponse {
+  data: ReceiptReportItem[];
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+}
+
 export interface ZReportData {
   id: string;
   targetUserId: string;
