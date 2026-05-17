@@ -179,6 +179,11 @@ export async function createZReport(req: Request, res: Response) {
     const actualCash = actualsMap["cash"] || 0;
     const actualCard = actualsMap["card"] || 0;
 
+    if (actualCash === 0 && actualCard === 0) {
+      res.status(400).json({ error: "No unreported transactions found for this employee. Z report cannot be created." });
+      return;
+    }
+
     const zReport = await prisma.$transaction(async (tx) => {
       const report = await tx.zReport.create({
         data: {

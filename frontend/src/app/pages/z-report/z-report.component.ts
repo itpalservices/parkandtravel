@@ -120,9 +120,10 @@ export class ZReportComponent implements OnInit {
         this.step = 'result';
         this.submitting = false;
       },
-      error: () => {
+      error: (err) => {
         this.submitting = false;
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to create Z report. Please try again.' });
+        const message = err?.error?.error || 'Failed to create Z report. Please try again.';
+        Swal.fire({ icon: 'error', title: 'Error', text: message });
       },
     });
   }
