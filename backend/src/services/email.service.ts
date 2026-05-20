@@ -1,15 +1,4 @@
-import nodemailer from "nodemailer";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-  port: parseInt(process.env.SMTP_PORT || "587", 10),
-  secure: false,
-  requireTLS: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_KEY,
-  },
-});
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 interface BookingEmailData {
   email: string;
@@ -446,8 +435,9 @@ function getEmailSubject(data: BookingEmailData): string {
 export async function sendBookingConfirmationEmail(
   data: BookingEmailData
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  if (!process.env.SMTP_USER || !process.env.SMTP_KEY) {
-    console.error("SMTP credentials not configured");
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.error("BREVO_API_KEY not configured");
     return { success: false, error: "Email service not configured" };
   }
 
@@ -455,28 +445,42 @@ export async function sendBookingConfirmationEmail(
   const fromEmail = process.env.BREVO_SENDER_EMAIL || "";
   const replyTo = process.env.BREVO_REPLY_TO_EMAIL || fromEmail;
 
-  try {
-    const mailOptions: Parameters<typeof transporter.sendMail>[0] = {
-      from: `"${fromName}" <${fromEmail}>`,
-      to: `"${data.fullName}" <${data.email}>`,
-      replyTo: replyTo,
-      subject: getEmailSubject(data),
-      html: generateBookingConfirmationHtml(data),
-      text: generateBookingConfirmationText(data),
-    };
+  const body: Record<string, any> = {
+    sender: { name: fromName, email: fromEmail },
+    to: [{ email: data.email, name: data.fullName }],
+    replyTo: { email: replyTo },
+    subject: getEmailSubject(data),
+    htmlContent: generateBookingConfirmationHtml(data),
+    textContent: generateBookingConfirmationText(data),
+  };
 
-    if (data.receiptPdfBuffer) {
-      mailOptions.attachments = [{
-        filename: 'receipt.pdf',
-        content: data.receiptPdfBuffer,
-        contentType: 'application/pdf',
-      }];
+  if (data.receiptPdfBuffer) {
+    body.attachment = [{
+      name: "receipt.pdf",
+      content: data.receiptPdfBuffer.toString("base64"),
+    }];
+  }
+
+  try {
+    const response = await fetch(BREVO_API_URL, {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const json = await response.json() as any;
+
+    if (!response.ok) {
+      const errMsg = json?.message || response.statusText;
+      console.error("Failed to send email:", errMsg);
+      return { success: false, error: errMsg };
     }
 
-    const info = await transporter.sendMail(mailOptions);
-
-    console.log("Email sent successfully:", info.messageId);
-    return { success: true, messageId: info.messageId };
+    console.log("Email sent successfully:", json.messageId);
+    return { success: true, messageId: json.messageId };
   } catch (error: any) {
     console.error("Failed to send email:", error.message);
     return { success: false, error: error.message || "Failed to send email" };
@@ -484,16 +488,27 @@ export async function sendBookingConfirmationEmail(
 }
 
 export async function testEmailConnection(): Promise<{ success: boolean; error?: string }> {
-  if (!process.env.SMTP_USER || !process.env.SMTP_KEY) {
-    return { success: false, error: "SMTP credentials not configured" };
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    return { success: false, error: "BREVO_API_KEY not configured" };
   }
 
   try {
-    await transporter.verify();
-    console.log("SMTP connection verified successfully");
+    const response = await fetch("https://api.brevo.com/v3/account", {
+      headers: { "api-key": apiKey },
+    });
+
+    if (!response.ok) {
+      const json = await response.json() as any;
+      const errMsg = json?.message || response.statusText;
+      console.error("Brevo API key verification failed:", errMsg);
+      return { success: false, error: errMsg };
+    }
+
+    console.log("Brevo API key verified successfully");
     return { success: true };
   } catch (error: any) {
-    console.error("SMTP connection failed:", error.message);
-    return { success: false, error: error.message || "SMTP connection failed" };
+    console.error("Brevo API connection failed:", error.message);
+    return { success: false, error: error.message || "Brevo API connection failed" };
   }
 }
