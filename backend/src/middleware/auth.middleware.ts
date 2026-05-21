@@ -1,7 +1,7 @@
 import { auth, InvalidRequestError, UnauthorizedError } from "express-oauth2-jwt-bearer";
 import { Request, Response, NextFunction } from "express";
 
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "dev-c2p14cvw0yc4psqt.us.auth0.com";
+const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "powersoft.eu.auth0.com";
 const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || "https://park-and-travel-api";
 const ROLE_NAMESPACE = "https://park-and-travel/roles";
 
