@@ -3,7 +3,7 @@
     <div class="header-row header-row-title">
       <h1 class="page-title">Bookings</h1>
       <div class="header-actions">
-        <button class="btn btn-x-report" (click)="goToXReport()">
+        <button *ngIf="isDriver || isAdmin" class="btn btn-x-report" (click)="goToXReport()">
           X Report
         </button>
         <button *ngIf="isAdmin" class="btn btn-z-report" (click)="goToZReport()">
