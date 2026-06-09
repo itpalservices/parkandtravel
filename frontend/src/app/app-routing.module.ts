@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout/layout.component';
 import { authGuard } from './core/guards/auth.guard';
-import { adminOnlyGuard } from './core/guards/role-redirect.guard';
+import { adminOnlyGuard, adminOrDriverOnlyGuard } from './core/guards/role-redirect.guard';
 
 export const appRoutes: Routes = [
   {
@@ -72,6 +72,7 @@ export const appRoutes: Routes = [
       },
       {
         path: 'x-report',
+        canActivate: [adminOrDriverOnlyGuard],
         loadComponent: () =>
           import('./pages/x-report/x-report.component').then((m) => m.XReportComponent),
       },
