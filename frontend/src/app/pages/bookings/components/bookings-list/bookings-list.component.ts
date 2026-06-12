@@ -58,9 +58,8 @@ export class BookingsListComponent {
   private async printThermalReceipt(receiptId: string): Promise<void> {
     try {
       await this.zebraPrintService.printThermalReceipt(receiptId);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Receipt sent to printer', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     } catch (err: any) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: err?.message || 'Failed to print receipt', showConfirmButton: false, timer: 5000, timerProgressBar: true });
+      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
     }
   }
 
@@ -1062,26 +1061,23 @@ export class BookingsListComponent {
   }
 
   private generateAndShowCheckinReceipt(bookingId: string): void {
-    this.apiService.post<any>(`/bookings/${bookingId}/checkin-receipt`, {}).subscribe({
-      next: (res: any) => {
-        const presignedUrl = res?.data?.presignedUrl;
-        if (!presignedUrl) return;
-        Swal.fire({
-          icon: 'info',
-          title: 'Check-in Receipt Ready',
-          text: 'Would you like to print the check-in receipt for the customer?',
-          confirmButtonText: 'Print Receipt',
-          showDenyButton: true,
-          denyButtonText: 'Skip',
-          denyButtonColor: '#6c757d',
-          confirmButtonColor: '#006B8F',
-        }).then((r) => {
-          if (r.isConfirmed) {
-            window.open(presignedUrl, '_blank');
-          }
-        });
-      },
-      error: () => { /* silent — check-in is already recorded */ },
+    Swal.fire({
+      icon: 'info',
+      title: 'Check-in Receipt',
+      text: 'Would you like to print the check-in receipt for the customer?',
+      confirmButtonText: 'Print Receipt',
+      showDenyButton: true,
+      denyButtonText: 'Skip',
+      denyButtonColor: '#6c757d',
+      confirmButtonColor: '#006B8F',
+    }).then(async (r) => {
+      if (r.isConfirmed) {
+        try {
+          await this.zebraPrintService.printCheckinReceipt(bookingId);
+        } catch (err: any) {
+          Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
+        }
+      }
     });
   }
 

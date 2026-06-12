@@ -16,6 +16,7 @@ import {
   getCheckinPaymentInfo as getCheckinPaymentInfoService,
   recordCheckinPayment as recordCheckinPaymentService,
   generateAndStoreCheckinReceipt as generateAndStoreCheckinReceiptService,
+  generateCheckinReceiptZplForBooking,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -815,6 +816,30 @@ export async function generateCheckinReceiptHandler(req: Request, res: Response)
     res.json({ success: true, data: { presignedUrl } });
   } catch (error) {
     console.error("Error generating check-in receipt:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function generateCheckinReceiptZplHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") {
+      res.status(403).json({ error: "Admin or driver role required" });
+      return;
+    }
+
+    const { id } = req.params;
+    const zpl = await generateCheckinReceiptZplForBooking(id);
+
+    if (!zpl) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    res.set({ 'Content-Type': 'text/plain' });
+    res.send(zpl);
+  } catch (error) {
+    console.error("Error generating check-in receipt ZPL:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

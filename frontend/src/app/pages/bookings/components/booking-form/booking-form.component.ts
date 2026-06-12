@@ -35,6 +35,7 @@ import {
 import { UserProfileService } from '../../../../core/services/user-profile.service';
 import { ShiftService } from '../../../../core/services/shift.service';
 import { SettingsService } from '../../../../core/services/settings.service';
+import { ZebraPrintService } from '../../../../core/services/zebra-print.service';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 
 interface UserSearchResponse {
@@ -149,6 +150,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private bookingsService = inject(BookingsService);
   private settingsService = inject(SettingsService);
+  private zebraPrintService = inject(ZebraPrintService);
 
   constructor(
     private authService: AuthService,
@@ -791,31 +793,32 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  private openThermalReceipt(receiptId: string): void {
-    window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+  private async openThermalReceipt(receiptId: string): Promise<void> {
+    try {
+      await this.zebraPrintService.printThermalReceipt(receiptId);
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
+    }
   }
 
   private generateAndShowCheckinReceipt(bookingId: string): void {
-    this.apiService.post<any>(`/bookings/${bookingId}/checkin-receipt`, {}).subscribe({
-      next: (res: any) => {
-        const presignedUrl = res?.data?.presignedUrl;
-        if (!presignedUrl) return;
-        Swal.fire({
-          icon: 'info',
-          title: 'Check-in Receipt Ready',
-          text: 'Would you like to print the check-in receipt for the customer?',
-          confirmButtonText: 'Print Receipt',
-          showDenyButton: true,
-          denyButtonText: 'Skip',
-          denyButtonColor: '#6c757d',
-          confirmButtonColor: '#006B8F',
-        }).then((r) => {
-          if (r.isConfirmed) {
-            window.open(presignedUrl, '_blank');
-          }
-        });
-      },
-      error: () => { /* silent — check-in is already recorded */ },
+    Swal.fire({
+      icon: 'info',
+      title: 'Check-in Receipt',
+      text: 'Would you like to print the check-in receipt for the customer?',
+      confirmButtonText: 'Print Receipt',
+      showDenyButton: true,
+      denyButtonText: 'Skip',
+      denyButtonColor: '#6c757d',
+      confirmButtonColor: '#006B8F',
+    }).then(async (r) => {
+      if (r.isConfirmed) {
+        try {
+          await this.zebraPrintService.printCheckinReceipt(bookingId);
+        } catch (err: any) {
+          Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
+        }
+      }
     });
   }
 

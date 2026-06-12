@@ -12,7 +12,17 @@ export class ZebraPrintService {
     const zpl = await firstValueFrom(
       this.http.get(`/api/receipts/thermal/${receiptId}/zpl`, { responseType: 'text' })
     );
+    await this.sendZpl(zpl);
+  }
 
+  async printCheckinReceipt(bookingId: string): Promise<void> {
+    const zpl = await firstValueFrom(
+      this.http.get(`/api/bookings/${bookingId}/checkin-receipt/zpl`, { responseType: 'text' })
+    );
+    await this.sendZpl(zpl);
+  }
+
+  private async sendZpl(zpl: string): Promise<void> {
     const available = await firstValueFrom(
       this.http.get<{ printer?: any[] }>(`${this.agentUrl}/available`)
     ).catch(() => {
@@ -23,11 +33,6 @@ export class ZebraPrintService {
     if (!printer) {
       throw new Error('No Zebra printer found. Make sure the ZQ521 is connected in Browser Print.');
     }
-
-    // Ensure printer is in ZPL mode (works even if printer is currently in CPCL mode)
-    await firstValueFrom(
-      this.http.post(`${this.agentUrl}/write`, { device: printer, data: '! U1 setvar "device.languages" "ZPL"\r\n' }, { responseType: 'text' })
-    ).catch(() => {});
 
     await firstValueFrom(
       this.http.post(`${this.agentUrl}/write`, { device: printer, data: zpl }, { responseType: 'text' })

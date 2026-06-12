@@ -518,6 +518,97 @@ function generateCheckinReceiptHtml(data: CheckinReceiptData, company: CompanySe
 </html>`;
 }
 
+export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promise<string> {
+  const company = await getCompanySettings();
+
+  const remaining = parseFloat((data.totalPrice - data.walleePaid - data.checkinPaid).toFixed(2));
+
+  const checkInDateStr = new Date(data.checkInDateTime).toLocaleString('en-GB', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+
+  const scheduledCheckOutStr = data.scheduledCheckOut
+    ? new Date(data.scheduledCheckOut).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : '-';
+
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : company.companyPhone1 || company.companyPhone2 || '';
+
+  const vehicleParts = [data.licensePlate, data.carModel].filter(Boolean);
+  const vehicleStr = vehicleParts.length > 0 ? vehicleParts.join(' / ') : '-';
+
+  const PW = 576;
+  const LM = 10;
+  const BW = PW - LM * 2;
+  let y = 15;
+  const cmds: string[] = [];
+
+  const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
+  const center = (text: string, h: number) => cmds.push(`^FO0,${y}^A0N,${h},${h}^FB${PW},1,0,C,0^FD${esc(text)}^FS`);
+  const left   = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FD${esc(text)}^FS`);
+  const right  = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FB${BW},1,0,R,0^FD${esc(text)}^FS`);
+  const solid  = () => cmds.push(`^FO${LM},${y}^GB${BW},2,2^FS`);
+  const thin   = () => cmds.push(`^FO${LM},${y}^GB${BW},1,1^FS`);
+
+  // Header
+  center(company.companyName || 'Park & Travel', 30); y += 36;
+  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 20); y += 24; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 20); y += 24; }
+  y += 6; solid(); y += 10;
+
+  // Title
+  center('CHECK-IN RECEIPT', 24); y += 30;
+  center(checkInDateStr, 20); y += 24;
+  y += 6; thin(); y += 10;
+
+  // Customer
+  left('CUSTOMER', 15); y += 20;
+  left(data.customerName, 22); y += 26;
+  left('BOOKING REFERENCE', 15); y += 20;
+  left(data.bookingId, 16); y += 22;
+  y += 6; thin(); y += 10;
+
+  // Vehicle
+  left('VEHICLE', 15); y += 20;
+  left(vehicleStr, 22); y += 26;
+
+  // Adults (left) and Keys (right) on same row
+  cmds.push(`^FO${LM},${y}^A0N,15,15^FD${esc('ADULTS')}^FS`);
+  cmds.push(`^FO${Math.floor(PW / 2)},${y}^A0N,15,15^FD${esc('KEYS')}^FS`);
+  y += 20;
+  cmds.push(`^FO${LM},${y}^A0N,22,22^FD${esc(String(data.adults ?? '-'))}^FS`);
+  cmds.push(`^FO${Math.floor(PW / 2)},${y}^A0N,22,22^FD${esc(data.keepKeys ? 'Kept' : 'Returned')}^FS`);
+  y += 26;
+
+  y += 4; thin(); y += 10;
+
+  // Checkout date
+  left('SCHEDULED CHECK-OUT', 15); y += 20;
+  left(scheduledCheckOutStr, 22); y += 26;
+  y += 4; solid(); y += 10;
+
+  // Financials
+  left('Total price', 18); right(`€${data.totalPrice.toFixed(2)}`, 18); y += 24;
+  if (data.walleePaid > 0) { left('Paid online', 18); right(`€${data.walleePaid.toFixed(2)}`, 18); y += 24; }
+  if (data.checkinPaid > 0) { left('Paid at check-in', 18); right(`€${data.checkinPaid.toFixed(2)}`, 18); y += 24; }
+  solid(); y += 10;
+
+  if (remaining > 0) {
+    left('Balance due at check-out', 26); right(`€${remaining.toFixed(2)}`, 26); y += 34;
+  } else {
+    center('PAID IN FULL', 26); y += 34;
+  }
+
+  // Footer
+  y += 10;
+  center('Thank you for choosing Park & Travel.', 16); y += 22;
+  if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
+  y += 20;
+
+  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+}
+
 export async function generateCheckinReceiptPdf(data: CheckinReceiptData): Promise<Buffer> {
   const company = await getCompanySettings();
   const html = generateCheckinReceiptHtml(data, company);
@@ -552,13 +643,9 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   const company = await getCompanySettings();
 
   const taxRate = company.tax ?? 0;
-  const subtotal = data.totalAmount;
-  const discountAmount = data.discount && data.discount > 0
-    ? parseFloat((subtotal * data.discount / 100).toFixed(2))
-    : 0;
-  const grossAfterDiscount = parseFloat((subtotal - discountAmount).toFixed(2));
-  const net = parseFloat((grossAfterDiscount / (1 + taxRate / 100)).toFixed(2));
-  const vatAmount = parseFloat((grossAfterDiscount - net).toFixed(2));
+  const total = data.totalAmount;
+  const net = parseFloat((total / (1 + taxRate / 100)).toFixed(2));
+  const vatAmount = parseFloat((total - net).toFixed(2));
 
   const dateStr = new Date(data.receiptDate).toLocaleString('en-GB', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -572,55 +659,57 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   const PW = 576; // ZQ521 @ 203dpi: 72mm printable = 576 dots
   const LM = 10;
   const BW = PW - LM * 2;
-  let y = 20;
+  let y = 15;
   const cmds: string[] = [];
 
-  const esc    = (s: string) => String(s).replace(/\^/g, '').replace(/~/g, '');
+  const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
   const center = (text: string, h: number) => cmds.push(`^FO0,${y}^A0N,${h},${h}^FB${PW},1,0,C,0^FD${esc(text)}^FS`);
   const left   = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FD${esc(text)}^FS`);
   const right  = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FB${BW},1,0,R,0^FD${esc(text)}^FS`);
-  const hline  = (t = 2) => cmds.push(`^FO${LM},${y}^GB${BW},${t},${t}^FS`);
+  const solid  = () => cmds.push(`^FO${LM},${y}^GB${BW},2,2^FS`);
+  const thin   = () => cmds.push(`^FO${LM},${y}^GB${BW},1,1^FS`);
 
-  center(company.companyName || 'Park & Travel', 30); y += 38;
-  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 20); y += 26; }
-  if (phoneLine) { center(`Tel: ${phoneLine}`, 20); y += 26; }
-  y += 8; hline(2); y += 14;
+  // Header
+  center(company.companyName || 'Park & Travel', 30); y += 36;
+  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 20); y += 24; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 20); y += 24; }
+  y += 6; solid(); y += 10;
 
-  center('RECEIPT', 28); y += 34;
-  center(data.receiptNumber, 20); y += 26;
-  center(dateStr, 20); y += 30;
-  hline(1); y += 12;
+  // Receipt title
+  center('RECEIPT', 26); y += 32;
+  center(data.receiptNumber, 20); y += 24;
+  center(dateStr, 20); y += 24;
+  y += 6; thin(); y += 10;
 
-  left('BILLED TO', 16); y += 22;
-  left(data.customerName, 22); y += 28;
-  left('BOOKING REF', 16); y += 22;
-  left(data.bookingId, 16); y += 26;
-  y += 8; hline(1); y += 12;
+  // Customer
+  left('BILLED TO', 15); y += 20;
+  left(data.customerName, 22); y += 26;
+  left('BOOKING REF', 15); y += 20;
+  left(data.bookingId, 16); y += 22;
+  y += 6; thin(); y += 10;
 
-  left('DESCRIPTION', 16); right('AMOUNT', 16); y += 22;
-  hline(1); y += 10;
+  // Line items
+  left('DESCRIPTION', 15); right('AMOUNT', 15); y += 20;
+  thin(); y += 8;
   for (const line of data.lines) {
-    const desc = line.description.length > 30 ? line.description.slice(0, 29) + '.' : line.description;
-    left(desc, 20); right(`EUR ${Number(line.amount).toFixed(2)}`, 20); y += 28;
+    const desc = line.description.length > 34 ? line.description.slice(0, 33) + '.' : line.description;
+    left(desc, 20); right(`€${Number(line.amount).toFixed(2)}`, 20); y += 26;
   }
-  y += 6; hline(2); y += 14;
+  y += 4; solid(); y += 10;
 
-  if (data.discount && data.discount > 0) {
-    left('Subtotal', 18); right(`EUR ${subtotal.toFixed(2)}`, 18); y += 24;
-    left(`Discount (${data.discount}%)`, 18); right(`-EUR ${discountAmount.toFixed(2)}`, 18); y += 24;
-    hline(1); y += 10;
-    left('After Discount', 18); right(`EUR ${grossAfterDiscount.toFixed(2)}`, 18); y += 24;
-  }
-  left(`Net excl. VAT ${taxRate}%`, 18); right(`EUR ${net.toFixed(2)}`, 18); y += 24;
-  left(`VAT (${taxRate}%)`, 18); right(`EUR ${vatAmount.toFixed(2)}`, 18); y += 24;
-  hline(2); y += 14;
+  // Totals (match HTML exactly)
+  left(`Net (excl. VAT ${taxRate}%)`, 18); right(`€${net.toFixed(2)}`, 18); y += 24;
+  left(`VAT (${taxRate}%)`, 18); right(`€${vatAmount.toFixed(2)}`, 18); y += 24;
+  solid(); y += 10;
 
-  left('TOTAL PAID', 28); right(`EUR ${grossAfterDiscount.toFixed(2)}`, 28); y += 36;
-  y += 20;
+  // Grand total
+  left('TOTAL PAID', 30); right(`€${total.toFixed(2)}`, 30); y += 38;
 
-  center('Thank you for choosing Park & Travel', 18); y += 26;
+  // Footer
+  y += 10;
+  center('Thank you for choosing Park & Travel.', 16); y += 22;
   if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
-  y += 24;
+  y += 20;
 
   return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
