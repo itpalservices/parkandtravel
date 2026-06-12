@@ -8,7 +8,6 @@ import { ApiService } from '../../../../core/services/api.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
 import { ShiftService } from '../../../../core/services/shift.service';
 import { SettingsService } from '../../../../core/services/settings.service';
-import { ZebraPrintService } from '../../../../core/services/zebra-print.service';
 import Swal from 'sweetalert2';
 import {
   CAR_PICK_UP_OPTIONS,
@@ -52,7 +51,6 @@ export class BookingsListComponent {
     private userProfileService: UserProfileService,
     private shiftService: ShiftService,
     private settingsService: SettingsService,
-    private zebraPrintService: ZebraPrintService,
   ) {}
 
   printBookingTag(booking: Booking): void {
@@ -575,17 +573,14 @@ export class BookingsListComponent {
             icon: 'success',
             title: 'Booking completed successfully',
             text: 'Would you like to print the receipt?',
-            confirmButtonText: 'Print (Zebra)',
+            confirmButtonText: 'Print Receipt',
             showDenyButton: true,
-            denyButtonText: 'Open PDF',
-            showCancelButton: true,
-            cancelButtonText: 'Skip',
-            confirmButtonColor: '#006B8F',
-            denyButtonColor: '#5a6268',
-            cancelButtonColor: '#aaa',
-          }).then(async (r) => {
-            if (r.isConfirmed) await this.printThermalReceipt(receiptId);
-            else if (r.isDenied) window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+            denyButtonText: 'Skip',
+            denyButtonColor: '#6c757d',
+          }).then((r) => {
+            if (r.isConfirmed) {
+              window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+            }
             this.bookingUpdated.emit();
           });
         } else {
@@ -921,17 +916,14 @@ export class BookingsListComponent {
                     icon: 'success',
                     title: 'Check-in payment recorded',
                     text: 'Would you like to print the receipt?',
-                    confirmButtonText: 'Print (Zebra)',
+                    confirmButtonText: 'Print Receipt',
                     showDenyButton: true,
-                    denyButtonText: 'Open PDF',
-                    showCancelButton: true,
-                    cancelButtonText: 'Skip',
-                    confirmButtonColor: '#006B8F',
-                    denyButtonColor: '#5a6268',
-                    cancelButtonColor: '#aaa',
-                  }).then(async (r) => {
-                    if (r.isConfirmed) await this.printThermalReceipt(receiptId);
-                    else if (r.isDenied) window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+                    denyButtonText: 'Close',
+                    denyButtonColor: '#6c757d',
+                  }).then((r) => {
+                    if (r.isConfirmed) {
+                      window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+                    }
                   }).then(() => this.generateAndShowCheckinReceipt(booking.id));
                 } else {
                   this.generateAndShowCheckinReceipt(booking.id);
@@ -1056,24 +1048,6 @@ export class BookingsListComponent {
         this.performStatusUpdate(booking, 'bookingStatus_created', 'Created');
       }
     });
-  }
-
-  private async printThermalReceipt(receiptId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printThermalReceipt(receiptId);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Sent to Zebra printer', showConfirmButton: false, timer: 2500, timerProgressBar: true });
-    } catch (err: any) {
-      const fallback = await Swal.fire({
-        icon: 'warning',
-        title: 'Zebra print failed',
-        text: err.message || 'Could not connect to the printer.',
-        confirmButtonText: 'Open PDF instead',
-        showCancelButton: true,
-        cancelButtonText: 'Skip',
-        confirmButtonColor: '#006B8F',
-      });
-      if (fallback.isConfirmed) window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
-    }
   }
 
   private generateAndShowCheckinReceipt(bookingId: string): void {
