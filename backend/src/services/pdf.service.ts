@@ -622,7 +622,7 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
   y += 24;
 
-  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('\n');
+  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
 export async function generateThermalReceiptPdf(data: ReceiptPdfData): Promise<Buffer> {
