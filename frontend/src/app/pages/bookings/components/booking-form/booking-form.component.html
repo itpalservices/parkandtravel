@@ -86,6 +86,7 @@
                   [class.disabled-field]="isRegularUser"
                   (focus)="!isRegularUser && onParkPlaceFocus($event)"
                   (keydown)="!isRegularUser && onParkPlaceKeydown($event)"
+                  (input)="!isRegularUser && onParkPlaceInput($event)"
                   (paste)="$event.preventDefault()"
                 />
               </div>

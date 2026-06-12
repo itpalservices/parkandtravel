@@ -629,6 +629,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         parkPlaceInput.value = '_-___';
         const EDITABLE = [0, 2, 3, 4];
         parkPlaceInput.addEventListener('keydown', (e: KeyboardEvent) => {
+          if (e.key === 'Unidentified') return; // mobile IME — handled by input event
           e.preventDefault();
           const v = parkPlaceInput.value;
           const chars = (v.length === 5 && v[1] === '-') ? v.split('') : '_-___'.split('');
@@ -646,6 +647,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             }
           }
           parkPlaceInput.value = chars.join('');
+        });
+        parkPlaceInput.addEventListener('input', () => {
+          const meaningful = parkPlaceInput.value.replace(/[^A-Za-z0-9]/g, '');
+          const letter = (meaningful.match(/[A-Za-z]/)?.[0] ?? '').toUpperCase();
+          const digits = meaningful.replace(/[^0-9]/g, '').slice(0, 3);
+          parkPlaceInput.value = (letter || '_') + '-' + digits.padEnd(3, '_');
         });
         parkPlaceInput.addEventListener('paste', (e: Event) => e.preventDefault());
 
@@ -883,6 +890,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   onParkPlaceKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Unidentified') return; // mobile IME — handled by onParkPlaceInput
     event.preventDefault();
     const input = event.target as HTMLInputElement;
     const v = input.value;
@@ -903,6 +911,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
     input.value = chars.join('');
     this.parkPlace = chars.join('');
+  }
+
+  onParkPlaceInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const meaningful = input.value.replace(/[^A-Za-z0-9]/g, '');
+    const letter = (meaningful.match(/[A-Za-z]/)?.[0] ?? '').toUpperCase();
+    const digits = meaningful.replace(/[^0-9]/g, '').slice(0, 3);
+    const formatted = (letter || '_') + '-' + digits.padEnd(3, '_');
+    input.value = formatted;
+    this.parkPlace = formatted;
   }
 
   private handleImageFiles(
