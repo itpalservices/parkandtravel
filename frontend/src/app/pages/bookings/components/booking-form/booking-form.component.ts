@@ -768,9 +768,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
                     showDenyButton: true,
                     denyButtonText: 'Close',
                     denyButtonColor: '#6c757d',
-                  }).then((r) => {
+                  }).then(async (r) => {
                     if (r.isConfirmed) {
-                      this.openThermalReceipt(receiptId);
+                      await this.openThermalReceipt(receiptId);
                     }
                   }).then(() => this.generateAndShowCheckinReceipt(this.bookingId!));
                 } else {

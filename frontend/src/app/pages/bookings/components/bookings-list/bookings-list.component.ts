@@ -930,9 +930,9 @@ export class BookingsListComponent {
                     showDenyButton: true,
                     denyButtonText: 'Close',
                     denyButtonColor: '#6c757d',
-                  }).then((r) => {
+                  }).then(async (r) => {
                     if (r.isConfirmed) {
-                      this.printThermalReceipt(receiptId);
+                      await this.printThermalReceipt(receiptId);
                     }
                   }).then(() => this.generateAndShowCheckinReceipt(booking.id));
                 } else {

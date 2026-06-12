@@ -95,6 +95,18 @@
   margin-bottom: 0.5rem;
 }
 
+.mobile-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .btn-x-report,
+  .btn-z-report {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+  }
+}
+
 .btn-add-booking-mobile {
   display: flex;
   align-items: center;
