@@ -8,6 +8,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
 import { ShiftService } from '../../../../core/services/shift.service';
 import { SettingsService } from '../../../../core/services/settings.service';
+import { ZebraPrintService } from '../../../../core/services/zebra-print.service';
 import Swal from 'sweetalert2';
 import {
   CAR_PICK_UP_OPTIONS,
@@ -51,7 +52,17 @@ export class BookingsListComponent {
     private userProfileService: UserProfileService,
     private shiftService: ShiftService,
     private settingsService: SettingsService,
+    private zebraPrintService: ZebraPrintService,
   ) {}
+
+  private async printThermalReceipt(receiptId: string): Promise<void> {
+    try {
+      await this.zebraPrintService.printThermalReceipt(receiptId);
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Receipt sent to printer', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    } catch (err: any) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: err?.message || 'Failed to print receipt', showConfirmButton: false, timer: 5000, timerProgressBar: true });
+    }
+  }
 
   printBookingTag(booking: Booking): void {
     const checkIn = booking.actualCheckIn
@@ -579,7 +590,7 @@ export class BookingsListComponent {
             denyButtonColor: '#6c757d',
           }).then((r) => {
             if (r.isConfirmed) {
-              window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+              this.printThermalReceipt(receiptId);
             }
             this.bookingUpdated.emit();
           });
@@ -922,7 +933,7 @@ export class BookingsListComponent {
                     denyButtonColor: '#6c757d',
                   }).then((r) => {
                     if (r.isConfirmed) {
-                      window.open(`/api/receipts/thermal/${receiptId}`, '_blank');
+                      this.printThermalReceipt(receiptId);
                     }
                   }).then(() => this.generateAndShowCheckinReceipt(booking.id));
                 } else {
