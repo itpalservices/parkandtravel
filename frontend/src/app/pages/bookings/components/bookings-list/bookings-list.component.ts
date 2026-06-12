@@ -724,7 +724,7 @@ export class BookingsListComponent {
           <div style="display: flex; gap: 12px; margin-bottom: 16px;">
             <div style="flex: 1;">
               <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Parking Place <span style="color: #dc3545;">*</span></label>
-              <input id="swal-park-place" class="swal2-input" placeholder="_-___" maxlength="5" style="margin: 0; width: 100%; box-sizing: border-box;" />
+              <input id="swal-park-place" class="swal2-input" placeholder="_-___" style="margin: 0; width: 100%; box-sizing: border-box;" />
             </div>
             <div style="flex: 1;">
               <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 14px;">Km</label>
