@@ -541,7 +541,7 @@ export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promi
   const PW = 576;
   const LM = 10;
   const BW = PW - LM * 2;
-  let y = 15;
+  let y = 80; // ~10mm top margin to clear the paper cutter
   const cmds: string[] = [];
 
   const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
@@ -659,7 +659,7 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   const PW = 576; // ZQ521 @ 203dpi: 72mm printable = 576 dots
   const LM = 10;
   const BW = PW - LM * 2;
-  let y = 15;
+  let y = 80; // ~10mm top margin to clear the paper cutter
   const cmds: string[] = [];
 
   const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
