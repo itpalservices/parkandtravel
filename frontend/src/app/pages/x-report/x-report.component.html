@@ -42,7 +42,7 @@
       </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="transactions.length > 0; else emptyState">
+    <div class="table-wrapper d-none d-md-block" *ngIf="transactions.length > 0; else emptyState">
       <table class="report-table">
         <thead>
           <tr>
@@ -67,6 +67,22 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="mobile-transaction-list d-block d-md-none" *ngIf="transactions.length > 0">
+      <div class="transaction-card" *ngFor="let t of transactions">
+        <div class="transaction-card-top">
+          <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+            {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+          </span>
+          <span class="transaction-amount">€{{ t.amount.toFixed(2) }}</span>
+        </div>
+        <div class="transaction-card-mid">
+          <span class="transaction-plate">{{ t.plateNo || '-' }}</span>
+          <span class="transaction-payment capitalize">{{ t.paymentMethod }}</span>
+        </div>
+        <div class="transaction-date">{{ formatDate(t.datetime) }}</div>
+      </div>
     </div>
 
     <ng-template #emptyState>
