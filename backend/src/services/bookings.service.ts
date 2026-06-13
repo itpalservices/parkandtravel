@@ -10,7 +10,7 @@ import {
 import { sendBookingConfirmationEmail } from "./email.service";
 import { checkAvailability } from "./availability.service";
 import { createReceipt, ReceiptLineInput } from "./receipt.service";
-import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, CheckinReceiptData } from "./pdf.service";
+import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, ReceiptPdfData, CheckinReceiptData } from "./pdf.service";
 import { uploadPdfToS3, uploadCheckinReceiptToS3, getPresignedUrl } from "./upload.service";
 
 async function getEmailDescription(): Promise<string | null> {
@@ -66,6 +66,8 @@ interface BookingResponse {
   extraFee: number | null;
   deleteflag: number;
   walleePaidAmount: number;
+  checkinPaidAmount: number;
+  completionPaidAmount: number;
   paidAmount: number;
   checkInBy: string | null;
   checkOutBy: string | null;
@@ -262,6 +264,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
       b."estimated_arrival_time",
       (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl"
     FROM bookings b
@@ -308,6 +311,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
     deleteflag: b.deleteflag,
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
+    completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
@@ -371,6 +376,7 @@ export async function getBookingById(
       b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
       (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeAmount",
       (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeCreatedAt",
       b.estimated_arrival_time,
@@ -421,6 +427,8 @@ export async function getBookingById(
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
+    completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
@@ -1240,6 +1248,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b."checkOutBy",
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
       b.estimated_arrival_time,
       (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl"
     FROM bookings b
@@ -1286,6 +1295,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
+    completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
       b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
@@ -1878,6 +1889,66 @@ export async function generateAndStoreCheckinReceipt(bookingId: string): Promise
   const pdfBuffer = await generateCheckinReceiptPdf(data);
   const key = await uploadCheckinReceiptToS3(bookingId, pdfBuffer, checkInDateTime);
   return getPresignedUrl(key, 900);
+}
+
+export async function generateCheckinPaymentZplForBooking(bookingId: string): Promise<string | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { checkinTransactions: true },
+  });
+
+  if (!booking || !booking.checkinTransactions.length) return null;
+
+  const totalAmount = booking.checkinTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const date = booking.checkinTransactions[0].datetime;
+
+  const data: ReceiptPdfData = {
+    receiptNumber: `CI-${bookingId.slice(0, 8).toUpperCase()}`,
+    receiptDate: date,
+    bookingId,
+    customerName: `${booking.name} ${booking.surname}`.trim(),
+    totalAmount,
+    discount: null,
+    lines: booking.checkinTransactions.map((t) => ({
+      lineType: 'checkin' as any,
+      description: 'Check-in payment',
+      amount: Number(t.amount),
+    })),
+  };
+
+  return generateThermalReceiptZpl(data);
+}
+
+export async function generateCompletionPaymentZplForBooking(bookingId: string): Promise<string | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { completionTransactions: true },
+  });
+
+  if (!booking || !booking.completionTransactions.length) return null;
+
+  const totalAmount = booking.completionTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const date = booking.completionTransactions[0].datetime;
+
+  const data: ReceiptPdfData = {
+    receiptNumber: `CO-${bookingId.slice(0, 8).toUpperCase()}`,
+    receiptDate: date,
+    bookingId,
+    customerName: `${booking.name} ${booking.surname}`.trim(),
+    totalAmount,
+    discount: null,
+    lines: booking.completionTransactions.map((t) => ({
+      lineType: 'completion' as any,
+      description: 'Checkout payment',
+      amount: Number(t.amount),
+    })),
+  };
+
+  return generateThermalReceiptZpl(data);
 }
 
 export async function generateCheckinReceiptZplForBooking(bookingId: string): Promise<string | null> {

@@ -55,6 +55,30 @@ export class BookingsListComponent {
     private zebraPrintService: ZebraPrintService,
   ) {}
 
+  async reprintCheckinPayment(bookingId: string): Promise<void> {
+    try {
+      await this.zebraPrintService.printCheckinPaymentReceipt(bookingId);
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
+    }
+  }
+
+  async reprintCompletionPayment(bookingId: string): Promise<void> {
+    try {
+      await this.zebraPrintService.printCompletionPaymentReceipt(bookingId);
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
+    }
+  }
+
+  async reprintCheckinCarReceipt(bookingId: string): Promise<void> {
+    try {
+      await this.zebraPrintService.printCheckinReceipt(bookingId);
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
+    }
+  }
+
   private async printThermalReceipt(receiptId: string): Promise<void> {
     try {
       await this.zebraPrintService.printThermalReceipt(receiptId);

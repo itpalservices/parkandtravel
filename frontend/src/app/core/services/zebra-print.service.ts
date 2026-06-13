@@ -22,6 +22,20 @@ export class ZebraPrintService {
     await this.sendZpl(zpl);
   }
 
+  async printCheckinPaymentReceipt(bookingId: string): Promise<void> {
+    const zpl = await firstValueFrom(
+      this.http.get(`/api/bookings/${bookingId}/checkin-payment/zpl`, { responseType: 'text' })
+    );
+    await this.sendZpl(zpl);
+  }
+
+  async printCompletionPaymentReceipt(bookingId: string): Promise<void> {
+    const zpl = await firstValueFrom(
+      this.http.get(`/api/bookings/${bookingId}/completion-payment/zpl`, { responseType: 'text' })
+    );
+    await this.sendZpl(zpl);
+  }
+
   private async sendZpl(zpl: string): Promise<void> {
     const available = await firstValueFrom(
       this.http.get<{ printer?: any[] }>(`${this.agentUrl}/available`)

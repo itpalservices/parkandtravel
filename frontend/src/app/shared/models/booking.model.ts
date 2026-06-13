@@ -37,6 +37,8 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   walleePaidAmount?: number;
+  checkinPaidAmount?: number;
+  completionPaidAmount?: number;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   estimated_arrival_time: string | null;

@@ -17,6 +17,8 @@ import {
   recordCheckinPayment as recordCheckinPaymentService,
   generateAndStoreCheckinReceipt as generateAndStoreCheckinReceiptService,
   generateCheckinReceiptZplForBooking,
+  generateCheckinPaymentZplForBooking,
+  generateCompletionPaymentZplForBooking,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -816,6 +818,34 @@ export async function generateCheckinReceiptHandler(req: Request, res: Response)
     res.json({ success: true, data: { presignedUrl } });
   } catch (error) {
     console.error("Error generating check-in receipt:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function generateCheckinPaymentZplHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const zpl = await generateCheckinPaymentZplForBooking(req.params.id);
+    if (!zpl) { res.status(404).json({ error: "No check-in payment found for this booking" }); return; }
+    res.set({ 'Content-Type': 'text/plain' });
+    res.send(zpl);
+  } catch (error) {
+    console.error("Error generating check-in payment ZPL:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function generateCompletionPaymentZplHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const zpl = await generateCompletionPaymentZplForBooking(req.params.id);
+    if (!zpl) { res.status(404).json({ error: "No completion payment found for this booking" }); return; }
+    res.set({ 'Content-Type': 'text/plain' });
+    res.send(zpl);
+  } catch (error) {
+    console.error("Error generating completion payment ZPL:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

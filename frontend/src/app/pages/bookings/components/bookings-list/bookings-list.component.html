@@ -120,6 +120,15 @@
                           Print
                         </button>
                       }
+                      @if ((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_created') {
+                        <button ngbDropdownItem (click)="reprintCheckinCarReceipt(booking.id)">🖨 Reprint Check-in Receipt</button>
+                      }
+                      @if ((isAdmin || isDriver) && (booking.checkinPaidAmount ?? 0) > 0) {
+                        <button ngbDropdownItem (click)="reprintCheckinPayment(booking.id)">🖨 Reprint Check-in Payment</button>
+                      }
+                      @if ((isAdmin || isDriver) && (booking.completionPaidAmount ?? 0) > 0) {
+                        <button ngbDropdownItem (click)="reprintCompletionPayment(booking.id)">🖨 Reprint Checkout Payment</button>
+                      }
                     </div>
                   </div>
                 </td>
@@ -628,6 +637,15 @@
                       </svg>
                       Print
                     </button>
+                  }
+                  @if ((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_created') {
+                    <button ngbDropdownItem (click)="reprintCheckinCarReceipt(booking.id)">🖨 Reprint Check-in Receipt</button>
+                  }
+                  @if ((isAdmin || isDriver) && (booking.checkinPaidAmount ?? 0) > 0) {
+                    <button ngbDropdownItem (click)="reprintCheckinPayment(booking.id)">🖨 Reprint Check-in Payment</button>
+                  }
+                  @if ((isAdmin || isDriver) && (booking.completionPaidAmount ?? 0) > 0) {
+                    <button ngbDropdownItem (click)="reprintCompletionPayment(booking.id)">🖨 Reprint Checkout Payment</button>
                   }
                 </div>
               </div>
