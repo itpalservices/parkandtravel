@@ -87,7 +87,15 @@ export class BookingsListComponent {
     }
   }
 
-  printBookingTag(booking: Booking): void {
+  async printBookingTag(bookingId: string): Promise<void> {
+    try {
+      await this.zebraPrintService.printBookingTag(bookingId);
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Could not print booking tag.', confirmButtonText: 'OK' });
+    }
+  }
+
+  printBookingTagHtml(booking: Booking): void {
     const checkIn = booking.actualCheckIn
       ? new Date(booking.actualCheckIn).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
         ' ' +

@@ -36,6 +36,13 @@ export class ZebraPrintService {
     await this.sendZpl(zpl);
   }
 
+  async printBookingTag(bookingId: string): Promise<void> {
+    const zpl = await firstValueFrom(
+      this.http.get(`/api/bookings/${bookingId}/booking-tag/zpl`, { responseType: 'text' })
+    );
+    await this.sendZpl(zpl);
+  }
+
   private async sendZpl(zpl: string): Promise<void> {
     const available = await firstValueFrom(
       this.http.get<{ printer?: any[] }>(`${this.agentUrl}/available`)

@@ -609,6 +609,88 @@ export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promi
   return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
+export interface BookingTagData {
+  customerName: string;
+  plateNo: string | null;
+  returnFlight: string | null;
+  dateTo: Date | null;
+  timeTo: Date | null;
+  actualCheckIn: Date | null;
+  parkPlace: string | null;
+  adults: number | null;
+  finalPrice: number | null;
+  keepKeys: boolean | null;
+  pickUpOption: string | null;
+}
+
+export async function generateBookingTagZpl(data: BookingTagData): Promise<string> {
+  const company = await getCompanySettings();
+
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : company.companyPhone1 || company.companyPhone2 || '';
+
+  const fmt = (d: Date | null) =>
+    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+
+  const fmtTime = (d: Date | null) =>
+    d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+
+  const fmtDt = (d: Date | null) =>
+    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+        ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+
+  const PW = 576;
+  const LM = 10;
+  const BW = PW - LM * 2;
+  let y = 80;
+  const cmds: string[] = [];
+
+  const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
+  const center = (text: string, h: number) => cmds.push(`^FO0,${y}^A0N,${h},${h}^FB${PW},1,0,C,0^FD${esc(text)}^FS`);
+  const left   = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FD${esc(text)}^FS`);
+  const solid  = () => cmds.push(`^FO${LM},${y}^GB${BW},2,2^FS`);
+  const thin   = () => cmds.push(`^FO${LM},${y}^GB${BW},1,1^FS`);
+
+  // Header
+  center(company.companyName || 'Park & Travel', 28); y += 34;
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 18); y += 24; }
+  y += 4; solid(); y += 8;
+
+  // Title
+  center('BOOKING TAG', 22); y += 28;
+  y += 4; solid(); y += 8;
+
+  // Customer & Plate
+  left('CUSTOMER', 15); y += 20;
+  left(data.customerName, 22); y += 28;
+  left('PLATE NO', 15); y += 20;
+  left(data.plateNo || '-', 22); y += 28;
+  y += 4; thin(); y += 8;
+
+  // Key-value rows
+  const VAL_X = 160;
+  const row = (label: string, value: string) => {
+    cmds.push(`^FO${LM},${y}^A0N,18,18^FD${esc(label)}^FS`);
+    cmds.push(`^FO${VAL_X},${y}^A0N,18,18^FD${esc(value)}^FS`);
+    y += 24;
+  };
+
+  row('Flight:', data.returnFlight || '-');
+  row('Return:', fmt(data.dateTo));
+  row('Time:', fmtTime(data.timeTo));
+  row('Check-in:', fmtDt(data.actualCheckIn));
+  row('Place:', data.parkPlace || '-');
+  row('Adults:', String(data.adults ?? '-'));
+  row('Price:', data.finalPrice != null ? `€${data.finalPrice.toFixed(2)}` : '-');
+  row('Keys:', data.keepKeys ? 'KK' : 'P&T');
+  row('Pick-up:', data.pickUpOption === 'airport_delivery' ? 'Airport' : 'Parking');
+
+  y += 20;
+
+  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+}
+
 export async function generateCheckinReceiptPdf(data: CheckinReceiptData): Promise<Buffer> {
   const company = await getCompanySettings();
   const html = generateCheckinReceiptHtml(data, company);

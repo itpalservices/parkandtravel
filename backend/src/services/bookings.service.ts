@@ -10,7 +10,7 @@ import {
 import { sendBookingConfirmationEmail } from "./email.service";
 import { checkAvailability } from "./availability.service";
 import { createReceipt, ReceiptLineInput } from "./receipt.service";
-import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, ReceiptPdfData, CheckinReceiptData } from "./pdf.service";
+import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, generateBookingTagZpl, ReceiptPdfData, CheckinReceiptData, BookingTagData } from "./pdf.service";
 import { uploadPdfToS3, uploadCheckinReceiptToS3, getPresignedUrl } from "./upload.service";
 
 async function getEmailDescription(): Promise<string | null> {
@@ -1976,6 +1976,32 @@ export async function generateCheckinReceiptZplForBooking(bookingId: string): Pr
   };
 
   return generateCheckinReceiptZpl(data);
+}
+
+export async function generateBookingTagZplForBooking(bookingId: string): Promise<string | null> {
+  if (!isValidUUID(bookingId)) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking || booking.deleteflag !== 0) return null;
+
+  const data: BookingTagData = {
+    customerName: `${booking.name} ${booking.surname}`.trim(),
+    plateNo: booking.plateNo ?? null,
+    returnFlight: booking.returnFlight ?? null,
+    dateTo: booking.dateTo ?? null,
+    timeTo: booking.timeTo ?? null,
+    actualCheckIn: booking.actualCheckIn ?? null,
+    parkPlace: booking.parkPlace ?? null,
+    adults: booking.adults ?? null,
+    finalPrice: booking.finalPrice != null ? Number(booking.finalPrice) : null,
+    keepKeys: booking.keepKeys ?? null,
+    pickUpOption: booking.pickUpOption ?? null,
+  };
+
+  return generateBookingTagZpl(data);
 }
 
 export { isValidDateFormat, isDateInPast, isValidUUID };

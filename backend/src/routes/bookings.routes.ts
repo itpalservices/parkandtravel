@@ -18,6 +18,7 @@ import {
   generateCheckinReceiptZplHandler,
   generateCheckinPaymentZplHandler,
   generateCompletionPaymentZplHandler,
+  generateBookingTagZplHandler,
 } from "../controllers/bookings.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -40,6 +41,7 @@ router.post("/:id/checkin-receipt", checkJwt, generateCheckinReceiptHandler);
 router.get("/:id/checkin-receipt/zpl", checkJwt, generateCheckinReceiptZplHandler);
 router.get("/:id/checkin-payment/zpl", checkJwt, generateCheckinPaymentZplHandler);
 router.get("/:id/completion-payment/zpl", checkJwt, generateCompletionPaymentZplHandler);
+router.get("/:id/booking-tag/zpl", checkJwt, generateBookingTagZplHandler);
 router.post("/guest", createGuestBooking);
 
 export default router;
