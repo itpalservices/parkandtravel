@@ -56,43 +56,23 @@ export class BookingsListComponent {
   ) {}
 
   async reprintCheckinPayment(bookingId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printCheckinPaymentReceipt(bookingId);
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-    }
+    await this.zebraPrintService.printCheckinPaymentReceipt(bookingId);
   }
 
   async reprintCompletionPayment(bookingId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printCompletionPaymentReceipt(bookingId);
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-    }
+    await this.zebraPrintService.printCompletionPaymentReceipt(bookingId);
   }
 
   async reprintCheckinCarReceipt(bookingId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printCheckinReceipt(bookingId);
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-    }
+    await this.zebraPrintService.printCheckinReceipt(bookingId);
   }
 
   private async printThermalReceipt(receiptId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printThermalReceipt(receiptId);
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-    }
+    await this.zebraPrintService.printThermalReceipt(receiptId);
   }
 
   async printBookingTag(bookingId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printBookingTag(bookingId);
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Could not print booking tag.', confirmButtonText: 'OK' });
-    }
+    await this.zebraPrintService.printBookingTag(bookingId);
   }
 
   printBookingTagHtml(booking: Booking): void {
@@ -1104,11 +1084,7 @@ export class BookingsListComponent {
       confirmButtonColor: '#006B8F',
     }).then(async (r) => {
       if (r.isConfirmed) {
-        try {
-          await this.zebraPrintService.printCheckinReceipt(bookingId);
-        } catch (err: any) {
-          Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-        }
+        await this.zebraPrintService.printCheckinReceipt(bookingId);
       }
     });
   }

@@ -1,0 +1,100 @@
+:host {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  width: 300px;
+  pointer-events: none;
+}
+
+.pp-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  pointer-events: all;
+
+  &.is-success {
+    border-color: #22c55e;
+  }
+
+  &.is-error {
+    border-color: #ef4444;
+  }
+}
+
+.pp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pp-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.pp-icon {
+  flex-shrink: 0;
+}
+
+.pp-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  margin-left: 8px;
+
+  &:hover {
+    color: #374151;
+    background: #f3f4f6;
+  }
+}
+
+.pp-bar-track {
+  height: 5px;
+  background: #f3f4f6;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pp-bar-success-track {
+  background: #dcfce7;
+}
+
+.pp-bar-indeterminate {
+  height: 100%;
+  width: 40%;
+  background: #006B8F;
+  border-radius: 99px;
+  animation: pp-slide 1.2s ease-in-out infinite;
+}
+
+.pp-bar-full {
+  height: 100%;
+  width: 100%;
+  background: #22c55e;
+  border-radius: 99px;
+}
+
+.pp-error-text {
+  font-size: 0.8rem;
+  color: #ef4444;
+  margin: 0;
+  line-height: 1.45;
+}
+
+@keyframes pp-slide {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(350%); }
+}

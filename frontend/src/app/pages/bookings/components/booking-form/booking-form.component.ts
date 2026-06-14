@@ -794,11 +794,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private async openThermalReceipt(receiptId: string): Promise<void> {
-    try {
-      await this.zebraPrintService.printThermalReceipt(receiptId);
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-    }
+    await this.zebraPrintService.printThermalReceipt(receiptId);
   }
 
   private generateAndShowCheckinReceipt(bookingId: string): void {
@@ -813,11 +809,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       confirmButtonColor: '#006B8F',
     }).then(async (r) => {
       if (r.isConfirmed) {
-        try {
-          await this.zebraPrintService.printCheckinReceipt(bookingId);
-        } catch (err: any) {
-          Swal.fire({ icon: 'error', title: 'Print failed', text: err?.message || 'Failed to print receipt', confirmButtonText: 'OK' });
-        }
+        await this.zebraPrintService.printCheckinReceipt(bookingId);
       }
     });
   }

@@ -7,6 +7,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { SessionExpiredModalComponent } from '../shared/components/session-expired-modal/session-expired-modal.component';
 import { LogoutConfirmationModalComponent } from '../shared/components/logout-confirmation-modal/logout-confirmation-modal.component';
+import { PrintProgressComponent } from '../shared/components/print-progress/print-progress.component';
 import { environment } from '../../environments/environment';
 import { RoleService } from '../core/services/role.service';
 import { ShiftService } from '../core/services/shift.service';
@@ -15,7 +16,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent, SessionExpiredModalComponent, LogoutConfirmationModalComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent, SessionExpiredModalComponent, LogoutConfirmationModalComponent, PrintProgressComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })
