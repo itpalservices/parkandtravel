@@ -606,7 +606,7 @@ export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promi
   if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
   y += 20;
 
-  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+  return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
 export interface BookingTagData {
@@ -688,7 +688,7 @@ export async function generateBookingTagZpl(data: BookingTagData): Promise<strin
 
   y += 20;
 
-  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+  return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
 export async function generateCheckinReceiptPdf(data: CheckinReceiptData): Promise<Buffer> {
@@ -793,7 +793,7 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
   y += 20;
 
-  return ['^XA', `^PW${PW}`, `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+  return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
 export async function generateThermalReceiptPdf(data: ReceiptPdfData): Promise<Buffer> {
