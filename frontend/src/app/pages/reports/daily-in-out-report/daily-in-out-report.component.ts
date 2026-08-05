@@ -2,16 +2,19 @@ import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/co
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDatepickerModule, NgbDateStruct, NgbCalendar, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DailyInOutReportItem } from '../../../shared/models/reports.model';
+import { exportToExcel } from '../../../shared/utils/excel-export.util';
+
+const REPORT_COLUMNS = ['Status', 'Type', 'Time', 'Flight No.', 'Full Name', 'Phone', 'Vehicle', 'Plate No.', 'Park Place', 'Price', 'Adults'];
 
 @Component({
   selector: 'app-daily-in-out-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule, CurrencyPipe],
+  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule, NgbDropdownModule, CurrencyPipe],
   templateUrl: './daily-in-out-report.component.html',
   styleUrl: './daily-in-out-report.component.scss',
 })
@@ -102,6 +105,30 @@ export class DailyInOutReportComponent implements OnInit {
     img.src = 'assets/img/park-and-travel-logo.png';
   }
 
+  private buildTableRows(): string[][] {
+    return this.reportData.map((item) => {
+      let priceStr = '-';
+      if (item.finalPrice !== null) {
+        const price = Number(item.finalPrice) || 0;
+        const extra = item.extraFee ? Number(item.extraFee) : 0;
+        priceStr = `€${(price + extra).toFixed(2)}`;
+      }
+      return [
+        item.bookingStatus,
+        this.getTypeLabel(item),
+        item.time || '-',
+        item.flightNo,
+        item.fullName,
+        item.phone,
+        item.vehicle,
+        item.plateNo,
+        item.parkPlace,
+        priceStr,
+        item.adults !== null ? item.adults.toString() : '-',
+      ];
+    });
+  }
+
   exportPDF(): void {
     if (this.reportData.length === 0) return;
 
@@ -141,32 +168,12 @@ export class DailyInOutReportComponent implements OnInit {
     doc.text(totalText, (pageWidth - totalWidth) / 2, yPos);
     yPos += 12;
 
-    const tableData = this.reportData.map((item) => {
-      let priceStr = '-';
-      if (item.finalPrice !== null) {
-        const price = Number(item.finalPrice) || 0;
-        const extra = item.extraFee ? Number(item.extraFee) : 0;
-        priceStr = `€${(price + extra).toFixed(2)}`;
-      }
-      return [
-        item.bookingStatus,
-        this.getTypeLabel(item),
-        item.time || '-',
-        item.flightNo,
-        item.fullName,
-        item.phone,
-        item.vehicle,
-        item.plateNo,
-        item.parkPlace,
-        priceStr,
-        item.adults !== null ? item.adults.toString() : '-',
-      ];
-    });
+    const tableData = this.buildTableRows();
 
     const typeColumnIndex = 1;
     autoTable(doc, {
       startY: yPos,
-      head: [['Status', 'Type', 'Time', 'Flight No.', 'Full Name', 'Phone', 'Vehicle', 'Plate No.', 'Park Place', 'Price', 'Adults']],
+      head: [REPORT_COLUMNS],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -201,6 +208,27 @@ export class DailyInOutReportComponent implements OnInit {
     doc.save(fileName);
 
     this.exporting = false;
+  }
+
+  async exportExcel(): Promise<void> {
+    if (this.reportData.length === 0 || this.exporting) return;
+
+    this.exporting = true;
+    try {
+      await exportToExcel({
+        fileName: `daily-in-out-report-${this.formatDateForApi(this.selectedDate)}.xlsx`,
+        sheetName: 'Daily In-Out',
+        title: 'Daily In/Out Report',
+        infoLines: [
+          `Date: ${this.formatDisplayDate(this.selectedDate)}`,
+          `Total Bookings: ${this.reportData.length}`,
+        ],
+        columns: REPORT_COLUMNS,
+        rows: this.buildTableRows(),
+      });
+    } finally {
+      this.exporting = false;
+    }
   }
 
   private formatDateForApi(date: NgbDateStruct): string {

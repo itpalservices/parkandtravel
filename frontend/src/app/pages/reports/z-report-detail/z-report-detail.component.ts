@@ -1,15 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import { ZReportData, XReportTransaction } from '../../../shared/models/reports.model';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { exportToExcel } from '../../../shared/utils/excel-export.util';
+
+const REPORT_COLUMNS = ['Date', 'Plate No', 'Type', 'Payment', 'Amount (€)'];
 
 @Component({
   selector: 'app-z-report-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NgbDropdownModule],
   templateUrl: './z-report-detail.component.html',
   styleUrl: './z-report-detail.component.scss',
 })
@@ -134,5 +138,36 @@ export class ZReportDetailComponent implements OnInit {
 
     doc.save(`z-report-${this.report.targetUserName.replace(/\s+/g, '-')}-${new Date(this.report.createdAt).toISOString().slice(0, 10)}.pdf`);
     this.exporting = false;
+  }
+
+  async exportExcel(): Promise<void> {
+    if (!this.report || this.exporting) return;
+    this.exporting = true;
+    try {
+      const totalDeclared = this.report.declaredCash + this.report.declaredCard;
+      const totalActual = this.report.actualCash + this.report.actualCard;
+
+      await exportToExcel({
+        fileName: `z-report-${this.report.targetUserName.replace(/\s+/g, '-')}-${new Date(this.report.createdAt).toISOString().slice(0, 10)}.xlsx`,
+        sheetName: 'Z-Report',
+        title: 'Z Report',
+        infoLines: [
+          `Employee: ${this.report.targetUserName}   |   Run by: ${this.report.runByUserName}   |   ${this.formatDateTime(this.report.createdAt)}`,
+          `Cash: Declared €${this.report.declaredCash.toFixed(2)} | Actual €${this.report.actualCash.toFixed(2)} | ${this.diffLabel(this.cashDiff)}`,
+          `Card: Declared €${this.report.declaredCard.toFixed(2)} | Actual €${this.report.actualCard.toFixed(2)} | ${this.diffLabel(this.cardDiff)}`,
+          `Total: Declared €${totalDeclared.toFixed(2)} | Actual €${totalActual.toFixed(2)} | ${this.diffLabel(this.totalDiff)}`,
+        ],
+        columns: REPORT_COLUMNS,
+        rows: this.transactions.map(t => [
+          this.formatDateTime(t.datetime),
+          t.plateNo || '-',
+          t.type === 'checkin' ? 'Check-in' : 'Check-out',
+          t.paymentMethod,
+          Number(t.amount).toFixed(2),
+        ]),
+      });
+    } finally {
+      this.exporting = false;
+    }
   }
 }

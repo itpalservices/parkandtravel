@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgbDatepickerModule, NgbDateStruct, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDatepickerModule, NgbDateStruct, NgbCalendar, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -11,11 +11,14 @@ import {
   CAR_PICK_UP_OPTIONS_LABELS,
 } from '../../../shared/statics/car-pick-up.model';
 import { WashServiceReportItem } from '../../../shared/models/reports.model';
+import { exportToExcel } from '../../../shared/utils/excel-export.util';
+
+const REPORT_COLUMNS = ['Full Name', 'Plate No.', 'Vehicle / Model', 'Vehicle Color', 'Car Pick-up', 'Check Out'];
 
 @Component({
   selector: 'app-wash-service-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule],
+  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule, NgbDropdownModule],
   templateUrl: './wash-service-report.component.html',
   styleUrl: './wash-service-report.component.scss',
 })
@@ -96,6 +99,17 @@ export class WashServiceReportComponent implements OnInit {
     img.src = 'assets/img/park-and-travel-logo.png';
   }
 
+  private buildTableRows(): string[][] {
+    return this.reportData.map((item) => [
+      item.fullName,
+      item.plateNo,
+      item.vehicleModel,
+      item.vehicleColor,
+      this.formatPickUp(item.carPickup),
+      `${item.checkOutDate} ${item.checkOutTime}`,
+    ]);
+  }
+
   exportPDF(): void {
     if (this.reportData.length === 0) return;
 
@@ -135,18 +149,11 @@ export class WashServiceReportComponent implements OnInit {
     doc.text(totalText, (pageWidth - totalWidth) / 2, yPos);
     yPos += 12;
 
-    const tableData = this.reportData.map((item) => [
-      item.fullName,
-      item.plateNo,
-      item.vehicleModel,
-      item.vehicleColor,
-      this.formatPickUp(item.carPickup),
-      `${item.checkOutDate} ${item.checkOutTime}`,
-    ]);
+    const tableData = this.buildTableRows();
 
     autoTable(doc, {
       startY: yPos,
-      head: [['Full Name', 'Plate No.', 'Vehicle / Model', 'Vehicle Color', 'Car Pick-up', 'Check Out']],
+      head: [REPORT_COLUMNS],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -177,6 +184,27 @@ export class WashServiceReportComponent implements OnInit {
     doc.save(fileName);
 
     this.exporting = false;
+  }
+
+  async exportExcel(): Promise<void> {
+    if (this.reportData.length === 0 || this.exporting) return;
+
+    this.exporting = true;
+    try {
+      await exportToExcel({
+        fileName: `wash-service-report-${this.formatDateForApi(this.selectedDate)}.xlsx`,
+        sheetName: 'Wash Service',
+        title: 'Wash Service Report',
+        infoLines: [
+          `Date: ${this.formatDisplayDate(this.selectedDate)}`,
+          `Total Cars: ${this.reportData.length}`,
+        ],
+        columns: REPORT_COLUMNS,
+        rows: this.buildTableRows(),
+      });
+    } finally {
+      this.exporting = false;
+    }
   }
 
   private formatDateForApi(date: NgbDateStruct): string {

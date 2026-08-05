@@ -1,12 +1,24 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCalendar, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { firstValueFrom } from 'rxjs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
+import { exportToExcel } from '../../../shared/utils/excel-export.util';
+
+interface ExportData {
+  title: string;
+  subtitle: string;
+  headers: string[];
+  rows: string[][];
+  totals: PaymentTotals[];
+  total: number;
+  filenameBase: string;
+  colStyles?: Record<number, any>;
+}
 
 export interface EmployeeInfo {
   userId: string;
@@ -57,7 +69,7 @@ type EmployeeStep = 'employees' | 'shifts' | 'transactions';
 @Component({
   selector: 'app-employee-session-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, DateRangePickerComponent],
+  imports: [CommonModule, RouterLink, DateRangePickerComponent, NgbDropdownModule],
   templateUrl: './employee-session-report.component.html',
   styleUrl: './employee-session-report.component.scss',
 })
@@ -287,23 +299,33 @@ export class EmployeeSessionReportComponent implements OnInit {
     this.shiftData = null;
   }
 
-  // ===================== PDF EXPORT =====================
+  // ===================== EXPORT =====================
   async exportPDF(): Promise<void> {
     if (this.exporting) return;
     this.exporting = true;
     try {
-      if (this.mode === 'date') {
-        await this.exportDatePDF();
-      } else {
-        await this.exportShiftPDF();
-      }
+      const data = this.mode === 'date' ? await this.assembleDateExportData() : await this.assembleShiftExportData();
+      if (!data) return;
+      this.buildPDF({ ...data, filename: `${data.filenameBase}.pdf` });
     } finally {
       this.exporting = false;
     }
   }
 
-  private async exportDatePDF(): Promise<void> {
-    if (!this.dateFrom || !this.dateTo) return;
+  async exportExcel(): Promise<void> {
+    if (this.exporting) return;
+    this.exporting = true;
+    try {
+      const data = this.mode === 'date' ? await this.assembleDateExportData() : await this.assembleShiftExportData();
+      if (!data) return;
+      await this.buildExcel({ ...data, filename: `${data.filenameBase}.xlsx` });
+    } finally {
+      this.exporting = false;
+    }
+  }
+
+  private async assembleDateExportData(): Promise<ExportData | null> {
+    if (!this.dateFrom || !this.dateTo) return null;
     const fromApi = this.formatDateTimeForApi(this.dateFrom);
     const toApi = this.formatDateTimeForApi(this.dateTo);
     const from = this.formatDateForApi(this.dateFrom);
@@ -327,9 +349,9 @@ export class EmployeeSessionReportComponent implements OnInit {
     const periodLabel = sameDay
       ? `Date: ${this.formatDisplayDate(this.dateFrom!)}`
       : `Period: ${this.formatDisplayDate(this.dateFrom!)} – ${this.formatDisplayDate(this.dateTo!)}`;
-    const filename = sameDay
-      ? `z-report-by-employee-${from}.pdf`
-      : `z-report-by-employee-${from}-to-${to}.pdf`;
+    const filenameBase = sameDay
+      ? `z-report-by-employee-${from}`
+      : `z-report-by-employee-${from}-to-${to}`;
 
     const rows = all.map((t) => [
       this.formatDateTime(t.datetime),
@@ -341,20 +363,20 @@ export class EmployeeSessionReportComponent implements OnInit {
       t.notes || '-',
     ]);
 
-    this.buildPDF({
+    return {
       title: 'Income by Employee',
       subtitle: periodLabel,
       headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Employee', 'Notes'],
       rows,
       totals,
       total: all.length,
-      filename,
+      filenameBase,
       colStyles: { 4: { halign: 'right' as const }, 6: { cellWidth: 40 } },
-    });
+    };
   }
 
-  private async exportShiftPDF(): Promise<void> {
-    if (!this.selectedShift || !this.selectedEmployee) return;
+  private async assembleShiftExportData(): Promise<ExportData | null> {
+    if (!this.selectedShift || !this.selectedEmployee) return null;
 
     const all: TransactionRow[] = [];
     let totals: PaymentTotals[] = [];
@@ -377,7 +399,7 @@ export class EmployeeSessionReportComponent implements OnInit {
       : 'Ongoing';
     const periodLabel = `Employee: ${this.selectedEmployee.name} | Shift: ${this.formatDateTime(this.selectedShift.shiftStart)} → ${shiftEnd}`;
     const safeName = this.selectedEmployee.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-    const filename = `z-report-by-employee-${safeName}-shift-${shiftStartStr}.pdf`;
+    const filenameBase = `z-report-by-employee-${safeName}-shift-${shiftStartStr}`;
 
     const rows = all.map((t) => [
       this.formatDateTime(t.datetime),
@@ -388,28 +410,39 @@ export class EmployeeSessionReportComponent implements OnInit {
       t.notes || '-',
     ]);
 
-    this.buildPDF({
+    return {
       title: 'Income by Employee',
       subtitle: periodLabel,
       headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Notes'],
       rows,
       totals,
       total: all.length,
-      filename,
+      filenameBase,
       colStyles: { 4: { halign: 'right' as const }, 5: { cellWidth: 40 } },
+    };
+  }
+
+  private async buildExcel(opts: ExportData & { filename: string }): Promise<void> {
+    const infoLines = [opts.subtitle, `Total Transactions: ${opts.total}`];
+    if (opts.totals.length > 0) {
+      infoLines.push('Payment Summary:');
+      opts.totals.forEach((t) => {
+        infoLines.push(`${this.formatPaymentMethod(t.paymentMethod)}: ${this.formatAmount(t.total)} (${t.count} tx)`);
+      });
+      infoLines.push(`Grand Total: ${this.formatAmount(this.grandTotal(opts.totals))}`);
+    }
+
+    await exportToExcel({
+      fileName: opts.filename,
+      sheetName: 'Income by Employee',
+      title: opts.title,
+      infoLines,
+      columns: opts.headers,
+      rows: opts.rows,
     });
   }
 
-  private buildPDF(opts: {
-    title: string;
-    subtitle: string;
-    headers: string[];
-    rows: string[][];
-    totals: PaymentTotals[];
-    total: number;
-    filename: string;
-    colStyles?: Record<number, any>;
-  }): void {
+  private buildPDF(opts: ExportData & { filename: string }): void {
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
     let yPos = 14;

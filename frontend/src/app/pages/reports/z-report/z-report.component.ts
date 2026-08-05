@@ -1,21 +1,23 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCalendar, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { firstValueFrom } from 'rxjs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
 import { WalleeResponse, WalleeTransaction } from '../../../shared/models/reports.model';
+import { exportToExcel } from '../../../shared/utils/excel-export.util';
 
 const SUCCESS_STATES = ['FULFILL', 'AUTHORIZED', 'CONFIRMED', 'COMPLETED'];
 const FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
+const REPORT_COLUMNS = ['Transaction ID', 'Date', 'Full Name', 'Car Details', 'Amount', 'Status'];
 
 @Component({
   selector: 'app-z-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, DateRangePickerComponent],
+  imports: [CommonModule, RouterLink, DateRangePickerComponent, NgbDropdownModule],
   templateUrl: './z-report.component.html',
   styleUrl: './z-report.component.scss',
 })
@@ -107,163 +109,227 @@ export class ZReportComponent {
     return Math.floor(this.currentOffset / this.pageSize) + 1;
   }
 
+  private async assembleZReportData(): Promise<{
+    dateLabel: string;
+    totalCountText: string;
+    allTransactions: WalleeTransaction[];
+    tableBody: string[][];
+    footerStartIndex: number;
+    fileSuffix: string;
+  } | null> {
+    if (!this.dateFrom || !this.dateTo) return null;
+
+    const dateFromStr = this.formatDateForApi(this.dateFrom);
+    const dateToStr = this.formatDateForApi(this.dateTo);
+    const dateFromApiStr = this.formatDateTimeForApi(this.dateFrom);
+    const dateToApiStr = this.formatDateTimeForApi(this.dateTo);
+
+    const [settingsData, firstPage] = await Promise.all([
+      firstValueFrom(this.apiService.get<{ tax: number | null }>('/settings')),
+      firstValueFrom(
+        this.apiService.get<WalleeResponse>(
+          `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=0`
+        )
+      ),
+    ]);
+
+    const allTransactions: WalleeTransaction[] = [...firstPage.data];
+    let offset = this.pageSize;
+    let hasMore = firstPage.hasMore;
+
+    while (hasMore) {
+      const page = await firstValueFrom(
+        this.apiService.get<WalleeResponse>(
+          `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=${offset}`
+        )
+      );
+      allTransactions.push(...page.data);
+      hasMore = page.hasMore;
+      offset += this.pageSize;
+    }
+
+    const taxRate: number | null = settingsData.tax ?? null;
+    const hasTax = taxRate !== null && taxRate > 0;
+
+    const grossAmount = allTransactions
+      .filter((t) => SUCCESS_STATES.includes(t.state?.toUpperCase()))
+      .reduce((sum, t) => sum + (Number(t.authorizationAmount) || 0), 0);
+
+    const netAmount = hasTax
+      ? grossAmount - grossAmount * (taxRate! / 100)
+      : null;
+
+    const currency = allTransactions[0]?.currency || '';
+
+    const sameDay =
+      this.formatDisplayDate(this.dateFrom) === this.formatDisplayDate(this.dateTo);
+    const dateLabel = sameDay
+      ? `Date: ${this.formatDisplayDate(this.dateFrom)}`
+      : `Period: ${this.formatDisplayDate(this.dateFrom)} \u2013 ${this.formatDisplayDate(this.dateTo)}`;
+    const totalCountText = `Total Transactions: ${allTransactions.length}`;
+
+    const transactionRows = allTransactions.map((item) => [
+      item.id?.toString() || '-',
+      this.formatCreatedOn(item.createdOn),
+      item.metaData?.customerName || '-',
+      [item.metaData?.carBrand, item.metaData?.plateNo].filter(Boolean).join(' - ') || '-',
+      this.formatAmount(item.authorizationAmount, item.currency),
+      this.getStatusLabel(item.state),
+    ]);
+
+    const footerStartIndex = transactionRows.length;
+    const tableBody: string[][] = [...transactionRows];
+
+    if (hasTax) {
+      tableBody.push(['Gross Amount', '', '', '', `${currency} ${grossAmount.toFixed(2)}`, '']);
+      tableBody.push(['Tax %', '', '', '', `${taxRate}%`, '']);
+      tableBody.push(['Net Amount', '', '', '', `${currency} ${netAmount!.toFixed(2)}`, '']);
+    } else {
+      tableBody.push(['Net Amount', '', '', '', `${currency} ${grossAmount.toFixed(2)}`, '']);
+    }
+
+    const fileSuffix = sameDay
+      ? dateFromStr
+      : `${dateFromStr}-to-${dateToStr}`;
+
+    return { dateLabel, totalCountText, allTransactions, tableBody, footerStartIndex, fileSuffix };
+  }
+
   async exportPDF(): Promise<void> {
     if (!this.dateFrom || !this.dateTo || this.exporting) return;
 
     this.exporting = true;
 
     try {
-      const dateFromStr = this.formatDateForApi(this.dateFrom);
-      const dateToStr = this.formatDateForApi(this.dateTo);
-      const dateFromApiStr = this.formatDateTimeForApi(this.dateFrom);
-      const dateToApiStr = this.formatDateTimeForApi(this.dateTo);
-
-      const [settingsData, firstPage] = await Promise.all([
-        firstValueFrom(this.apiService.get<{ tax: number | null }>('/settings')),
-        firstValueFrom(
-          this.apiService.get<WalleeResponse>(
-            `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=0`
-          )
-        ),
-      ]);
-
-      const allTransactions: WalleeTransaction[] = [...firstPage.data];
-      let offset = this.pageSize;
-      let hasMore = firstPage.hasMore;
-
-      while (hasMore) {
-        const page = await firstValueFrom(
-          this.apiService.get<WalleeResponse>(
-            `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=${offset}`
-          )
-        );
-        allTransactions.push(...page.data);
-        hasMore = page.hasMore;
-        offset += this.pageSize;
-      }
-
-      const taxRate: number | null = settingsData.tax ?? null;
-      const hasTax = taxRate !== null && taxRate > 0;
-
-      const grossAmount = allTransactions
-        .filter((t) => SUCCESS_STATES.includes(t.state?.toUpperCase()))
-        .reduce((sum, t) => sum + (Number(t.authorizationAmount) || 0), 0);
-
-      const netAmount = hasTax
-        ? grossAmount - grossAmount * (taxRate! / 100)
-        : null;
-
-      const currency = allTransactions[0]?.currency || '';
-
-      const doc = new jsPDF('portrait');
-      const pageWidth = doc.internal.pageSize.getWidth();
-      let yPos = 15;
-
-      if (this.logoBase64) {
-        const logoWidth = 50;
-        const logoHeight = 20;
-        const logoX = (pageWidth - logoWidth) / 2;
-        doc.addImage(this.logoBase64, 'PNG', logoX, yPos, logoWidth, logoHeight);
-        yPos += logoHeight + 10;
-      }
-
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 107, 143);
-      const title = 'Z-Report';
-      doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, yPos);
-      yPos += 10;
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(55, 65, 81);
-      const sameDay =
-        this.formatDisplayDate(this.dateFrom) === this.formatDisplayDate(this.dateTo);
-      const dateLabel = sameDay
-        ? `Date: ${this.formatDisplayDate(this.dateFrom)}`
-        : `Period: ${this.formatDisplayDate(this.dateFrom)} \u2013 ${this.formatDisplayDate(this.dateTo)}`;
-      doc.text(dateLabel, (pageWidth - doc.getTextWidth(dateLabel)) / 2, yPos);
-      yPos += 8;
-
-      const totalCountText = `Total Transactions: ${allTransactions.length}`;
-      doc.text(totalCountText, (pageWidth - doc.getTextWidth(totalCountText)) / 2, yPos);
-      yPos += 12;
-
-      const transactionRows = allTransactions.map((item) => [
-        item.id?.toString() || '-',
-        this.formatCreatedOn(item.createdOn),
-        item.metaData?.customerName || '-',
-        [item.metaData?.carBrand, item.metaData?.plateNo].filter(Boolean).join(' - ') || '-',
-        this.formatAmount(item.authorizationAmount, item.currency),
-        this.getStatusLabel(item.state),
-      ]);
-
-      const footerStartIndex = transactionRows.length;
-      const tableBody: string[][] = [...transactionRows];
-
-      if (hasTax) {
-        tableBody.push(['Gross Amount', '', '', '', `${currency} ${grossAmount.toFixed(2)}`, '']);
-        tableBody.push(['Tax %', '', '', '', `${taxRate}%`, '']);
-        tableBody.push(['Net Amount', '', '', '', `${currency} ${netAmount!.toFixed(2)}`, '']);
-      } else {
-        tableBody.push(['Net Amount', '', '', '', `${currency} ${grossAmount.toFixed(2)}`, '']);
-      }
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [['Transaction ID', 'Date', 'Full Name', 'Car Details', 'Amount', 'Status']],
-        body: tableBody,
-        theme: 'striped',
-        headStyles: {
-          fillColor: [0, 107, 143],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 8,
-        },
-        bodyStyles: {
-          fontSize: 7,
-          textColor: [55, 65, 81],
-        },
-        alternateRowStyles: {
-          fillColor: [249, 250, 251],
-        },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          4: { halign: 'right' },
-        },
-        margin: { left: 10, right: 10 },
-        didParseCell: (data: any) => {
-          if (data.section !== 'body') return;
-
-          if (data.row.index >= footerStartIndex) {
-            data.cell.styles.fillColor = [255, 255, 255];
-            data.cell.styles.textColor = [0, 107, 143];
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fontSize = 8;
-            if (data.row.index === footerStartIndex) {
-              data.cell.styles.lineWidth = { top: 0.5, bottom: 0, left: 0, right: 0 };
-              data.cell.styles.lineColor = [0, 107, 143];
-            }
-          } else if (data.column.index === 5) {
-            const state = allTransactions[data.row.index]?.state?.toUpperCase();
-            if (FAILED_STATES.includes(state)) {
-              data.cell.styles.textColor = [220, 38, 38];
-            } else if (SUCCESS_STATES.includes(state)) {
-              data.cell.styles.textColor = [22, 163, 74];
-            }
-          }
-        },
-      });
-
-      const fileSuffix = sameDay
-        ? dateFromStr
-        : `${dateFromStr}-to-${dateToStr}`;
-      doc.save(`z-report-${fileSuffix}.pdf`);
+      const data = await this.assembleZReportData();
+      if (!data) return;
+      this.buildPDF(data);
     } catch (err) {
-      console.error('Error exporting Z-Report PDF:', err);
+      console.error('Error exporting Online Payments PDF:', err);
     } finally {
       this.exporting = false;
     }
+  }
+
+  async exportExcel(): Promise<void> {
+    if (!this.dateFrom || !this.dateTo || this.exporting) return;
+
+    this.exporting = true;
+
+    try {
+      const data = await this.assembleZReportData();
+      if (!data) return;
+      await this.buildExcel(data);
+    } catch (err) {
+      console.error('Error exporting Online Payments Excel:', err);
+    } finally {
+      this.exporting = false;
+    }
+  }
+
+  private buildPDF(data: {
+    dateLabel: string;
+    totalCountText: string;
+    allTransactions: WalleeTransaction[];
+    tableBody: string[][];
+    footerStartIndex: number;
+    fileSuffix: string;
+  }): void {
+    const { dateLabel, totalCountText, allTransactions, tableBody, footerStartIndex, fileSuffix } = data;
+
+    const doc = new jsPDF('portrait');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = 15;
+
+    if (this.logoBase64) {
+      const logoWidth = 50;
+      const logoHeight = 20;
+      const logoX = (pageWidth - logoWidth) / 2;
+      doc.addImage(this.logoBase64, 'PNG', logoX, yPos, logoWidth, logoHeight);
+      yPos += logoHeight + 10;
+    }
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 107, 143);
+    const title = 'Online Payments';
+    doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, yPos);
+    yPos += 10;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    doc.text(dateLabel, (pageWidth - doc.getTextWidth(dateLabel)) / 2, yPos);
+    yPos += 8;
+
+    doc.text(totalCountText, (pageWidth - doc.getTextWidth(totalCountText)) / 2, yPos);
+    yPos += 12;
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [REPORT_COLUMNS],
+      body: tableBody,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [0, 107, 143],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
+      },
+      bodyStyles: {
+        fontSize: 7,
+        textColor: [55, 65, 81],
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251],
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        4: { halign: 'right' },
+      },
+      margin: { left: 10, right: 10 },
+      didParseCell: (cellData: any) => {
+        if (cellData.section !== 'body') return;
+
+        if (cellData.row.index >= footerStartIndex) {
+          cellData.cell.styles.fillColor = [255, 255, 255];
+          cellData.cell.styles.textColor = [0, 107, 143];
+          cellData.cell.styles.fontStyle = 'bold';
+          cellData.cell.styles.fontSize = 8;
+          if (cellData.row.index === footerStartIndex) {
+            cellData.cell.styles.lineWidth = { top: 0.5, bottom: 0, left: 0, right: 0 };
+            cellData.cell.styles.lineColor = [0, 107, 143];
+          }
+        } else if (cellData.column.index === 5) {
+          const state = allTransactions[cellData.row.index]?.state?.toUpperCase();
+          if (FAILED_STATES.includes(state)) {
+            cellData.cell.styles.textColor = [220, 38, 38];
+          } else if (SUCCESS_STATES.includes(state)) {
+            cellData.cell.styles.textColor = [22, 163, 74];
+          }
+        }
+      },
+    });
+
+    doc.save(`online-payment-${fileSuffix}.pdf`);
+  }
+
+  private async buildExcel(data: {
+    dateLabel: string;
+    totalCountText: string;
+    tableBody: string[][];
+    footerStartIndex: number;
+    fileSuffix: string;
+  }): Promise<void> {
+    await exportToExcel({
+      fileName: `online-payment-${data.fileSuffix}.xlsx`,
+      sheetName: 'Online Payments',
+      title: 'Online Payments',
+      infoLines: [data.dateLabel, data.totalCountText],
+      columns: REPORT_COLUMNS,
+      rows: data.tableBody,
+      footerRowCount: data.tableBody.length - data.footerStartIndex,
+    });
   }
 
   formatCreatedOn(dateStr: string): string {
