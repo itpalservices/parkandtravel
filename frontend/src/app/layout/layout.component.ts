@@ -27,6 +27,7 @@ export class LayoutComponent implements OnInit {
   private shiftService = inject(ShiftService);
   
   sidebarOpen = signal(false);
+  sidebarCollapsed = signal(this.readCollapsedFromStorage());
 
   ngOnInit(): void {
     this.checkEmailVerification();
@@ -91,5 +92,14 @@ export class LayoutComponent implements OnInit {
 
   closeSidebar(): void {
     this.sidebarOpen.set(false);
+  }
+
+  toggleSidebarCollapse(): void {
+    this.sidebarCollapsed.update(v => !v);
+    localStorage.setItem('sidebarCollapsed', String(this.sidebarCollapsed()));
+  }
+
+  private readCollapsedFromStorage(): boolean {
+    return localStorage.getItem('sidebarCollapsed') === 'true';
   }
 }

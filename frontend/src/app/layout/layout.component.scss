@@ -9,10 +9,16 @@
   min-height: calc(100vh - 94px);
   padding: 1.5rem;
   background-color: #f5f7fa;
+  transition: margin-left 0.3s ease;
+
+  &.sidebar-collapsed {
+    margin-left: 64px;
+  }
 }
 
 @media (max-width: 767.98px) {
-  .main-content {
+  .main-content,
+  .main-content.sidebar-collapsed {
     margin-left: 0;
     padding: 1rem;
   }

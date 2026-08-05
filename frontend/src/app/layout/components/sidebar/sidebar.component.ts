@@ -15,7 +15,9 @@ import { NavItem } from '../../../shared/models/nav.model';
 })
 export class SidebarComponent implements OnInit {
   @Input() isOpen = false;
+  @Input() collapsed = false;
   @Output() closeSidebar = new EventEmitter<void>();
+  @Output() toggleCollapse = new EventEmitter<void>();
 
   private roleService = inject(RoleService);
 
@@ -44,6 +46,10 @@ export class SidebarComponent implements OnInit {
 
   onClose(): void {
     this.closeSidebar.emit();
+  }
+
+  onToggleCollapse(): void {
+    this.toggleCollapse.emit();
   }
 
   onNavClick(): void {
