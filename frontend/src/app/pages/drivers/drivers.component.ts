@@ -94,6 +94,34 @@ export class DriversComponent implements OnInit {
     });
   }
 
+  resetPassword(driver: Driver): void {
+    const name = [driver.name, driver.surname].filter(Boolean).join(' ') || driver.email;
+    Swal.fire({
+      title: 'Reset Password',
+      text: `Send a password reset email to ${name}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Send',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.api.post<{ success: boolean }>(`/user/drivers/${driver.userId}/reset-password`, {}).subscribe({
+        next: () => {
+          Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'Password reset email sent',
+            showConfirmButton: false, timer: 3000, timerProgressBar: true,
+          });
+        },
+        error: (err) => {
+          Swal.fire({ icon: 'error', title: 'Error', text: err.error?.error || 'Failed to send password reset email' });
+        }
+      });
+    });
+  }
+
   toggleBlock(driver: Driver): void {
     const action = driver.blocked ? 'unblock' : 'block';
     const name = [driver.name, driver.surname].filter(Boolean).join(' ') || driver.email;

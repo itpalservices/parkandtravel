@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
-import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount, getUserSettings, setUserSettings, getDriverById } from "../services/auth0.service";
+import { getUserById, updateUser, sendVerificationEmail, searchRegularUserByEmail, getAllRegularUsers, getAllDriverUsers, createDriverUser, updateDriverUser, deleteDriverUser, setDriverBlockStatus, getUserDiscount, setUserDiscount, getUserSettings, setUserSettings, getDriverById, sendPasswordResetEmail } from "../services/auth0.service";
 import { getBookingsByUserId } from "../services/bookings.service";
 
 const router = Router();
@@ -255,6 +255,35 @@ router.patch("/drivers/:userId/block", checkJwt, async (req: Request, res: Respo
   } catch (error: any) {
     console.error("Error updating driver block status:", error.response?.data || error.message);
     res.status(500).json({ error: error.response?.data?.message || "Failed to update driver status" });
+  }
+});
+
+router.post("/drivers/:userId/reset-password", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+    if (!authUser || authUser.role !== "admin") {
+      res.status(403).json({ error: "Only admins can reset driver passwords" });
+      return;
+    }
+
+    const { userId } = req.params;
+    const driver = await getDriverById(userId);
+
+    if (!driver) {
+      res.status(404).json({ error: "Driver not found" });
+      return;
+    }
+
+    if (driver.blocked) {
+      res.status(400).json({ error: "Cannot reset password for a blocked driver" });
+      return;
+    }
+
+    await sendPasswordResetEmail(driver.email);
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error sending driver password reset email:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to send password reset email" });
   }
 });
 

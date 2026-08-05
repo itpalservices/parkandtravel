@@ -412,13 +412,17 @@ export async function createDriverUser(params: {
 
   const userId = createResponse.data.user_id;
 
-  await axios.post(`https://${AUTH0_DOMAIN}/dbconnections/change_password`, {
-    client_id: process.env.AUTH0_CLIENT_ID,
-    email: params.email,
-    connection: 'Username-Password-Authentication',
-  });
+  await sendPasswordResetEmail(params.email);
 
   return { userId, email: params.email };
+}
+
+export async function sendPasswordResetEmail(email: string): Promise<void> {
+  await axios.post(`https://${AUTH0_DOMAIN}/dbconnections/change_password`, {
+    client_id: process.env.AUTH0_CLIENT_ID,
+    email,
+    connection: 'Username-Password-Authentication',
+  });
 }
 
 export async function getUserDiscount(userId: string): Promise<number | null> {
