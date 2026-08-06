@@ -621,6 +621,7 @@ export interface BookingTagData {
   finalPrice: number | null;
   keepKeys: boolean | null;
   pickUpOption: string | null;
+  mileageKm: number | null;
 }
 
 export async function generateBookingTagZpl(data: BookingTagData): Promise<string> {
@@ -681,6 +682,7 @@ export async function generateBookingTagZpl(data: BookingTagData): Promise<strin
   row('Time:', fmtTime(data.timeTo));
   row('Check-in:', fmtDt(data.actualCheckIn));
   row('Place:', data.parkPlace || '-');
+  row('Km:', data.mileageKm != null ? String(data.mileageKm) : '-');
   row('Adults:', String(data.adults ?? '-'));
   row('Price:', data.finalPrice != null ? `€${data.finalPrice.toFixed(2)}` : '-');
   row('Keys:', data.keepKeys ? 'KK' : 'P&T');
@@ -711,6 +713,7 @@ function generateBookingTagHtml(data: BookingTagData, company: CompanySettings):
     ['Time', fmtTime(data.timeTo)],
     ['Check-in', fmtDt(data.actualCheckIn)],
     ['Place', data.parkPlace || '-'],
+    ['Km', data.mileageKm != null ? String(data.mileageKm) : '-'],
     ['Adults', String(data.adults ?? '-')],
     ['Price', data.finalPrice != null ? `€${data.finalPrice.toFixed(2)}` : '-'],
     ['Keys', data.keepKeys ? 'Customer keeps keys' : 'P&T keeps keys'],

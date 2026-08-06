@@ -1997,6 +1997,7 @@ async function buildBookingTagData(bookingId: string): Promise<BookingTagData | 
     finalPrice: booking.finalPrice != null ? Number(booking.finalPrice) : null,
     keepKeys: booking.keepKeys ?? null,
     pickUpOption: booking.pickUpOption ?? null,
+    mileageKm: booking.mileageKm ?? null,
   };
 }
 
