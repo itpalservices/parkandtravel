@@ -20,6 +20,10 @@ import {
   generateCheckinPaymentZplForBooking,
   generateCompletionPaymentZplForBooking,
   generateBookingTagZplForBooking,
+  emailCheckinReceiptForBooking,
+  emailCheckinPaymentForBooking,
+  emailCompletionPaymentForBooking,
+  emailBookingTagForBooking,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -885,6 +889,77 @@ export async function generateBookingTagZplHandler(req: Request, res: Response):
     res.send(zpl);
   } catch (error) {
     console.error("Error generating booking tag ZPL:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getValidatedEmail(req: Request, res: Response): string | null {
+  const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
+  if (!email || !EMAIL_REGEX.test(email)) {
+    res.status(400).json({ error: "A valid email address is required" });
+    return null;
+  }
+  return email;
+}
+
+export async function emailCheckinReceiptHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const email = getValidatedEmail(req, res);
+    if (!email) return;
+    const result = await emailCheckinReceiptForBooking(req.params.id, email);
+    if (!result.success) { res.status(404).json({ error: result.error }); return; }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error emailing check-in receipt:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function emailCheckinPaymentHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const email = getValidatedEmail(req, res);
+    if (!email) return;
+    const result = await emailCheckinPaymentForBooking(req.params.id, email);
+    if (!result.success) { res.status(404).json({ error: result.error }); return; }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error emailing check-in payment receipt:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function emailCompletionPaymentHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const email = getValidatedEmail(req, res);
+    if (!email) return;
+    const result = await emailCompletionPaymentForBooking(req.params.id, email);
+    if (!result.success) { res.status(404).json({ error: result.error }); return; }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error emailing checkout payment receipt:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function emailBookingTagHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const email = getValidatedEmail(req, res);
+    if (!email) return;
+    const result = await emailBookingTagForBooking(req.params.id, email);
+    if (!result.success) { res.status(404).json({ error: result.error }); return; }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error emailing booking tag:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

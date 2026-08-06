@@ -7,10 +7,10 @@ import {
   getNextDay,
   formatMinutesToTime,
 } from "../utils/dayEnd.utils";
-import { sendBookingConfirmationEmail } from "./email.service";
+import { sendBookingConfirmationEmail, sendDocumentEmail } from "./email.service";
 import { checkAvailability } from "./availability.service";
 import { createReceipt, ReceiptLineInput } from "./receipt.service";
-import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, generateBookingTagZpl, ReceiptPdfData, CheckinReceiptData, BookingTagData } from "./pdf.service";
+import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, generateThermalReceiptPdf, generateBookingTagZpl, generateBookingTagPdf, ReceiptPdfData, CheckinReceiptData, BookingTagData } from "./pdf.service";
 import { uploadPdfToS3, uploadCheckinReceiptToS3, getPresignedUrl } from "./upload.service";
 
 async function getEmailDescription(): Promise<string | null> {
@@ -1895,7 +1895,7 @@ export async function generateAndStoreCheckinReceipt(bookingId: string): Promise
   return getPresignedUrl(key, 900);
 }
 
-export async function generateCheckinPaymentZplForBooking(bookingId: string): Promise<string | null> {
+async function buildCheckinPaymentData(bookingId: string): Promise<ReceiptPdfData | null> {
   if (!isValidUUID(bookingId)) return null;
 
   const booking = await prisma.booking.findUnique({
@@ -1908,7 +1908,7 @@ export async function generateCheckinPaymentZplForBooking(bookingId: string): Pr
   const totalAmount = booking.checkinTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
   const date = booking.checkinTransactions[0].datetime;
 
-  const data: ReceiptPdfData = {
+  return {
     receiptNumber: `CI-${bookingId.slice(0, 8).toUpperCase()}`,
     receiptDate: date,
     bookingId,
@@ -1921,11 +1921,9 @@ export async function generateCheckinPaymentZplForBooking(bookingId: string): Pr
       amount: Number(t.amount),
     })),
   };
-
-  return generateThermalReceiptZpl(data);
 }
 
-export async function generateCompletionPaymentZplForBooking(bookingId: string): Promise<string | null> {
+async function buildCompletionPaymentData(bookingId: string): Promise<ReceiptPdfData | null> {
   if (!isValidUUID(bookingId)) return null;
 
   const booking = await prisma.booking.findUnique({
@@ -1938,7 +1936,7 @@ export async function generateCompletionPaymentZplForBooking(bookingId: string):
   const totalAmount = booking.completionTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
   const date = booking.completionTransactions[0].datetime;
 
-  const data: ReceiptPdfData = {
+  return {
     receiptNumber: `CO-${bookingId.slice(0, 8).toUpperCase()}`,
     receiptDate: date,
     bookingId,
@@ -1951,11 +1949,9 @@ export async function generateCompletionPaymentZplForBooking(bookingId: string):
       amount: Number(t.amount),
     })),
   };
-
-  return generateThermalReceiptZpl(data);
 }
 
-export async function generateCheckinReceiptZplForBooking(bookingId: string): Promise<string | null> {
+async function buildCheckinReceiptData(bookingId: string): Promise<CheckinReceiptData | null> {
   if (!isValidUUID(bookingId)) return null;
 
   const booking = await prisma.booking.findUnique({
@@ -1965,7 +1961,7 @@ export async function generateCheckinReceiptZplForBooking(bookingId: string): Pr
 
   if (!booking || booking.deleteflag !== 0) return null;
 
-  const data: CheckinReceiptData = {
+  return {
     bookingId,
     customerName: `${booking.name} ${booking.surname}`.trim(),
     checkInDateTime: booking.actualCheckIn ?? new Date(),
@@ -1978,11 +1974,9 @@ export async function generateCheckinReceiptZplForBooking(bookingId: string): Pr
     walleePaid: booking.walleeTransactions.reduce((sum, t) => sum + Number(t.amount), 0),
     checkinPaid: booking.checkinTransactions.reduce((sum, t) => sum + Number(t.amount), 0),
   };
-
-  return generateCheckinReceiptZpl(data);
 }
 
-export async function generateBookingTagZplForBooking(bookingId: string): Promise<string | null> {
+async function buildBookingTagData(bookingId: string): Promise<BookingTagData | null> {
   if (!isValidUUID(bookingId)) return null;
 
   const booking = await prisma.booking.findUnique({
@@ -1991,7 +1985,7 @@ export async function generateBookingTagZplForBooking(bookingId: string): Promis
 
   if (!booking || booking.deleteflag !== 0) return null;
 
-  const data: BookingTagData = {
+  return {
     customerName: `${booking.name} ${booking.surname}`.trim(),
     plateNo: booking.plateNo ?? null,
     returnFlight: booking.returnFlight ?? null,
@@ -2004,8 +1998,87 @@ export async function generateBookingTagZplForBooking(bookingId: string): Promis
     keepKeys: booking.keepKeys ?? null,
     pickUpOption: booking.pickUpOption ?? null,
   };
+}
 
-  return generateBookingTagZpl(data);
+export async function generateCheckinPaymentZplForBooking(bookingId: string): Promise<string | null> {
+  const data = await buildCheckinPaymentData(bookingId);
+  return data ? generateThermalReceiptZpl(data) : null;
+}
+
+export async function generateCompletionPaymentZplForBooking(bookingId: string): Promise<string | null> {
+  const data = await buildCompletionPaymentData(bookingId);
+  return data ? generateThermalReceiptZpl(data) : null;
+}
+
+export async function generateCheckinReceiptZplForBooking(bookingId: string): Promise<string | null> {
+  const data = await buildCheckinReceiptData(bookingId);
+  return data ? generateCheckinReceiptZpl(data) : null;
+}
+
+export async function generateBookingTagZplForBooking(bookingId: string): Promise<string | null> {
+  const data = await buildBookingTagData(bookingId);
+  return data ? generateBookingTagZpl(data) : null;
+}
+
+interface EmailDocumentResult {
+  success: boolean;
+  error?: string;
+}
+
+export async function emailCheckinPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
+  const data = await buildCheckinPaymentData(bookingId);
+  if (!data) return { success: false, error: "No check-in payment found for this booking" };
+
+  const pdfBuffer = await generateThermalReceiptPdf(data);
+  return sendDocumentEmail({
+    email,
+    subject: "Your Check-in Payment Receipt - Park & Travel",
+    bodyText: `Please find attached your check-in payment receipt for booking ${data.customerName}.`,
+    pdfBuffer,
+    attachmentName: "checkin-payment-receipt.pdf",
+  });
+}
+
+export async function emailCompletionPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
+  const data = await buildCompletionPaymentData(bookingId);
+  if (!data) return { success: false, error: "No checkout payment found for this booking" };
+
+  const pdfBuffer = await generateThermalReceiptPdf(data);
+  return sendDocumentEmail({
+    email,
+    subject: "Your Checkout Payment Receipt - Park & Travel",
+    bodyText: `Please find attached your checkout payment receipt for booking ${data.customerName}.`,
+    pdfBuffer,
+    attachmentName: "checkout-payment-receipt.pdf",
+  });
+}
+
+export async function emailCheckinReceiptForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
+  const data = await buildCheckinReceiptData(bookingId);
+  if (!data) return { success: false, error: "Booking not found" };
+
+  const pdfBuffer = await generateCheckinReceiptPdf(data);
+  return sendDocumentEmail({
+    email,
+    subject: "Your Check-in Receipt - Park & Travel",
+    bodyText: `Please find attached your check-in receipt for booking ${data.customerName}.`,
+    pdfBuffer,
+    attachmentName: "checkin-receipt.pdf",
+  });
+}
+
+export async function emailBookingTagForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
+  const data = await buildBookingTagData(bookingId);
+  if (!data) return { success: false, error: "Booking not found" };
+
+  const pdfBuffer = await generateBookingTagPdf(data);
+  return sendDocumentEmail({
+    email,
+    subject: "Your Booking Tag - Park & Travel",
+    bodyText: `Please find attached your booking tag for booking ${data.customerName}.`,
+    pdfBuffer,
+    attachmentName: "booking-tag.pdf",
+  });
 }
 
 export { isValidDateFormat, isDateInPast, isValidUUID };

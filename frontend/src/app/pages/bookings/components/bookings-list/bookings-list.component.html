@@ -51,43 +51,43 @@
                         Edit
                       </a>
                       @if (isAdmin || isDriver) {
-                        <button ngbDropdownItem (click)="printBookingTag(booking.id)">
+                        <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'booking-tag')">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                           </svg>
-                          Print Booking Tag
+                          Booking Tag
                         </button>
                       }
                       @if ((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_created') {
-                        <button ngbDropdownItem (click)="reprintCheckinCarReceipt(booking.id)">
+                        <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'checkin-receipt')">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                           </svg>
-                          Reprint Check-in Receipt
+                          Check-in Receipt
                         </button>
                       }
                       @if ((isAdmin || isDriver) && (booking.checkinPaidAmount ?? 0) > 0) {
-                        <button ngbDropdownItem (click)="reprintCheckinPayment(booking.id)">
+                        <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'checkin-payment')">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                           </svg>
-                          Reprint Check-in Payment
+                          Check-in Payment
                         </button>
                       }
                       @if ((isAdmin || isDriver) && (booking.completionPaidAmount ?? 0) > 0) {
-                        <button ngbDropdownItem (click)="reprintCompletionPayment(booking.id)">
+                        <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'completion-payment')">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                           </svg>
-                          Reprint Checkout Payment
+                          Checkout Payment
                         </button>
                       }
                       @if (booking.bookingStatusId == 'bookingStatus_created') {
@@ -116,23 +116,23 @@
                     </button>
                     <div ngbDropdownMenu class="dropdown-menu-end">
                       @if ((booking.checkinPaidAmount ?? 0) > 0) {
-                        <button ngbDropdownItem (click)="reprintCheckinPayment(booking.id)">
+                        <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'checkin-payment')">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                           </svg>
-                          Reprint Check-in Payment
+                          Check-in Payment
                         </button>
                       }
                       @if ((booking.completionPaidAmount ?? 0) > 0) {
-                        <button ngbDropdownItem (click)="reprintCompletionPayment(booking.id)">
+                        <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'completion-payment')">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                           </svg>
-                          Reprint Checkout Payment
+                          Checkout Payment
                         </button>
                       }
                     </div>
@@ -577,43 +577,43 @@
                     Edit
                   </a>
                   @if (isAdmin || isDriver) {
-                    <button ngbDropdownItem (click)="printBookingTag(booking.id)">
+                    <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'booking-tag')">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                       </svg>
-                      Print Booking Tag
+                      Booking Tag
                     </button>
                   }
                   @if ((isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_created') {
-                    <button ngbDropdownItem (click)="reprintCheckinCarReceipt(booking.id)">
+                    <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'checkin-receipt')">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                       </svg>
-                      Reprint Check-in Receipt
+                      Check-in Receipt
                     </button>
                   }
                   @if ((isAdmin || isDriver) && (booking.checkinPaidAmount ?? 0) > 0) {
-                    <button ngbDropdownItem (click)="reprintCheckinPayment(booking.id)">
+                    <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'checkin-payment')">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                       </svg>
-                      Reprint Check-in Payment
+                      Check-in Payment
                     </button>
                   }
                   @if ((isAdmin || isDriver) && (booking.completionPaidAmount ?? 0) > 0) {
-                    <button ngbDropdownItem (click)="reprintCompletionPayment(booking.id)">
+                    <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'completion-payment')">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                       </svg>
-                      Reprint Checkout Payment
+                      Checkout Payment
                     </button>
                   }
                   @if (booking.bookingStatusId === 'bookingStatus_created') {
@@ -640,23 +640,23 @@
                 </button>
                 <div ngbDropdownMenu class="dropdown-menu-end">
                   @if ((booking.checkinPaidAmount ?? 0) > 0) {
-                    <button ngbDropdownItem (click)="reprintCheckinPayment(booking.id)">
+                    <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'checkin-payment')">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                       </svg>
-                      Reprint Check-in Payment
+                      Check-in Payment
                     </button>
                   }
                   @if ((booking.completionPaidAmount ?? 0) > 0) {
-                    <button ngbDropdownItem (click)="reprintCompletionPayment(booking.id)">
+                    <button ngbDropdownItem (click)="chooseDeliveryMethod(booking, 'completion-payment')">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                         <rect x="6" y="14" width="12" height="8"></rect>
                       </svg>
-                      Reprint Checkout Payment
+                      Checkout Payment
                     </button>
                   }
                 </div>

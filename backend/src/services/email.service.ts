@@ -487,6 +487,76 @@ export async function sendBookingConfirmationEmail(
   }
 }
 
+interface DocumentEmailData {
+  email: string;
+  subject: string;
+  bodyText: string;
+  pdfBuffer: Buffer;
+  attachmentName: string;
+}
+
+function generateDocumentEmailHtml(bodyText: string): string {
+  return `<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, Helvetica, sans-serif; color: #212529; line-height: 1.6;">
+  <p>${bodyText}</p>
+  <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">Park &amp; Travel</p>
+</body>
+</html>`;
+}
+
+export async function sendDocumentEmail(
+  data: DocumentEmailData
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.error("BREVO_API_KEY not configured");
+    return { success: false, error: "Email service not configured" };
+  }
+
+  const fromName = process.env.FROM_NAME || "Park & Travel";
+  const fromEmail = process.env.BREVO_SENDER_EMAIL || "";
+  const replyTo = process.env.BREVO_REPLY_TO_EMAIL || fromEmail;
+
+  const body: Record<string, any> = {
+    sender: { name: fromName, email: fromEmail },
+    to: [{ email: data.email }],
+    replyTo: { email: replyTo },
+    subject: data.subject,
+    htmlContent: generateDocumentEmailHtml(data.bodyText),
+    textContent: data.bodyText,
+    attachment: [{
+      name: data.attachmentName,
+      content: data.pdfBuffer.toString("base64"),
+    }],
+  };
+
+  try {
+    const response = await fetch(BREVO_API_URL, {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const json = await response.json() as any;
+
+    if (!response.ok) {
+      const errMsg = json?.message || response.statusText;
+      console.error("Failed to send document email:", errMsg);
+      return { success: false, error: errMsg };
+    }
+
+    console.log("Document email sent successfully:", json.messageId);
+    return { success: true, messageId: json.messageId };
+  } catch (error: any) {
+    console.error("Failed to send document email:", error.message);
+    return { success: false, error: error.message || "Failed to send email" };
+  }
+}
+
 export async function testEmailConnection(): Promise<{ success: boolean; error?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {

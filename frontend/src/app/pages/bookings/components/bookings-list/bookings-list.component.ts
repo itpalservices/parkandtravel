@@ -23,6 +23,8 @@ import { RouterModule } from '@angular/router';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 
+export type PrintableDocType = 'booking-tag' | 'checkin-receipt' | 'checkin-payment' | 'completion-payment';
+
 @Component({
   selector: 'app-bookings-list',
   standalone: true,
@@ -76,91 +78,83 @@ export class BookingsListComponent {
     await this.zebraPrintService.printBookingTag(bookingId);
   }
 
-  printBookingTagHtml(booking: Booking): void {
-    const checkIn = booking.actualCheckIn
-      ? new Date(booking.actualCheckIn).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-        ' ' +
-        new Date(booking.actualCheckIn).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-      : '-';
-    const dateTo = booking.dateTo
-      ? new Date(booking.dateTo + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      : '-';
-    const timeTo = booking.timeTo || '-';
-    const fullName = `${booking.name} ${booking.surname}`;
-    const keysLabel = booking.keepKeys ? 'KK' : 'P&T';
-    const pickUpLabel = booking.pickUpOption === 'airport_delivery'
-      ? '<span style="color:#0d6efd;font-weight:600;">Airport</span>'
-      : '<span style="color:#dc3545;font-weight:600;">P</span>';
+  private readonly printableDocs: Record<PrintableDocType, { label: string; endpoint: string; print: (booking: Booking) => Promise<void> }> = {
+    'booking-tag': { label: 'Booking Tag', endpoint: 'booking-tag', print: (b) => this.printBookingTag(b.id) },
+    'checkin-receipt': { label: 'Check-in Receipt', endpoint: 'checkin-receipt', print: (b) => this.reprintCheckinCarReceipt(b.id) },
+    'checkin-payment': { label: 'Check-in Payment', endpoint: 'checkin-payment', print: (b) => this.reprintCheckinPayment(b.id) },
+    'completion-payment': { label: 'Checkout Payment', endpoint: 'completion-payment', print: (b) => this.reprintCompletionPayment(b.id) },
+  };
 
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    if (!printWindow) return;
+  async chooseDeliveryMethod(booking: Booking, docType: PrintableDocType): Promise<void> {
+    const doc = this.printableDocs[docType];
+    const result = await Swal.fire({
+      title: doc.label,
+      text: `How would you like to receive the ${doc.label.toLowerCase()}?`,
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: 'Print',
+      denyButtonText: 'Email',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#006B8F',
+      denyButtonColor: '#6c757d',
+    });
 
-    printWindow.document.write(`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Booking Tag</title>
-<style>
-  @page { size: 80mm auto; margin: 0; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
-    color: #000;
-    background: #fff;
-    width: 80mm;
-    padding: 6mm 5mm;
+    if (result.isConfirmed) {
+      await doc.print(booking);
+    } else if (result.isDenied) {
+      await this.promptAndSendEmail(booking, docType);
+    }
   }
-  .center { text-align: center; }
-  .bold { font-weight: 700; }
-  .company-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-  .meta { font-size: 9px; color: #333; margin: 1px 0; }
-  .divider { border: none; border-top: 1px dashed #000; margin: 5px 0; }
-  .divider-solid { border: none; border-top: 1px solid #000; margin: 5px 0; }
-  .label { font-size: 8px; text-transform: uppercase; color: #555; margin-bottom: 1px; }
-  .value { font-size: 10px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
-  table { width: 100%; border-collapse: collapse; margin: 2px 0; }
-  td.lbl { font-size: 9px; color: #555; padding: 2px 0; white-space: nowrap; padding-right: 4px; width: 1%; }
-  td.val { font-size: 10px; font-weight: 600; padding: 2px 0; }
-</style>
-</head>
-<body>
-  <div class="center">
-    <div class="company-name">Park &amp; Travel</div>
-    <div class="meta">Tel: 99 877866</div>
-  </div>
 
-  <hr class="divider-solid">
+  private async promptAndSendEmail(booking: Booking, docType: PrintableDocType): Promise<void> {
+    const doc = this.printableDocs[docType];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  <div class="center">
-    <div class="bold" style="font-size:12px; letter-spacing:2px;">BOOKING TAG</div>
-  </div>
+    const { value: email } = await Swal.fire({
+      title: `Email ${doc.label}`,
+      input: 'email',
+      inputLabel: 'Recipient email address',
+      inputValue: booking.email || '',
+      inputPlaceholder: 'customer@example.com',
+      showCancelButton: true,
+      confirmButtonText: 'Send',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#006B8F',
+      inputValidator: (value) => {
+        if (!value || !emailRegex.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+        return undefined;
+      },
+    });
 
-  <hr class="divider">
+    if (!email) return;
 
-  <div class="label">Customer</div>
-  <div class="value">${fullName}</div>
-  <div class="label">Plate No</div>
-  <div class="value">${booking.plateNo || '-'}</div>
-
-  <hr class="divider">
-
-  <table>
-    <tr><td class="lbl">Flight:</td><td class="val">${booking.returnFlight || '-'}</td></tr>
-    <tr><td class="lbl">Return:</td><td class="val">${dateTo}</td></tr>
-    <tr><td class="lbl">Time:</td><td class="val">${timeTo}</td></tr>
-    <tr><td class="lbl">Check-in:</td><td class="val">${checkIn}</td></tr>
-    <tr><td class="lbl">Place:</td><td class="val">${booking.parkPlace || '-'}</td></tr>
-    <tr><td class="lbl">Adults:</td><td class="val">${booking.adults ?? '-'}</td></tr>
-    <tr><td class="lbl">Price:</td><td class="val">${booking.finalPrice != null ? '\u20AC' + Number(booking.finalPrice).toFixed(2) : '-'}</td></tr>
-    <tr><td class="lbl">Keys:</td><td class="val">${keysLabel}</td></tr>
-    <tr><td class="lbl">Pick-up:</td><td class="val">${pickUpLabel}</td></tr>
-  </table>
-
-<script>window.onload=function(){window.print();}<\/script>
-</body>
-</html>`);
-    printWindow.document.close();
+    this.apiService.post<{ success: boolean }>(`/bookings/${booking.id}/${doc.endpoint}/email`, { email: email.trim() }).subscribe({
+      next: () => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `${doc.label} emailed successfully`,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      },
+      error: (err) => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.error?.error || `Failed to email ${doc.label.toLowerCase()}`,
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
   }
 
   canHaveImages(booking: Booking): boolean {

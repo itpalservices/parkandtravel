@@ -691,6 +691,113 @@ export async function generateBookingTagZpl(data: BookingTagData): Promise<strin
   return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
+function generateBookingTagHtml(data: BookingTagData, company: CompanySettings): string {
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : (company.companyPhone1 || company.companyPhone2 || '');
+
+  const fmt = (d: Date | null) =>
+    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+
+  const fmtTime = (d: Date | null) =>
+    d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+
+  const fmtDt = (d: Date | null) =>
+    d ? `${fmt(d)} ${fmtTime(d)}` : '-';
+
+  const rows = [
+    ['Flight', data.returnFlight || '-'],
+    ['Return', fmt(data.dateTo)],
+    ['Time', fmtTime(data.timeTo)],
+    ['Check-in', fmtDt(data.actualCheckIn)],
+    ['Place', data.parkPlace || '-'],
+    ['Adults', String(data.adults ?? '-')],
+    ['Price', data.finalPrice != null ? `€${data.finalPrice.toFixed(2)}` : '-'],
+    ['Keys', data.keepKeys ? 'Customer keeps keys' : 'P&T keeps keys'],
+    ['Pick-up', data.pickUpOption === 'airport_delivery' ? 'Airport' : 'Parking'],
+  ];
+
+  const rowsHtml = rows.map(([label, value]) => `
+    <tr><td class="lbl">${label}</td><td class="val">${value}</td></tr>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: 80mm auto; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #000;
+      background: #fff;
+      width: 80mm;
+      padding: 6mm 5mm;
+    }
+    .center { text-align: center; }
+    .bold { font-weight: 700; }
+    .company-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .meta { font-size: 9px; color: #333; margin: 1px 0; }
+    .divider { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+    .divider-solid { border: none; border-top: 1px solid #000; margin: 5px 0; }
+    .label { font-size: 8px; text-transform: uppercase; color: #555; margin-bottom: 1px; }
+    .value { font-size: 10px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+    table { width: 100%; border-collapse: collapse; margin: 2px 0; }
+    td.lbl { font-size: 9px; color: #555; padding: 3px 0; white-space: nowrap; padding-right: 8px; width: 1%; }
+    td.val { font-size: 10px; font-weight: 600; padding: 3px 0; }
+    .footer { margin-top: 8mm; font-size: 8px; color: #555; text-align: center; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div class="company-name">${company.companyName || 'Park &amp; Travel'}</div>
+    ${phoneLine ? `<div class="meta">Tel: ${phoneLine}</div>` : ''}
+  </div>
+
+  <hr class="divider-solid">
+
+  <div class="center">
+    <div class="bold" style="font-size:12px; letter-spacing:2px;">BOOKING TAG</div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="label">Customer</div>
+  <div class="value">${data.customerName}</div>
+  <div class="label">Plate No</div>
+  <div class="value">${data.plateNo || '-'}</div>
+
+  <hr class="divider">
+
+  <table>
+    ${rowsHtml}
+  </table>
+
+  <div class="footer">
+    <p>Thank you for choosing Park &amp; Travel.</p>
+    ${company.companyVatNo ? `<p>VAT Reg: ${company.companyVatNo}</p>` : ''}
+  </div>
+</body>
+</html>`;
+}
+
+export async function generateBookingTagPdf(data: BookingTagData): Promise<Buffer> {
+  const company = await getCompanySettings();
+  const html = generateBookingTagHtml(data, company);
+
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    return Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function generateCheckinReceiptPdf(data: CheckinReceiptData): Promise<Buffer> {
   const company = await getCompanySettings();
   const html = generateCheckinReceiptHtml(data, company);
