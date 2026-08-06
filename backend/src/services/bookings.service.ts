@@ -43,6 +43,7 @@ interface BookingResponse {
   timeTo: string | null;
   mobile: string | null;
   phoneCodeId: string | null;
+  phoneCode?: string | null;
   plateNo: string | null;
   carBrand: string | null;
   carModel: string | null;
@@ -238,6 +239,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b."timeTo",
       b.mobile,
       b."phoneCodeId",
+      pc."phoneCode" as "phoneCodeValue",
       b."plateNo",
       b."carBrand",
       b."carModel",
@@ -270,6 +272,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
+    LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
     WHERE ${whereClause}
     ORDER BY b."dateTo" ASC, COALESCE(b."timeTo"::time, '23:59:59'::time) ASC
   `;
@@ -288,6 +291,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     timeTo: formatTime(b.timeTo),
     mobile: b.mobile,
     phoneCodeId: b.phoneCodeId || null,
+    phoneCode: b.phoneCodeValue || null,
     plateNo: b.plateNo,
     carBrand: b.carBrand,
     carModel: b.carModel,

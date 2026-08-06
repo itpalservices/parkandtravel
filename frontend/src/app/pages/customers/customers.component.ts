@@ -8,6 +8,7 @@ import { CAR_PICK_UP_OPTIONS, CAR_PICK_UP_OPTIONS_LABELS } from '../../shared/st
 import { PhoneCode } from '../../shared/models/phone-codes.model';
 import { Customer } from '../../shared/models/customers.model';
 import { HistoryBooking } from '../../shared/models/booking.model';
+import { buildTelHref } from '../../shared/utils/phone.util';
 
 @Component({
   selector: 'app-customers',
@@ -168,6 +169,10 @@ export class CustomersComponent implements OnInit {
     if (!phoneCode) return '';
     const code = this.phoneCodes.find(pc => pc.phoneCode === phoneCode);
     return code?.isoCode || '';
+  }
+
+  getTelHref(phoneCode: string | null | undefined, phone: string | null | undefined): string | null {
+    return buildTelHref(phoneCode, phone);
   }
 
   onPrevious(): void {

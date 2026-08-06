@@ -32,6 +32,17 @@ html, body {
   text-align: center;
 }
 
+// Clickable phone number links (tel:), used wherever a phone number is displayed
+.tel-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: $primary-color;
+    text-decoration: underline;
+  }
+}
+
 .mt-1 { margin-top: $spacer-xs; }
 .mt-2 { margin-top: $spacer-sm; }
 .mt-3 { margin-top: $spacer-md; }

@@ -5,6 +5,7 @@ export interface Booking {
   email: string;
   phone: string | null;
   mobile: string | null;
+  phoneCode: string | null;
   plateNo: string;
   carBrand: string | null;
   carModel: string | null;

@@ -144,7 +144,11 @@
                         @if (driver.phoneCode) {
                           <span class="phone-code">{{ driver.phoneCode }}</span>
                         }
-                        <span>{{ driver.phone || '-' }}</span>
+                        @if (getTelHref(driver.phoneCode, driver.phone); as telHref) {
+                          <a [href]="telHref" class="tel-link" (click)="$event.stopPropagation()">{{ driver.phone }}</a>
+                        } @else {
+                          <span>{{ driver.phone || '-' }}</span>
+                        }
                       </div>
                     } @else {
                       -
@@ -236,7 +240,11 @@
                       @if (driver.phoneCode) {
                         <span class="phone-code">{{ driver.phoneCode }}</span>
                       }
-                      {{ driver.phone || '-' }}
+                      @if (getTelHref(driver.phoneCode, driver.phone); as telHref) {
+                        <a [href]="telHref" class="tel-link">{{ driver.phone }}</a>
+                      } @else {
+                        {{ driver.phone || '-' }}
+                      }
                     } @else {
                       -
                     }

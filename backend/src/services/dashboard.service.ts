@@ -216,6 +216,7 @@ export interface DashboardDetailItem {
   id: string;
   customerName: string;
   phoneNumber: string;
+  phoneCode: string | null;
   plateNo: string;
   vehicleModel: string;
   checkIn: string;
@@ -228,6 +229,7 @@ interface DetailBookingRow {
   name: string | null;
   surname: string | null;
   mobile: string | null;
+  phoneCodeValue: string | null;
   plateNo: string | null;
   carBrand: string | null;
   carModel: string | null;
@@ -259,54 +261,59 @@ export async function getCardDetails(
   switch (cardType) {
     case "total-cars":
       query = `
-        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
-        FROM bookings 
-        WHERE deleteflag = 0 
-          AND "dateFrom" <= '${todayStr}'::date 
-          AND "bookingStatusId" = 'bookingStatus_parked'
-        ORDER BY "dateFrom" DESC
+        SELECT b.id, b.name, b.surname, b.mobile, pc."phoneCode" as "phoneCodeValue", b."plateNo", b."carBrand", b."carModel", b."dateFrom", b."dateTo", b."timeFrom", b."timeTo", b."parkPlace"
+        FROM bookings b
+        LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
+        WHERE b.deleteflag = 0
+          AND b."dateFrom" <= '${todayStr}'::date
+          AND b."bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY b."dateFrom" DESC
       `;
       break;
     case "today-check-ins":
       query = `
-        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", NULL as "parkPlace"
-        FROM bookings 
-        WHERE deleteflag = 0 
+        SELECT b.id, b.name, b.surname, b.mobile, pc."phoneCode" as "phoneCodeValue", b."plateNo", b."carBrand", b."carModel", b."dateFrom", b."dateTo", b."timeFrom", b."timeTo", NULL as "parkPlace"
+        FROM bookings b
+        LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
+        WHERE b.deleteflag = 0
           AND ${todayCheckInCondition}
-          AND "bookingStatusId" = 'bookingStatus_created'
-        ORDER BY "timeFrom" ASC
+          AND b."bookingStatusId" = 'bookingStatus_created'
+        ORDER BY b."timeFrom" ASC
       `;
       break;
     case "today-check-outs":
       query = `
-        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
-        FROM bookings 
-        WHERE deleteflag = 0 
+        SELECT b.id, b.name, b.surname, b.mobile, pc."phoneCode" as "phoneCodeValue", b."plateNo", b."carBrand", b."carModel", b."dateFrom", b."dateTo", b."timeFrom", b."timeTo", b."parkPlace"
+        FROM bookings b
+        LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
+        WHERE b.deleteflag = 0
           AND ${todayCheckOutCondition}
-          AND "bookingStatusId" = 'bookingStatus_parked'
-        ORDER BY "timeTo" ASC
+          AND b."bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY b."timeTo" ASC
       `;
       break;
     case "wash-today":
       query = `
-        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
-        FROM bookings 
-        WHERE deleteflag = 0 
+        SELECT b.id, b.name, b.surname, b.mobile, pc."phoneCode" as "phoneCodeValue", b."plateNo", b."carBrand", b."carModel", b."dateFrom", b."dateTo", b."timeFrom", b."timeTo", b."parkPlace"
+        FROM bookings b
+        LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
+        WHERE b.deleteflag = 0
           AND ${todayCheckOutCondition}
-          AND "washService" = true
-          AND "bookingStatusId" = 'bookingStatus_parked'
-        ORDER BY "timeTo" ASC
+          AND b."washService" = true
+          AND b."bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY b."timeTo" ASC
       `;
       break;
     case "wash-tomorrow":
       query = `
-        SELECT id, name, surname, mobile, "plateNo", "carBrand", "carModel", "dateFrom", "dateTo", "timeFrom", "timeTo", "parkPlace"
-        FROM bookings 
-        WHERE deleteflag = 0 
+        SELECT b.id, b.name, b.surname, b.mobile, pc."phoneCode" as "phoneCodeValue", b."plateNo", b."carBrand", b."carModel", b."dateFrom", b."dateTo", b."timeFrom", b."timeTo", b."parkPlace"
+        FROM bookings b
+        LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
+        WHERE b.deleteflag = 0
           AND ${tomorrowCheckOutCondition}
-          AND "washService" = true
-          AND "bookingStatusId" = 'bookingStatus_parked'
-        ORDER BY "timeTo" ASC
+          AND b."washService" = true
+          AND b."bookingStatusId" = 'bookingStatus_parked'
+        ORDER BY b."timeTo" ASC
       `;
       break;
     default:
@@ -319,6 +326,7 @@ export async function getCardDetails(
     id: b.id,
     customerName: `${b.name || ""} ${b.surname || ""}`.trim(),
     phoneNumber: b.mobile || "",
+    phoneCode: b.phoneCodeValue || null,
     plateNo: b.plateNo || "",
     vehicleModel: `${b.carBrand || ""} ${b.carModel || ""}`.trim(),
     checkIn: `${formatDisplayDate(new Date(b.dateFrom))} ${formatTime(b.timeFrom)}`,

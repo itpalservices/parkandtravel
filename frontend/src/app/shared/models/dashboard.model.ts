@@ -21,6 +21,7 @@ export interface DashboardDetailItem {
   id: string;
   customerName: string;
   phoneNumber: string;
+  phoneCode: string | null;
   plateNo: string;
   vehicleModel: string;
   checkIn: string;

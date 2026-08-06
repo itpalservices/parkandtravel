@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { NgbDropdownModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { Booking, DateRangeFilter } from '../../../../shared/models/booking.model';
+import { buildTelHref } from '../../../../shared/utils/phone.util';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { UserProfileService } from '../../../../core/services/user-profile.service';
@@ -269,6 +270,10 @@ export class BookingsListComponent {
       result += ` (${booking.mileageKm} km)`;
     }
     return result;
+  }
+
+  getTelHref(booking: Booking): string | null {
+    return buildTelHref(booking.phoneCode, booking.mobile);
   }
 
   formatDropOff(option: string | null): string {

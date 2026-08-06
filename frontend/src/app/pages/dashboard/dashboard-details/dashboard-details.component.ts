@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import { CardType, DashboardDetailItem } from '../../../shared/models/dashboard.model';
+import { buildTelHref } from '../../../shared/utils/phone.util';
 
 @Component({
   selector: 'app-dashboard-details',
@@ -84,6 +85,10 @@ export class DashboardDetailsComponent implements OnInit {
     this.totalPages = Math.ceil(this.filteredItems.length / this.pageSize);
     this.calculatePageNumbers();
     this.updateDisplayedItems();
+  }
+
+  getTelHref(item: DashboardDetailItem): string | null {
+    return buildTelHref(item.phoneCode, item.phoneNumber);
   }
 
   private updateDisplayedItems(): void {

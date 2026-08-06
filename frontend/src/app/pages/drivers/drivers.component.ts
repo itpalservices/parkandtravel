@@ -5,6 +5,7 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 import { Driver } from '../../shared/models/driver.model';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
+import { buildTelHref } from '../../shared/utils/phone.util';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -195,5 +196,9 @@ export class DriversComponent implements OnInit {
     if (!phoneCode) return '';
     const code = this.phoneCodes.find(pc => pc.phoneCode === phoneCode);
     return code?.isoCode || '';
+  }
+
+  getTelHref(phoneCode: string | null | undefined, phone: string | null | undefined): string | null {
+    return buildTelHref(phoneCode, phone);
   }
 }

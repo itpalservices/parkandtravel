@@ -128,7 +128,13 @@
                       -
                     }
                   </td>
-                  <td>{{ customer.phone || '-' }}</td>
+                  <td>
+                    @if (getTelHref(customer.phoneCode, customer.phone); as telHref) {
+                      <a [href]="telHref" class="tel-link">{{ customer.phone }}</a>
+                    } @else {
+                      {{ customer.phone || '-' }}
+                    }
+                  </td>
                   <td>
                     <button 
                       class="btn-action" 
@@ -200,7 +206,13 @@
                 </div>
                 <div class="detail-row">
                   <span class="detail-label text-start">Phone:</span>
-                  <span class="detail-value">{{ customer.phone || '-' }}</span>
+                  <span class="detail-value">
+                    @if (getTelHref(customer.phoneCode, customer.phone); as telHref) {
+                      <a [href]="telHref" class="tel-link">{{ customer.phone }}</a>
+                    } @else {
+                      {{ customer.phone || '-' }}
+                    }
+                  </span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label text-start">Actions:</span>
