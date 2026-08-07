@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, HostListener, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BookingImageInfo } from '../../models/booking.model';
 
 @Component({
   selector: 'app-image-carousel',
@@ -9,7 +10,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./image-carousel.component.scss'],
 })
 export class ImageCarouselComponent implements OnChanges {
-  @Input() images: string[] = [];
+  @Input() images: BookingImageInfo[] = [];
   @Input() startIndex: number = 0;
   @Output() closed = new EventEmitter<void>();
 
@@ -22,7 +23,19 @@ export class ImageCarouselComponent implements OnChanges {
   }
 
   get currentImage(): string {
-    return this.images[this.currentIndex] || '';
+    return this.images[this.currentIndex]?.url || '';
+  }
+
+  get currentImageTimestamp(): string {
+    const createdAt = this.images[this.currentIndex]?.createdAt;
+    if (!createdAt) return '';
+    return new Date(createdAt).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   get total(): number {

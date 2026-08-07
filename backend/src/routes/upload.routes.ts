@@ -102,11 +102,11 @@ router.get(
         return;
       }
 
-      const urls = await listImagesForBooking(bookingId);
+      const images = await listImagesForBooking(bookingId);
 
       res.json({
         success: true,
-        data: { urls },
+        data: { images },
       });
     } catch (error: any) {
       console.error("Error listing images:", error);

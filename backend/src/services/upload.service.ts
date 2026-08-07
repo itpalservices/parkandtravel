@@ -1,4 +1,4 @@
-import { PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client, S3_BUCKET } from "../config/s3.config";
 import { prisma } from "../lib/prisma";
@@ -80,25 +80,19 @@ export async function uploadMultipleImages(
   return { urls, errors };
 }
 
-export async function listImagesForBooking(bookingId: string): Promise<string[]> {
-  const prefix = `bookings/${bookingId}/`;
-  const command = new ListObjectsV2Command({
-    Bucket: S3_BUCKET,
-    Prefix: prefix,
+export interface BookingImageInfo {
+  url: string;
+  createdAt: string;
+}
+
+export async function listImagesForBooking(bookingId: string): Promise<BookingImageInfo[]> {
+  const images = await prisma.bookingImage.findMany({
+    where: { bookingId },
+    orderBy: { createdAt: "asc" },
+    select: { url: true, createdAt: true },
   });
 
-  const response = await s3Client.send(command);
-  const urls: string[] = [];
-
-  if (response.Contents) {
-    for (const obj of response.Contents) {
-      if (obj.Key && !obj.Key.includes('/receipts/')) {
-        urls.push(buildPublicUrl(obj.Key));
-      }
-    }
-  }
-
-  return urls;
+  return images.map((img) => ({ url: img.url, createdAt: img.createdAt.toISOString() }));
 }
 
 export async function uploadCheckinReceiptToS3(bookingId: string, pdfBuffer: Buffer, checkInDate: Date): Promise<string> {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BookingsResponse, BookingResponse } from '../../shared/models/booking.model';
+import { BookingsResponse, BookingResponse, BookingImageInfo } from '../../shared/models/booking.model';
 import { getApiBaseUrl } from '../utils/api-url.util';
 
 export interface BookingsQueryParams {
@@ -88,8 +88,8 @@ export class BookingsService {
     );
   }
 
-  getBookingImages(bookingId: string): Observable<{ success: boolean; data: { urls: string[] } }> {
-    return this.http.get<{ success: boolean; data: { urls: string[] } }>(
+  getBookingImages(bookingId: string): Observable<{ success: boolean; data: { images: BookingImageInfo[] } }> {
+    return this.http.get<{ success: boolean; data: { images: BookingImageInfo[] } }>(
       `${getApiBaseUrl()}/upload/${bookingId}/images`
     );
   }

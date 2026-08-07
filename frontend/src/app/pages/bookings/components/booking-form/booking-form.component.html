@@ -97,9 +97,9 @@
           <div class="form-section vehicle-photos-section">
             <h3>Vehicle Photos</h3>
             <div class="photos-grid">
-              @for (img of bookingImages; track img; let i = $index) {
+              @for (img of bookingImages; track img.url; let i = $index) {
                 <div class="photo-item" (click)="openCarousel(i)">
-                  <img [src]="img" alt="Vehicle photo" loading="lazy" />
+                  <img [src]="img.url" alt="Vehicle photo" loading="lazy" />
                 </div>
               }
             </div>

@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { NgbDropdownModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
-import { Booking, DateRangeFilter } from '../../../../shared/models/booking.model';
+import { Booking, DateRangeFilter, BookingImageInfo } from '../../../../shared/models/booking.model';
 import { buildTelHref } from '../../../../shared/utils/phone.util';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -46,7 +46,7 @@ export class BookingsListComponent {
   @Output() bookingUpdated = new EventEmitter<void>();
 
   showCarousel = false;
-  carouselImages: string[] = [];
+  carouselImages: BookingImageInfo[] = [];
   carouselStartIndex = 0;
 
   constructor(
@@ -176,8 +176,8 @@ export class BookingsListComponent {
     event.stopPropagation();
     this.bookingsService.getBookingImages(bookingId).subscribe({
       next: (response) => {
-        if (response.success && response.data.urls.length > 0) {
-          this.carouselImages = response.data.urls;
+        if (response.success && response.data.images.length > 0) {
+          this.carouselImages = response.data.images;
           this.carouselStartIndex = 0;
           this.showCarousel = true;
         } else {

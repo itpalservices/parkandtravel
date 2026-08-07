@@ -137,3 +137,8 @@ export interface DateRangeFilter {
   dateFrom: string | null;
   dateTo: string | null;
 }
+
+export interface BookingImageInfo {
+  url: string;
+  createdAt: string;
+}

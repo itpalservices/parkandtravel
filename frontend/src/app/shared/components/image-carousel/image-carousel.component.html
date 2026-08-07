@@ -18,6 +18,9 @@
 
       <div class="carousel-image-wrapper">
         <img [src]="currentImage" alt="Photo {{ currentIndex + 1 }} of {{ total }}" />
+        @if (currentImageTimestamp) {
+          <span class="carousel-timestamp">{{ currentImageTimestamp }}</span>
+        }
       </div>
 
       @if (total > 1) {

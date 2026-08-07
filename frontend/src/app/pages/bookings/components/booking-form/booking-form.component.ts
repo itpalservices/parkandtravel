@@ -22,6 +22,7 @@ import { BookingsService } from '../../../../core/services/bookings.service';
 import { FormFieldErrorComponent } from '../../../../shared/components/form-field-error/form-field-error.component';
 import { Subscription, take, firstValueFrom } from 'rxjs';
 import { BookingDetails, ParkingType, ParkingTypesResponse } from '../../../../shared';
+import { BookingImageInfo } from '../../../../shared/models/booking.model';
 import { PhoneCode } from '../../../../shared/models/phone-codes.model';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
 import { UserProfile, Car } from '../../../../shared/models/user-profile.model';
@@ -144,7 +145,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   parkPlace: string = '';
   updatingStatus = false;
   isBookingParked = false;
-  bookingImages: string[] = [];
+  bookingImages: BookingImageInfo[] = [];
   showCarousel = false;
   carouselStartIndex = 0;
 
@@ -828,7 +829,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.bookingsService.getBookingImages(this.bookingId).subscribe({
       next: (response) => {
         if (response.success) {
-          this.bookingImages = response.data.urls;
+          this.bookingImages = response.data.images;
         }
       },
       error: (error) => {
