@@ -37,7 +37,11 @@ export class BookingsPageComponent implements OnInit {
 
   isAdmin: boolean = false;
   isDriver: boolean = false;
+  isUser: boolean = false;
   verifiedEmail: boolean | undefined = false;
+
+  customerBookings: Booking[] = [];
+  loadingCustomerBookings = false;
 
   dateFilter: DateRange = { from: null, to: null, preset: null };
   dateRangeFilterForList: { dateFrom: string | null; dateTo: string | null } = { dateFrom: null, dateTo: null };
@@ -222,8 +226,67 @@ export class BookingsPageComponent implements OnInit {
       next: (roleInfo: UserRoleInfo) => {
         this.isDriver = roleInfo.isDriver;
         this.isAdmin = roleInfo.isAdmin;
+        this.isUser = roleInfo.isUser;
+        if (roleInfo.isUser) {
+          this.loadCustomerBookingCards();
+        }
       },
     });
+  }
+
+  private loadCustomerBookingCards(): void {
+    this.loadingCustomerBookings = true;
+    this.bookingsService.getBookings({ limit: 1000 }).subscribe({
+      next: (response) => {
+        this.customerBookings = response.data;
+        this.loadingCustomerBookings = false;
+      },
+      error: (err) => {
+        console.error('Failed to load booking history:', err);
+        this.loadingCustomerBookings = false;
+      },
+    });
+  }
+
+  private isPastDate(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  }
+
+  private isFutureDate(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date > today;
+  }
+
+  get pastBookings(): Booking[] {
+    return this.customerBookings
+      .filter((b) => b.bookingStatusId === 'bookingStatus_completed' && this.isPastDate(b.dateTo))
+      .sort((a, b) => (a.dateTo < b.dateTo ? 1 : -1));
+  }
+
+  get upcomingBookings(): Booking[] {
+    return this.customerBookings
+      .filter((b) => b.bookingStatusId === 'bookingStatus_created' && this.isFutureDate(b.dateFrom))
+      .sort((a, b) => (a.dateFrom < b.dateFrom ? -1 : 1));
+  }
+
+  formatBookingDate(dateStr: string | null): string {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  formatBookingPrice(price: number | null): string {
+    if (price === null) return '-';
+    return `€${price.toFixed(2)}`;
   }
 
   private checkEmailVerification() {
