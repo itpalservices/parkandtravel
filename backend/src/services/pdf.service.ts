@@ -553,57 +553,57 @@ export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promi
 
   // Header
   center(company.companyName || 'Park & Travel', 30); y += 36;
-  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 20); y += 24; }
-  if (phoneLine) { center(`Tel: ${phoneLine}`, 20); y += 24; }
+  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 22); y += 27; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 22); y += 27; }
   y += 6; solid(); y += 10;
 
   // Title
-  center('CHECK-IN RECEIPT', 24); y += 30;
-  center(checkInDateStr, 20); y += 24;
+  center('CHECK-IN RECEIPT', 27); y += 33;
+  center(checkInDateStr, 22); y += 27;
   y += 6; thin(); y += 10;
 
   // Customer
-  left('CUSTOMER', 15); y += 20;
-  left(data.customerName, 22); y += 26;
-  left('BOOKING REFERENCE', 15); y += 20;
-  left(data.bookingId, 16); y += 22;
+  left('CUSTOMER', 21); y += 26;
+  left(data.customerName, 24); y += 30;
+  left('BOOKING REFERENCE', 21); y += 26;
+  left(data.bookingId, 19); y += 25;
   y += 6; thin(); y += 10;
 
   // Vehicle
-  left('VEHICLE', 15); y += 20;
-  left(vehicleStr, 22); y += 26;
+  left('VEHICLE', 21); y += 26;
+  left(vehicleStr, 24); y += 30;
 
   // Adults (left) and Keys (right) on same row
-  cmds.push(`^FO${LM},${y}^A0N,15,15^FD${esc('ADULTS')}^FS`);
-  cmds.push(`^FO${Math.floor(PW / 2)},${y}^A0N,15,15^FD${esc('KEYS')}^FS`);
-  y += 20;
-  cmds.push(`^FO${LM},${y}^A0N,22,22^FD${esc(String(data.adults ?? '-'))}^FS`);
-  cmds.push(`^FO${Math.floor(PW / 2)},${y}^A0N,22,22^FD${esc(data.keepKeys ? 'Kept' : 'Returned')}^FS`);
+  cmds.push(`^FO${LM},${y}^A0N,21,21^FD${esc('ADULTS')}^FS`);
+  cmds.push(`^FO${Math.floor(PW / 2)},${y}^A0N,21,21^FD${esc('KEYS')}^FS`);
   y += 26;
+  cmds.push(`^FO${LM},${y}^A0N,24,24^FD${esc(String(data.adults ?? '-'))}^FS`);
+  cmds.push(`^FO${Math.floor(PW / 2)},${y}^A0N,24,24^FD${esc(data.keepKeys ? 'Kept' : 'Returned')}^FS`);
+  y += 30;
 
   y += 4; thin(); y += 10;
 
   // Checkout date
-  left('SCHEDULED CHECK-OUT', 15); y += 20;
-  left(scheduledCheckOutStr, 22); y += 26;
+  left('SCHEDULED CHECK-OUT', 21); y += 26;
+  left(scheduledCheckOutStr, 24); y += 30;
   y += 4; solid(); y += 10;
 
   // Financials
-  left('Total price', 18); right(`€${data.totalPrice.toFixed(2)}`, 18); y += 24;
-  if (data.walleePaid > 0) { left('Paid online', 18); right(`€${data.walleePaid.toFixed(2)}`, 18); y += 24; }
-  if (data.checkinPaid > 0) { left('Paid at check-in', 18); right(`€${data.checkinPaid.toFixed(2)}`, 18); y += 24; }
+  left('Total price', 24); right(`€${data.totalPrice.toFixed(2)}`, 24); y += 30;
+  if (data.walleePaid > 0) { left('Paid online', 24); right(`€${data.walleePaid.toFixed(2)}`, 24); y += 30; }
+  if (data.checkinPaid > 0) { left('Paid at check-in', 24); right(`€${data.checkinPaid.toFixed(2)}`, 24); y += 30; }
   solid(); y += 10;
 
   if (remaining > 0) {
-    left('Balance due at check-out', 26); right(`€${remaining.toFixed(2)}`, 26); y += 34;
+    left('Balance due at check-out', 25); right(`€${remaining.toFixed(2)}`, 25); y += 32;
   } else {
-    center('PAID IN FULL', 26); y += 34;
+    center('PAID IN FULL', 25); y += 32;
   }
 
   // Footer
   y += 10;
-  center('Thank you for choosing Park & Travel.', 16); y += 22;
-  if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
+  center('Thank you for choosing Park & Travel.', 19); y += 25;
+  if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 19); y += 25; }
   y += 20;
 
   return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
@@ -655,26 +655,26 @@ export async function generateBookingTagZpl(data: BookingTagData): Promise<strin
 
   // Header
   center(company.companyName || 'Park & Travel', 28); y += 34;
-  if (phoneLine) { center(`Tel: ${phoneLine}`, 18); y += 24; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 20); y += 26; }
   y += 4; solid(); y += 8;
 
   // Title
-  center('BOOKING TAG', 22); y += 28;
+  center('BOOKING TAG', 26); y += 32;
   y += 4; solid(); y += 8;
 
   // Customer & Plate
-  left('CUSTOMER', 15); y += 20;
-  left(data.customerName, 22); y += 28;
-  left('PLATE NO', 15); y += 20;
-  left(data.plateNo || '-', 22); y += 28;
+  left('CUSTOMER', 21); y += 26;
+  left(data.customerName, 24); y += 30;
+  left('PLATE NO', 21); y += 26;
+  left(data.plateNo || '-', 24); y += 30;
   y += 4; thin(); y += 8;
 
   // Key-value rows
-  const VAL_X = 160;
+  const VAL_X = 190;
   const row = (label: string, value: string) => {
-    cmds.push(`^FO${LM},${y}^A0N,18,18^FD${esc(label)}^FS`);
-    cmds.push(`^FO${VAL_X},${y}^A0N,18,18^FD${esc(value)}^FS`);
-    y += 24;
+    cmds.push(`^FO${LM},${y}^A0N,22,22^FD${esc(label)}^FS`);
+    cmds.push(`^FO${VAL_X},${y}^A0N,24,24^FD${esc(value)}^FS`);
+    y += 30;
   };
 
   row('Flight:', data.returnFlight || '-');
@@ -863,44 +863,44 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
 
   // Header
   center(company.companyName || 'Park & Travel', 30); y += 36;
-  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 20); y += 24; }
-  if (phoneLine) { center(`Tel: ${phoneLine}`, 20); y += 24; }
+  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 22); y += 27; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 22); y += 27; }
   y += 6; solid(); y += 10;
 
   // Receipt title
-  center('RECEIPT', 26); y += 32;
-  center(data.receiptNumber, 20); y += 24;
-  center(dateStr, 20); y += 24;
+  center('RECEIPT', 28); y += 34;
+  center(data.receiptNumber, 22); y += 27;
+  center(dateStr, 22); y += 27;
   y += 6; thin(); y += 10;
 
   // Customer
-  left('BILLED TO', 15); y += 20;
-  left(data.customerName, 22); y += 26;
-  left('BOOKING REF', 15); y += 20;
-  left(data.bookingId, 16); y += 22;
+  left('BILLED TO', 21); y += 26;
+  left(data.customerName, 24); y += 30;
+  left('BOOKING REF', 21); y += 26;
+  left(data.bookingId, 19); y += 25;
   y += 6; thin(); y += 10;
 
   // Line items
-  left('DESCRIPTION', 15); right('AMOUNT', 15); y += 20;
+  left('DESCRIPTION', 20); right('AMOUNT', 20); y += 25;
   thin(); y += 8;
   for (const line of data.lines) {
     const desc = line.description.length > 34 ? line.description.slice(0, 33) + '.' : line.description;
-    left(desc, 20); right(`€${Number(line.amount).toFixed(2)}`, 20); y += 26;
+    left(desc, 24); right(`€${Number(line.amount).toFixed(2)}`, 24); y += 30;
   }
   y += 4; solid(); y += 10;
 
   // Totals (match HTML exactly)
-  left(`Net (excl. VAT ${taxRate}%)`, 18); right(`€${net.toFixed(2)}`, 18); y += 24;
-  left(`VAT (${taxRate}%)`, 18); right(`€${vatAmount.toFixed(2)}`, 18); y += 24;
+  left(`Net (excl. VAT ${taxRate}%)`, 23); right(`€${net.toFixed(2)}`, 23); y += 29;
+  left(`VAT (${taxRate}%)`, 23); right(`€${vatAmount.toFixed(2)}`, 23); y += 29;
   solid(); y += 10;
 
   // Grand total
-  left('TOTAL PAID', 30); right(`€${total.toFixed(2)}`, 30); y += 38;
+  left('TOTAL PAID', 25); right(`€${total.toFixed(2)}`, 25); y += 32;
 
   // Footer
   y += 10;
-  center('Thank you for choosing Park & Travel.', 16); y += 22;
-  if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 16); y += 22; }
+  center('Thank you for choosing Park & Travel.', 19); y += 25;
+  if (company.companyVatNo) { center(`VAT Reg: ${company.companyVatNo}`, 19); y += 25; }
   y += 20;
 
   return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
