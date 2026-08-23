@@ -5,28 +5,28 @@
         <thead>
           <tr>
             <th class="actions-col"></th>
-            <th>Status</th>
-            <th>Full Name</th>
-            <th>Plate No.</th>
-            <th>Vehicle / Model</th>
-            <th>Vehicle Color</th>
-            <th>Check In</th>
+            <th class="sortable-col" (click)="onSortClick('status')">Status{{ sortIndicator('status') }}</th>
+            <th class="sortable-col" (click)="onSortClick('name')">Full Name{{ sortIndicator('name') }}</th>
+            <th class="sortable-col" (click)="onSortClick('plateNo')">Plate No.{{ sortIndicator('plateNo') }}</th>
+            <th class="sortable-col" (click)="onSortClick('vehicle')">Vehicle / Model{{ sortIndicator('vehicle') }}</th>
+            <th class="sortable-col" (click)="onSortClick('carColor')">Vehicle Color{{ sortIndicator('carColor') }}</th>
+            <th class="sortable-col" (click)="onSortClick('checkIn')">Check In{{ sortIndicator('checkIn') }}</th>
             @if (isAdmin) {
-              <th>Check In By</th>
+              <th class="sortable-col" (click)="onSortClick('checkInBy')">Check In By{{ sortIndicator('checkInBy') }}</th>
             }
-            <th>Car Drop-off</th>
-            <th>Check Out</th>
+            <th class="sortable-col" (click)="onSortClick('dropOff')">Car Drop-off{{ sortIndicator('dropOff') }}</th>
+            <th class="sortable-col" (click)="onSortClick('checkOut')">Check Out{{ sortIndicator('checkOut') }}</th>
             @if (isAdmin) {
-              <th>Check Out By</th>
+              <th class="sortable-col" (click)="onSortClick('checkOutBy')">Check Out By{{ sortIndicator('checkOutBy') }}</th>
             }
-            <th>Car Pick-up</th>
-            <th>Flight No.</th>
-            <th>Parking Type</th>
-            <th>Wash Service</th>
+            <th class="sortable-col" (click)="onSortClick('pickUp')">Car Pick-up{{ sortIndicator('pickUp') }}</th>
+            <th class="sortable-col" (click)="onSortClick('returnFlight')">Flight No.{{ sortIndicator('returnFlight') }}</th>
+            <th class="sortable-col" (click)="onSortClick('parkingType')">Parking Type{{ sortIndicator('parkingType') }}</th>
+            <th class="sortable-col" (click)="onSortClick('washService')">Wash Service{{ sortIndicator('washService') }}</th>
             @if (isAdmin) {
-              <th>Source</th>
+              <th class="sortable-col" (click)="onSortClick('source')">Source{{ sortIndicator('source') }}</th>
             }
-            <th>Price</th>
+            <th class="sortable-col" (click)="onSortClick('finalPrice')">Price{{ sortIndicator('finalPrice') }}</th>
           </tr>
         </thead>
         <tbody>

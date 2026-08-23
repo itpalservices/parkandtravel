@@ -30,6 +30,15 @@
       border-bottom: 1px solid #e5e7eb;
       white-space: nowrap;
     }
+
+    .sortable-col {
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        color: $primary-color;
+      }
+    }
   }
   
   tbody {

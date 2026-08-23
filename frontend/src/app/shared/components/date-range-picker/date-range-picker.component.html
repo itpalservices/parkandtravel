@@ -1,5 +1,5 @@
-<div class="date-range-picker">
-  <button class="date-trigger-btn" (click)="toggleDropdown()">
+<div class="date-range-picker" [ngClass]="class ? class : ''">
+  <button class="date-trigger-btn" (click)="toggleDropdown()" [ngClass]="class ? class : ''">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="16"

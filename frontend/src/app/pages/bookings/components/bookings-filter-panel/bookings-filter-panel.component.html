@@ -1,0 +1,199 @@
+<div class="filter-panel">
+  <div class="filter-panel-header">
+    <h2>Filters</h2>
+    <button type="button" class="btn-close-panel" (click)="onDismiss()" aria-label="Close">&times;</button>
+  </div>
+
+  <div class="filter-panel-body">
+    <section class="filter-section">
+      <div class="filter-field">
+        <label for="dateRange">Date Range</label>
+        <app-date-range-picker
+          [selectedPreset]="draft.datePreset"
+          [selectedFromDate]="selectedFromDate"
+          [selectedToDate]="selectedToDate"
+          [enablePastDates]="enablePastDates"
+          (dateRangeChange)="onDateRangeChange($event)"
+          [class]="'w-100'"
+        ></app-date-range-picker>
+      </div>
+      <div class="filter-field">
+        <label for="filterName">Full Name</label>
+        <input type="text" id="filterName" class="form-control" [(ngModel)]="draft.name" placeholder="e.g. John" />
+      </div>
+      <div class="filter-field">
+        <label for="filterEmail">Email</label>
+        <input type="text" id="filterEmail" class="form-control" [(ngModel)]="draft.email" placeholder="e.g. john@example.com" />
+      </div>
+      <div class="filter-field">
+        <label for="filterMobile">Mobile</label>
+        <input type="text" id="filterMobile" class="form-control" [(ngModel)]="draft.mobile" placeholder="e.g. 99123456" />
+      </div>
+      <div class="filter-field">
+        <label for="filterPlate">Plate No.</label>
+        <input type="text" id="filterPlate" class="form-control" [(ngModel)]="draft.plateNo" placeholder="e.g. ABC123" />
+      </div>
+      <div class="filter-field">
+        <label for="filterBrand">Vehicle Brand</label>
+        <input type="text" id="filterBrand" class="form-control" [(ngModel)]="draft.carBrand" placeholder="e.g. Toyota" />
+      </div>
+      <div class="filter-field">
+        <label for="filterModel">Vehicle Model</label>
+        <input type="text" id="filterModel" class="form-control" [(ngModel)]="draft.carModel" placeholder="e.g. Corolla" />
+      </div>
+      <div class="filter-field">
+        <label for="filterColor">Vehicle Color</label>
+        <input type="text" id="filterColor" class="form-control" [(ngModel)]="draft.carColor" placeholder="e.g. Black" />
+      </div>
+      <div class="filter-field">
+        <label for="filterFlight">Flight No.</label>
+        <input type="text" id="filterFlight" class="form-control" [(ngModel)]="draft.returnFlight" placeholder="e.g. BE1234" />
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h3>Status</h3>
+      <div class="checkbox-list">
+        @for (opt of statusOptions; track opt.id) {
+          <label class="checkbox-option">
+            <input type="checkbox" [checked]="draft.status.includes(opt.id)" (change)="toggleInArray(draft.status, opt.id)" />
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h3>Parking Type</h3>
+      <div class="checkbox-list">
+        @for (opt of parkingTypeOptions; track opt.id) {
+          <label class="checkbox-option">
+            <input type="checkbox" [checked]="draft.parkingType.includes(opt.id)" (change)="toggleInArray(draft.parkingType, opt.id)" />
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h3>Wash Service</h3>
+      <div class="checkbox-list">
+        @for (opt of washServiceOptions; track opt.id) {
+          <label class="checkbox-option">
+            <input type="checkbox" [checked]="draft.washService.includes(opt.id)" (change)="toggleInArray(draft.washService, opt.id)" />
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h3>Car Drop-off</h3>
+      <div class="checkbox-list">
+        @for (opt of dropOffOptions; track opt.id) {
+          <label class="checkbox-option">
+            <input type="checkbox" [checked]="draft.dropOff.includes(opt.id)" (change)="toggleInArray(draft.dropOff, opt.id)" />
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h3>Car Pick-up</h3>
+      <div class="checkbox-list">
+        @for (opt of pickUpOptions; track opt.id) {
+          <label class="checkbox-option">
+            <input type="checkbox" [checked]="draft.pickUp.includes(opt.id)" (change)="toggleInArray(draft.pickUp, opt.id)" />
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </section>
+
+    @if (isAdmin) {
+      <section class="filter-section">
+        <h3>Source</h3>
+        <div class="checkbox-list">
+          @for (opt of sourceOptions; track opt.id) {
+            <label class="checkbox-option">
+              <input type="checkbox" [checked]="draft.source.includes(opt.id)" (change)="toggleInArray(draft.source, opt.id)" />
+              {{ opt.label }}
+            </label>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="filter-section">
+      <h3>Price</h3>
+      <div class="range-row">
+        <div class="filter-field">
+          <label for="priceMin">Min &euro;</label>
+          <input type="number" id="priceMin" class="form-control" min="0" step="0.01" [(ngModel)]="draft.priceMin" placeholder="0.00" />
+        </div>
+        <div class="filter-field">
+          <label for="priceMax">Max &euro;</label>
+          <input type="number" id="priceMax" class="form-control" min="0" step="0.01" [(ngModel)]="draft.priceMax" placeholder="0.00" />
+        </div>
+      </div>
+    </section>
+
+    @if (isAdmin) {
+      <section class="filter-section">
+        <h3>Check In By</h3>
+        <select class="form-select" [(ngModel)]="draft.checkInBy">
+          <option value="">Any</option>
+          @for (name of checkInByOptions; track name) {
+            <option [value]="name">{{ name }}</option>
+          }
+        </select>
+      </section>
+
+      <section class="filter-section">
+        <h3>Check Out By</h3>
+        <select class="form-select" [(ngModel)]="draft.checkOutBy">
+          <option value="">Any</option>
+          @for (name of checkOutByOptions; track name) {
+            <option [value]="name">{{ name }}</option>
+          }
+        </select>
+      </section>
+    }
+
+    <section class="filter-section sort-section d-block d-md-none">
+      <h3>Sort by</h3>
+      <select class="form-select mb-2" [(ngModel)]="draft.sortField">
+        <option [ngValue]="null">Default order</option>
+        @for (opt of sortFieldOptions; track opt.id) {
+          <option [ngValue]="opt.id">{{ opt.label }}</option>
+        }
+      </select>
+      @if (draft.sortField) {
+        <div class="sort-direction-toggle">
+          <button
+            type="button"
+            class="sort-dir-btn"
+            [class.active]="draft.sortDirection === 'asc'"
+            (click)="draft.sortDirection = 'asc'"
+          >
+            &uarr; Ascending
+          </button>
+          <button
+            type="button"
+            class="sort-dir-btn"
+            [class.active]="draft.sortDirection === 'desc'"
+            (click)="draft.sortDirection = 'desc'"
+          >
+            &darr; Descending
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+
+  <div class="filter-panel-footer">
+    <button type="button" class="btn-apply" (click)="onApply()">Apply</button>
+    <button type="button" class="btn-reset" (click)="onReset()">Reset</button>
+  </div>
+</div>

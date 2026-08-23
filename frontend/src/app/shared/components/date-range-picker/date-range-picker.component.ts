@@ -34,6 +34,7 @@ export class DateRangePickerComponent implements OnInit, OnChanges {
   @Input() enableCustomRange: boolean = true;
   @Input() showPastOptions: boolean = false;
   @Input() showTime: boolean = false;
+  @Input() class: string | null = null;
 
   @Output() dateRangeChange = new EventEmitter<DateRange>();
 

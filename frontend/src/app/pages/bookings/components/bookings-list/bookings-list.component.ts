@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { NgbDropdownModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
-import { Booking, DateRangeFilter, BookingImageInfo } from '../../../../shared/models/booking.model';
+import { Booking, DateRangeFilter, BookingImageInfo, BookingSortField, BookingSortDirection } from '../../../../shared/models/booking.model';
 import { buildTelHref } from '../../../../shared/utils/phone.util';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -42,9 +42,21 @@ export class BookingsListComponent {
   @Input() isAdmin: boolean = false;
   @Input() isDriver: boolean = false;
   @Input() dateRangeFilter: DateRangeFilter | null = null;
+  @Input() sortField: BookingSortField | null = null;
+  @Input() sortDirection: BookingSortDirection = 'asc';
   @Output() pageChange = new EventEmitter<number>();
   @Output() bookingDeleted = new EventEmitter<void>();
   @Output() bookingUpdated = new EventEmitter<void>();
+  @Output() sortChange = new EventEmitter<BookingSortField>();
+
+  onSortClick(field: BookingSortField): void {
+    this.sortChange.emit(field);
+  }
+
+  sortIndicator(field: BookingSortField): string {
+    if (this.sortField !== field) return '';
+    return this.sortDirection === 'asc' ? ' ↑' : ' ↓';
+  }
 
   showCarousel = false;
   carouselImages: BookingImageInfo[] = [];

@@ -144,3 +144,51 @@ export interface BookingImageInfo {
   url: string;
   createdAt: string;
 }
+
+/** One key per sortable bookings-list column — kept 1:1 with the table's header order. */
+export type BookingSortField =
+  | 'status'
+  | 'name'
+  | 'plateNo'
+  | 'vehicle'
+  | 'carColor'
+  | 'checkIn'
+  | 'checkInBy'
+  | 'dropOff'
+  | 'checkOut'
+  | 'checkOutBy'
+  | 'pickUp'
+  | 'returnFlight'
+  | 'parkingType'
+  | 'washService'
+  | 'source'
+  | 'finalPrice';
+
+export type BookingSortDirection = 'asc' | 'desc';
+
+/** Full filter + sort state for the bookings list filter panel. */
+export interface BookingsFilterState {
+  dateFrom: string | null;
+  dateTo: string | null;
+  datePreset: string | null;
+  status: string[];
+  parkingType: string[];
+  washService: string[]; // 'yes' | 'no'
+  dropOff: string[];
+  pickUp: string[];
+  source: string[]; // 'registered' | 'guest' — admin only
+  priceMin: number | null;
+  priceMax: number | null;
+  checkInBy: string; // admin only
+  checkOutBy: string; // admin only
+  name: string;
+  email: string;
+  mobile: string;
+  plateNo: string;
+  carBrand: string;
+  carModel: string;
+  carColor: string;
+  returnFlight: string;
+  sortField: BookingSortField | null;
+  sortDirection: BookingSortDirection;
+}

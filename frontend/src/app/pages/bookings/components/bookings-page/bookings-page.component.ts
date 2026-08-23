@@ -1,28 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
-import { NgbDatepickerModule, NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
+import { NgbCalendar, NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
-import { Booking } from '../../../../shared/models/booking.model';
-import {
-  DateRangePickerComponent,
-  DateRange,
-} from '../../../../shared/components/date-range-picker/date-range-picker.component';
+import { Booking, BookingSortField, BookingsFilterState } from '../../../../shared/models/booking.model';
 import { BookingsListComponent } from '../bookings-list/bookings-list.component';
+import { BookingsFilterPanelComponent } from '../bookings-filter-panel/bookings-filter-panel.component';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
 import { take } from 'rxjs';
 import { AuthService } from '@auth0/auth0-angular';
+import {
+  buildBookingsPredicate,
+  countActiveFilters,
+  createDefaultBookingsFilterState,
+  filterStateFromQueryParams,
+  filterStateToQueryParams,
+  sortBookings,
+} from '../../../../shared/utils/bookings-filter.util';
 
 @Component({
   selector: 'app-bookings-page',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     RouterLink,
-    NgbDatepickerModule,
-    DateRangePickerComponent,
     BookingsListComponent,
   ],
   templateUrl: './bookings-page.component.html',
@@ -33,7 +34,6 @@ export class BookingsPageComponent implements OnInit {
   filteredBookings: Booking[] = [];
   loading = false;
   errorMessage = '';
-  searchTerm = '';
 
   isAdmin: boolean = false;
   isDriver: boolean = false;
@@ -43,8 +43,7 @@ export class BookingsPageComponent implements OnInit {
   customerBookings: Booking[] = [];
   loadingCustomerBookings = false;
 
-  dateFilter: DateRange = { from: null, to: null, preset: null };
-  dateRangeFilterForList: { dateFrom: string | null; dateTo: string | null } = { dateFrom: null, dateTo: null };
+  filterState!: BookingsFilterState;
 
   currentPage = 1;
   pageSize = 10;
@@ -56,6 +55,8 @@ export class BookingsPageComponent implements OnInit {
     private roleService: RoleService,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
+    private offcanvasService: NgbOffcanvas,
   ) {}
 
   goToXReport(): void {
@@ -67,37 +68,27 @@ export class BookingsPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.initDefaultDateRange();
+    const queryParams: Record<string, string | null> = {};
+    this.route.snapshot.queryParamMap.keys.forEach((key) => {
+      queryParams[key] = this.route.snapshot.queryParamMap.get(key);
+    });
+    this.filterState = filterStateFromQueryParams(queryParams, this.createDefaultFilterState());
+
     this.loadBookings();
     this.checkUserRole();
     this.checkEmailVerification();
   }
 
-  private initDefaultDateRange(): void {
+  private getTodayDateString(): string {
     const today = this.calendar.getToday();
-    const fromDate = new Date(today.year, today.month - 1, today.day);
-    const toDate = new Date(today.year, today.month - 1, today.day);
-
-    this.dateFilter = {
-      from: fromDate,
-      to: toDate,
-      preset: 'today',
-    };
-    this.updateDateRangeFilterForList();
+    const month = String(today.month).padStart(2, '0');
+    const day = String(today.day).padStart(2, '0');
+    return `${today.year}-${month}-${day}`;
   }
 
-  private updateDateRangeFilterForList(): void {
-    this.dateRangeFilterForList = {
-      dateFrom: this.dateFilter.from ? this.formatDateForApi(this.dateFilter.from) : null,
-      dateTo: this.dateFilter.to ? this.formatDateForApi(this.dateFilter.to) : null,
-    };
-  }
-
-  private formatDateForApi(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  private createDefaultFilterState(): BookingsFilterState {
+    const today = this.getTodayDateString();
+    return createDefaultBookingsFilterState(today, today, 'today');
   }
 
   loadBookings(): void {
@@ -105,19 +96,18 @@ export class BookingsPageComponent implements OnInit {
     this.errorMessage = '';
 
     const params: { dateFrom?: string; dateTo?: string; filterBy?: 'check-ins' | 'check-outs' | 'both' } = {};
-
-    if (this.dateFilter.from) {
-      params.dateFrom = this.formatDateForApi(this.dateFilter.from);
+    if (this.filterState.dateFrom) {
+      params.dateFrom = this.filterState.dateFrom;
     }
-    if (this.dateFilter.to) {
-      params.dateTo = this.formatDateForApi(this.dateFilter.to);
+    if (this.filterState.dateTo) {
+      params.dateTo = this.filterState.dateTo;
     }
     params.filterBy = 'both';
 
     this.bookingsService.getBookings(params).subscribe({
       next: (response) => {
         this.allBookings = response.data;
-        this.applySearchFilter();
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -128,41 +118,96 @@ export class BookingsPageComponent implements OnInit {
     });
   }
 
-  private applySearchFilter(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-
-    if (!term) {
-      this.filteredBookings = [...this.allBookings];
-    } else {
-      this.filteredBookings = this.allBookings.filter((booking) => {
-        const fullName = `${booking.name} ${booking.surname}`.toLowerCase();
-        const searchableFields = [
-          fullName,
-          booking.email,
-          booking.phone,
-          booking.mobile,
-          booking.plateNo,
-          booking.returnFlight,
-          booking.parkingType,
-          booking.dateFrom,
-          booking.dateTo,
-          booking.carBrand,
-          booking.carModel,
-          booking.carColor,
-        ];
-
-        return searchableFields.some((field) => field && field.toLowerCase().includes(term));
-      });
-    }
-
+  /** Re-filters + re-sorts the already-fetched date-range set; no server round-trip. */
+  applyFilters(): void {
+    const predicate = buildBookingsPredicate(this.filterState);
+    const filtered = this.allBookings.filter(predicate);
+    this.filteredBookings = sortBookings(filtered, this.filterState.sortField, this.filterState.sortDirection);
     this.totalPages = Math.ceil(this.filteredBookings.length / this.pageSize) || 1;
     this.currentPage = 1;
   }
 
-  onDateRangeChange(range: DateRange): void {
-    this.dateFilter = range;
-    this.updateDateRangeFilterForList();
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: filterStateToQueryParams(this.filterState),
+      replaceUrl: true,
+    });
+  }
+
+  get dateRangeLabel(): string {
+    if (!this.filterState.dateFrom) return 'All dates';
+    const from = this.formatDateForDisplay(this.filterState.dateFrom);
+    const to = this.filterState.dateTo ? this.formatDateForDisplay(this.filterState.dateTo) : from;
+    return from === to ? from : `${from} - ${to}`;
+  }
+
+  private formatDateForDisplay(dateStr: string): string {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  get activeFilterCount(): number {
+    return countActiveFilters(this.filterState);
+  }
+
+  get dateRangeFilterForList(): { dateFrom: string | null; dateTo: string | null } {
+    return { dateFrom: this.filterState.dateFrom, dateTo: this.filterState.dateTo };
+  }
+
+  get checkInByOptions(): string[] {
+    return this.uniqueSorted(this.allBookings.map((b) => b.checkInBy));
+  }
+
+  get checkOutByOptions(): string[] {
+    return this.uniqueSorted(this.allBookings.map((b) => b.checkOutBy));
+  }
+
+  private uniqueSorted(values: (string | null)[]): string[] {
+    return Array.from(new Set(values.filter((v): v is string => !!v))).sort((a, b) => a.localeCompare(b));
+  }
+
+  openFiltersPanel(): void {
+    const ref = this.offcanvasService.open(BookingsFilterPanelComponent, {
+      position: 'end',
+      panelClass: 'bookings-filter-offcanvas',
+    });
+    const instance = ref.componentInstance as BookingsFilterPanelComponent;
+    instance.state = this.filterState;
+    instance.isAdmin = this.isAdmin;
+    instance.enablePastDates = !this.isDriver;
+    instance.checkInByOptions = this.checkInByOptions;
+    instance.checkOutByOptions = this.checkOutByOptions;
+
+    instance.apply.subscribe((newState: BookingsFilterState) => this.onFiltersApplied(newState));
+    instance.reset.subscribe(() => this.onFiltersReset());
+  }
+
+  private onFiltersApplied(newState: BookingsFilterState): void {
+    const dateChanged = newState.dateFrom !== this.filterState.dateFrom || newState.dateTo !== this.filterState.dateTo;
+    this.filterState = newState;
+    this.syncFiltersToUrl();
+    if (dateChanged) {
+      this.loadBookings();
+    } else {
+      this.applyFilters();
+    }
+  }
+
+  private onFiltersReset(): void {
+    this.filterState = this.createDefaultFilterState();
+    this.syncFiltersToUrl();
     this.loadBookings();
+  }
+
+  onSortChange(field: BookingSortField): void {
+    if (this.filterState.sortField === field) {
+      this.filterState = { ...this.filterState, sortDirection: this.filterState.sortDirection === 'asc' ? 'desc' : 'asc' };
+    } else {
+      this.filterState = { ...this.filterState, sortField: field, sortDirection: 'asc' };
+    }
+    this.syncFiltersToUrl();
+    this.applyFilters();
   }
 
   get paginatedBookings(): Booking[] {
@@ -207,10 +252,6 @@ export class BookingsPageComponent implements OnInit {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
-  }
-
-  onSearchChange(): void {
-    this.applySearchFilter();
   }
 
   private checkUserRole(): void {
