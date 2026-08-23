@@ -1844,7 +1844,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         if (this.existingBooking?.parkingTypeId) {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId }, { emitEvent: false });
         } else if (!this.isEditMode && response.parkingTypes.length > 0) {
-          this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
+          this.bookingForm.patchValue({ parkingType: response.defaultParkingTypeId ?? response.parkingTypes[0].id });
           this.checkAvailability();
         }
       },

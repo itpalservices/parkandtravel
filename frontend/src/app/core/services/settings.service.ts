@@ -19,6 +19,7 @@ export interface ConfigurationSettings {
   airportDelivery: boolean;
   availableAfter: number;
   returnDetailsDefault: boolean;
+  defaultParkingType: string;
 }
 
 @Injectable({

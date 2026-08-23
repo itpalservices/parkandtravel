@@ -240,6 +240,53 @@
               </div>
 
               <div class="settings-group">
+                <h4>Default Parking Type</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  Which parking type new bookings start pre-selected with. A type with no spots
+                  available can't be picked here, and bookings automatically fall back to whichever
+                  type currently has spots if this one runs out later.
+                </small>
+
+                <div class="form-row">
+                  <div class="form-check">
+                    <input
+                      type="radio"
+                      id="defaultParkingTypeUncovered"
+                      class="form-check-input"
+                      name="defaultParkingType"
+                      [checked]="defaultParkingType === 'parkingType_uncovered'"
+                      [disabled]="isUncoveredUnavailable"
+                      (change)="defaultParkingType = 'parkingType_uncovered'"
+                    />
+                    <label class="form-check-label" for="defaultParkingTypeUncovered">
+                      Uncovered
+                      @if (isUncoveredUnavailable) {
+                        <small class="text-muted">(no spots available)</small>
+                      }
+                    </label>
+                  </div>
+
+                  <div class="form-check">
+                    <input
+                      type="radio"
+                      id="defaultParkingTypeCovered"
+                      class="form-check-input"
+                      name="defaultParkingType"
+                      [checked]="defaultParkingType === 'parkingType_covered'"
+                      [disabled]="isCoveredUnavailable"
+                      (change)="defaultParkingType = 'parkingType_covered'"
+                    />
+                    <label class="form-check-label" for="defaultParkingTypeCovered">
+                      Covered
+                      @if (isCoveredUnavailable) {
+                        <small class="text-muted">(no spots available)</small>
+                      }
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
                 <h4>Pricing</h4>
 
                 <div class="form-row">

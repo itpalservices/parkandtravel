@@ -202,7 +202,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.applyAirportDeliveryState();
         this.applyAvailableAfterRestriction();
         if (response.parkingTypes.length > 0) {
-          this.bookingForm.patchValue({ parkingType: response.parkingTypes[0].id });
+          this.bookingForm.patchValue({ parkingType: response.defaultParkingTypeId ?? response.parkingTypes[0].id });
           this.checkAvailability();
         }
       },

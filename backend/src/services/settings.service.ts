@@ -17,7 +17,11 @@ export interface ConfigurationSettings {
   airportDelivery: boolean;
   availableAfter: number;
   returnDetailsDefault: boolean;
+  defaultParkingType: string;
 }
+
+export const PARKING_TYPE_IDS = ['parkingType_covered', 'parkingType_uncovered'] as const;
+const DEFAULT_PARKING_TYPE_FALLBACK = 'parkingType_covered';
 
 const SETTING_KEYS = {
   availableUncovered: "configurationSetting_availableUncovered",
@@ -35,7 +39,8 @@ const SETTING_KEYS = {
   mandatoryCheckInPayment: "configurationSetting_mandatoryCheckInPayment",
   airportDelivery: "configurationSetting_delivery",
   availableAfter: "configurationSetting_availableAfter",
-  returnDetailsDefault: "configurationSetting_returnDetailsDefault"
+  returnDetailsDefault: "configurationSetting_returnDetailsDefault",
+  defaultParkingType: "configurationSetting_defaultParkingType"
 };
 
 interface SettingRow {
@@ -73,7 +78,8 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     mandatoryCheckInPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryCheckInPayment)),
     airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery)),
     availableAfter: parseIntOrNull(settingsMap.get(SETTING_KEYS.availableAfter)) ?? 0,
-    returnDetailsDefault: parseBoolean(settingsMap.get(SETTING_KEYS.returnDetailsDefault))
+    returnDetailsDefault: parseBoolean(settingsMap.get(SETTING_KEYS.returnDetailsDefault)),
+    defaultParkingType: parseParkingTypeId(settingsMap.get(SETTING_KEYS.defaultParkingType))
   };
 }
 
@@ -198,6 +204,13 @@ export async function updateSettings(
     });
   }
 
+  if (data.defaultParkingType !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.defaultParkingType,
+      value: parseParkingTypeId(data.defaultParkingType),
+    });
+  }
+
   for (const update of updates) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO configuration_settings (id, value) VALUES ($1, $2)
@@ -220,6 +233,12 @@ function parseFloatOrNull(value: string | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed = parseFloat(value);
   return isNaN(parsed) ? null : parsed;
+}
+
+function parseParkingTypeId(value: string | null | undefined): string {
+  return value === 'parkingType_covered' || value === 'parkingType_uncovered'
+    ? value
+    : DEFAULT_PARKING_TYPE_FALLBACK;
 }
 
 function parseBoolean(value: string | null | undefined): boolean {

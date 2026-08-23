@@ -66,6 +66,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   mandatoryCheckInPayment = false;
   airportDelivery = true;
   returnDetailsDefault = false;
+  defaultParkingType = 'parkingType_covered';
   availableAfter = 0;
   priceIncrementsCovered: number[] = [];
   priceIncrementsUncovered: number[] = [];
@@ -173,6 +174,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       } else {
         priceUncoveredCtrl.enable();
       }
+      this.reconcileDefaultParkingType();
     });
 
     this.settingsForm.get('availableCovered')!.valueChanges.subscribe((value) => {
@@ -186,7 +188,31 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       } else {
         priceCoveredCtrl.enable();
       }
+      this.reconcileDefaultParkingType();
     });
+  }
+
+  get isUncoveredUnavailable(): boolean {
+    const value = this.settingsForm.get('availableUncovered')?.value;
+    return value === null || value === 0 || value === '';
+  }
+
+  get isCoveredUnavailable(): boolean {
+    const value = this.settingsForm.get('availableCovered')?.value;
+    return value === null || value === 0 || value === '';
+  }
+
+  /**
+   * Keeps the selected default parking type in sync with live availability: if the
+   * currently-selected default just lost its spots, fall back to whichever type
+   * still has some, mirroring the price-field reset above.
+   */
+  private reconcileDefaultParkingType(): void {
+    if (this.defaultParkingType === 'parkingType_covered' && this.isCoveredUnavailable && !this.isUncoveredUnavailable) {
+      this.defaultParkingType = 'parkingType_uncovered';
+    } else if (this.defaultParkingType === 'parkingType_uncovered' && this.isUncoveredUnavailable && !this.isCoveredUnavailable) {
+      this.defaultParkingType = 'parkingType_covered';
+    }
   }
 
   loadSettings(): void {
@@ -195,6 +221,10 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
 
     this.settingsService.getSettings().subscribe({
       next: (settings) => {
+        // Set before patchValue: availability changes below trigger reconciliation
+        // synchronously, and it needs the freshly-loaded preference to reconcile against.
+        this.defaultParkingType = settings.defaultParkingType || 'parkingType_covered';
+
         this.settingsForm.patchValue({
           availableUncovered: settings.availableUncovered,
           availableCovered: settings.availableCovered,
@@ -216,6 +246,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         this.offerWashService = settings.priceWash !== null;
         this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
         this.priceIncrementsUncovered = settings.priceIncrementsUncovered || [];
+        this.reconcileDefaultParkingType();
         this.settingsLoading = false;
       },
       error: (error) => {
@@ -345,7 +376,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       availableAfter: formValue.availableAfter !== '' && formValue.availableAfter !== null
         ? Math.max(0, Math.floor(Number(formValue.availableAfter)))
         : 0,
-      returnDetailsDefault: this.returnDetailsDefault
+      returnDetailsDefault: this.returnDetailsDefault,
+      defaultParkingType: this.defaultParkingType
     };
 
     this.settingsService.updateSettings(data).subscribe({

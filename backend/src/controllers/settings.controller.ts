@@ -3,6 +3,7 @@ import {
   getSettings,
   updateSettings,
   ConfigurationSettings,
+  PARKING_TYPE_IDS,
 } from "../services/settings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 
@@ -101,6 +102,16 @@ export async function updateSettingsHandler(
       return;
     }
 
+    if (
+      data.defaultParkingType !== undefined &&
+      !PARKING_TYPE_IDS.includes(data.defaultParkingType as any)
+    ) {
+      res.status(400).json({
+        error: "Default parking type must be one of: " + PARKING_TYPE_IDS.join(", "),
+      });
+      return;
+    }
+
     const validatedData: Partial<ConfigurationSettings> = {
       availableUncovered: availableUncovered !== null && availableUncovered !== undefined
         ? Math.floor(Number(availableUncovered))
@@ -134,6 +145,7 @@ export async function updateSettingsHandler(
         ? Math.max(0, Math.floor(Number(data.availableAfter)))
         : 0,
       returnDetailsDefault: data.returnDetailsDefault !== undefined ? Boolean(data.returnDetailsDefault) : false,
+      defaultParkingType: data.defaultParkingType,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {

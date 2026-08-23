@@ -1102,6 +1102,7 @@ export interface ParkingTypesResponse {
   airportDeliveryEnabled: boolean;
   availableAfter: number;
   returnDetailsDefaultEnabled: boolean;
+  defaultParkingTypeId: string | null;
 }
 
 export async function getParkingTypes(): Promise<ParkingTypesResponse> {
@@ -1110,7 +1111,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   });
 
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
@@ -1122,7 +1123,8 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     'configurationSetting_mandatoryPrePayment',
     'configurationSetting_delivery',
     'configurationSetting_availableAfter',
-    'configurationSetting_returnDetailsDefault'
+    'configurationSetting_returnDetailsDefault',
+    'configurationSetting_defaultParkingType'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -1173,6 +1175,16 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     return true;
   });
 
+  // Resolve the admin's preferred default parking type against live availability:
+  // fall back to the first available type if the preference is unset or currently has 0 spots.
+  const defaultParkingTypeRaw = settingsMap.get('configurationSetting_defaultParkingType');
+  const preferredParkingType = defaultParkingTypeRaw === 'parkingType_covered' || defaultParkingTypeRaw === 'parkingType_uncovered'
+    ? defaultParkingTypeRaw
+    : 'parkingType_covered';
+  const defaultParkingTypeId = filteredTypes.find((t) => t.id === preferredParkingType)?.id
+    ?? filteredTypes[0]?.id
+    ?? null;
+
   const parkingTypes = filteredTypes.map((type) => ({
     id: type.id,
     name: type.name,
@@ -1191,6 +1203,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     airportDeliveryEnabled,
     availableAfter,
     returnDetailsDefaultEnabled,
+    defaultParkingTypeId,
   };
 }
 

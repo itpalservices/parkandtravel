@@ -78,6 +78,7 @@ export interface ParkingTypesResponse {
   airportDeliveryEnabled: boolean;
   availableAfter: number;
   returnDetailsDefaultEnabled: boolean;
+  defaultParkingTypeId: string | null;
 }
 
 export interface HistoryBooking {
