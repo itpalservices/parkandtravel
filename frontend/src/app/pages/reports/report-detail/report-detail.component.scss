@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .page-container {
   max-width: 1200px;
 }
@@ -17,7 +19,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: #006B8F;
+    color: $primary-color;
   }
 }
 

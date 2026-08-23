@@ -1,3 +1,5 @@
+@use '../../../styles/variables' as *;
+
 .page-container {
   max-width: 1200px;
 }
@@ -29,17 +31,17 @@
   cursor: pointer;
 
   &:hover {
-    border-color: #006B8F;
+    border-color: $primary-color;
     box-shadow: 0 4px 12px rgba(0, 107, 143, 0.15);
     transform: translateY(-2px);
 
     .report-icon {
-      background-color: #006B8F;
+      background-color: $primary-color;
       color: white;
     }
 
     .report-arrow {
-      color: #006B8F;
+      color: $primary-color;
       transform: translateX(4px);
     }
   }
@@ -54,7 +56,7 @@
   min-width: 56px;
   background-color: #f0f9ff;
   border-radius: 0.75rem;
-  color: #006B8F;
+  color: $primary-color;
   transition: all 0.2s ease;
 }
 

@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .app-footer {
   height: 34px;
   display: flex;
@@ -11,13 +13,13 @@
   flex-shrink: 0;
 
   a {
-    color: #006B8F;
+    color: $primary-color;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.15s ease;
 
     &:hover {
-      color: #004d66;
+      color: $primary-color-dark;
       text-decoration: underline;
     }
   }

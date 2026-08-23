@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .modal-backdrop {
       position: fixed;
       top: 0;
@@ -43,7 +45,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #006B8F;
+      color: $primary-color;
       margin-bottom: 0.25rem;
     }
 
@@ -73,7 +75,7 @@
       width: 36px;
       height: 36px;
       border: 3px solid #e5e7eb;
-      border-top-color: #006B8F;
+      border-top-color: $primary-color;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
@@ -244,7 +246,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.625rem 1rem;
-      background-color: #006B8F;
+      background-color: $primary-color;
       color: #ffffff;
     }
 
@@ -294,7 +296,7 @@
       font-size: 0.9375rem;
       font-weight: 600;
       color: #ffffff;
-      background-color: #006B8F;
+      background-color: $primary-color;
       border: none;
       border-radius: 8px;
       cursor: pointer;

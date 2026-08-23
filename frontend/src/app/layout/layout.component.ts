@@ -1,3 +1,4 @@
+import { PRIMARY_COLOR } from '../shared/constants/theme.constants';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
@@ -67,7 +68,7 @@ export class LayoutComponent implements OnInit {
             position: 'top-end',
             icon: 'warning',
             title: 'Email not verified',
-            html: 'Please verify your email. <a id="profile-link" href="javascript:void(0)" style="color: #006B8F; font-weight: 500; text-decoration: underline; cursor: pointer;">Go to Profile</a>',
+            html: `Please verify your email. <a id="profile-link" href="javascript:void(0)" style="color: ${PRIMARY_COLOR}; font-weight: 500; text-decoration: underline; cursor: pointer;">Go to Profile</a>`,
             showConfirmButton: false,
             timer: 6000,
             timerProgressBar: true,

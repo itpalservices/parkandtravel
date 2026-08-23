@@ -22,6 +22,7 @@ import {
 import { RouterModule } from '@angular/router';
 import { FormAction } from '../../../../shared/enums/form-action.enum';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
+import { PRIMARY_COLOR } from '../../../../shared/constants/theme.constants';
 
 export type PrintableDocType = 'booking-tag' | 'checkin-receipt' | 'checkin-payment' | 'completion-payment';
 
@@ -96,7 +97,7 @@ export class BookingsListComponent {
       confirmButtonText: 'Print',
       denyButtonText: 'Email',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
       denyButtonColor: '#6c757d',
     });
 
@@ -120,7 +121,7 @@ export class BookingsListComponent {
       showCancelButton: true,
       confirmButtonText: 'Send',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
       inputValidator: (value) => {
         if (!value || !emailRegex.test(value.trim())) {
           return 'Please enter a valid email address';
@@ -168,7 +169,7 @@ export class BookingsListComponent {
       text: booking.parkingComments ?? '',
       icon: 'info',
       confirmButtonText: 'Close',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
     });
   }
 
@@ -475,7 +476,7 @@ export class BookingsListComponent {
         showCloseButton: true,
         confirmButtonText: 'Apply extra fee',
         denyButtonText: 'Skip extra fee',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         denyButtonColor: '#6c757d',
         allowOutsideClick: false,
         allowEscapeKey: true,
@@ -489,7 +490,7 @@ export class BookingsListComponent {
         icon: 'info',
         showCancelButton: false,
         confirmButtonText: 'Proceed',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -526,7 +527,7 @@ export class BookingsListComponent {
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
       });
       if (!confirmResult.isConfirmed) return;
     } else {
@@ -559,7 +560,7 @@ export class BookingsListComponent {
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         preConfirm: () => {
           const amtEl = document.getElementById('swal-amount') as HTMLInputElement;
           const pmEl = document.querySelector('input[name="swal-pm"]:checked') as HTMLInputElement;
@@ -728,8 +729,8 @@ export class BookingsListComponent {
         paymentSectionHtml = `
           <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
             <div id="swal-checkin-header" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; user-select:none;">
-              <span style="font-weight:600; color:#006B8F; font-size:14px;">Record check-in payment (optional)</span>
-              <span id="swal-checkin-chevron" style="color:#006B8F; font-size:11px; font-weight:bold;">▶</span>
+              <span style="font-weight:600; color:${PRIMARY_COLOR}; font-size:14px;">Record check-in payment (optional)</span>
+              <span id="swal-checkin-chevron" style="color:${PRIMARY_COLOR}; font-size:11px; font-weight:bold;">▶</span>
             </div>
             <div id="swal-checkin-body" style="display:none; margin-top:12px;">
               ${fieldsHtml}
@@ -796,7 +797,7 @@ export class BookingsListComponent {
       showCancelButton: true,
       confirmButtonText: 'Submit',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
       width: 520,
       didOpen: () => {
         const parkPlaceInput = document.getElementById('swal-park-place') as HTMLInputElement;
@@ -850,7 +851,7 @@ export class BookingsListComponent {
         uploadArea.addEventListener('click', () => fileInput.click());
         uploadArea.addEventListener('dragover', (e) => {
           e.preventDefault();
-          uploadArea.style.borderColor = '#006B8F';
+          uploadArea.style.borderColor = PRIMARY_COLOR;
           uploadArea.style.background = '#f0f9ff';
         });
         uploadArea.addEventListener('dragleave', () => {
@@ -1062,7 +1063,7 @@ export class BookingsListComponent {
       showCancelButton: true,
       confirmButtonText: 'Yes, revert',
       cancelButtonText: 'No',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
       cancelButtonColor: '#6c757d',
     }).then((result) => {
       if (result.isConfirmed) {
@@ -1080,7 +1081,7 @@ export class BookingsListComponent {
       showDenyButton: true,
       denyButtonText: 'Skip',
       denyButtonColor: '#6c757d',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
     }).then(async (r) => {
       if (r.isConfirmed) {
         await this.zebraPrintService.printCheckinReceipt(bookingId);

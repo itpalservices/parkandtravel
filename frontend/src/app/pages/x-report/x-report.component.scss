@@ -1,3 +1,5 @@
+@use '../../../styles/variables' as *;
+
 .page-container {
   padding: 24px;
   max-width: 1100px;
@@ -36,7 +38,7 @@
   gap: 6px;
   background: none;
   border: none;
-  color: #006B8F;
+  color: $primary-color;
   font-size: 0.9rem;
   cursor: pointer;
   padding: 0;
@@ -48,7 +50,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #006B8F;
+  background: $primary-color;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -81,7 +83,7 @@
   gap: 6px;
 
   &--total {
-    border-color: #006B8F;
+    border-color: $primary-color;
     background: #f0f9ff;
   }
 }
@@ -112,7 +114,7 @@
   border-collapse: collapse;
 
   thead tr {
-    background: #006B8F;
+    background: $primary-color;
   }
 
   thead th {
@@ -169,7 +171,7 @@
     width: 36px;
     height: 36px;
     border: 3px solid #e5e7eb;
-    border-top-color: #006B8F;
+    border-top-color: $primary-color;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 12px;

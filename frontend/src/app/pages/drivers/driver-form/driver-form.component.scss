@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .driver-form-page {
   width: 100%;
 }
@@ -88,7 +90,7 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &:focus {
-    border-color: #006B8F;
+    border-color: $primary-color;
     box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     outline: none;
   }
@@ -194,7 +196,7 @@
 
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
   }
 }
 
@@ -272,7 +274,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #fff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 8px;
   cursor: pointer;

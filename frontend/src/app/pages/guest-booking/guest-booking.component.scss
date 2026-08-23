@@ -1,3 +1,5 @@
+@use '../../../styles/variables' as *;
+
 .guest-booking-page {
   min-height: 100%;
   background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
@@ -108,7 +110,7 @@
   .ngb-dp-day {
     .btn-light {
       &.bg-primary {
-        background-color: #006B8F !important;
+        background-color: $primary-color !important;
       }
     }
     
@@ -144,7 +146,7 @@
 
     &:focus {
       outline: none;
-      border-color: #006B8F;
+      border-color: $primary-color;
       box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }
   }
@@ -188,7 +190,7 @@ input[type="time"].form-control {
   font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -320,7 +322,7 @@ input[type="time"].form-control {
   font-size: 0.9375rem;
   font-weight: 500;
   color: #ffffff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -381,7 +383,7 @@ input[type="time"].form-control {
   
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
     box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
   }
   
@@ -421,7 +423,7 @@ input[type="time"].form-control {
   
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
   }
   
   &::placeholder {
@@ -472,7 +474,7 @@ input[type="time"].form-control {
   border-left: none !important;
   
   &:focus {
-    border-left: 1px solid #006B8F !important;
+    border-left: 1px solid $primary-color !important;
   }
 }
 
@@ -503,7 +505,7 @@ input[type="time"].form-control {
     height: 0;
 
     &:checked + .toggle-slider {
-      background-color: #006B8F;
+      background-color: $primary-color;
     }
 
     &:checked + .toggle-slider:before {
@@ -543,7 +545,7 @@ input[type="time"].form-control {
 }
 
 .wash-price {
-  color: #006B8F;
+  color: $primary-color;
   font-weight: 600;
 }
 
@@ -582,7 +584,7 @@ input[type="time"].form-control {
 }
 
 .total-amount {
-  color: #006B8F;
+  color: $primary-color;
   font-size: 1.125rem;
 }
 

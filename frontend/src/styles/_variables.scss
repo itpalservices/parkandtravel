@@ -1,5 +1,10 @@
 // Color variables
-$primary-color: #006B8F;
+// Actual values come from environment.primaryColor (see src/environments/), pushed
+// in as CSS custom properties by main.ts before the app renders. The hex literals
+// below are only the compile-time fallback (used if the custom property is unset).
+$primary-color: var(--primary-color, #006B8F);
+$primary-color-dark: var(--primary-color-dark, #004d66);   // gradients/hover shades
+$primary-color-light: var(--primary-color-light, #0088b3); // gradients/hover shades
 $secondary-color: #6c757d;
 $success-color: #28a745;
 $danger-color: #dc3545;

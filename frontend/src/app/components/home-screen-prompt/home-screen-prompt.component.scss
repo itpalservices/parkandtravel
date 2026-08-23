@@ -1,3 +1,5 @@
+@use '../../../styles/variables' as *;
+
 .hsp-backdrop {
   position: fixed;
   inset: 0;
@@ -43,7 +45,7 @@
 }
 
 .hsp-icon {
-  color: #006b8f;
+  color: $primary-color;
   margin-bottom: 2px;
 }
 
@@ -80,7 +82,7 @@
 .hsp-inline-icon {
   display: inline-flex;
   vertical-align: middle;
-  color: #006b8f;
+  color: $primary-color;
   margin: 0 2px;
   position: relative;
   top: -1px;
@@ -99,7 +101,7 @@
   input[type='checkbox'] {
     width: 16px;
     height: 16px;
-    accent-color: #006b8f;
+    accent-color: $primary-color;
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -108,7 +110,7 @@
 .hsp-btn {
   width: 100%;
   padding: 12px;
-  background: #006b8f;
+  background: $primary-color;
   color: #fff;
   border: none;
   border-radius: 10px;

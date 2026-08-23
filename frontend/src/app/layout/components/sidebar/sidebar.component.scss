@@ -51,10 +51,10 @@
 
   &:hover {
     background-color: #f3f4f6;
-    color: #006B8F;
+    color: $primary-color;
 
     .nav-icon {
-      color: #006B8F;
+      color: $primary-color;
     }
   }
 }
@@ -98,16 +98,16 @@
 
   &:hover {
     background-color: #f3f4f6;
-    color: #006B8F;
+    color: $primary-color;
   }
 
   &.active {
     background-color: #e6f3f7;
-    color: #006B8F;
-    border-left-color: #006B8F;
+    color: $primary-color;
+    border-left-color: $primary-color;
 
     .nav-icon {
-      color: #006B8F;
+      color: $primary-color;
     }
   }
 }

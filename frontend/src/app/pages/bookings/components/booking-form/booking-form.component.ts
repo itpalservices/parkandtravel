@@ -37,6 +37,7 @@ import { UserProfileService } from '../../../../core/services/user-profile.servi
 import { ShiftService } from '../../../../core/services/shift.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { ZebraPrintService } from '../../../../core/services/zebra-print.service';
+import { PRIMARY_COLOR } from '../../../../shared/constants/theme.constants';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 
 interface UserSearchResponse {
@@ -173,7 +174,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             position: 'top-end',
             icon: 'warning',
             title: 'Email not verified',
-            html: 'Please verify your email. <a id="profile-link" href="javascript:void(0)" style="color: #006B8F; font-weight: 500; text-decoration: underline; cursor: pointer;">Go to Profile</a>',
+            html: `Please verify your email. <a id="profile-link" href="javascript:void(0)" style="color: ${PRIMARY_COLOR}; font-weight: 500; text-decoration: underline; cursor: pointer;">Go to Profile</a>`,
             showConfirmButton: false,
             timer: 6000,
             timerProgressBar: true,
@@ -557,8 +558,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         paymentSectionHtml = `
           <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
             <div id="swal-checkin-header" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; user-select:none;">
-              <span style="font-weight:600; color:#006B8F; font-size:14px;">Record check-in payment (optional)</span>
-              <span id="swal-checkin-chevron" style="color:#006B8F; font-size:11px; font-weight:bold;">▶</span>
+              <span style="font-weight:600; color:${PRIMARY_COLOR}; font-size:14px;">Record check-in payment (optional)</span>
+              <span id="swal-checkin-chevron" style="color:${PRIMARY_COLOR}; font-size:11px; font-weight:bold;">▶</span>
             </div>
             <div id="swal-checkin-body" style="display:none; margin-top:12px;">
               ${fieldsHtml}
@@ -625,7 +626,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: 'Submit',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
       width: 520,
       didOpen: () => {
         const parkPlaceInput = document.getElementById('swal-park-place') as HTMLInputElement;
@@ -679,7 +680,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         uploadArea.addEventListener('click', () => fileInput.click());
         uploadArea.addEventListener('dragover', (e) => {
           e.preventDefault();
-          uploadArea.style.borderColor = '#006B8F';
+          uploadArea.style.borderColor = PRIMARY_COLOR;
           uploadArea.style.background = '#f0f9ff';
         });
         uploadArea.addEventListener('dragleave', () => {
@@ -807,7 +808,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       showDenyButton: true,
       denyButtonText: 'Skip',
       denyButtonColor: '#6c757d',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
     }).then(async (r) => {
       if (r.isConfirmed) {
         await this.zebraPrintService.printCheckinReceipt(bookingId);
@@ -991,7 +992,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         showCloseButton: true,
         confirmButtonText: 'Apply extra fee',
         denyButtonText: 'Skip extra fee',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         denyButtonColor: '#6c757d',
         allowOutsideClick: false,
         allowEscapeKey: true,
@@ -1005,7 +1006,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         icon: 'info',
         showCancelButton: false,
         confirmButtonText: 'Proceed',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -1044,7 +1045,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
       });
       if (!confirmResult.isConfirmed) return;
     } else {
@@ -1076,7 +1077,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         preConfirm: () => {
           const amtEl = document.getElementById('swal-amount') as HTMLInputElement;
           const pmEl = document.querySelector('input[name="swal-pm"]:checked') as HTMLInputElement;
@@ -1225,7 +1226,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: 'Yes, revert',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
     }).then((result) => {
       if (result.isConfirmed) {
         this.performStatusUpdate('bookingStatus_created', 'Created');
@@ -2144,7 +2145,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           showDenyButton: true,
           confirmButtonText: 'Pay Now',
           denyButtonText: 'Pay Later',
-          confirmButtonColor: '#006B8F',
+          confirmButtonColor: PRIMARY_COLOR,
           denyButtonColor: '#6c757d',
         }).then((result) => {
           if (result.isConfirmed) {
@@ -2298,7 +2299,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         showDenyButton: true,
         confirmButtonText: 'Pay Now',
         denyButtonText: 'Pay Later',
-        confirmButtonColor: '#006B8F',
+        confirmButtonColor: PRIMARY_COLOR,
         denyButtonColor: '#6c757d',
       }).then((result) => {
         if (result.isConfirmed) {

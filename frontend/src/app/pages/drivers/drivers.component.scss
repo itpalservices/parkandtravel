@@ -1,3 +1,5 @@
+@use '../../../styles/variables' as *;
+
 .drivers-page {
   max-width: 100%;
 }
@@ -37,7 +39,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #fff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 8px;
   text-decoration: none;
@@ -59,7 +61,7 @@
   width: 40px;
   height: 40px;
   color: #fff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 8px;
   text-decoration: none;
@@ -343,7 +345,7 @@
   }
 
   &.active {
-    background-color: #006B8F;
+    background-color: $primary-color;
     color: #ffffff;
   }
 }

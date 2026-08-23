@@ -1,6 +1,8 @@
 import { Workbook } from 'exceljs';
+import { PRIMARY_COLOR } from '../constants/theme.constants';
 
-const BRAND_COLOR = 'FF006B8F';
+// ARGB format (Excel fill colors are prefixed with alpha channel 'FF')
+const BRAND_COLOR = 'FF' + PRIMARY_COLOR.slice(1);
 const TEXT_COLOR = 'FF374151';
 const STRIPE_COLOR = 'FFF9FAFB';
 

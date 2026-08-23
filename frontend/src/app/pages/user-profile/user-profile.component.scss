@@ -69,7 +69,7 @@
       }
 
       &.btn-primary {
-        background-color: #006B8F;
+        background-color: $primary-color;
         color: white;
         border: none;
 
@@ -211,7 +211,7 @@
     height: 0;
 
     &:checked + .toggle-slider {
-      background-color: #006B8F;
+      background-color: $primary-color;
     }
 
     &:checked + .toggle-slider:before {
@@ -265,7 +265,7 @@
     width: 40px;
     height: 40px;
     border: 3px solid #e5e7eb;
-    border-top-color: #006B8F;
+    border-top-color: $primary-color;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -347,7 +347,7 @@
 
     &:focus {
       outline: none;
-      border-color: #006B8F;
+      border-color: $primary-color;
       box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }
 
@@ -392,7 +392,7 @@
     }
 
     .resend-link {
-      color: #006B8F;
+      color: $primary-color;
       text-decoration: underline;
       cursor: pointer;
 
@@ -489,7 +489,7 @@
 
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
   }
 }
 
@@ -527,7 +527,7 @@
   border-left: none !important;
 
   &:focus {
-    border-left: 1px solid #006B8F !important;
+    border-left: 1px solid $primary-color !important;
   }
 }
 
@@ -583,7 +583,7 @@
     }
 
     &.btn-primary {
-      background-color: #006B8F;
+      background-color: $primary-color;
       color: white;
       border: none;
 
@@ -641,8 +641,8 @@
   }
 
   .btn-outline-primary {
-    border: 1px solid #006B8F;
-    color: #006B8F;
+    border: 1px solid $primary-color;
+    color: $primary-color;
     background: transparent;
     padding: 0.5rem 1rem;
     border-radius: 6px;
@@ -651,7 +651,7 @@
     transition: all 0.2s;
 
     &:hover {
-      background: #006B8F;
+      background: $primary-color;
       color: white;
     }
   }
@@ -736,7 +736,7 @@
 
     .plate-badge {
       display: inline-block;
-      background: #006B8F;
+      background: $primary-color;
       color: white;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
@@ -931,7 +931,7 @@
   }
 
   .btn-primary {
-    background-color: #006B8F;
+    background-color: $primary-color;
     color: white;
     border: none;
 

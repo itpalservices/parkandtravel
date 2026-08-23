@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .page-header {
   margin-bottom: 24px;
 }
@@ -13,7 +15,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: #006B8F;
+    color: $primary-color;
   }
 }
 
@@ -275,7 +277,7 @@
   white-space: nowrap;
   transition: background 0.2s;
 
-  &:hover:not(:disabled) { background: #006B8F; }
+  &:hover:not(:disabled) { background: $primary-color; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 

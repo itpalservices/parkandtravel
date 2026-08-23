@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .page-wrapper {
   padding: 24px;
   max-width: 1200px;
@@ -23,7 +25,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #006b8f;
+  color: $primary-color;
   text-decoration: none;
   font-size: 0.85rem;
   background: none;
@@ -51,7 +53,7 @@
   align-items: center;
   gap: 6px;
   padding: 9px 18px;
-  background: #006b8f;
+  background: $primary-color;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -98,7 +100,7 @@
   &:first-child { border-right: 1px solid #e2e8f0; }
 
   &.active {
-    background: #006b8f;
+    background: $primary-color;
     color: #fff;
   }
 
@@ -137,7 +139,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid #e2e8f0;
-  border-top-color: #006b8f;
+  border-top-color: $primary-color;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -202,8 +204,8 @@
   }
 
   &.grand-total {
-    background: #006b8f;
-    border-color: #006b8f;
+    background: $primary-color;
+    border-color: $primary-color;
 
     .total-label,
     .total-count { color: rgba(255, 255, 255, 0.8); }
@@ -349,8 +351,8 @@
   &:hover:not(.active) { background: #f1f5f9; }
 
   &.active {
-    background: #006b8f;
-    border-color: #006b8f;
+    background: $primary-color;
+    border-color: $primary-color;
     color: #fff;
     font-weight: 600;
   }
@@ -383,7 +385,7 @@
   text-align: left;
 
   &:hover {
-    border-color: #006b8f;
+    border-color: $primary-color;
     box-shadow: 0 2px 8px rgba(0, 107, 143, 0.1);
   }
 }
@@ -392,7 +394,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #006b8f;
+  background: $primary-color;
   color: #fff;
   display: flex;
   align-items: center;
@@ -456,7 +458,7 @@
   font-size: 0.875rem;
   color: #374151;
 
-  svg { color: #006b8f; flex-shrink: 0; }
+  svg { color: $primary-color; flex-shrink: 0; }
 
   strong { color: #1e293b; }
 }
@@ -488,7 +490,7 @@
   text-align: left;
 
   &:hover {
-    border-color: #006b8f;
+    border-color: $primary-color;
     background: #fff;
     box-shadow: 0 1px 6px rgba(0, 107, 143, 0.1);
   }

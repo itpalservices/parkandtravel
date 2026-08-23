@@ -1,3 +1,5 @@
+@use '../../../../styles/variables' as *;
+
 .page-container {
   max-width: 1200px;
 }
@@ -17,7 +19,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: #006B8F;
+    color: $primary-color;
   }
 }
 
@@ -57,7 +59,7 @@
 
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
     box-shadow: 0 0 0 2px rgba(0, 107, 143, 0.15);
   }
 }
@@ -79,7 +81,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: #006B8F;
+    color: $primary-color;
   }
 }
 
@@ -116,7 +118,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e5e7eb;
-  border-top-color: #006B8F;
+  border-top-color: $primary-color;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -176,7 +178,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #006B8F;
+  background: $primary-color;
   color: white;
   border: none;
   border-radius: 6px;
@@ -203,7 +205,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #006B8F;
+  background: $primary-color;
   color: white;
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;

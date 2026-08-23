@@ -7,6 +7,7 @@ import { ZReportEmployee, ZReportData, XReportTransaction } from '../../shared/m
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { PRIMARY_COLOR } from '../../shared/constants/theme.constants';
 
 type Step = 'form' | 'result';
 
@@ -95,7 +96,7 @@ export class ZReportComponent implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Confirm & Create',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#006B8F',
+      confirmButtonColor: PRIMARY_COLOR,
       cancelButtonColor: '#6c757d',
     }).then(res => {
       if (res.isConfirmed) {

@@ -1,3 +1,5 @@
+@use '../../../../../styles/variables' as *;
+
 .bookings-list-wrapper {
   background: #ffffff;
 }
@@ -277,7 +279,7 @@
   }
   
   &.active {
-    background-color: #006B8F;
+    background-color: $primary-color;
     color: #ffffff;
   }
 }
@@ -407,7 +409,7 @@
 
 .park-place-badge {
   font-size: 0.75rem;
-  color: #006B8F;
+  color: $primary-color;
   font-weight: 600;
   background: #e6f3f7;
   padding: 0.2rem 0.5rem;
@@ -466,7 +468,7 @@
 .mobile-price {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #006B8F;
+  color: $primary-color;
 }
 
 .wash-badge {

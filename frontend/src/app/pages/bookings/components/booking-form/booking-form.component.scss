@@ -1,3 +1,5 @@
+@use '../../../../../styles/variables' as *;
+
 .booking-form-page {
   .sections-container {
     display: flex;
@@ -123,7 +125,7 @@
 
         &:focus {
           outline: none;
-          border-color: #006B8F;
+          border-color: $primary-color;
           box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
         }
       }
@@ -193,7 +195,7 @@
   .ngb-dp-day {
     .btn-light {
       &.bg-primary {
-        background-color: #006B8F !important;
+        background-color: $primary-color !important;
       }
     }
     
@@ -229,7 +231,7 @@
 
     &:focus {
       outline: none;
-      border-color: #006B8F;
+      border-color: $primary-color;
       box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }
   }
@@ -273,7 +275,7 @@ input[type="time"].form-control {
   font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -367,7 +369,7 @@ input[type="time"].form-control {
 
     &.btn-primary {
       color: #ffffff;
-      background: linear-gradient(135deg, #004d66, #006B8F);
+      background: linear-gradient(135deg, $primary-color-dark, $primary-color);
       border: none;
 
       &:hover {
@@ -392,7 +394,7 @@ input[type="time"].form-control {
   font-size: 0.9375rem;
   font-weight: 500;
   color: #ffffff;
-  background: linear-gradient(135deg, #004d66, #006B8F);
+  background: linear-gradient(135deg, $primary-color-dark, $primary-color);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -453,7 +455,7 @@ input[type="time"].form-control {
   
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
     box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
   }
   
@@ -493,7 +495,7 @@ input[type="time"].form-control {
   
   &:focus {
     outline: none;
-    border-color: #006B8F;
+    border-color: $primary-color;
   }
   
   &::placeholder {
@@ -544,7 +546,7 @@ input[type="time"].form-control {
   border-left: none !important;
   
   &:focus {
-    border-left: 1px solid #006B8F !important;
+    border-left: 1px solid $primary-color !important;
   }
 }
 
@@ -575,7 +577,7 @@ input[type="time"].form-control {
     height: 0;
 
     &:checked + .toggle-slider {
-      background-color: #006B8F;
+      background-color: $primary-color;
     }
 
     &:checked + .toggle-slider:before {
@@ -615,7 +617,7 @@ input[type="time"].form-control {
 }
 
 .wash-price {
-  color: #006B8F;
+  color: $primary-color;
   font-weight: 600;
 }
 
@@ -654,7 +656,7 @@ input[type="time"].form-control {
 }
 
 .total-amount {
-  color: #006B8F;
+  color: $primary-color;
   font-size: 1.125rem;
 }
 
@@ -676,14 +678,14 @@ input[type="time"].form-control {
   text-align: right;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #006B8F;
+  color: $primary-color;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 2px 8px;
   outline: none;
 
   &:focus {
-    border-color: #006B8F;
+    border-color: $primary-color;
     box-shadow: 0 0 0 2px rgba(0, 107, 143, 0.15);
   }
 
@@ -819,7 +821,7 @@ input[type="time"].form-control {
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #004d66, #006B8F);
+    background: linear-gradient(135deg, $primary-color-dark, $primary-color);
     border: none;
 
     &:hover {

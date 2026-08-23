@@ -1,3 +1,5 @@
+@use '../../../styles/variables' as *;
+
 .customers-page {
   max-width: 100%;
 }
@@ -42,7 +44,7 @@
     }
     
     &:focus {
-      border-color: #006B8F;
+      border-color: $primary-color;
       background-color: #ffffff;
       box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }
@@ -235,13 +237,13 @@
   background-color: transparent;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  color: #006B8F;
+  color: $primary-color;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #006B8F;
-    border-color: #006B8F;
+    background-color: $primary-color;
+    border-color: $primary-color;
     color: #ffffff;
   }
 }
@@ -253,7 +255,7 @@
   width: 28px;
   height: 28px;
   padding: 0;
-  background-color: #006B8F;
+  background-color: $primary-color;
   border: none;
   border-radius: 6px;
   color: #ffffff;
@@ -400,7 +402,7 @@
   }
   
   &.active {
-    background-color: #006B8F;
+    background-color: $primary-color;
     color: #ffffff;
   }
 }
@@ -436,7 +438,7 @@
     height: 0;
 
     &:checked + .toggle-slider {
-      background-color: #006B8F;
+      background-color: $primary-color;
     }
 
     &:checked + .toggle-slider:before {
@@ -521,7 +523,7 @@
     }
 
     &:focus {
-      border-color: #006B8F;
+      border-color: $primary-color;
       background-color: #ffffff;
       box-shadow: 0 0 0 3px rgba(0, 107, 143, 0.1);
     }

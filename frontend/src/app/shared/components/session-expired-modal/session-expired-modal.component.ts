@@ -98,7 +98,7 @@ import { SessionService } from '../../../core/services/session.service';
       font-size: 1rem;
       font-weight: 600;
       color: #ffffff;
-      background-color: #006B8F;
+      background-color: var(--primary-color, #006B8F);
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -106,7 +106,7 @@ import { SessionService } from '../../../core/services/session.service';
     }
 
     .btn-logout:hover {
-      background-color: #005a78;
+      background-color: var(--primary-color-dark, #004d66);
     }
 
     .btn-logout:active {
