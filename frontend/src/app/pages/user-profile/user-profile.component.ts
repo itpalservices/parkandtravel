@@ -65,6 +65,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   mandatoryPayment = false;
   mandatoryCheckInPayment = false;
   airportDelivery = true;
+  returnDetailsDefault = false;
   availableAfter = 0;
   priceIncrementsCovered: number[] = [];
   priceIncrementsUncovered: number[] = [];
@@ -211,6 +212,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         this.mandatoryPayment = settings.mandatoryPayment;
         this.mandatoryCheckInPayment = settings.mandatoryCheckInPayment;
         this.airportDelivery = settings.airportDelivery ?? true;
+        this.returnDetailsDefault = settings.returnDetailsDefault ?? false;
         this.offerWashService = settings.priceWash !== null;
         this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
         this.priceIncrementsUncovered = settings.priceIncrementsUncovered || [];
@@ -342,7 +344,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
       airportDelivery: this.airportDelivery,
       availableAfter: formValue.availableAfter !== '' && formValue.availableAfter !== null
         ? Math.max(0, Math.floor(Number(formValue.availableAfter)))
-        : 0
+        : 0,
+      returnDetailsDefault: this.returnDetailsDefault
     };
 
     this.settingsService.updateSettings(data).subscribe({

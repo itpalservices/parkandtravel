@@ -16,6 +16,7 @@ export interface ConfigurationSettings {
   mandatoryCheckInPayment: boolean;
   airportDelivery: boolean;
   availableAfter: number;
+  returnDetailsDefault: boolean;
 }
 
 const SETTING_KEYS = {
@@ -33,7 +34,8 @@ const SETTING_KEYS = {
   mandatoryPayment: "configurationSetting_mandatoryPrePayment",
   mandatoryCheckInPayment: "configurationSetting_mandatoryCheckInPayment",
   airportDelivery: "configurationSetting_delivery",
-  availableAfter: "configurationSetting_availableAfter"
+  availableAfter: "configurationSetting_availableAfter",
+  returnDetailsDefault: "configurationSetting_returnDetailsDefault"
 };
 
 interface SettingRow {
@@ -70,7 +72,8 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     mandatoryPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryPayment)),
     mandatoryCheckInPayment: parseBoolean(settingsMap.get(SETTING_KEYS.mandatoryCheckInPayment)),
     airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery)),
-    availableAfter: parseIntOrNull(settingsMap.get(SETTING_KEYS.availableAfter)) ?? 0
+    availableAfter: parseIntOrNull(settingsMap.get(SETTING_KEYS.availableAfter)) ?? 0,
+    returnDetailsDefault: parseBoolean(settingsMap.get(SETTING_KEYS.returnDetailsDefault))
   };
 }
 
@@ -185,6 +188,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.availableAfter,
       value: data.availableAfter !== null ? String(Math.max(0, Math.floor(Number(data.availableAfter)))) : "0",
+    });
+  }
+
+  if (data.returnDetailsDefault !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.returnDetailsDefault,
+      value: JSON.stringify(data.returnDetailsDefault),
     });
   }
 

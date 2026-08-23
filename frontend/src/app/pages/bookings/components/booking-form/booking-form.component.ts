@@ -396,6 +396,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   toggleReturnDetails(): void {
     this.returnDetailsEnabled = !this.returnDetailsEnabled;
+    this.applyReturnDetailsValidators();
+    this.refreshAdminPrice();
+  }
+
+  private applyReturnDetailsValidators(): void {
     const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'];
     if (this.returnDetailsEnabled) {
       this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
@@ -410,7 +415,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     returnFields.forEach((field) => {
       this.bookingForm.get(field)?.updateValueAndValidity();
     });
-    this.refreshAdminPrice();
   }
 
   private enableFieldsForNonParkedBooking(): void {
@@ -1831,6 +1835,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.availableAfterDays = response.availableAfter ?? 0;
         this.applyAirportDeliveryState();
         this.applyAvailableAfterRestriction();
+
+        if (!this.isEditMode) {
+          this.returnDetailsEnabled = response.returnDetailsDefaultEnabled ?? false;
+          this.applyReturnDetailsValidators();
+        }
 
         if (this.existingBooking?.parkingTypeId) {
           this.bookingForm.patchValue({ parkingType: this.existingBooking.parkingTypeId }, { emitEvent: false });

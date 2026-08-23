@@ -1101,6 +1101,7 @@ export interface ParkingTypesResponse {
   mandatoryPrePayment: boolean;
   airportDeliveryEnabled: boolean;
   availableAfter: number;
+  returnDetailsDefaultEnabled: boolean;
 }
 
 export async function getParkingTypes(): Promise<ParkingTypesResponse> {
@@ -1109,7 +1110,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
   });
 
   const settings = await prisma.$queryRawUnsafe<{ id: string; value: string | null }[]>(
-    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+    `SELECT id, value FROM configuration_settings WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     'configurationSetting_availableUncovered',
     'configurationSetting_availableCovered',
     'configurationSetting_priceUncovered',
@@ -1120,7 +1121,8 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     'configurationSetting_priceIncrementsUncovered',
     'configurationSetting_mandatoryPrePayment',
     'configurationSetting_delivery',
-    'configurationSetting_availableAfter'
+    'configurationSetting_availableAfter',
+    'configurationSetting_returnDetailsDefault'
   );
 
   const settingsMap = new Map<string, string | null>();
@@ -1159,6 +1161,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     const parsed = parseInt(availableAfterRaw, 10);
     return isNaN(parsed) || parsed < 0 ? 0 : parsed;
   })();
+  const returnDetailsDefaultEnabled = parseBooleanSetting(settingsMap.get('configurationSetting_returnDetailsDefault'));
 
   const filteredTypes = types.filter((type) => {
     if (type.id === 'parkingType_uncovered') {
@@ -1187,6 +1190,7 @@ export async function getParkingTypes(): Promise<ParkingTypesResponse> {
     mandatoryPrePayment,
     airportDeliveryEnabled,
     availableAfter,
+    returnDetailsDefaultEnabled,
   };
 }
 

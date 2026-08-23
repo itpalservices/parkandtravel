@@ -18,6 +18,7 @@ export interface ConfigurationSettings {
   mandatoryCheckInPayment: boolean;
   airportDelivery: boolean;
   availableAfter: number;
+  returnDetailsDefault: boolean;
 }
 
 @Injectable({

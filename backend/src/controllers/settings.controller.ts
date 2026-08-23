@@ -132,7 +132,8 @@ export async function updateSettingsHandler(
       airportDelivery: data.airportDelivery !== undefined ? Boolean(data.airportDelivery) : true,
       availableAfter: data.availableAfter !== null && data.availableAfter !== undefined
         ? Math.max(0, Math.floor(Number(data.availableAfter)))
-        : 0
+        : 0,
+      returnDetailsDefault: data.returnDetailsDefault !== undefined ? Boolean(data.returnDetailsDefault) : false,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {

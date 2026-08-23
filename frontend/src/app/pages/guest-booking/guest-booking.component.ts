@@ -54,7 +54,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   washAvailable = false;
   washPrice: number | null = null;
   washServiceEnabled = false;
-  returnDetailsEnabled= false;
+  returnDetailsEnabled = false;
+  returnDetailsDefaultEnabled = false;
   deliveryFee: number | null = null;
   mandatoryPrePayment = false;
   airportDeliveryEnabled = true;
@@ -195,6 +196,9 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
         this.mandatoryPrePayment = response.mandatoryPrePayment ?? false;
         this.airportDeliveryEnabled = response.airportDeliveryEnabled ?? true;
         this.availableAfterDays = response.availableAfter ?? 0;
+        this.returnDetailsDefaultEnabled = response.returnDetailsDefaultEnabled ?? false;
+        this.returnDetailsEnabled = this.returnDetailsDefaultEnabled;
+        this.applyReturnDetailsValidators();
         this.applyAirportDeliveryState();
         this.applyAvailableAfterRestriction();
         if (response.parkingTypes.length > 0) {
@@ -396,6 +400,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   toggleReturnDetails(): void {
     this.returnDetailsEnabled = !this.returnDetailsEnabled;
+    this.applyReturnDetailsValidators();
+  }
+
+  private applyReturnDetailsValidators(): void {
     const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'];
     if (this.returnDetailsEnabled) {
       this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
@@ -526,7 +534,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   }
 
   createAnotherBooking(): void {
-    this.returnDetailsEnabled = false;
+    this.returnDetailsEnabled = this.returnDetailsDefaultEnabled;
     this.submitSuccess = false;
     const today = this.calendar.getToday();
     const tomorrow = this.calendar.getNext(today, 'd', 1);
@@ -541,6 +549,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       dropOffOption: 'self_drive',
       pickUpOption: 'self_pickup',
     });
+    this.applyReturnDetailsValidators();
     this.washServiceEnabled = false;
     this.showPaymentButtonOnSuccess = false;
     this.createdBookingId = null;

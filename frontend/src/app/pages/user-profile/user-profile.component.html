@@ -522,6 +522,31 @@
               </div>
 
               <div class="settings-group">
+                <h4>Return Details</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  Controls whether new bookings start with "I know my return details" expanded by default.
+                </small>
+
+                <div class="wash-service-toggle">
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      [checked]="returnDetailsDefault"
+                      (change)="returnDetailsDefault=!returnDetailsDefault"
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">
+                    @if (returnDetailsDefault) {
+                      Return details are known by default
+                    } @else {
+                      Return details are unknown by default
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="settings-group">
                 <h4>Delivery Fee</h4>
                 <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
                   Fee for delivering a car from/to the airport. Leave empty if not applicable.

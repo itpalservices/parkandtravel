@@ -77,6 +77,7 @@ export interface ParkingTypesResponse {
   mandatoryPrePayment: boolean;
   airportDeliveryEnabled: boolean;
   availableAfter: number;
+  returnDetailsDefaultEnabled: boolean;
 }
 
 export interface HistoryBooking {
