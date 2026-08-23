@@ -98,10 +98,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       vehicleColor: [''],
       flightNumber: [''],
       checkInDate: [defaultCheckIn, Validators.required],
-      checkInTime: ['10:00', Validators.required],
+      checkInTime: ['00:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
       checkOutDate: [defaultCheckOut],
-      checkOutTime: ['10:00'],
+      checkOutTime: ['00:00'],
       pickUpOption: ['self_pickup'],
       parkingType: ['', Validators.required],
     });
@@ -544,8 +544,8 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     this.bookingForm.reset({
       checkInDate: tomorrow,
       checkOutDate: dayAfterTomorrow,
-      checkInTime: '10:00',
-      checkOutTime: '10:00',
+      checkInTime: '00:00',
+      checkOutTime: '00:00',
       dropOffOption: 'self_drive',
       pickUpOption: 'self_pickup',
     });

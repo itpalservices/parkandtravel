@@ -213,10 +213,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       vehicleColor: [''],
       flightNumber: [''],
       checkInDate: [defaultCheckIn, Validators.required],
-      checkInTime: ['10:00', Validators.required],
+      checkInTime: ['00:00', Validators.required],
       dropOffOption: ['self_drive', Validators.required],
       checkOutDate: [defaultCheckOut],
-      checkOutTime: ['10:00'],
+      checkOutTime: ['00:00'],
       pickUpOption: ['self_pickup'],
       parkingType: ['', Validators.required],
     });
@@ -304,8 +304,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     const checkInDate = this.parseApiDate(booking.dateFrom);
     const checkOutDate = booking.dateTo ? this.parseApiDate(booking.dateTo) : null;
-    const checkInTime = booking.timeFrom ? booking.timeFrom.substring(0, 5) : '10:00';
-    const checkOutTime = booking.timeTo ? booking.timeTo.substring(0, 5) : '10:00';
+    const checkInTime = booking.timeFrom ? booking.timeFrom.substring(0, 5) : '00:00';
+    const checkOutTime = booking.timeTo ? booking.timeTo.substring(0, 5) : '00:00';
 
     const hasReturnDetails = !!(booking.dateTo || booking.returnFlight || booking.pickUpOption);
     this.returnDetailsEnabled = hasReturnDetails;
@@ -325,7 +325,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkInTime: checkInTime,
       dropOffOption: booking.dropOffOption || 'self_drive',
       checkOutDate: checkOutDate,
-      checkOutTime: checkOutTime || '10:00',
+      checkOutTime: checkOutTime || '00:00',
       pickUpOption: booking.pickUpOption || 'self_pickup',
       parkingType: booking.parkingTypeId || '',
     }, { emitEvent: false });
