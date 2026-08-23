@@ -168,29 +168,6 @@
         </span>
       </div>
       <div class="filters-right">
-        <div class="filter-pills">
-          <button
-            class="filter-pill"
-            [class.active]="filterBy === 'check-ins'"
-            (click)="onFilterByChange('check-ins')"
-          >
-            Check-Ins
-          </button>
-          <button
-            class="filter-pill"
-            [class.active]="filterBy === 'check-outs'"
-            (click)="onFilterByChange('check-outs')"
-          >
-            Check-Outs
-          </button>
-          <button
-            class="filter-pill"
-            [class.active]="filterBy === 'both'"
-            (click)="onFilterByChange('both')"
-          >
-            Both
-          </button>
-        </div>
         <app-date-range-picker
           [selectedPreset]="dateFilter.preset"
           [selectedFromDate]="dateFilter.from"
@@ -255,31 +232,6 @@
         (dateRangeChange)="onDateRangeChange($event)"
         [enablePastDates]="!isDriver"
       ></app-date-range-picker>
-    </div>
-    <div class="filter-pills-row">
-      <div class="filter-pills">
-        <button
-          class="filter-pill"
-          [class.active]="filterBy === 'check-ins'"
-          (click)="onFilterByChange('check-ins')"
-        >
-          Check-Ins
-        </button>
-        <button
-          class="filter-pill"
-          [class.active]="filterBy === 'check-outs'"
-          (click)="onFilterByChange('check-outs')"
-        >
-          Check-Outs
-        </button>
-        <button
-          class="filter-pill"
-          [class.active]="filterBy === 'both'"
-          (click)="onFilterByChange('both')"
-        >
-          Both
-        </button>
-      </div>
     </div>
   </div>
 
