@@ -175,6 +175,7 @@ export class BookingsPageComponent implements OnInit {
     const instance = ref.componentInstance as BookingsFilterPanelComponent;
     instance.state = this.filterState;
     instance.isAdmin = this.isAdmin;
+    instance.isUser = this.isUser;
     instance.enablePastDates = !this.isDriver;
     instance.checkInByOptions = this.checkInByOptions;
     instance.checkOutByOptions = this.checkOutByOptions;
@@ -262,9 +263,21 @@ export class BookingsPageComponent implements OnInit {
         this.isUser = roleInfo.isUser;
         if (roleInfo.isUser) {
           this.loadCustomerBookingCards();
+          this.stripCustomerIdentityFilters();
         }
       },
     });
+  }
+
+  /** A customer only ever sees their own bookings, so Name/Email/Mobile filters can never
+   *  narrow anything — the panel hides those inputs for isUser, but if a stale value somehow
+   *  ended up in state (e.g. a bookmarked URL from before), clear it too so it can't silently
+   *  filter their own list down to nothing with no visible control left to undo it. */
+  private stripCustomerIdentityFilters(): void {
+    if (!this.filterState.name && !this.filterState.email && !this.filterState.mobile) return;
+    this.filterState = { ...this.filterState, name: '', email: '', mobile: '' };
+    this.syncFiltersToUrl();
+    this.applyFilters();
   }
 
   private loadCustomerBookingCards(): void {
@@ -302,7 +315,8 @@ export class BookingsPageComponent implements OnInit {
   get pastBookings(): Booking[] {
     return this.customerBookings
       .filter((b) => b.bookingStatusId === 'bookingStatus_completed' && this.isPastDate(b.dateTo))
-      .sort((a, b) => (a.dateTo < b.dateTo ? 1 : -1));
+      .sort((a, b) => (a.dateTo < b.dateTo ? 1 : -1))
+      .slice(0, 10);
   }
 
   get upcomingBookings(): Booking[] {

@@ -17,18 +17,20 @@
           [class]="'w-100'"
         ></app-date-range-picker>
       </div>
-      <div class="filter-field">
-        <label for="filterName">Full Name</label>
-        <input type="text" id="filterName" class="form-control" [(ngModel)]="draft.name" placeholder="e.g. John" />
-      </div>
-      <div class="filter-field">
-        <label for="filterEmail">Email</label>
-        <input type="text" id="filterEmail" class="form-control" [(ngModel)]="draft.email" placeholder="e.g. john@example.com" />
-      </div>
-      <div class="filter-field">
-        <label for="filterMobile">Mobile</label>
-        <input type="text" id="filterMobile" class="form-control" [(ngModel)]="draft.mobile" placeholder="e.g. 99123456" />
-      </div>
+      @if (!isUser) {
+        <div class="filter-field">
+          <label for="filterName">Full Name</label>
+          <input type="text" id="filterName" class="form-control" [(ngModel)]="draft.name" placeholder="e.g. John" />
+        </div>
+        <div class="filter-field">
+          <label for="filterEmail">Email</label>
+          <input type="text" id="filterEmail" class="form-control" [(ngModel)]="draft.email" placeholder="e.g. john@example.com" />
+        </div>
+        <div class="filter-field">
+          <label for="filterMobile">Mobile</label>
+          <input type="text" id="filterMobile" class="form-control" [(ngModel)]="draft.mobile" placeholder="e.g. 99123456" />
+        </div>
+      }
       <div class="filter-field">
         <label for="filterPlate">Plate No.</label>
         <input type="text" id="filterPlate" class="form-control" [(ngModel)]="draft.plateNo" placeholder="e.g. ABC123" />

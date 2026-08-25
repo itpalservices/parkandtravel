@@ -23,6 +23,7 @@ interface Option {
 export class BookingsFilterPanelComponent implements OnInit {
   @Input() state!: BookingsFilterState;
   @Input() isAdmin = false;
+  @Input() isUser = false;
   @Input() enablePastDates = false;
   @Input() checkInByOptions: string[] = [];
   @Input() checkOutByOptions: string[] = [];
