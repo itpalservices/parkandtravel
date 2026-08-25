@@ -1,0 +1,95 @@
+<div class="filter-panel">
+  <div class="filter-panel-header">
+    <h2>Filters</h2>
+    <button type="button" class="btn-close-panel" (click)="onDismiss()" aria-label="Close">&times;</button>
+  </div>
+
+  <div class="filter-panel-body">
+    <section class="filter-section">
+      <div class="filter-field">
+        <label for="filterName">Full Name</label>
+        <input type="text" id="filterName" class="form-control" [(ngModel)]="draft.name" placeholder="e.g. John" />
+      </div>
+      <div class="filter-field">
+        <label for="filterEmail">Email</label>
+        <input type="text" id="filterEmail" class="form-control" [(ngModel)]="draft.email" placeholder="e.g. john@example.com" />
+      </div>
+      <div class="filter-field">
+        <label for="phoneCode">Phone Code</label>
+        <div ngbDropdown class="phone-code-dropdown w-100">
+          <button type="button" class="btn btn-outline-secondary dropdown-toggle phone-code-btn w-100" ngbDropdownToggle>
+            @if (selectedPhoneCode) {
+              <img [src]="getFlagUrl(selectedPhoneCode.isoCode)" [alt]="selectedPhoneCode.isoCode" class="flag-icon" />
+              <span>{{ selectedPhoneCode.phoneCode }}</span>
+            } @else {
+              <span>All</span>
+            }
+          </button>
+          <div ngbDropdownMenu class="phone-code-menu">
+            <div class="phone-search-container">
+              <input
+                type="text"
+                class="phone-search-input"
+                placeholder="Search country or code..."
+                [(ngModel)]="phoneCodeSearch"
+                [ngModelOptions]="{ standalone: true }"
+                (click)="$event.stopPropagation()"
+              />
+            </div>
+            <div class="phone-codes-list">
+              <button type="button" ngbDropdownItem (click)="selectPhoneCode(null)" class="phone-code-item">
+                <span class="phone-code-text">All phone codes</span>
+              </button>
+              @for (code of filteredPhoneCodes; track code.id) {
+                <button type="button" ngbDropdownItem (click)="selectPhoneCode(code)" class="phone-code-item">
+                  <img [src]="getFlagUrl(code.isoCode)" [alt]="code.isoCode" class="flag-icon" />
+                  <span class="phone-code-text">{{ code.phoneCode }}</span>
+                  <span class="country-code-text">{{ code.isoCode }}</span>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filterPhone">Phone</label>
+        <input type="text" id="filterPhone" class="form-control" [(ngModel)]="draft.phone" placeholder="e.g. 99123456" />
+      </div>
+    </section>
+
+    <section class="filter-section sort-section d-block d-md-none">
+      <h3>Sort by</h3>
+      <select class="form-select mb-2" [(ngModel)]="draft.sortField">
+        <option [ngValue]="null">Default order</option>
+        @for (opt of sortFieldOptions; track opt.id) {
+          <option [ngValue]="opt.id">{{ opt.label }}</option>
+        }
+      </select>
+      @if (draft.sortField) {
+        <div class="sort-direction-toggle">
+          <button
+            type="button"
+            class="sort-dir-btn"
+            [class.active]="draft.sortDirection === 'asc'"
+            (click)="draft.sortDirection = 'asc'"
+          >
+            &uarr; Ascending
+          </button>
+          <button
+            type="button"
+            class="sort-dir-btn"
+            [class.active]="draft.sortDirection === 'desc'"
+            (click)="draft.sortDirection = 'desc'"
+          >
+            &darr; Descending
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+
+  <div class="filter-panel-footer">
+    <button type="button" class="btn-apply" (click)="onApply()">Apply</button>
+    <button type="button" class="btn-reset" (click)="onReset()">Reset</button>
+  </div>
+</div>

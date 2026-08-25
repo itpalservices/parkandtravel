@@ -1,0 +1,258 @@
+@use '../../../../styles/variables' as *;
+
+// The offcanvas host (Bootstrap's .offcanvas) is a fixed-height flex column with this
+// component as its only child, so every level down to .filter-panel-body needs both
+// `flex: 1` (to actually grow into the available height) and `min-height: 0` (flex
+// items default to a content-based min-height, which silently defeats overflow-y:
+// auto below unless overridden) for the scroll + sticky-footer chain to work.
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+}
+
+.btn-close-panel {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+
+  &:hover {
+    color: #1f2937;
+  }
+}
+
+.filter-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.25rem;
+}
+
+.filter-section {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.filter-field {
+  margin-bottom: 0.75rem;
+
+  label {
+    display: block;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.phone-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  min-width: 100px;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus {
+    background-color: #f8f9fa;
+    border-color: #d1d5db;
+    color: #000;
+
+    &::after {
+      color: #000;
+    }
+  }
+
+  &::after {
+    margin-left: auto;
+  }
+}
+
+.flag-icon {
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.phone-code-menu {
+  min-width: 240px;
+  max-height: 300px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.phone-search-container {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.phone-search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+  }
+}
+
+.phone-codes-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.phone-code-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+
+  .phone-code-text {
+    font-weight: 500;
+  }
+
+  .country-code-text {
+    color: #6b7280;
+    font-size: 0.8125rem;
+  }
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+
+  input {
+    cursor: pointer;
+  }
+}
+
+.sort-section {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.sort-direction-toggle {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sort-dir-btn {
+  flex: 1;
+  padding: 0.5rem;
+  background: #ffffff;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:first-child {
+    border-right: 1px solid #e5e7eb;
+  }
+
+  &.active {
+    background-color: $primary-color;
+    color: #ffffff;
+  }
+}
+
+.filter-panel-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.btn-apply {
+  padding: 0.625rem 1rem;
+  background-color: $primary-color;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--primary-color-dark, #004d66);
+  }
+}
+
+.btn-reset {
+  padding: 0.625rem 1rem;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #f9fafb;
+    color: #374151;
+  }
+}

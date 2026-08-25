@@ -1,14 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NgbModal, NgbModalModule, NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
 import { CAR_DROP_OFF_OPTIONS, CAR_DROP_OFF_OPTIONS_LABELS } from '../../shared/statics/car-drop-off.model';
 import { CAR_PICK_UP_OPTIONS, CAR_PICK_UP_OPTIONS_LABELS } from '../../shared/statics/car-pick-up.model';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
-import { Customer } from '../../shared/models/customers.model';
+import { Customer, CustomerSortField, CustomersFilterState } from '../../shared/models/customers.model';
 import { HistoryBooking } from '../../shared/models/booking.model';
 import { buildTelHref } from '../../shared/utils/phone.util';
+import {
+  buildCustomersPredicate,
+  countActiveCustomerFilters,
+  createDefaultCustomersFilterState,
+  customersFilterStateFromQueryParams,
+  customersFilterStateToQueryParams,
+  sortCustomers,
+} from '../../shared/utils/customers-filter.util';
+import { CustomersFilterPanelComponent } from './customers-filter-panel/customers-filter-panel.component';
 
 @Component({
   selector: 'app-customers',
@@ -23,7 +33,8 @@ export class CustomersComponent implements OnInit {
   phoneCodes: PhoneCode[] = [];
   loading = true;
   error: string | null = null;
-  searchTerm = '';
+
+  filterState: CustomersFilterState = createDefaultCustomersFilterState();
 
   currentPage = 1;
   pageSize = 10;
@@ -50,10 +61,19 @@ export class CustomersComponent implements OnInit {
 
   constructor(
     private api: ApiService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private offcanvasService: NgbOffcanvas,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
+    const queryParams: Record<string, string | null> = {};
+    this.route.snapshot.queryParamMap.keys.forEach((key) => {
+      queryParams[key] = this.route.snapshot.queryParamMap.get(key);
+    });
+    this.filterState = customersFilterStateFromQueryParams(queryParams, createDefaultCustomersFilterState());
+
     this.loadPhoneCodes();
     this.loadCustomers();
   }
@@ -76,7 +96,7 @@ export class CustomersComponent implements OnInit {
     this.api.get<{ success: boolean; data: Customer[] }>('/user/customers').subscribe({
       next: (response) => {
         this.allCustomers = response.data;
-        this.applySearchFilter();
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -87,35 +107,61 @@ export class CustomersComponent implements OnInit {
     });
   }
 
-  applySearchFilter(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-
-    if (!term) {
-      this.filteredCustomers = [...this.allCustomers];
-    } else {
-      this.filteredCustomers = this.allCustomers.filter(customer => {
-        const fullName = `${customer.name} ${customer.surname}`.toLowerCase();
-        const searchableFields = [
-          fullName,
-          customer.email,
-          customer.name,
-          customer.surname,
-          customer.phone,
-          customer.phoneCode
-        ];
-
-        return searchableFields.some(field =>
-          field && field.toLowerCase().includes(term)
-        );
-      });
-    }
-
+  /** Re-filters + re-sorts the already-fetched full customer list; no server round-trip. */
+  applyFilters(): void {
+    const predicate = buildCustomersPredicate(this.filterState);
+    const filtered = this.allCustomers.filter(predicate);
+    this.filteredCustomers = sortCustomers(filtered, this.filterState.sortField, this.filterState.sortDirection);
     this.totalPages = Math.ceil(this.filteredCustomers.length / this.pageSize) || 1;
     this.currentPage = 1;
   }
 
-  onSearchChange(): void {
-    this.applySearchFilter();
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: customersFilterStateToQueryParams(this.filterState),
+      replaceUrl: true,
+    });
+  }
+
+  get activeFilterCount(): number {
+    return countActiveCustomerFilters(this.filterState);
+  }
+
+  openFiltersPanel(): void {
+    const ref = this.offcanvasService.open(CustomersFilterPanelComponent, {
+      position: 'end',
+      panelClass: 'customers-filter-offcanvas',
+    });
+    const instance = ref.componentInstance as CustomersFilterPanelComponent;
+    instance.state = this.filterState;
+    instance.phoneCodes = this.phoneCodes;
+
+    instance.apply.subscribe((newState: CustomersFilterState) => {
+      this.filterState = newState;
+      this.syncFiltersToUrl();
+      this.applyFilters();
+    });
+    instance.reset.subscribe(() => {
+      this.filterState = createDefaultCustomersFilterState();
+      this.syncFiltersToUrl();
+      this.applyFilters();
+    });
+  }
+
+  onSortClick(field: CustomerSortField): void {
+    if (this.filterState.sortField === field) {
+      this.filterState = { ...this.filterState, sortDirection: this.filterState.sortDirection === 'asc' ? 'desc' : 'asc' };
+    } else {
+      this.filterState = { ...this.filterState, sortField: field, sortDirection: 'asc' };
+    }
+    this.syncFiltersToUrl();
+    this.applyFilters();
+  }
+
+  sortIndicator(field: CustomerSortField): string {
+    if (this.filterState.sortField !== field) return '';
+    return this.filterState.sortDirection === 'asc' ? ' ↑' : ' ↓';
   }
 
   get paginatedCustomers(): Customer[] {
