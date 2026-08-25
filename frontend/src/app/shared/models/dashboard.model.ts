@@ -30,3 +30,8 @@ export interface DashboardDetailItem {
 }
 
 export type CardType = 'total-cars' | 'today-check-ins' | 'today-check-outs' | 'wash-today' | 'wash-tomorrow';
+
+/** One key per sortable dashboard-details column. */
+export type DashboardSortField = 'customerName' | 'plateNo' | 'vehicleModel' | 'parkPlace' | 'checkIn' | 'checkOut';
+
+export type DashboardSortDirection = 'asc' | 'desc';

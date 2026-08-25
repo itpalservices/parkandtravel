@@ -50,14 +50,14 @@
       <table class="table history-table">
         <thead>
           <tr>
-            <th>Customer</th>
-            <th>Plate No.</th>
-            <th>Vehicle / Model</th>
+            <th class="sortable-col" (click)="onSortClick('customerName')">Customer{{ sortIndicator('customerName') }}</th>
+            <th class="sortable-col" (click)="onSortClick('plateNo')">Plate No.{{ sortIndicator('plateNo') }}</th>
+            <th class="sortable-col" (click)="onSortClick('vehicleModel')">Vehicle / Model{{ sortIndicator('vehicleModel') }}</th>
             @if (showParkPlace) {
-              <th>Park Place</th>
+              <th class="sortable-col" (click)="onSortClick('parkPlace')">Park Place{{ sortIndicator('parkPlace') }}</th>
             }
-            <th>Check In</th>
-            <th>Check Out</th>
+            <th class="sortable-col" (click)="onSortClick('checkIn')">Check In{{ sortIndicator('checkIn') }}</th>
+            <th class="sortable-col" (click)="onSortClick('checkOut')">Check Out{{ sortIndicator('checkOut') }}</th>
           </tr>
         </thead>
         <tbody>

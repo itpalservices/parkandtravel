@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
-import { CardType, DashboardDetailItem } from '../../../shared/models/dashboard.model';
+import { CardType, DashboardDetailItem, DashboardSortDirection, DashboardSortField } from '../../../shared/models/dashboard.model';
 import { buildTelHref } from '../../../shared/utils/phone.util';
 
 @Component({
@@ -31,6 +31,9 @@ export class DashboardDetailsComponent implements OnInit {
   totalPages = 1;
   pageNumbers: number[] = [];
   showParkPlace = true;
+
+  sortField: DashboardSortField | null = null;
+  sortDirection: DashboardSortDirection = 'asc';
 
   private cardTitles: Record<CardType, string> = {
     'total-cars': 'Total Cars',
@@ -82,9 +85,74 @@ export class DashboardDetailsComponent implements OnInit {
     } else {
       this.filteredItems = [...this.allItems];
     }
+
+    if (this.sortField) {
+      const field = this.sortField;
+      this.filteredItems = [...this.filteredItems].sort((a, b) => this.compareItems(a, b, field, this.sortDirection));
+    }
+
     this.totalPages = Math.ceil(this.filteredItems.length / this.pageSize);
     this.calculatePageNumbers();
     this.updateDisplayedItems();
+  }
+
+  onSortClick(field: DashboardSortField): void {
+    if (this.sortField === field) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDirection = 'asc';
+    }
+    this.page = 1;
+    this.filterAndPaginate();
+  }
+
+  sortIndicator(field: DashboardSortField): string {
+    if (this.sortField !== field) return '';
+    return this.sortDirection === 'asc' ? ' ↑' : ' ↓';
+  }
+
+  private compareItems(a: DashboardDetailItem, b: DashboardDetailItem, field: DashboardSortField, direction: DashboardSortDirection): number {
+    switch (field) {
+      case 'customerName': return this.compareStrings(a.customerName, b.customerName, direction);
+      case 'plateNo': return this.compareStrings(a.plateNo, b.plateNo, direction);
+      case 'vehicleModel': return this.compareStrings(a.vehicleModel, b.vehicleModel, direction);
+      case 'parkPlace': return this.compareStrings(a.parkPlace ?? '', b.parkPlace ?? '', direction);
+      case 'checkIn': return this.compareDateStrings(a.checkIn, b.checkIn, direction);
+      case 'checkOut': return this.compareDateStrings(a.checkOut, b.checkOut, direction);
+    }
+  }
+
+  /** Empty values always sort last, regardless of direction. */
+  private compareStrings(a: string, b: string, direction: DashboardSortDirection): number {
+    const aEmpty = !a.trim();
+    const bEmpty = !b.trim();
+    if (aEmpty && bEmpty) return 0;
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+    const result = a.localeCompare(b, undefined, { sensitivity: 'base' });
+    return direction === 'desc' ? -result : result;
+  }
+
+  /** checkIn/checkOut arrive as pre-formatted "DD/MM/YYYY HH:mm" display strings, not raw
+   *  ISO dates, so a plain string compare would sort them wrong (day-first, not year-first) —
+   *  parse back into a timestamp for the comparison only. */
+  private compareDateStrings(a: string, b: string, direction: DashboardSortDirection): number {
+    const aEmpty = !a;
+    const bEmpty = !b;
+    if (aEmpty && bEmpty) return 0;
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+    const result = this.parseDisplayDateTime(a) - this.parseDisplayDateTime(b);
+    return direction === 'desc' ? -result : result;
+  }
+
+  private parseDisplayDateTime(value: string): number {
+    const [datePart, timePart] = value.split(' ');
+    const [day, month, year] = (datePart || '').split('/').map(Number);
+    const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+    if (!day || !month || !year) return 0;
+    return new Date(year, month - 1, day, hours || 0, minutes || 0).getTime();
   }
 
   getTelHref(item: DashboardDetailItem): string | null {
