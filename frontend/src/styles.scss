@@ -64,7 +64,8 @@ html, body {
 // Bookings filter panel (NgbOffcanvas host element lives on <body>, outside any
 // component's view encapsulation, so its sizing has to be styled globally).
 .bookings-filter-offcanvas,
-.customers-filter-offcanvas {
+.customers-filter-offcanvas,
+.drivers-filter-offcanvas {
   width: 420px !important;
 
   @media (max-width: 767.98px) {

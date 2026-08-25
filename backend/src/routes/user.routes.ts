@@ -319,17 +319,11 @@ router.get("/drivers", checkJwt, async (req: Request, res: Response) => {
       return;
     }
 
-    const page = Math.max(0, parseInt(req.query.page as string) || 0);
-    const perPage = 10;
-
-    const result = await getAllDriverUsers(page, perPage);
+    const drivers = await getAllDriverUsers();
 
     res.json({
       success: true,
-      data: result.users,
-      total: result.total,
-      page,
-      perPage,
+      data: drivers,
     });
   } catch (error: any) {
     console.error("Error fetching drivers:", error.response?.data || error.message);

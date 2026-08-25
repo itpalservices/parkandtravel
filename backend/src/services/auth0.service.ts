@@ -460,18 +460,15 @@ export async function setUserSettings(userId: string, discountPercentage: number
   );
 }
 
-export async function getAllDriverUsers(page: number, perPage: number): Promise<{
-  users: {
-    userId: string;
-    email: string;
-    name: string;
-    surname: string;
-    phone: string;
-    phoneCode: string;
-    blocked: boolean;
-  }[];
-  total: number;
-}> {
+export async function getAllDriverUsers(): Promise<{
+  userId: string;
+  email: string;
+  name: string;
+  surname: string;
+  phone: string;
+  phoneCode: string;
+  blocked: boolean;
+}[]> {
   const token = await getManagementToken();
 
   // Fetch all users without Lucene search to avoid Auth0's indexing delay
@@ -502,22 +499,15 @@ export async function getAllDriverUsers(page: number, perPage: number): Promise<
     authPage++;
   }
 
-  const total = allDrivers.length;
-  const startIndex = page * perPage;
-  const paginatedDrivers = allDrivers.slice(startIndex, startIndex + perPage);
-
-  return {
-    users: paginatedDrivers.map(user => ({
-      userId: user.user_id,
-      email: user.email,
-      name: user.user_metadata?.name || user.given_name || '',
-      surname: user.user_metadata?.surname || user.family_name || '',
-      phone: user.user_metadata?.phone_number || '',
-      phoneCode: user.user_metadata?.phone_code || '',
-      blocked: user.blocked || false,
-    })),
-    total,
-  };
+  return allDrivers.map(user => ({
+    userId: user.user_id,
+    email: user.email,
+    name: user.user_metadata?.name || user.given_name || '',
+    surname: user.user_metadata?.surname || user.family_name || '',
+    phone: user.user_metadata?.phone_number || '',
+    phoneCode: user.user_metadata?.phone_code || '',
+    blocked: user.blocked || false,
+  }));
 }
 
 export async function getAllEmployees(): Promise<{

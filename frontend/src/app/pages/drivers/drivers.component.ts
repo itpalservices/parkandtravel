@@ -1,11 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgbDropdownModule, NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../core/services/api.service';
-import { Driver } from '../../shared/models/driver.model';
+import { Driver, DriverSortField, DriversFilterState } from '../../shared/models/driver.model';
 import { PhoneCode } from '../../shared/models/phone-codes.model';
 import { buildTelHref } from '../../shared/utils/phone.util';
+import {
+  buildDriversPredicate,
+  countActiveDriverFilters,
+  createDefaultDriversFilterState,
+  driversFilterStateFromQueryParams,
+  driversFilterStateToQueryParams,
+  sortDrivers,
+} from '../../shared/utils/drivers-filter.util';
+import { DriversFilterPanelComponent } from './drivers-filter-panel/drivers-filter-panel.component';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -16,18 +25,32 @@ import Swal from 'sweetalert2';
   styleUrl: './drivers.component.scss'
 })
 export class DriversComponent implements OnInit {
-  drivers: Driver[] = [];
+  allDrivers: Driver[] = [];
+  filteredDrivers: Driver[] = [];
   phoneCodes: PhoneCode[] = [];
   loading = true;
   error: string | null = null;
 
+  filterState: DriversFilterState = createDefaultDriversFilterState();
+
   currentPage = 1;
   pageSize = 10;
-  totalItems = 0;
+  totalPages = 1;
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private offcanvasService: NgbOffcanvas,
+  ) {}
 
   ngOnInit(): void {
+    const queryParams: Record<string, string | null> = {};
+    this.route.snapshot.queryParamMap.keys.forEach((key) => {
+      queryParams[key] = this.route.snapshot.queryParamMap.get(key);
+    });
+    this.filterState = driversFilterStateFromQueryParams(queryParams, createDefaultDriversFilterState());
+
     this.loadPhoneCodes();
     this.loadDrivers();
   }
@@ -42,11 +65,10 @@ export class DriversComponent implements OnInit {
   loadDrivers(): void {
     this.loading = true;
     this.error = null;
-    const page = this.currentPage - 1;
-    this.api.get<{ success: boolean; data: Driver[]; total: number }>(`/user/drivers?page=${page}`).subscribe({
+    this.api.get<{ success: boolean; data: Driver[] }>('/user/drivers').subscribe({
       next: (response) => {
-        this.drivers = response.data;
-        this.totalItems = response.total;
+        this.allDrivers = response.data;
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -55,6 +77,63 @@ export class DriversComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  /** Re-filters + re-sorts the already-fetched full driver list; no server round-trip. */
+  applyFilters(): void {
+    const predicate = buildDriversPredicate(this.filterState);
+    const filtered = this.allDrivers.filter(predicate);
+    this.filteredDrivers = sortDrivers(filtered, this.filterState.sortField, this.filterState.sortDirection);
+    this.totalPages = Math.ceil(this.filteredDrivers.length / this.pageSize) || 1;
+    this.currentPage = 1;
+  }
+
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: driversFilterStateToQueryParams(this.filterState),
+      replaceUrl: true,
+    });
+  }
+
+  get activeFilterCount(): number {
+    return countActiveDriverFilters(this.filterState);
+  }
+
+  openFiltersPanel(): void {
+    const ref = this.offcanvasService.open(DriversFilterPanelComponent, {
+      position: 'end',
+      panelClass: 'drivers-filter-offcanvas',
+    });
+    const instance = ref.componentInstance as DriversFilterPanelComponent;
+    instance.state = this.filterState;
+    instance.phoneCodes = this.phoneCodes;
+
+    instance.apply.subscribe((newState: DriversFilterState) => {
+      this.filterState = newState;
+      this.syncFiltersToUrl();
+      this.applyFilters();
+    });
+    instance.reset.subscribe(() => {
+      this.filterState = createDefaultDriversFilterState();
+      this.syncFiltersToUrl();
+      this.applyFilters();
+    });
+  }
+
+  onSortClick(field: DriverSortField): void {
+    if (this.filterState.sortField === field) {
+      this.filterState = { ...this.filterState, sortDirection: this.filterState.sortDirection === 'asc' ? 'desc' : 'asc' };
+    } else {
+      this.filterState = { ...this.filterState, sortField: field, sortDirection: 'asc' };
+    }
+    this.syncFiltersToUrl();
+    this.applyFilters();
+  }
+
+  sortIndicator(field: DriverSortField): string {
+    if (this.filterState.sortField !== field) return '';
+    return this.filterState.sortDirection === 'asc' ? ' ↑' : ' ↓';
   }
 
   editDriver(driver: Driver): void {
@@ -81,12 +160,8 @@ export class DriversComponent implements OnInit {
             title: 'Driver deleted successfully',
             showConfirmButton: false, timer: 3000, timerProgressBar: true,
           });
-          this.drivers = this.drivers.filter(d => d.userId !== driver.userId);
-          this.totalItems = Math.max(0, this.totalItems - 1);
-          if (this.drivers.length === 0 && this.currentPage > 1) {
-            this.currentPage--;
-            this.loadDrivers();
-          }
+          this.allDrivers = this.allDrivers.filter(d => d.userId !== driver.userId);
+          this.applyFilters();
         },
         error: (err) => {
           Swal.fire({ icon: 'error', title: 'Error', text: err.error?.error || 'Failed to delete driver' });
@@ -153,8 +228,10 @@ export class DriversComponent implements OnInit {
     });
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.totalItems / this.pageSize) || 1;
+  get paginatedDrivers(): Driver[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredDrivers.slice(start, end);
   }
 
   get pageNumbers(): (number | -1)[] {
@@ -175,15 +252,15 @@ export class DriversComponent implements OnInit {
   }
 
   onPrevious(): void {
-    if (this.currentPage > 1) { this.currentPage--; this.loadDrivers(); }
+    if (this.currentPage > 1) { this.currentPage--; }
   }
 
   onNext(): void {
-    if (this.currentPage < this.totalPages) { this.currentPage++; this.loadDrivers(); }
+    if (this.currentPage < this.totalPages) { this.currentPage++; }
   }
 
   onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) { this.currentPage = page; this.loadDrivers(); }
+    if (page >= 1 && page <= this.totalPages) { this.currentPage = page; }
   }
 
   getCountryFlag(phoneCode: string): string {
