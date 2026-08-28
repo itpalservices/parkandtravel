@@ -12,6 +12,7 @@ import { checkAvailability } from "./availability.service";
 import { createReceipt, ReceiptLineInput } from "./receipt.service";
 import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, generateThermalReceiptPdf, generateBookingTagZpl, generateBookingTagPdf, ReceiptPdfData, CheckinReceiptData, BookingTagData } from "./pdf.service";
 import { uploadPdfToS3, uploadCheckinReceiptToS3, getPresignedUrl } from "./upload.service";
+import { PDFDocument } from "pdf-lib";
 
 async function getEmailDescription(): Promise<string | null> {
   const result = await prisma.$queryRawUnsafe<{ value: string | null }[]>(
@@ -1968,6 +1969,67 @@ async function buildCompletionPaymentData(bookingId: string): Promise<ReceiptPdf
   };
 }
 
+/** Every genuine online (Wallee) payment for a booking, each as its own real, already-issued
+ *  receipt — `receipts_header`/`receipts_lines` rows with `transaction_id` set (the discriminator
+ *  that excludes in-person check-in/checkout receipts, which leave `transaction_id` null). A
+ *  booking amended after its first online payment gets a *separate* receipt per payment, each
+ *  with its own number, lines, and discount — so these are returned individually rather than
+ *  merged into one synthetic document; callers print/email/download each one as-is. */
+async function buildPrepaidReceiptsData(bookingId: string): Promise<ReceiptPdfData[]> {
+  if (!isValidUUID(bookingId)) return [];
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) return [];
+
+  const receipts = await prisma.receiptHeader.findMany({
+    where: { bookingId, transactionId: { not: null } },
+    include: { lines: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const customerName = `${booking.name} ${booking.surname}`.trim();
+
+  return receipts.map((r) => ({
+    receiptNumber: r.receiptNumber || r.id,
+    receiptDate: r.createdAt,
+    bookingId,
+    customerName,
+    totalAmount: Number(r.totalAmount),
+    discount: r.discount ?? null,
+    lines: r.lines.map((l) => ({
+      lineType: l.lineType as ReceiptLineInput['lineType'],
+      description: l.description,
+      amount: Number(l.amount),
+    })),
+  }));
+}
+
+/** Binds several already-rendered PDFs into one multi-page document, page order preserved,
+ *  content of each page untouched — used so a customer's single download click can't be
+ *  silently defeated by the browser's popup blocker (which allows only one `window.open()`
+ *  per click), without pretending the N receipts were ever one document. */
+async function mergePdfBuffers(buffers: Buffer[]): Promise<Buffer> {
+  const merged = await PDFDocument.create();
+  for (const buf of buffers) {
+    const doc = await PDFDocument.load(buf);
+    const pages = await merged.copyPages(doc, doc.getPageIndices());
+    pages.forEach((page) => merged.addPage(page));
+  }
+  return Buffer.from(await merged.save());
+}
+
+/** Customer self-service download: every genuine pre-paid receipt for the booking, each
+ *  page an unaltered render of that receipt's real data — merged into one file only so a
+ *  single click reliably yields one download; a booking with one receipt just gets that
+ *  one PDF back untouched. */
+export async function getPrepaidPaymentPdf(bookingId: string): Promise<Buffer | null> {
+  const receipts = await buildPrepaidReceiptsData(bookingId);
+  if (receipts.length === 0) return null;
+
+  const buffers = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
+  return buffers.length === 1 ? buffers[0] : mergePdfBuffers(buffers);
+}
+
 async function buildCheckinReceiptData(bookingId: string): Promise<CheckinReceiptData | null> {
   if (!isValidUUID(bookingId)) return null;
 
@@ -2028,6 +2090,16 @@ export async function generateCompletionPaymentZplForBooking(bookingId: string):
   return data ? generateThermalReceiptZpl(data) : null;
 }
 
+/** Concatenates one ZPL label per genuine online payment into a single print job — a ZPL
+ *  stream can hold multiple back-to-back ^XA...^XZ blocks, which the printer treats as
+ *  separate labels, so this prints each receipt as its own physical slip in one go. */
+export async function generatePrepaidPaymentZplForBooking(bookingId: string): Promise<string | null> {
+  const receipts = await buildPrepaidReceiptsData(bookingId);
+  if (receipts.length === 0) return null;
+  const labels = await Promise.all(receipts.map((r) => generateThermalReceiptZpl(r)));
+  return labels.join('');
+}
+
 export async function generateCheckinReceiptZplForBooking(bookingId: string): Promise<string | null> {
   const data = await buildCheckinReceiptData(bookingId);
   return data ? generateCheckinReceiptZpl(data) : null;
@@ -2042,6 +2114,21 @@ interface EmailDocumentResult {
   success: boolean;
   error?: string;
 }
+
+/** Direct PDF for self-service download (customer's own booking, or admin/driver) — same
+ *  data + renderer the email flow above already uses, just returned instead of mailed. */
+export async function getCheckinPaymentPdf(bookingId: string): Promise<Buffer | null> {
+  const data = await buildCheckinPaymentData(bookingId);
+  if (!data) return null;
+  return generateThermalReceiptPdf(data);
+}
+
+export async function getCompletionPaymentPdf(bookingId: string): Promise<Buffer | null> {
+  const data = await buildCompletionPaymentData(bookingId);
+  if (!data) return null;
+  return generateThermalReceiptPdf(data);
+}
+
 
 export async function emailCheckinPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
   const data = await buildCheckinPaymentData(bookingId);
@@ -2068,6 +2155,25 @@ export async function emailCompletionPaymentForBooking(bookingId: string, email:
     bodyText: `Please find attached your checkout payment receipt for booking ${data.customerName}.`,
     pdfBuffer,
     attachmentName: "checkout-payment-receipt.pdf",
+  });
+}
+
+export async function emailPrepaidPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
+  const receipts = await buildPrepaidReceiptsData(bookingId);
+  if (receipts.length === 0) return { success: false, error: "No pre-paid online payment found for this booking" };
+
+  const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateThermalReceiptPdf(r)));
+  const multiple = receipts.length > 1;
+
+  return sendDocumentEmail({
+    email,
+    subject: multiple ? "Your Pre-paid Receipts - Park & Travel" : "Your Pre-paid Receipt - Park & Travel",
+    bodyText: multiple
+      ? `Please find attached your ${receipts.length} pre-paid receipts for booking ${receipts[0].customerName}.`
+      : `Please find attached your pre-paid receipt for booking ${receipts[0].customerName}.`,
+    pdfBuffer: firstBuffer,
+    attachmentName: multiple ? "prepaid-receipt-1.pdf" : "prepaid-receipt.pdf",
+    additionalAttachments: restBuffers.map((buffer, i) => ({ buffer, name: `prepaid-receipt-${i + 2}.pdf` })),
   });
 }
 

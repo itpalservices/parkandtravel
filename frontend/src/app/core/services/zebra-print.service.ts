@@ -37,6 +37,13 @@ export class ZebraPrintService {
     );
   }
 
+  async printPrepaidPaymentReceipt(bookingId: string): Promise<void> {
+    await this.run(() =>
+      this.http.get(`/api/bookings/${bookingId}/prepaid-payment/zpl`, { responseType: 'text' })
+        .toPromise().then(zpl => this.sendZpl(zpl!))
+    );
+  }
+
   async printBookingTag(bookingId: string): Promise<void> {
     await this.run(() =>
       this.http.get(`/api/bookings/${bookingId}/booking-tag/zpl`, { responseType: 'text' })

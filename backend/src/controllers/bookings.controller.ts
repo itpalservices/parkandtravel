@@ -19,15 +19,21 @@ import {
   generateCheckinReceiptZplForBooking,
   generateCheckinPaymentZplForBooking,
   generateCompletionPaymentZplForBooking,
+  generatePrepaidPaymentZplForBooking,
   generateBookingTagZplForBooking,
   emailCheckinReceiptForBooking,
   emailCheckinPaymentForBooking,
   emailCompletionPaymentForBooking,
+  emailPrepaidPaymentForBooking,
   emailBookingTagForBooking,
+  getCheckinPaymentPdf,
+  getCompletionPaymentPdf,
+  getPrepaidPaymentPdf,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
 import { getUserDiscount } from "../services/auth0.service";
+import { prisma } from "../lib/prisma";
 import { updateShiftActivity, getOpenShiftId } from "../services/shifts.service";
 
 export async function listBookings(req: Request, res: Response): Promise<void> {
@@ -855,6 +861,20 @@ export async function generateCompletionPaymentZplHandler(req: Request, res: Res
   }
 }
 
+export async function generatePrepaidPaymentZplHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const zpl = await generatePrepaidPaymentZplForBooking(req.params.id);
+    if (!zpl) { res.status(404).json({ error: "No pre-paid online payment found for this booking" }); return; }
+    res.set({ 'Content-Type': 'text/plain' });
+    res.send(zpl);
+  } catch (error) {
+    console.error("Error generating pre-paid payment ZPL:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 export async function generateCheckinReceiptZplHandler(req: Request, res: Response): Promise<void> {
   try {
     const authUser = req.authUser as AuthUser | undefined;
@@ -889,6 +909,77 @@ export async function generateBookingTagZplHandler(req: Request, res: Response):
     res.send(zpl);
   } catch (error) {
     console.error("Error generating booking tag ZPL:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+/** Admin/driver can access any booking's receipt; a customer only their own. */
+async function canAccessBookingReceipt(bookingId: string, authUser: AuthUser | undefined): Promise<boolean> {
+  if (!authUser) return false;
+  if (authUser.role === "admin" || authUser.role === "driver") return true;
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { userId: true } });
+  return !!booking && booking.userId === authUser.sub;
+}
+
+export async function getCheckinPaymentPdfHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!(await canAccessBookingReceipt(req.params.id, authUser))) {
+      res.status(403).json({ error: "Not authorized to access this receipt" });
+      return;
+    }
+    const pdfBuffer = await getCheckinPaymentPdf(req.params.id);
+    if (!pdfBuffer) { res.status(404).json({ error: "No check-in payment found for this booking" }); return; }
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'inline; filename="checkin-payment-receipt.pdf"',
+      "Content-Length": pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating check-in payment PDF:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getCompletionPaymentPdfHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!(await canAccessBookingReceipt(req.params.id, authUser))) {
+      res.status(403).json({ error: "Not authorized to access this receipt" });
+      return;
+    }
+    const pdfBuffer = await getCompletionPaymentPdf(req.params.id);
+    if (!pdfBuffer) { res.status(404).json({ error: "No checkout payment found for this booking" }); return; }
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'inline; filename="checkout-payment-receipt.pdf"',
+      "Content-Length": pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating checkout payment PDF:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getPrepaidPaymentPdfHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!(await canAccessBookingReceipt(req.params.id, authUser))) {
+      res.status(403).json({ error: "Not authorized to access this receipt" });
+      return;
+    }
+    const pdfBuffer = await getPrepaidPaymentPdf(req.params.id);
+    if (!pdfBuffer) { res.status(404).json({ error: "No pre-paid online payment found for this booking" }); return; }
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'inline; filename="prepaid-receipt.pdf"',
+      "Content-Length": pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating pre-paid receipt PDF:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -945,6 +1036,21 @@ export async function emailCompletionPaymentHandler(req: Request, res: Response)
     res.json({ success: true });
   } catch (error) {
     console.error("Error emailing checkout payment receipt:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function emailPrepaidPaymentHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const email = getValidatedEmail(req, res);
+    if (!email) return;
+    const result = await emailPrepaidPaymentForBooking(req.params.id, email);
+    if (!result.success) { res.status(404).json({ error: result.error }); return; }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error emailing pre-paid receipt:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

@@ -24,7 +24,7 @@ import { FormAction } from '../../../../shared/enums/form-action.enum';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 import { PRIMARY_COLOR } from '../../../../shared/constants/theme.constants';
 
-export type PrintableDocType = 'booking-tag' | 'checkin-receipt' | 'checkin-payment' | 'completion-payment';
+export type PrintableDocType = 'booking-tag' | 'checkin-receipt' | 'checkin-payment' | 'completion-payment' | 'prepaid-payment';
 
 @Component({
   selector: 'app-bookings-list',
@@ -41,6 +41,7 @@ export class BookingsListComponent {
   @Input() pageNumbers: number[] = [];
   @Input() isAdmin: boolean = false;
   @Input() isDriver: boolean = false;
+  @Input() isUser: boolean = false;
   @Input() dateRangeFilter: DateRangeFilter | null = null;
   @Input() sortField: BookingSortField | null = null;
   @Input() sortDirection: BookingSortDirection = 'asc';
@@ -87,15 +88,20 @@ export class BookingsListComponent {
     await this.zebraPrintService.printThermalReceipt(receiptId);
   }
 
+  async printPrepaidReceipt(booking: Booking): Promise<void> {
+    await this.zebraPrintService.printPrepaidPaymentReceipt(booking.id);
+  }
+
   async printBookingTag(bookingId: string): Promise<void> {
     await this.zebraPrintService.printBookingTag(bookingId);
   }
 
-  private readonly printableDocs: Record<PrintableDocType, { label: string; endpoint: string; print: (booking: Booking) => Promise<void> }> = {
-    'booking-tag': { label: 'Booking Tag', endpoint: 'booking-tag', print: (b) => this.printBookingTag(b.id) },
-    'checkin-receipt': { label: 'Check-in Receipt', endpoint: 'checkin-receipt', print: (b) => this.reprintCheckinCarReceipt(b.id) },
-    'checkin-payment': { label: 'Check-in Payment', endpoint: 'checkin-payment', print: (b) => this.reprintCheckinPayment(b.id) },
-    'completion-payment': { label: 'Checkout Payment', endpoint: 'completion-payment', print: (b) => this.reprintCompletionPayment(b.id) },
+  private readonly printableDocs: Record<PrintableDocType, { label: string; print: (booking: Booking) => Promise<void>; emailEndpoint: (booking: Booking) => string }> = {
+    'booking-tag': { label: 'Booking Tag', print: (b) => this.printBookingTag(b.id), emailEndpoint: (b) => `/bookings/${b.id}/booking-tag/email` },
+    'checkin-receipt': { label: 'Check-in Receipt', print: (b) => this.reprintCheckinCarReceipt(b.id), emailEndpoint: (b) => `/bookings/${b.id}/checkin-receipt/email` },
+    'checkin-payment': { label: 'Check-in Payment', print: (b) => this.reprintCheckinPayment(b.id), emailEndpoint: (b) => `/bookings/${b.id}/checkin-payment/email` },
+    'completion-payment': { label: 'Checkout Payment', print: (b) => this.reprintCompletionPayment(b.id), emailEndpoint: (b) => `/bookings/${b.id}/completion-payment/email` },
+    'prepaid-payment': { label: 'Pre-paid Receipt', print: (b) => this.printPrepaidReceipt(b), emailEndpoint: (b) => `/bookings/${b.id}/prepaid-payment/email` },
   };
 
   async chooseDeliveryMethod(booking: Booking, docType: PrintableDocType): Promise<void> {
@@ -144,7 +150,7 @@ export class BookingsListComponent {
 
     if (!email) return;
 
-    this.apiService.post<{ success: boolean }>(`/bookings/${booking.id}/${doc.endpoint}/email`, { email: email.trim() }).subscribe({
+    this.apiService.post<{ success: boolean }>(doc.emailEndpoint(booking), { email: email.trim() }).subscribe({
       next: () => {
         Swal.fire({
           toast: true,
@@ -168,6 +174,41 @@ export class BookingsListComponent {
         });
       },
     });
+  }
+
+  /** Customer self-service: opens the PDF directly (no Print/Email chooser — that dialog
+   *  only makes sense for staff at a counter with a physical printer). */
+  private openPdfBlob(endpoint: string, errorMessage: string): void {
+    this.apiService.getBlob(endpoint).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      },
+      error: () => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: errorMessage,
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+        });
+      },
+    });
+  }
+
+  downloadCheckinPaymentReceipt(booking: Booking): void {
+    this.openPdfBlob(`/bookings/${booking.id}/checkin-payment/pdf`, 'Failed to load check-in payment receipt');
+  }
+
+  downloadCompletionPaymentReceipt(booking: Booking): void {
+    this.openPdfBlob(`/bookings/${booking.id}/completion-payment/pdf`, 'Failed to load checkout payment receipt');
+  }
+
+  downloadPrepaidReceipt(booking: Booking): void {
+    this.openPdfBlob(`/bookings/${booking.id}/prepaid-payment/pdf`, 'Failed to load pre-paid receipt');
   }
 
   canHaveImages(booking: Booking): boolean {

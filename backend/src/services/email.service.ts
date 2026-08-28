@@ -493,6 +493,9 @@ interface DocumentEmailData {
   bodyText: string;
   pdfBuffer: Buffer;
   attachmentName: string;
+  /** Extra PDFs to attach alongside the primary one — e.g. one booking with several
+   *  separate pre-paid receipts, each sent as its own attachment rather than merged. */
+  additionalAttachments?: { buffer: Buffer; name: string }[];
 }
 
 function generateDocumentEmailHtml(bodyText: string): string {
@@ -525,10 +528,10 @@ export async function sendDocumentEmail(
     subject: data.subject,
     htmlContent: generateDocumentEmailHtml(data.bodyText),
     textContent: data.bodyText,
-    attachment: [{
-      name: data.attachmentName,
-      content: data.pdfBuffer.toString("base64"),
-    }],
+    attachment: [
+      { name: data.attachmentName, content: data.pdfBuffer.toString("base64") },
+      ...(data.additionalAttachments ?? []).map((a) => ({ name: a.name, content: a.buffer.toString("base64") })),
+    ],
   };
 
   try {

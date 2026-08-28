@@ -631,12 +631,17 @@ export async function generateBookingTagZpl(data: BookingTagData): Promise<strin
     ? `${company.companyPhone1} | ${company.companyPhone2}`
     : company.companyPhone1 || company.companyPhone2 || '';
 
+  // dateTo/timeTo are plain DATE/TIME columns with no timezone of their own — they're a
+  // literal wall-clock value the customer chose (e.g. "00:00"), not a real instant, so they
+  // must be displayed exactly as stored rather than shifted by the server's local timezone.
   const fmt = (d: Date | null) =>
-    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }) : '-';
 
   const fmtTime = (d: Date | null) =>
-    d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+    d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }) : '-';
 
+  // actualCheckIn is a real timestamptz (a genuine moment), so showing it in the server's
+  // local business timezone is intentional here — kept separate from fmt/fmtTime above.
   const fmtDt = (d: Date | null) =>
     d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
         ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
@@ -698,14 +703,20 @@ function generateBookingTagHtml(data: BookingTagData, company: CompanySettings):
     ? `${company.companyPhone1} | ${company.companyPhone2}`
     : (company.companyPhone1 || company.companyPhone2 || '');
 
+  // dateTo/timeTo are plain DATE/TIME columns with no timezone of their own — they're a
+  // literal wall-clock value the customer chose (e.g. "00:00"), not a real instant, so they
+  // must be displayed exactly as stored rather than shifted by the server's local timezone.
   const fmt = (d: Date | null) =>
-    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }) : '-';
 
   const fmtTime = (d: Date | null) =>
-    d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+    d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }) : '-';
 
+  // actualCheckIn is a real timestamptz (a genuine moment), so showing it in the server's
+  // local business timezone is intentional here — kept separate from fmt/fmtTime above.
   const fmtDt = (d: Date | null) =>
-    d ? `${fmt(d)} ${fmtTime(d)}` : '-';
+    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+        ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
 
   const rows = [
     ['Flight', data.returnFlight || '-'],

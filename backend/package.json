@@ -30,6 +30,7 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.11.3",
     "playwright": "^1.59.1",
     "prisma": "^7.1.0"
