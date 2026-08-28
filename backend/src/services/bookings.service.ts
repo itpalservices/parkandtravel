@@ -10,7 +10,7 @@ import {
 import { sendBookingConfirmationEmail, sendDocumentEmail } from "./email.service";
 import { checkAvailability } from "./availability.service";
 import { createReceipt, ReceiptLineInput } from "./receipt.service";
-import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, generateThermalReceiptPdf, generateBookingTagZpl, generateBookingTagPdf, ReceiptPdfData, CheckinReceiptData, BookingTagData } from "./pdf.service";
+import { generateReceiptPdf, generateCheckinReceiptPdf, generateCheckinReceiptZpl, generateThermalReceiptZpl, generateBookingTagZpl, generateBookingTagPdf, ReceiptPdfData, CheckinReceiptData, BookingTagData } from "./pdf.service";
 import { uploadPdfToS3, uploadCheckinReceiptToS3, getPresignedUrl } from "./upload.service";
 import { PDFDocument } from "pdf-lib";
 
@@ -1913,60 +1913,42 @@ export async function generateAndStoreCheckinReceipt(bookingId: string): Promise
   return getPresignedUrl(key, 900);
 }
 
-async function buildCheckinPaymentData(bookingId: string): Promise<ReceiptPdfData | null> {
-  if (!isValidUUID(bookingId)) return null;
+/** Every genuine in-person payment receipt for a booking, of the given type — real
+ *  `receipts_header`/`receipts_lines` rows (`transaction_id` null identifies an in-person
+ *  payment, as opposed to an online Wallee one), each created by
+ *  `createAndSendReceiptForInPersonPayment` at the moment that payment was recorded.
+ *  Returning the actual stored receipt (not a fabricated id) is what makes "Receipt No"
+ *  on the printed/downloaded/emailed document match what's really in the database. */
+async function buildInPersonPaymentReceiptsData(
+  bookingId: string,
+  lineType: 'CHECKIN' | 'CHECKOUT'
+): Promise<ReceiptPdfData[]> {
+  if (!isValidUUID(bookingId)) return [];
 
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { checkinTransactions: true },
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) return [];
+
+  const receipts = await prisma.receiptHeader.findMany({
+    where: { bookingId, transactionId: null, lines: { some: { lineType } } },
+    include: { lines: true },
+    orderBy: { createdAt: 'asc' },
   });
 
-  if (!booking || !booking.checkinTransactions.length) return null;
+  const customerName = `${booking.name} ${booking.surname}`.trim();
 
-  const totalAmount = booking.checkinTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
-  const date = booking.checkinTransactions[0].datetime;
-
-  return {
-    receiptNumber: `CI-${bookingId.slice(0, 8).toUpperCase()}`,
-    receiptDate: date,
+  return receipts.map((r) => ({
+    receiptNumber: r.receiptNumber || r.id,
+    receiptDate: r.createdAt,
     bookingId,
-    customerName: `${booking.name} ${booking.surname}`.trim(),
-    totalAmount,
-    discount: null,
-    lines: booking.checkinTransactions.map((t) => ({
-      lineType: 'checkin' as any,
-      description: 'Check-in payment',
-      amount: Number(t.amount),
+    customerName,
+    totalAmount: Number(r.totalAmount),
+    discount: r.discount ?? null,
+    lines: r.lines.map((l) => ({
+      lineType: l.lineType as ReceiptLineInput['lineType'],
+      description: l.description,
+      amount: Number(l.amount),
     })),
-  };
-}
-
-async function buildCompletionPaymentData(bookingId: string): Promise<ReceiptPdfData | null> {
-  if (!isValidUUID(bookingId)) return null;
-
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { completionTransactions: true },
-  });
-
-  if (!booking || !booking.completionTransactions.length) return null;
-
-  const totalAmount = booking.completionTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
-  const date = booking.completionTransactions[0].datetime;
-
-  return {
-    receiptNumber: `CO-${bookingId.slice(0, 8).toUpperCase()}`,
-    receiptDate: date,
-    bookingId,
-    customerName: `${booking.name} ${booking.surname}`.trim(),
-    totalAmount,
-    discount: null,
-    lines: booking.completionTransactions.map((t) => ({
-      lineType: 'completion' as any,
-      description: 'Checkout payment',
-      amount: Number(t.amount),
-    })),
-  };
+  }));
 }
 
 /** Every genuine online (Wallee) payment for a booking, each as its own real, already-issued
@@ -2081,13 +2063,17 @@ async function buildBookingTagData(bookingId: string): Promise<BookingTagData | 
 }
 
 export async function generateCheckinPaymentZplForBooking(bookingId: string): Promise<string | null> {
-  const data = await buildCheckinPaymentData(bookingId);
-  return data ? generateThermalReceiptZpl(data) : null;
+  const receipts = await buildInPersonPaymentReceiptsData(bookingId, 'CHECKIN');
+  if (receipts.length === 0) return null;
+  const labels = await Promise.all(receipts.map((r) => generateThermalReceiptZpl(r)));
+  return labels.join('');
 }
 
 export async function generateCompletionPaymentZplForBooking(bookingId: string): Promise<string | null> {
-  const data = await buildCompletionPaymentData(bookingId);
-  return data ? generateThermalReceiptZpl(data) : null;
+  const receipts = await buildInPersonPaymentReceiptsData(bookingId, 'CHECKOUT');
+  if (receipts.length === 0) return null;
+  const labels = await Promise.all(receipts.map((r) => generateThermalReceiptZpl(r)));
+  return labels.join('');
 }
 
 /** Concatenates one ZPL label per genuine online payment into a single print job — a ZPL
@@ -2116,45 +2102,56 @@ interface EmailDocumentResult {
 }
 
 /** Direct PDF for self-service download (customer's own booking, or admin/driver) — same
- *  data + renderer the email flow above already uses, just returned instead of mailed. */
+ *  data + renderer the email flow above already uses, just returned instead of mailed.
+ *  A4 format (same renderer the pre-paid receipt already used) — printing stays thermal
+ *  via the separate /zpl routes below, which this doesn't touch. */
 export async function getCheckinPaymentPdf(bookingId: string): Promise<Buffer | null> {
-  const data = await buildCheckinPaymentData(bookingId);
-  if (!data) return null;
-  return generateThermalReceiptPdf(data);
+  const receipts = await buildInPersonPaymentReceiptsData(bookingId, 'CHECKIN');
+  if (receipts.length === 0) return null;
+  const buffers = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
+  return buffers.length === 1 ? buffers[0] : mergePdfBuffers(buffers);
 }
 
 export async function getCompletionPaymentPdf(bookingId: string): Promise<Buffer | null> {
-  const data = await buildCompletionPaymentData(bookingId);
-  if (!data) return null;
-  return generateThermalReceiptPdf(data);
+  const receipts = await buildInPersonPaymentReceiptsData(bookingId, 'CHECKOUT');
+  if (receipts.length === 0) return null;
+  const buffers = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
+  return buffers.length === 1 ? buffers[0] : mergePdfBuffers(buffers);
 }
 
-
 export async function emailCheckinPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
-  const data = await buildCheckinPaymentData(bookingId);
-  if (!data) return { success: false, error: "No check-in payment found for this booking" };
+  const receipts = await buildInPersonPaymentReceiptsData(bookingId, 'CHECKIN');
+  if (receipts.length === 0) return { success: false, error: "No check-in payment found for this booking" };
 
-  const pdfBuffer = await generateThermalReceiptPdf(data);
+  const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
+  const multiple = receipts.length > 1;
   return sendDocumentEmail({
     email,
-    subject: "Your Check-in Payment Receipt - Park & Travel",
-    bodyText: `Please find attached your check-in payment receipt for booking ${data.customerName}.`,
-    pdfBuffer,
-    attachmentName: "checkin-payment-receipt.pdf",
+    subject: multiple ? "Your Check-in Payment Receipts - Park & Travel" : "Your Check-in Payment Receipt - Park & Travel",
+    bodyText: multiple
+      ? `Please find attached your ${receipts.length} check-in payment receipts for booking ${receipts[0].customerName}.`
+      : `Please find attached your check-in payment receipt for booking ${receipts[0].customerName}.`,
+    pdfBuffer: firstBuffer,
+    attachmentName: multiple ? "checkin-payment-receipt-1.pdf" : "checkin-payment-receipt.pdf",
+    additionalAttachments: restBuffers.map((buffer, i) => ({ buffer, name: `checkin-payment-receipt-${i + 2}.pdf` })),
   });
 }
 
 export async function emailCompletionPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
-  const data = await buildCompletionPaymentData(bookingId);
-  if (!data) return { success: false, error: "No checkout payment found for this booking" };
+  const receipts = await buildInPersonPaymentReceiptsData(bookingId, 'CHECKOUT');
+  if (receipts.length === 0) return { success: false, error: "No checkout payment found for this booking" };
 
-  const pdfBuffer = await generateThermalReceiptPdf(data);
+  const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
+  const multiple = receipts.length > 1;
   return sendDocumentEmail({
     email,
-    subject: "Your Checkout Payment Receipt - Park & Travel",
-    bodyText: `Please find attached your checkout payment receipt for booking ${data.customerName}.`,
-    pdfBuffer,
-    attachmentName: "checkout-payment-receipt.pdf",
+    subject: multiple ? "Your Checkout Payment Receipts - Park & Travel" : "Your Checkout Payment Receipt - Park & Travel",
+    bodyText: multiple
+      ? `Please find attached your ${receipts.length} checkout payment receipts for booking ${receipts[0].customerName}.`
+      : `Please find attached your checkout payment receipt for booking ${receipts[0].customerName}.`,
+    pdfBuffer: firstBuffer,
+    attachmentName: multiple ? "checkout-payment-receipt-1.pdf" : "checkout-payment-receipt.pdf",
+    additionalAttachments: restBuffers.map((buffer, i) => ({ buffer, name: `checkout-payment-receipt-${i + 2}.pdf` })),
   });
 }
 
@@ -2162,7 +2159,7 @@ export async function emailPrepaidPaymentForBooking(bookingId: string, email: st
   const receipts = await buildPrepaidReceiptsData(bookingId);
   if (receipts.length === 0) return { success: false, error: "No pre-paid online payment found for this booking" };
 
-  const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateThermalReceiptPdf(r)));
+  const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
   const multiple = receipts.length > 1;
 
   return sendDocumentEmail({
