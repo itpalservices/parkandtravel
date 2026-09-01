@@ -269,13 +269,19 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
       b."estimated_arrival_time",
-      (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl"
+      (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl",
+      CASE
+        WHEN b."bookingStatusId" = 'bookingStatus_created'
+          THEN b."dateFrom" + COALESCE(b."timeFrom", '00:00:00'::time)
+        ELSE
+          COALESCE(b."dateTo", b."dateFrom") + COALESCE(b."timeTo", '23:59:59'::time)
+      END AS "sortingDatetime"
     FROM bookings b
     LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
     LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
     LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
     WHERE ${whereClause}
-    ORDER BY b."dateTo" ASC, COALESCE(b."timeTo"::time, '23:59:59'::time) ASC
+    ORDER BY "sortingDatetime" ASC
   `;
 
   const bookings = await prisma.$queryRawUnsafe<any[]>(dataQuery);
