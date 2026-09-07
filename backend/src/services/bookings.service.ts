@@ -493,7 +493,6 @@ interface CreateGuestBookingParams {
   parkingTypeId: string;
   washService?: boolean;
   dropOffOption?: string | null;
-  pickUpOption?: string | null;
 }
 
 export interface CreateBookingParams extends CreateGuestBookingParams {
@@ -594,8 +593,18 @@ function calculateExtraFeeProgressive(originalDays: number, extraDays: number, i
   return fee;
 }
 
-function hasAirportDelivery(dropOffOption?: string | null, pickUpOption?: string | null): boolean {
-  return dropOffOption === 'airport_pickup' || pickUpOption === 'airport_delivery';
+function hasAirportDelivery(dropOffOption?: string | null): boolean {
+  return dropOffOption === 'airport_pickup';
+}
+
+/**
+ * The pick-up method always mirrors how the car was dropped off — there is no
+ * independent choice for it (self_drive => self_pickup, airport_pickup => airport_delivery).
+ */
+export function derivePickUpOption(dropOffOption?: string | null): string | null {
+  if (dropOffOption === 'self_drive') return 'self_pickup';
+  if (dropOffOption === 'airport_pickup') return 'airport_delivery';
+  return null;
 }
 
 export async function createGuestBooking(
@@ -643,11 +652,13 @@ export async function createGuestBooking(
       if (params.washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
-      if (hasAirportDelivery(params.dropOffOption, params.pickUpOption) && priceSettings.deliveryFee !== null) {
+      if (hasAirportDelivery(params.dropOffOption) && priceSettings.deliveryFee !== null) {
         finalPrice += priceSettings.deliveryFee;
       }
     }
   }
+
+  const pickUpOption = derivePickUpOption(params.dropOffOption);
 
   const booking = await prisma.booking.create({
     data: {
@@ -669,7 +680,7 @@ export async function createGuestBooking(
       washService: params.washService || false,
       finalPrice: finalPrice,
       dropOffOption: params.dropOffOption || null,
-      pickUpOption: params.pickUpOption || null,
+      pickUpOption,
       deleteflag: 0,
     },
   });
@@ -697,7 +708,7 @@ export async function createGuestBooking(
         washService: params.washService || false,
         flightNumber: params.flightNumber || undefined,
         dropOffOption: params.dropOffOption || undefined,
-        pickUpOption: params.pickUpOption || undefined,
+        pickUpOption: pickUpOption || undefined,
         finalPrice: finalPrice,
         emailDescription,
         paymentStatus: (!priceSettings.mandatoryPrePayment && finalPrice !== null) ? 'pending' : null,
@@ -762,7 +773,7 @@ export async function createBooking(
       if (params.washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
-      if (hasAirportDelivery(params.dropOffOption, params.pickUpOption) && priceSettings.deliveryFee !== null) {
+      if (hasAirportDelivery(params.dropOffOption) && priceSettings.deliveryFee !== null) {
         finalPrice += priceSettings.deliveryFee;
       }
     }
@@ -771,6 +782,8 @@ export async function createBooking(
       finalPrice = Math.round(finalPrice * (1 - params.discountPercentage / 100) * 100) / 100;
     }
   }
+
+  const pickUpOption = derivePickUpOption(params.dropOffOption);
 
   const booking = await prisma.booking.create({
     data: {
@@ -793,7 +806,7 @@ export async function createBooking(
       washService: params.washService || false,
       finalPrice: finalPrice,
       dropOffOption: params.dropOffOption || null,
-      pickUpOption: params.pickUpOption || null,
+      pickUpOption,
       deleteflag: 0,
     },
   });
@@ -821,7 +834,7 @@ export async function createBooking(
         washService: params.washService || false,
         flightNumber: params.flightNumber || undefined,
         dropOffOption: params.dropOffOption || undefined,
-        pickUpOption: params.pickUpOption || undefined,
+        pickUpOption: pickUpOption || undefined,
         finalPrice: finalPrice,
         emailDescription,
       }).then((result) => {
@@ -858,7 +871,6 @@ export interface UpdateBookingParams {
   parkingTypeId?: string;
   washService?: boolean;
   dropOffOption?: string | null;
-  pickUpOption?: string | null;
   userId?: string | null;
   finalPrice?: number | null;
   isRegularUser?: boolean;
@@ -912,7 +924,6 @@ export async function updateBooking(
   if (params.vehicleColor !== undefined) updateData.carColor = params.vehicleColor;
   if (params.flightNumber !== undefined) updateData.returnFlight = params.flightNumber;
   if (params.dropOffOption !== undefined) updateData.dropOffOption = params.dropOffOption;
-  if (params.pickUpOption !== undefined) updateData.pickUpOption = params.pickUpOption;
   if (params.userId !== undefined) updateData.userId = params.userId;
   if (params.washService !== undefined) updateData.washService = params.washService;
   if (params.parkingTypeId !== undefined) updateData.parkingTypeId = params.parkingTypeId;
@@ -935,7 +946,8 @@ export async function updateBooking(
   const parkingTypeId = (updateData.parkingTypeId as string) || existingBooking.parkingTypeId;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
   const dropOffOption = (params.dropOffOption !== undefined ? params.dropOffOption : existingBooking.dropOffOption) as string | null;
-  const pickUpOption = (params.pickUpOption !== undefined ? params.pickUpOption : existingBooking.pickUpOption) as string | null;
+  const pickUpOption = derivePickUpOption(dropOffOption);
+  updateData.pickUpOption = pickUpOption;
 
   let finalPrice: number | null = null;
   if (params.finalPrice !== undefined) {
@@ -959,7 +971,7 @@ export async function updateBooking(
       if (washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
-      if (hasAirportDelivery(dropOffOption, pickUpOption) && priceSettings.deliveryFee !== null) {
+      if (hasAirportDelivery(dropOffOption) && priceSettings.deliveryFee !== null) {
         finalPrice += priceSettings.deliveryFee;
       }
     }
@@ -982,7 +994,7 @@ export async function updateBooking(
     const vehicleColor = params.vehicleColor || existingBooking.carColor || undefined;
     const flightNumber = params.flightNumber !== undefined ? params.flightNumber : existingBooking.returnFlight;
     const dropOffOption = params.dropOffOption !== undefined ? params.dropOffOption : existingBooking.dropOffOption;
-    const pickUpOption = params.pickUpOption !== undefined ? params.pickUpOption : existingBooking.pickUpOption;
+    const pickUpOption = derivePickUpOption(dropOffOption);
 
     const parkingType = await prisma.parkingType.findUnique({
       where: { id: parkingTypeId || "" },
@@ -1057,7 +1069,6 @@ export interface StageBookingUpdateParams {
   parkingTypeId?: string;
   washService?: boolean;
   dropOffOption?: string | null;
-  pickUpOption?: string | null;
   userId?: string | null;
   finalPrice?: number | null;
   discountPercentage?: number | null;
@@ -1468,7 +1479,6 @@ export async function updateBookingStatus(
 
 interface UpdateParkedBookingParams {
   parkPlace?: string;
-  pickUpOption?: string | null;
   washService?: boolean;
   flightNumber?: string | null;
   checkOutDate?: string | null;
@@ -1497,11 +1507,7 @@ export async function updateParkedBooking(
   if (params.parkPlace !== undefined) {
     updateData.parkPlace = params.parkPlace;
   }
-  
-  if (params.pickUpOption !== undefined) {
-    updateData.pickUpOption = params.pickUpOption;
-  }
-  
+
   if (params.washService !== undefined) {
     updateData.washService = params.washService;
   }
@@ -1521,8 +1527,10 @@ export async function updateParkedBooking(
   const checkInDate = existingBooking.dateFrom;
   const checkOutDate = (updateData.dateTo !== undefined ? updateData.dateTo : existingBooking.dateTo) as Date | null;
   const washService = (updateData.washService as boolean) ?? existingBooking.washService;
-  const pickUpOption = (params.pickUpOption !== undefined ? params.pickUpOption : existingBooking.pickUpOption) as string | null;
+  // Drop-off is fixed once the car is parked; pick-up always mirrors it, not whatever was passed in.
   const dropOffOption = existingBooking.dropOffOption as string | null;
+  const pickUpOption = derivePickUpOption(dropOffOption);
+  updateData.pickUpOption = pickUpOption;
 
   let finalPrice: number | null = null;
   if (params.finalPrice !== undefined) {
@@ -1547,7 +1555,7 @@ export async function updateParkedBooking(
       if (washService && priceSettings.priceWash !== null) {
         finalPrice += priceSettings.priceWash;
       }
-      if (hasAirportDelivery(dropOffOption, pickUpOption) && priceSettings.deliveryFee !== null) {
+      if (hasAirportDelivery(dropOffOption) && priceSettings.deliveryFee !== null) {
         finalPrice += priceSettings.deliveryFee;
       }
     }
@@ -1573,7 +1581,7 @@ export async function updateParkedBooking(
       ? resolvedCheckOutTime.toISOString().split("T")[1].substring(0, 5)
       : undefined;
     const resolvedFlightNumber = (updateData.returnFlight !== undefined ? updateData.returnFlight : existingBooking.returnFlight) as string | null;
-    const resolvedPickUpOption = (updateData.pickUpOption !== undefined ? updateData.pickUpOption : existingBooking.pickUpOption) as string | null;
+    const resolvedPickUpOption = pickUpOption;
 
     const parkingType = existingBooking.parkingTypeId
       ? await prisma.parkingType.findUnique({

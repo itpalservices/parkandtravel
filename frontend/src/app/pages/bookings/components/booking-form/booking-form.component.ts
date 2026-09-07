@@ -217,7 +217,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       dropOffOption: ['self_drive', Validators.required],
       checkOutDate: [defaultCheckOut],
       checkOutTime: ['00:00'],
-      pickUpOption: ['self_pickup'],
       parkingType: ['', Validators.required],
     });
   }
@@ -307,7 +306,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const checkInTime = booking.timeFrom ? booking.timeFrom.substring(0, 5) : '00:00';
     const checkOutTime = booking.timeTo ? booking.timeTo.substring(0, 5) : '00:00';
 
-    const hasReturnDetails = !!(booking.dateTo || booking.returnFlight || booking.pickUpOption);
+    // Note: pickUpOption is no longer an independent signal here — it's always derived from
+    // dropOffOption server-side, so it can't be used to detect whether return details are known.
+    const hasReturnDetails = !!(booking.dateTo || booking.returnFlight);
     this.returnDetailsEnabled = hasReturnDetails;
 
     this.editEmail = booking.email;
@@ -326,7 +327,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       dropOffOption: booking.dropOffOption || 'self_drive',
       checkOutDate: checkOutDate,
       checkOutTime: checkOutTime || '00:00',
-      pickUpOption: booking.pickUpOption || 'self_pickup',
       parkingType: booking.parkingTypeId || '',
     }, { emitEvent: false });
 
@@ -334,8 +334,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
       this.bookingForm.get('checkOutDate')?.setValidators([Validators.required]);
       this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
-      this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
-      ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'].forEach((field) => {
+      ['flightNumber', 'checkOutDate', 'checkOutTime'].forEach((field) => {
         this.bookingForm.get(field)?.updateValueAndValidity({ emitEvent: false });
       });
     }
@@ -377,7 +376,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private disableFieldsForParkedBooking(): void {
     const allFormFields = Object.keys(this.bookingForm.controls);
-    const fieldsToKeepEnabled = ['pickUpOption', 'checkOutDate', 'checkOutTime', 'flightNumber'];
+    const fieldsToKeepEnabled = ['checkOutDate', 'checkOutTime', 'flightNumber'];
 
     allFormFields.forEach((field) => {
       if (!fieldsToKeepEnabled.includes(field)) {
@@ -401,12 +400,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   }
 
   private applyReturnDetailsValidators(): void {
-    const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'];
+    const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime'];
     if (this.returnDetailsEnabled) {
       this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
       this.bookingForm.get('checkOutDate')?.setValidators([Validators.required]);
       this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
-      this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
     } else {
       returnFields.forEach((field) => {
         this.bookingForm.get(field)?.clearValidators();
@@ -1712,11 +1710,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.refreshAdminPrice();
     });
 
-    this.bookingForm.get('pickUpOption')?.valueChanges.subscribe(() => {
-      this.storedFinalPrice = null;
-      this.refreshAdminPrice();
-    });
-
     this.bookingForm.get('dropOffOption')?.valueChanges.subscribe(() => {
       this.storedFinalPrice = null;
       this.refreshAdminPrice();
@@ -1865,15 +1858,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private applyAirportDeliveryState(): void {
     const dropOff = this.bookingForm.get('dropOffOption');
-    const pickUp = this.bookingForm.get('pickUpOption');
     if (!this.airportDeliveryEnabled) {
       dropOff?.setValue('self_drive', { emitEvent: false });
       dropOff?.disable({ emitEvent: false });
-      pickUp?.setValue('self_pickup', { emitEvent: false });
-      pickUp?.disable({ emitEvent: false });
     } else {
       dropOff?.enable({ emitEvent: false });
-      pickUp?.enable({ emitEvent: false });
     }
   }
 
@@ -1903,10 +1892,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   get hasDeliveryFee(): boolean {
     if (this.deliveryFee === null) return false;
     const dropOff = this.bookingForm.get('dropOffOption')?.value;
-    const pickUp = this.bookingForm.get('pickUpOption')?.value;
-    const dropOffMatch = dropOff === 'airport_pickup';
-    const pickUpMatch = this.returnDetailsEnabled && pickUp === 'airport_delivery';
-    return dropOffMatch || pickUpMatch;
+    return dropOff === 'airport_pickup';
   }
 
   calculateProgressivePrice(basePrice: number, days: number, increments: number[] | null): number {
@@ -2103,7 +2089,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           ? this.formatDateForApi(formValue.checkOutDate)
           : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
-      pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
       finalPrice: this.returnDetailsEnabled
         ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.displayedFinalPrice())
         : null,
@@ -2373,7 +2358,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
     const updateData: Record<string, any> = {
       parkPlace: parkPlace,
-      pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
       flightNumber: this.returnDetailsEnabled ? formValue.flightNumber?.trim() || null : null,
       checkOutDate:
         this.returnDetailsEnabled && formValue.checkOutDate

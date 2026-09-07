@@ -9,6 +9,7 @@ import { sendBookingConfirmationEmail } from './email.service';
 import { createReceipt, ReceiptLineInput } from './receipt.service';
 import { generateReceiptPdf } from './pdf.service';
 import { uploadPdfToS3 } from './upload.service';
+import { derivePickUpOption } from './bookings.service';
 
 const WALLEE_SUCCESS_STATES = ['AUTHORIZED', 'FULFILL', 'COMPLETED'];
 const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
@@ -90,8 +91,8 @@ function calcProgressive(base: number, days: number, increments: number[] | null
   return price;
 }
 
-function hasAirportDelivery(drop?: string | null, pick?: string | null): boolean {
-  return drop === 'airport_pickup' || pick === 'airport_delivery';
+function hasAirportDelivery(drop?: string | null): boolean {
+  return drop === 'airport_pickup';
 }
 
 function parseTimeToDate(t: string): Date {
@@ -123,7 +124,6 @@ interface GuestFormData {
   parkingTypeId: string;
   washService?: boolean;
   dropOffOption?: string | null;
-  pickUpOption?: string | null;
 }
 
 interface AuthPendingFormData {
@@ -143,7 +143,6 @@ interface AuthPendingFormData {
   parkingTypeId: string;
   washService?: boolean;
   dropOffOption?: string | null;
-  pickUpOption?: string | null;
   userId?: string | null;
   finalPrice: number;
   discountPercentage?: number | null;
@@ -175,7 +174,7 @@ async function calculateFinalPrice(
   if (formData.washService && priceSettings.priceWash !== null) {
     price += priceSettings.priceWash;
   }
-  if (hasAirportDelivery(formData.dropOffOption, formData.pickUpOption) && priceSettings.deliveryFee !== null) {
+  if (hasAirportDelivery(formData.dropOffOption) && priceSettings.deliveryFee !== null) {
     price += priceSettings.deliveryFee;
   }
   return price;
@@ -189,7 +188,6 @@ interface BookingPricingState {
   parkingTypeId: string | null;
   washService: boolean;
   dropOffOption: string | null;
-  pickUpOption: string | null;
 }
 
 function buildGuardingAmount(state: BookingPricingState, ps: PriceSettingsSnapshot): number {
@@ -225,7 +223,7 @@ function buildLinesForNewBooking(state: BookingPricingState, ps: PriceSettingsSn
     lines.push({ lineType: 'WASHING', description: 'Car wash service', amount: ps.priceWash });
   }
 
-  if (hasAirportDelivery(state.dropOffOption, state.pickUpOption) && ps.deliveryFee !== null && ps.deliveryFee > 0) {
+  if (hasAirportDelivery(state.dropOffOption) && ps.deliveryFee !== null && ps.deliveryFee > 0) {
     lines.push({ lineType: 'DELIVERY', description: 'Airport delivery', amount: ps.deliveryFee });
   }
 
@@ -256,7 +254,7 @@ function buildLinesForBookingUpdate(
 
   if (
     !alreadyChargedTypes.has('DELIVERY') &&
-    hasAirportDelivery(newState.dropOffOption, newState.pickUpOption) &&
+    hasAirportDelivery(newState.dropOffOption) &&
     ps.deliveryFee !== null && ps.deliveryFee > 0
   ) {
     lines.push({ lineType: 'DELIVERY', description: 'Airport delivery', amount: ps.deliveryFee });
@@ -304,7 +302,7 @@ async function createBookingFromPending(
       washService: formData.washService || false,
       finalPrice: finalPrice,
       dropOffOption: formData.dropOffOption || null,
-      pickUpOption: formData.pickUpOption || null,
+      pickUpOption: derivePickUpOption(formData.dropOffOption),
       deleteflag: 0,
     },
   });
@@ -327,7 +325,6 @@ async function createBookingFromPending(
         parkingTypeId: formData.parkingTypeId,
         washService: formData.washService || false,
         dropOffOption: formData.dropOffOption || null,
-        pickUpOption: formData.pickUpOption || null,
       },
       priceSettings,
     );
@@ -383,7 +380,7 @@ async function createBookingFromPending(
       washService: formData.washService || false,
       flightNumber: formData.flightNumber || undefined,
       dropOffOption: formData.dropOffOption || undefined,
-      pickUpOption: formData.pickUpOption || undefined,
+      pickUpOption: derivePickUpOption(formData.dropOffOption) || undefined,
       finalPrice,
       emailDescription,
       paymentStatus: 'paid',
@@ -432,7 +429,7 @@ async function createBookingFromAuthPending(
       washService: formData.washService || false,
       finalPrice,
       dropOffOption: formData.dropOffOption || null,
-      pickUpOption: formData.pickUpOption || null,
+      pickUpOption: derivePickUpOption(formData.dropOffOption),
       deleteflag: 0,
     },
   });
@@ -453,7 +450,6 @@ async function createBookingFromAuthPending(
       parkingTypeId: formData.parkingTypeId,
       washService: formData.washService || false,
       dropOffOption: formData.dropOffOption || null,
-      pickUpOption: formData.pickUpOption || null,
     },
     authPriceSettings,
   );
@@ -509,7 +505,7 @@ async function createBookingFromAuthPending(
       washService: formData.washService || false,
       flightNumber: formData.flightNumber || undefined,
       dropOffOption: formData.dropOffOption || undefined,
-      pickUpOption: formData.pickUpOption || undefined,
+      pickUpOption: derivePickUpOption(formData.dropOffOption) || undefined,
       finalPrice,
       emailDescription,
       paymentStatus: 'paid',
@@ -698,8 +694,11 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
   if (formData.vehicleModel !== undefined) updateData.carModel = formData.vehicleModel;
   if (formData.vehicleColor !== undefined) updateData.carColor = formData.vehicleColor;
   if (formData.flightNumber !== undefined) updateData.returnFlight = formData.flightNumber;
+  const resolvedDropOffOption = formData.dropOffOption !== undefined
+    ? formData.dropOffOption
+    : (oldBooking?.dropOffOption as string | null | undefined) ?? null;
   if (formData.dropOffOption !== undefined) updateData.dropOffOption = formData.dropOffOption;
-  if (formData.pickUpOption !== undefined) updateData.pickUpOption = formData.pickUpOption;
+  updateData.pickUpOption = derivePickUpOption(resolvedDropOffOption);
   if (formData.washService !== undefined) updateData.washService = formData.washService;
   if (formData.parkingTypeId !== undefined) updateData.parkingTypeId = formData.parkingTypeId;
   if (formData.checkInDate !== undefined) updateData.dateFrom = new Date(formData.checkInDate + 'T12:00:00Z');
@@ -735,7 +734,6 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
         parkingTypeId: oldBooking.parkingTypeId,
         washService: oldBooking.washService,
         dropOffOption: oldBooking.dropOffOption as string | null,
-        pickUpOption: oldBooking.pickUpOption as string | null,
       };
       const newState: BookingPricingState = {
         dateFrom: formData.checkInDate ? new Date(formData.checkInDate + 'T12:00:00Z') : oldBooking.dateFrom,
@@ -744,8 +742,7 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
           : oldBooking.dateTo,
         parkingTypeId: formData.parkingTypeId ?? oldBooking.parkingTypeId,
         washService: formData.washService !== undefined ? formData.washService : oldBooking.washService,
-        dropOffOption: formData.dropOffOption !== undefined ? formData.dropOffOption : (oldBooking.dropOffOption as string | null),
-        pickUpOption: formData.pickUpOption !== undefined ? formData.pickUpOption : (oldBooking.pickUpOption as string | null),
+        dropOffOption: resolvedDropOffOption,
       };
       const updateReceiptLines = buildLinesForBookingUpdate(oldState, newState, updatePriceSettings, alreadyChargedTypes);
 

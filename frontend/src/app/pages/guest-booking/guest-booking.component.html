@@ -415,19 +415,6 @@
               </div>
             </div>
 
-            <div class="form-group transport-question">
-              <label>How will you get your car back? *</label>
-              <select
-                class="form-control"
-                [class.is-invalid]="hasError('pickUpOption')"
-                formControlName="pickUpOption"
-              >
-                <option value="airport_delivery">Bring my car to the airport</option>
-                <option value="self_pickup">I will get my car from the parking</option>
-              </select>
-              <app-form-field-error [control]="f['pickUpOption']" fieldName="Pick-up option">
-              </app-form-field-error>
-            </div>
           }
 
           <div class="form-group">

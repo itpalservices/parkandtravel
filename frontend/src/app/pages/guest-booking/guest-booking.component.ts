@@ -102,7 +102,6 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       dropOffOption: ['self_drive', Validators.required],
       checkOutDate: [defaultCheckOut],
       checkOutTime: ['00:00'],
-      pickUpOption: ['self_pickup'],
       parkingType: ['', Validators.required],
     });
   }
@@ -222,15 +221,11 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
 
   private applyAirportDeliveryState(): void {
     const dropOff = this.bookingForm.get('dropOffOption');
-    const pickUp = this.bookingForm.get('pickUpOption');
     if (!this.airportDeliveryEnabled) {
       dropOff?.setValue('self_drive');
       dropOff?.disable();
-      pickUp?.setValue('self_pickup');
-      pickUp?.disable();
     } else {
       dropOff?.enable();
-      pickUp?.enable();
     }
   }
 
@@ -306,10 +301,7 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   get hasDeliveryFee(): boolean {
     if (this.deliveryFee === null) return false;
     const dropOff = this.bookingForm.get('dropOffOption')?.value;
-    const pickUp = this.bookingForm.get('pickUpOption')?.value;
-    const dropOffMatch = dropOff === 'airport_pickup';
-    const pickUpMatch = this.returnDetailsEnabled && pickUp === 'airport_delivery';
-    return dropOffMatch || pickUpMatch;
+    return dropOff === 'airport_pickup';
   }
 
   calculateProgressivePrice(basePrice: number, days: number, increments: number[] | null): number {
@@ -404,12 +396,11 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
   }
 
   private applyReturnDetailsValidators(): void {
-    const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime', 'pickUpOption'];
+    const returnFields = ['flightNumber', 'checkOutDate', 'checkOutTime'];
     if (this.returnDetailsEnabled) {
       this.bookingForm.get('flightNumber')?.setValidators([Validators.required]);
       this.bookingForm.get('checkOutDate')?.setValidators([Validators.required]);
       this.bookingForm.get('checkOutTime')?.setValidators([Validators.required]);
-      this.bookingForm.get('pickUpOption')?.setValidators([Validators.required]);
     } else {
       returnFields.forEach(field => {
         this.bookingForm.get(field)?.clearValidators();
@@ -476,7 +467,6 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       flightNumber: this.returnDetailsEnabled ? (formValue.flightNumber?.trim() || null) : null,
       checkOutDate: this.returnDetailsEnabled && formValue.checkOutDate ? this.formatDateForApi(formValue.checkOutDate) : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
-      pickUpOption: this.returnDetailsEnabled ? formValue.pickUpOption : null,
     };
 
     if (this.mandatoryPrePayment && !this.isPriceTBC) {
@@ -547,7 +537,6 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
       checkInTime: '00:00',
       checkOutTime: '00:00',
       dropOffOption: 'self_drive',
-      pickUpOption: 'self_pickup',
     });
     this.applyReturnDetailsValidators();
     this.washServiceEnabled = false;
