@@ -673,7 +673,7 @@
                 </div>
               </div>
 
-              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+              <div class="settings-group">
                 <h4>Tax</h4>
                 <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
                   Tax to be used to calculate the totals in Z-Report.
@@ -693,6 +693,31 @@
                       step="0.01"
                     />
                   </div>
+                </div>
+              </div>
+
+              <div class="settings-group" style="border-bottom: none; padding-bottom: 0px">
+                <h4>Guest Booking</h4>
+                <small class="form-text text-muted" style="margin-bottom: 12px; display: block;">
+                  Controls whether the "Proceed as a Guest" option is offered on the homepage and whether the guest booking form can be accessed directly.
+                </small>
+
+                <div class="wash-service-toggle">
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      [checked]="showGuestForm"
+                      (change)="showGuestForm=!showGuestForm"
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">
+                    @if (showGuestForm) {
+                      Guest booking is enabled
+                    } @else {
+                      Guest booking is disabled
+                    }
+                  </span>
                 </div>
               </div>
 

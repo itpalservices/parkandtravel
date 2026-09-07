@@ -66,6 +66,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
   mandatoryCheckInPayment = false;
   airportDelivery = true;
   returnDetailsDefault = false;
+  showGuestForm = true;
   defaultParkingType = 'parkingType_covered';
   availableAfter = 0;
   priceIncrementsCovered: number[] = [];
@@ -243,6 +244,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         this.mandatoryCheckInPayment = settings.mandatoryCheckInPayment;
         this.airportDelivery = settings.airportDelivery ?? true;
         this.returnDetailsDefault = settings.returnDetailsDefault ?? false;
+        this.showGuestForm = settings.showGuestForm ?? true;
         this.offerWashService = settings.priceWash !== null;
         this.priceIncrementsCovered = settings.priceIncrementsCovered || [];
         this.priceIncrementsUncovered = settings.priceIncrementsUncovered || [];
@@ -377,7 +379,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewChecked
         ? Math.max(0, Math.floor(Number(formValue.availableAfter)))
         : 0,
       returnDetailsDefault: this.returnDetailsDefault,
-      defaultParkingType: this.defaultParkingType
+      defaultParkingType: this.defaultParkingType,
+      showGuestForm: this.showGuestForm
     };
 
     this.settingsService.updateSettings(data).subscribe({

@@ -2,10 +2,24 @@ import { Request, Response } from "express";
 import {
   getSettings,
   updateSettings,
+  isGuestFormEnabled,
   ConfigurationSettings,
   PARKING_TYPE_IDS,
 } from "../services/settings.service";
 import { AuthUser } from "../middleware/auth.middleware";
+
+export async function getPublicSettingsHandler(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const showGuestForm = await isGuestFormEnabled();
+    res.json({ showGuestForm });
+  } catch (error) {
+    console.error("Error getting public settings:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 export async function getSettingsHandler(
   req: Request,
@@ -146,6 +160,7 @@ export async function updateSettingsHandler(
         : 0,
       returnDetailsDefault: data.returnDetailsDefault !== undefined ? Boolean(data.returnDetailsDefault) : false,
       defaultParkingType: data.defaultParkingType,
+      showGuestForm: data.showGuestForm !== undefined ? Boolean(data.showGuestForm) : true,
     };
 
     if (validatedData.availableUncovered && validatedData.availableUncovered > 0) {

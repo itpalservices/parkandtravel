@@ -20,6 +20,11 @@ export interface ConfigurationSettings {
   availableAfter: number;
   returnDetailsDefault: boolean;
   defaultParkingType: string;
+  showGuestForm: boolean;
+}
+
+export interface PublicConfigurationSettings {
+  showGuestForm: boolean;
 }
 
 @Injectable({
@@ -34,5 +39,10 @@ export class SettingsService {
 
   updateSettings(data: Partial<ConfigurationSettings>): Observable<ConfigurationSettings> {
     return this.http.put<ConfigurationSettings>('/api/settings', data);
+  }
+
+  /** Unauthenticated endpoint — safe to call from the landing page and route guards before login. */
+  getPublicSettings(): Observable<PublicConfigurationSettings> {
+    return this.http.get<PublicConfigurationSettings>('/api/settings/public');
   }
 }

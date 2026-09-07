@@ -5,6 +5,7 @@ import { AuthService } from '@auth0/auth0-angular';
 import { environment } from '../../../environments/environment';
 import { filter, take } from 'rxjs/operators';
 import { RoleService } from '../../core/services/role.service';
+import { SettingsService } from '../../core/services/settings.service';
 
 @Component({
   selector: 'app-landing',
@@ -17,11 +18,16 @@ export class LandingComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private roleService = inject(RoleService);
+  private settingsService = inject(SettingsService);
 
   isAuth0Configured = !!(environment.auth0.domain && environment.auth0.clientId);
   isLoading = true;
+  // Fail-open: keep the guest option visible unless the backend explicitly says otherwise.
+  showGuestForm = true;
 
   ngOnInit(): void {
+    this.loadGuestFormSetting();
+
     if (!this.isAuth0Configured) {
       this.isLoading = false;
       return;
@@ -44,6 +50,18 @@ export class LandingComponent implements OnInit {
           this.isLoading = false;
         }
       });
+    });
+  }
+
+  private loadGuestFormSetting(): void {
+    this.settingsService.getPublicSettings().pipe(take(1)).subscribe({
+      next: (settings) => {
+        this.showGuestForm = settings.showGuestForm;
+      },
+      error: (error) => {
+        console.error('Error loading public settings:', error);
+        // Keep the fail-open default (showGuestForm = true) on error.
+      },
     });
   }
 

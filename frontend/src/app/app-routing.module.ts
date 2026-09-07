@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout/layout.component';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, guestFormGuard } from './core/guards/auth.guard';
 import { adminOnlyGuard, adminOrDriverOnlyGuard } from './core/guards/role-redirect.guard';
 
 export const appRoutes: Routes = [
@@ -11,6 +11,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'guest/book',
+    canActivate: [guestFormGuard],
     loadComponent: () =>
       import('./pages/guest-booking/guest-booking.component').then((m) => m.GuestBookingComponent),
   },

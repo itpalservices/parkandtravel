@@ -18,6 +18,7 @@ export interface ConfigurationSettings {
   availableAfter: number;
   returnDetailsDefault: boolean;
   defaultParkingType: string;
+  showGuestForm: boolean;
 }
 
 export const PARKING_TYPE_IDS = ['parkingType_covered', 'parkingType_uncovered'] as const;
@@ -40,7 +41,8 @@ const SETTING_KEYS = {
   airportDelivery: "configurationSetting_delivery",
   availableAfter: "configurationSetting_availableAfter",
   returnDetailsDefault: "configurationSetting_returnDetailsDefault",
-  defaultParkingType: "configurationSetting_defaultParkingType"
+  defaultParkingType: "configurationSetting_defaultParkingType",
+  showGuestForm: "configurationSetting_showGuestForm"
 };
 
 interface SettingRow {
@@ -79,8 +81,18 @@ export async function getSettings(): Promise<ConfigurationSettings> {
     airportDelivery: parseBoolean(settingsMap.get(SETTING_KEYS.airportDelivery)),
     availableAfter: parseIntOrNull(settingsMap.get(SETTING_KEYS.availableAfter)) ?? 0,
     returnDetailsDefault: parseBoolean(settingsMap.get(SETTING_KEYS.returnDetailsDefault)),
-    defaultParkingType: parseParkingTypeId(settingsMap.get(SETTING_KEYS.defaultParkingType))
+    defaultParkingType: parseParkingTypeId(settingsMap.get(SETTING_KEYS.defaultParkingType)),
+    showGuestForm: parseBoolean(settingsMap.get(SETTING_KEYS.showGuestForm))
   };
+}
+
+export async function isGuestFormEnabled(): Promise<boolean> {
+  const result = await prisma.$queryRawUnsafe<{ value: string | null }[]>(
+    `SELECT value FROM configuration_settings WHERE id = $1`,
+    SETTING_KEYS.showGuestForm
+  );
+  if (!result.length || result[0].value === null) return true;
+  return parseBoolean(result[0].value);
 }
 
 export async function updateSettings(
@@ -208,6 +220,13 @@ export async function updateSettings(
     updates.push({
       id: SETTING_KEYS.defaultParkingType,
       value: parseParkingTypeId(data.defaultParkingType),
+    });
+  }
+
+  if (data.showGuestForm !== undefined) {
+    updates.push({
+      id: SETTING_KEYS.showGuestForm,
+      value: JSON.stringify(data.showGuestForm),
     });
   }
 
