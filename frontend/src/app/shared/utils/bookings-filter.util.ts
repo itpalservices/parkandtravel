@@ -156,6 +156,40 @@ export function sortBookings(bookings: Booking[], field: BookingSortField | null
   return [...bookings].sort(fieldComparator(field, direction));
 }
 
+/** Page numbers for a pagination bar, collapsing long runs into a single "-1" ellipsis marker. */
+export function computePageNumbers(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = [];
+  const maxVisiblePages = 5;
+
+  if (totalPages <= maxVisiblePages + 2) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  pages.push(1);
+
+  if (currentPage > 3) {
+    pages.push(-1);
+  }
+
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (currentPage < totalPages - 2) {
+    pages.push(-1);
+  }
+
+  pages.push(totalPages);
+
+  return pages;
+}
+
 // ---------- URL query-param (de)serialization ----------
 
 const PARKING_TYPE_URL_MAP: Record<string, string> = {

@@ -30,7 +30,15 @@ interface GetBookingsParams {
   limit: number;
   userId?: string;
   filterBy?: 'check-ins' | 'check-outs' | 'both';
+  /** Admin/driver only: leave overstayed and unknown-checkout parked bookings out of this
+   *  result set — they're shown instead in the dedicated overstayed table. */
+  excludeOverstayed?: boolean;
 }
+
+/** A parked booking that either has no scheduled check-out yet, or whose check-out has
+ *  already passed as of today — the set shown in the dedicated "overstayed" table. */
+const OVERSTAYED_OR_UNKNOWN_CONDITION =
+  `b."bookingStatusId" = 'bookingStatus_parked' AND (b."dateTo" IS NULL OR b."dateTo" < CURRENT_DATE)`;
 
 interface BookingResponse {
   id: string;
@@ -126,7 +134,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   data: BookingResponse[];
   meta: { total: number; page: number };
 }> {
-  const { dateFrom, dateTo, search, page, limit, userId, filterBy = 'both' } = params;
+  const { dateFrom, dateTo, search, page, limit, userId, filterBy = 'both', excludeOverstayed } = params;
   const dayEndMinutes = await getDayEndMinutes();
 
   const whereConditions: string[] = [
@@ -219,6 +227,10 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     } else if (dateTo) {
       whereClause += ` OR (b."actualCheckOut" IS NOT NULL AND b."actualCheckOut"::date <= '${dateTo}'::date AND b.deleteflag = 0${userIdFilter})`;
     }
+  }
+
+  if (excludeOverstayed) {
+    whereClause = `(${whereClause}) AND NOT (${OVERSTAYED_OR_UNKNOWN_CONDITION})`;
   }
 
   const countQuery = `SELECT COUNT(*) as count FROM bookings b WHERE ${whereClause}`;
@@ -341,6 +353,118 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     data,
     meta: { total, page },
   };
+}
+
+/** Admin/driver only: parked bookings that are overstayed (check-out already passed) or
+ *  whose check-out is still unknown. Deliberately ignores the date-range filter — these
+ *  need attention regardless of whatever window the main table is currently scoped to. */
+export async function getOverstayedBookings(): Promise<{ data: BookingResponse[] }> {
+  const dataQuery = `
+    SELECT
+      b.id,
+      b.name,
+      b.surname,
+      b.email,
+      b."returnFlight",
+      b."dateFrom",
+      b."timeFrom",
+      b."dateTo",
+      b."timeTo",
+      b.mobile,
+      b."phoneCodeId",
+      pc."phoneCode" as "phoneCodeValue",
+      b."plateNo",
+      b."carBrand",
+      b."carModel",
+      b."carColor",
+      b."parkingTypeId",
+      pt.name as "parkingTypeName",
+      b.adults,
+      b."washService",
+      b."finalPrice",
+      b."dropOffOption",
+      b."pickUpOption",
+      b.deleteflag,
+      b."userId",
+      b."bookingStatusId",
+      bs.value as "bookingStatusValue",
+      b."parkPlace",
+      b."keepKeys",
+      b."mileageKm",
+      b."parkingComments",
+      b."actualCheckIn",
+      b."actualCheckOut",
+      b."extraFee",
+      b."checkInBy",
+      b."checkOutBy",
+      COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
+      b."estimated_arrival_time",
+      (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl",
+      COALESCE(b."dateTo", b."dateFrom") + COALESCE(b."timeTo", '23:59:59'::time) AS "sortingDatetime"
+    FROM bookings b
+    LEFT JOIN parking_types pt ON b."parkingTypeId" = pt.id
+    LEFT JOIN booking_statuses bs ON b."bookingStatusId" = bs.id
+    LEFT JOIN phone_codes pc ON b."phoneCodeId" = pc.id
+    WHERE b.deleteflag = 0 AND ${OVERSTAYED_OR_UNKNOWN_CONDITION}
+    ORDER BY "sortingDatetime" ASC
+  `;
+
+  const bookings = await prisma.$queryRawUnsafe<any[]>(dataQuery);
+
+  const data: BookingResponse[] = bookings.map((b: any) => ({
+    id: b.id,
+    name: b.name,
+    surname: b.surname,
+    email: b.email,
+    returnFlight: b.returnFlight,
+    dateFrom: formatDate(b.dateFrom)!,
+    timeFrom: formatTime(b.timeFrom),
+    dateTo: formatDate(b.dateTo),
+    timeTo: formatTime(b.timeTo),
+    mobile: b.mobile,
+    phoneCodeId: b.phoneCodeId || null,
+    phoneCode: b.phoneCodeValue || null,
+    plateNo: b.plateNo,
+    carBrand: b.carBrand,
+    carModel: b.carModel,
+    carColor: b.carColor,
+    parkingType: b.parkingTypeName,
+    parkingTypeId: b.parkingTypeId || null,
+    adults: b.adults,
+    washService: b.washService ?? false,
+    finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    dropOffOption: b.dropOffOption || null,
+    pickUpOption: b.pickUpOption || null,
+    userId: b.userId || null,
+    bookingStatusId: b.bookingStatusId || null,
+    bookingStatus: b.bookingStatusValue || null,
+    parkPlace: b.parkPlace || null,
+    keepKeys: b.keepKeys ?? null,
+    mileageKm: b.mileageKm ?? null,
+    parkingComments: b.parkingComments || null,
+    actualCheckIn: b.actualCheckIn ? b.actualCheckIn.toISOString() : null,
+    actualCheckOut: b.actualCheckOut ? b.actualCheckOut.toISOString() : null,
+    extraFee: b.extraFee !== null ? parseFloat(b.extraFee) : null,
+    deleteflag: b.deleteflag,
+    walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
+    checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
+    completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
+    paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
+    checkInBy: b.checkInBy,
+    checkOutBy: b.checkOutBy,
+    paymentStatus: derivePaymentStatus(
+      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
+    ),
+    isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
+    walleePayment: null,
+    estimated_arrival_time: b.estimated_arrival_time,
+    thumbnailUrl: b.thumbnailUrl || null,
+  }));
+
+  return { data };
 }
 
 export async function getBookingById(

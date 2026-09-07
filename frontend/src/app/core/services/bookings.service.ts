@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BookingsResponse, BookingResponse, BookingImageInfo } from '../../shared/models/booking.model';
+import { Booking, BookingsResponse, BookingResponse, BookingImageInfo } from '../../shared/models/booking.model';
 import { getApiBaseUrl } from '../utils/api-url.util';
 
 export interface BookingsQueryParams {
@@ -99,5 +99,10 @@ export class BookingsService {
       `${this.baseUrl}/check-park-place`,
       { params: { parkPlace, excludeBookingId } }
     );
+  }
+
+  /** Admin/driver only: overstayed and unknown-checkout parked bookings, independent of any date filter. */
+  getOverstayedBookings(): Observable<{ data: Booking[] }> {
+    return this.http.get<{ data: Booking[] }>(`${this.baseUrl}/overstayed`);
   }
 }

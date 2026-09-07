@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { NgbCalendar, NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import { BookingsService } from '../../../../core/services/bookings.service';
-import { Booking, BookingSortField, BookingsFilterState } from '../../../../shared/models/booking.model';
+import { Booking, BookingSortDirection, BookingSortField, BookingsFilterState } from '../../../../shared/models/booking.model';
 import { BookingsListComponent } from '../bookings-list/bookings-list.component';
 import { BookingsFilterPanelComponent } from '../bookings-filter-panel/bookings-filter-panel.component';
 import { RoleService, UserRoleInfo } from '../../../../core/services/role.service';
@@ -11,6 +11,7 @@ import { take } from 'rxjs';
 import { AuthService } from '@auth0/auth0-angular';
 import {
   buildBookingsPredicate,
+  computePageNumbers,
   countActiveFilters,
   createDefaultBookingsFilterState,
   filterStateFromQueryParams,
@@ -48,6 +49,17 @@ export class BookingsPageComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
+
+  // Second table (admin/driver only): overstayed + unknown-checkout parked bookings.
+  // Independent of the date-range filter, but shares the same non-date filter criteria.
+  overstayedBookings: Booking[] = [];
+  filteredOverstayedBookings: Booking[] = [];
+  loadingOverstayed = false;
+  overstayedErrorMessage = '';
+  overstayedCurrentPage = 1;
+  overstayedTotalPages = 1;
+  overstayedSortField: BookingSortField | null = null;
+  overstayedSortDirection: BookingSortDirection = 'asc';
 
   constructor(
     private bookingsService: BookingsService,
@@ -116,6 +128,15 @@ export class BookingsPageComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  /** A booking edited/deleted from either table can affect both (e.g. adding a check-out
+   *  date moves a booking out of the overstayed table and into the main one), so refresh both. */
+  refreshAfterBookingChange(): void {
+    this.loadBookings();
+    if (this.isAdmin || this.isDriver) {
+      this.loadOverstayedBookings();
+    }
   }
 
   /** Re-filters + re-sorts the already-fetched date-range set; no server round-trip. */
@@ -193,12 +214,16 @@ export class BookingsPageComponent implements OnInit {
     } else {
       this.applyFilters();
     }
+    // The overstayed table ignores the date range but shares every other filter field,
+    // so it always needs re-filtering here regardless of what changed.
+    this.applyOverstayedFilters();
   }
 
   private onFiltersReset(): void {
     this.filterState = this.createDefaultFilterState();
     this.syncFiltersToUrl();
     this.loadBookings();
+    this.applyOverstayedFilters();
   }
 
   onSortChange(field: BookingSortField): void {
@@ -218,40 +243,67 @@ export class BookingsPageComponent implements OnInit {
   }
 
   get pageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-
-    if (this.totalPages <= maxVisiblePages + 2) {
-      for (let i = 1; i <= this.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-
-      if (this.currentPage > 3) {
-        pages.push(-1);
-      }
-
-      const start = Math.max(2, this.currentPage - 1);
-      const end = Math.min(this.totalPages - 1, this.currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (this.currentPage < this.totalPages - 2) {
-        pages.push(-1);
-      }
-
-      pages.push(this.totalPages);
-    }
-
-    return pages;
+    return computePageNumbers(this.currentPage, this.totalPages);
   }
 
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+    }
+  }
+
+  // ---------- Overstayed / unknown-checkout table (admin/driver only) ----------
+
+  loadOverstayedBookings(): void {
+    this.loadingOverstayed = true;
+    this.overstayedErrorMessage = '';
+
+    this.bookingsService.getOverstayedBookings().subscribe({
+      next: (response) => {
+        this.overstayedBookings = response.data;
+        this.applyOverstayedFilters();
+        this.loadingOverstayed = false;
+      },
+      error: (err) => {
+        console.error('Failed to load overstayed bookings:', err);
+        this.overstayedErrorMessage = err.message || 'Failed to load overstayed bookings. Please try again.';
+        this.loadingOverstayed = false;
+      },
+    });
+  }
+
+  /** Shares the same non-date filter criteria as the main table (status, plate, price, etc.). */
+  applyOverstayedFilters(): void {
+    const predicate = buildBookingsPredicate(this.filterState);
+    const filtered = this.overstayedBookings.filter(predicate);
+    this.filteredOverstayedBookings = sortBookings(filtered, this.overstayedSortField, this.overstayedSortDirection);
+    this.overstayedTotalPages = Math.ceil(this.filteredOverstayedBookings.length / this.pageSize) || 1;
+    this.overstayedCurrentPage = 1;
+  }
+
+  onOverstayedSortChange(field: BookingSortField): void {
+    if (this.overstayedSortField === field) {
+      this.overstayedSortDirection = this.overstayedSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.overstayedSortField = field;
+      this.overstayedSortDirection = 'asc';
+    }
+    this.applyOverstayedFilters();
+  }
+
+  get overstayedPaginatedBookings(): Booking[] {
+    const start = (this.overstayedCurrentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredOverstayedBookings.slice(start, end);
+  }
+
+  get overstayedPageNumbers(): number[] {
+    return computePageNumbers(this.overstayedCurrentPage, this.overstayedTotalPages);
+  }
+
+  onOverstayedPageChange(page: number): void {
+    if (page >= 1 && page <= this.overstayedTotalPages) {
+      this.overstayedCurrentPage = page;
     }
   }
 
@@ -264,6 +316,9 @@ export class BookingsPageComponent implements OnInit {
         if (roleInfo.isUser) {
           this.loadCustomerBookingCards();
           this.stripCustomerIdentityFilters();
+        }
+        if (roleInfo.isAdmin || roleInfo.isDriver) {
+          this.loadOverstayedBookings();
         }
       },
     });

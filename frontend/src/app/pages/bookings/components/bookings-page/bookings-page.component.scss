@@ -384,6 +384,17 @@
   overflow: hidden;
 }
 
+.overstayed-header {
+  margin: 2rem 0 1.5rem;
+
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+}
+
 .loading-spinner,
 .no-bookings {
   background: #ffffff;

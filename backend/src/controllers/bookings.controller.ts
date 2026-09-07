@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   getBookings,
+  getOverstayedBookings,
   getBookingById,
   softDeleteBooking,
   isValidDateFormat,
@@ -81,6 +82,11 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
 
     const userId = isRegularUser ? authUser?.sub : undefined;
 
+    // Admin/driver get overstayed and unknown-checkout parked bookings in a dedicated
+    // table instead (see listOverstayedBookings); a customer's own single table is
+    // unaffected and keeps including them exactly as before.
+    const excludeOverstayed = !isRegularUser;
+
     const result = await getBookings({
       dateFrom: dateFrom as string | undefined,
       dateTo: dateTo as string | undefined,
@@ -89,11 +95,28 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
       limit: limitNum,
       userId,
       filterBy: filterByValue as 'check-ins' | 'check-outs' | 'both',
+      excludeOverstayed,
     });
 
     res.json(result);
   } catch (error) {
     console.error("Error listing bookings:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function listOverstayedBookings(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") {
+      res.status(403).json({ error: "Admin or driver role required" });
+      return;
+    }
+
+    const result = await getOverstayedBookings();
+    res.json(result);
+  } catch (error) {
+    console.error("Error listing overstayed bookings:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

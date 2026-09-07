@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   listBookings,
+  listOverstayedBookings,
   getBooking,
   deleteBooking,
   createGuestBooking,
@@ -36,6 +37,7 @@ const router = Router();
 router.get("/", checkJwt, listBookings);
 router.post("/", checkJwt, createBooking);
 router.get("/check-park-place", checkJwt, checkParkPlaceAvailability);
+router.get("/overstayed", checkJwt, listOverstayedBookings);
 router.get("/:id", checkJwt, getBooking);
 router.put("/:id", checkJwt, updateBooking);
 router.patch("/:id/status", checkJwt, updateBookingStatus);

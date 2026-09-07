@@ -194,10 +194,53 @@
         [sortField]="filterState.sortField"
         [sortDirection]="filterState.sortDirection"
         (pageChange)="onPageChange($event)"
-        (bookingDeleted)="loadBookings()"
-        (bookingUpdated)="loadBookings()"
+        (bookingDeleted)="refreshAfterBookingChange()"
+        (bookingUpdated)="refreshAfterBookingChange()"
         (sortChange)="onSortChange($event)"
       ></app-bookings-list>
     }
   </div>
+
+  @if (isAdmin || isDriver) {
+    <div class="overstayed-header">
+      <h2 class="section-title">Overstayed &amp; Unknown Check-out</h2>
+    </div>
+
+    <div class="bookings-content">
+      @if (loadingOverstayed) {
+        <div class="loading-spinner text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      } @else if (overstayedErrorMessage) {
+        <div class="error-message text-center py-5">
+          <div class="alert alert-danger" role="alert">
+            {{ overstayedErrorMessage }}
+          </div>
+          <button class="btn btn-primary" (click)="loadOverstayedBookings()">Try Again</button>
+        </div>
+      } @else if (filteredOverstayedBookings.length === 0) {
+        <div class="no-bookings text-center py-5">
+          <p class="text-muted mb-0">No overstayed or unknown check-out bookings</p>
+        </div>
+      } @else {
+        <app-bookings-list
+          [isDriver]="isDriver"
+          [isAdmin]="isAdmin"
+          [isUser]="isUser"
+          [bookings]="overstayedPaginatedBookings"
+          [currentPage]="overstayedCurrentPage"
+          [totalPages]="overstayedTotalPages"
+          [pageNumbers]="overstayedPageNumbers"
+          [sortField]="overstayedSortField"
+          [sortDirection]="overstayedSortDirection"
+          (pageChange)="onOverstayedPageChange($event)"
+          (bookingDeleted)="refreshAfterBookingChange()"
+          (bookingUpdated)="refreshAfterBookingChange()"
+          (sortChange)="onOverstayedSortChange($event)"
+        ></app-bookings-list>
+      }
+    </div>
+  }
 </div>
