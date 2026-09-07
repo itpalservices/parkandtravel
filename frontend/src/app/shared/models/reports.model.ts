@@ -32,6 +32,7 @@ export interface WashServiceReportItem {
   carPickup: string;
   checkOutDate: string;
   checkOutTime: string;
+  parkPlace: string | null;
 }
 
 export interface PendingBookingsReportItem {

@@ -28,14 +28,19 @@ export async function washServiceReport(
   res: Response
 ): Promise<void> {
   try {
-    const { date } = req.query;
+    const { dateFrom, dateTo } = req.query;
 
-    if (!date || typeof date !== "string") {
-      res.status(400).json({ error: "Date parameter is required" });
+    if (!dateFrom || typeof dateFrom !== "string") {
+      res.status(400).json({ error: "dateFrom parameter is required" });
       return;
     }
 
-    const report = await getWashServiceReport(date);
+    if (!dateTo || typeof dateTo !== "string") {
+      res.status(400).json({ error: "dateTo parameter is required" });
+      return;
+    }
+
+    const report = await getWashServiceReport(dateFrom, dateTo);
     res.json(report);
   } catch (error) {
     console.error("Error fetching wash service report:", error);

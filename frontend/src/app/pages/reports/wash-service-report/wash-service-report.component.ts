@@ -1,8 +1,7 @@
-import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { NgbDatepickerModule, NgbDateStruct, NgbCalendar, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -12,24 +11,21 @@ import {
 } from '../../../shared/statics/car-pick-up.model';
 import { WashServiceReportItem } from '../../../shared/models/reports.model';
 import { exportToExcel } from '../../../shared/utils/excel-export.util';
+import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
 
-const REPORT_COLUMNS = ['Full Name', 'Plate No.', 'Vehicle / Model', 'Vehicle Color', 'Car Pick-up', 'Check Out'];
+const REPORT_COLUMNS = ['Full Name', 'Plate No.', 'Vehicle / Model', 'Vehicle Color', 'Car Pick-up', 'Check Out', 'Parking Place'];
 
 @Component({
   selector: 'app-wash-service-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, NgbDatepickerModule, NgbDropdownModule],
+  imports: [CommonModule, RouterLink, NgbDropdownModule, DateRangePickerComponent],
   templateUrl: './wash-service-report.component.html',
   styleUrl: './wash-service-report.component.scss',
 })
 export class WashServiceReportComponent implements OnInit {
   private apiService = inject(ApiService);
-  private calendar = inject(NgbCalendar);
-  private elementRef = inject(ElementRef);
 
-  selectedDate: NgbDateStruct;
-  minDate: NgbDateStruct;
-  isDatepickerOpen = false;
+  dateFilter: DateRange;
 
   reportData: WashServiceReportItem[] = [];
   loading = false;
@@ -38,9 +34,8 @@ export class WashServiceReportComponent implements OnInit {
   private logoBase64: string = '';
 
   constructor() {
-    const today = this.calendar.getToday();
-    this.selectedDate = today;
-    this.minDate = today;
+    const today = new Date();
+    this.dateFilter = { from: today, to: today, preset: 'today' };
     this.loadLogo();
   }
 
@@ -48,29 +43,20 @@ export class WashServiceReportComponent implements OnInit {
     this.loadReport();
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.isDatepickerOpen = false;
-    }
-  }
-
-  toggleDatepicker(): void {
-    this.isDatepickerOpen = !this.isDatepickerOpen;
-  }
-
-  onDateSelect(date: NgbDateStruct): void {
-    this.selectedDate = date;
-    this.isDatepickerOpen = false;
+  onDateRangeChange(range: DateRange): void {
+    this.dateFilter = range;
     this.loadReport();
   }
 
   private loadReport(): void {
+    if (!this.dateFilter.from || !this.dateFilter.to) return;
+
     this.loading = true;
-    const dateStr = this.formatDateForApi(this.selectedDate);
+    const dateFrom = this.formatDateForApi(this.dateFilter.from);
+    const dateTo = this.formatDateForApi(this.dateFilter.to);
 
     this.apiService
-      .get<WashServiceReportItem[]>(`/reports/wash-service?date=${dateStr}`)
+      .get<WashServiceReportItem[]>(`/reports/wash-service?dateFrom=${dateFrom}&dateTo=${dateTo}`)
       .subscribe({
         next: (data) => {
           this.reportData = data;
@@ -107,6 +93,7 @@ export class WashServiceReportComponent implements OnInit {
       item.vehicleColor,
       this.formatPickUp(item.carPickup),
       `${item.checkOutDate} ${item.checkOutTime}`,
+      item.parkPlace || '-',
     ]);
   }
 
@@ -139,7 +126,7 @@ export class WashServiceReportComponent implements OnInit {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(55, 65, 81);
-    const dateText = `Date: ${this.formatDisplayDate(this.selectedDate)}`;
+    const dateText = `Date: ${this.dateRangeLabel}`;
     const dateWidth = doc.getTextWidth(dateText);
     doc.text(dateText, (pageWidth - dateWidth) / 2, yPos);
     yPos += 8;
@@ -170,17 +157,18 @@ export class WashServiceReportComponent implements OnInit {
         fillColor: [249, 250, 251],
       },
       columnStyles: {
-        0: { cellWidth: 35 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 35 },
+        0: { cellWidth: 30 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 28 },
+        5: { cellWidth: 32 },
+        6: { cellWidth: 22 },
       },
       margin: { left: 10, right: 10 },
     });
 
-    const fileName = `wash-service-report-${this.formatDateForApi(this.selectedDate)}.pdf`;
+    const fileName = `wash-service-report-${this.fileNameDateSuffix}.pdf`;
     doc.save(fileName);
 
     this.exporting = false;
@@ -192,11 +180,11 @@ export class WashServiceReportComponent implements OnInit {
     this.exporting = true;
     try {
       await exportToExcel({
-        fileName: `wash-service-report-${this.formatDateForApi(this.selectedDate)}.xlsx`,
+        fileName: `wash-service-report-${this.fileNameDateSuffix}.xlsx`,
         sheetName: 'Wash Service',
         title: 'Wash Service Report',
         infoLines: [
-          `Date: ${this.formatDisplayDate(this.selectedDate)}`,
+          `Date: ${this.dateRangeLabel}`,
           `Total Cars: ${this.reportData.length}`,
         ],
         columns: REPORT_COLUMNS,
@@ -207,17 +195,32 @@ export class WashServiceReportComponent implements OnInit {
     }
   }
 
-  private formatDateForApi(date: NgbDateStruct): string {
-    const year = date.year;
-    const month = date.month.toString().padStart(2, '0');
-    const day = date.day.toString().padStart(2, '0');
+  private formatDateForApi(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
-  formatDisplayDate(date: NgbDateStruct): string {
-    const day = date.day.toString().padStart(2, '0');
-    const month = date.month.toString().padStart(2, '0');
-    return `${day}/${month}/${date.year}`;
+  formatDisplayDate(date: Date): string {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}/${month}/${date.getFullYear()}`;
+  }
+
+  /** e.g. "07/09/2026" for a single day, or "07/09/2026 - 09/09/2026" for a range. */
+  get dateRangeLabel(): string {
+    if (!this.dateFilter.from) return '-';
+    const from = this.formatDisplayDate(this.dateFilter.from);
+    const to = this.dateFilter.to ? this.formatDisplayDate(this.dateFilter.to) : from;
+    return from === to ? from : `${from} - ${to}`;
+  }
+
+  private get fileNameDateSuffix(): string {
+    if (!this.dateFilter.from) return '';
+    const from = this.formatDateForApi(this.dateFilter.from);
+    const to = this.dateFilter.to ? this.formatDateForApi(this.dateFilter.to) : from;
+    return from === to ? from : `${from}_to_${to}`;
   }
 
   formatPickUp(option: string | null): string {

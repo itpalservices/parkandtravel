@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma";
 import {
   getDayEndMinutes,
   buildSingleDateCondition,
+  buildDateToCondition,
 } from "../utils/dayEnd.utils";
 
 export interface WashServiceReportItem {
@@ -13,6 +14,7 @@ export interface WashServiceReportItem {
   carPickup: string;
   checkOutDate: string;
   checkOutTime: string;
+  parkPlace: string | null;
 }
 
 export interface PendingBookingsReportItem {
@@ -51,6 +53,7 @@ interface WashServiceRow {
   pickUpOption: string | null;
   dateTo: Date;
   timeTo: Date | null;
+  parkPlace: string | null;
 }
 
 interface PendingBookingRow {
@@ -216,19 +219,20 @@ export async function getDailyInOutReport(
 }
 
 export async function getWashServiceReport(
-  date: string
+  dateFrom: string,
+  dateTo: string
 ): Promise<WashServiceReportItem[]> {
   const dayEndMinutes = await getDayEndMinutes();
-  const checkOutCondition = buildSingleDateCondition(date, "dateTo", dayEndMinutes, "");
-  
+  const checkOutCondition = buildDateToCondition(dateFrom, dateTo, dayEndMinutes, "b");
+
   const bookings = await prisma.$queryRawUnsafe<WashServiceRow[]>(`
-    SELECT id, name, surname, "plateNo", "carBrand", "carModel", "carColor", "pickUpOption", "dateTo", "timeTo"
-    FROM bookings 
-    WHERE deleteflag = 0 
+    SELECT b.id, b.name, b.surname, b."plateNo", b."carBrand", b."carModel", b."carColor", b."pickUpOption", b."dateTo", b."timeTo", b."parkPlace"
+    FROM bookings b
+    WHERE b.deleteflag = 0
       AND ${checkOutCondition}
-      AND "washService" = true
-      AND "bookingStatusId" = 'bookingStatus_parked'
-    ORDER BY "timeTo" ASC NULLS LAST, name ASC
+      AND b."washService" = true
+      AND b."bookingStatusId" = 'bookingStatus_parked'
+    ORDER BY b."timeTo" ASC NULLS LAST, b.name ASC
   `);
 
   return bookings.map((b) => {
@@ -242,6 +246,7 @@ export async function getWashServiceReport(
       carPickup: b.pickUpOption || "-",
       checkOutDate: formatDisplayDate(new Date(b.dateTo)),
       checkOutTime: formatTime(b.timeTo),
+      parkPlace: b.parkPlace || null,
     };
   });
 }

@@ -38,64 +38,6 @@
   margin: 0;
 }
 
-.date-picker-wrapper {
-  position: relative;
-}
-
-.date-input-container {
-  position: relative;
-  display: flex;
-}
-
-.date-input {
-  width: 160px;
-  padding: 0.5rem 0.75rem;
-  padding-right: 2.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: #fff;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 2px rgba(0, 107, 143, 0.15);
-  }
-}
-
-.date-picker-btn {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  color: #6b7280;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: $primary-color;
-  }
-}
-
-.dropdown-datepicker {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 1050;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 .report-content {
   background: white;
   border-radius: 0.5rem;
@@ -327,18 +269,5 @@
   .title-row {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .date-input {
-    width: 100%;
-  }
-
-  .date-picker-wrapper {
-    width: 100%;
-  }
-
-  .dropdown-datepicker {
-    right: auto;
-    left: 0;
   }
 }

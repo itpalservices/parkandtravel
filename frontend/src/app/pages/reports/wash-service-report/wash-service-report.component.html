@@ -18,43 +18,13 @@
     </a>
     <div class="title-row">
       <h1 class="page-title">Wash Service Report</h1>
-      <div class="date-picker-wrapper" (click)="$event.stopPropagation()">
-        <div class="date-input-container">
-          <input
-            class="form-control date-input"
-            [value]="formatDisplayDate(selectedDate)"
-            readonly
-            (click)="toggleDatepicker()"
-          />
-          <button class="date-picker-btn" type="button" (click)="toggleDatepicker()">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-          </button>
-          @if (isDatepickerOpen) {
-            <div class="dropdown-datepicker" (click)="$event.stopPropagation()">
-              <ngb-datepicker
-                [(ngModel)]="selectedDate"
-                [minDate]="minDate"
-                (dateSelect)="onDateSelect($event)"
-              ></ngb-datepicker>
-            </div>
-          }
-        </div>
-      </div>
+      <app-date-range-picker
+        [selectedPreset]="dateFilter.preset"
+        [selectedFromDate]="dateFilter.from"
+        [selectedToDate]="dateFilter.to"
+        [enablePastDates]="false"
+        (dateRangeChange)="onDateRangeChange($event)"
+      ></app-date-range-picker>
     </div>
   </div>
 
@@ -90,7 +60,7 @@
           </svg>
         </div>
         <h3>No wash services scheduled</h3>
-        <p>There are no cars scheduled for wash service on {{ formatDisplayDate(selectedDate) }}</p>
+        <p>There are no cars scheduled for wash service on {{ dateRangeLabel }}</p>
       </div>
     } @else {
       <div class="results-summary">
@@ -149,6 +119,7 @@
               <th>Vehicle Color</th>
               <th>Car Pick-up</th>
               <th>Check Out</th>
+              <th>Parking Place</th>
             </tr>
           </thead>
           <tbody>
@@ -162,6 +133,7 @@
                 <td>{{ item.vehicleColor }}</td>
                 <td>{{ formatPickUp(item.carPickup) }}</td>
                 <td>{{ item.checkOutDate }} {{ item.checkOutTime }}</td>
+                <td>{{ item.parkPlace || '-' }}</td>
               </tr>
             }
           </tbody>
@@ -191,6 +163,10 @@
               <div class="card-row">
                 <span class="label">Check Out</span>
                 <span class="value">{{ item.checkOutDate }} {{ item.checkOutTime }}</span>
+              </div>
+              <div class="card-row">
+                <span class="label">Parking Place</span>
+                <span class="value">{{ item.parkPlace || '-' }}</span>
               </div>
             </div>
           </div>
