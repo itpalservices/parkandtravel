@@ -28,8 +28,11 @@ export async function getSettingsHandler(
   try {
     const authUser = req.authUser as AuthUser | undefined;
 
-    if (authUser?.role !== "admin") {
-      res.status(403).json({ error: "Admin access required" });
+    // Read-only access: drivers need mandatoryCheckInPayment/mandatoryPayment for the
+    // check-in flow (see bookings-list/booking-form components). Only updateSettingsHandler
+    // (below) remains admin-only.
+    if (authUser?.role !== "admin" && authUser?.role !== "driver") {
+      res.status(403).json({ error: "Admin or driver access required" });
       return;
     }
 

@@ -120,6 +120,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   isRegularUser = false;
   isAdminOrDriver = false;
   isAdmin = false;
+  isDriver = false;
   adminFinalPrice: number | null = null;
   customerDiscountPercentage: number | null = null;
   storedFinalPrice: number | null | undefined = undefined;
@@ -537,11 +538,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       } else {
         prefilledAmount = finalPrice;
       }
+      // Drivers collect exactly the pre-filled amount — only the payment method is theirs to
+      // choose. Admins keep full control and can adjust the amount as today.
+      const amountDisabledAttr = this.isDriver ? 'disabled' : '';
+      const amountDisabledStyle = this.isDriver ? 'background:#f3f4f6; color:#6b7280; cursor:not-allowed;' : '';
       const fieldsHtml = `
         ${infoHtml}
         <div style="margin-bottom:12px;">
           <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Amount (€)${effectiveMandatory ? ' <span style="color:#dc3545;">*</span>' : ''}</label>
-          <input id="swal-checkin-amount" type="number" step="0.01" min="0" class="swal2-input" value="${prefilledAmount.toFixed(2)}" style="margin:0; width:100%; box-sizing:border-box;">
+          <input id="swal-checkin-amount" type="number" step="0.01" min="0" class="swal2-input" value="${prefilledAmount.toFixed(2)}" style="margin:0; width:100%; box-sizing:border-box; ${amountDisabledStyle}" ${amountDisabledAttr}>
         </div>
         <div>
           <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Payment Method</label>
@@ -983,8 +988,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
     this.updatingStatus = false;
 
+    // Drivers can't waive the extra fee, so they skip the confirmation and go straight to
+    // the next step with it applied. Only admins choose.
     let applyExtraFee = false;
-    if (isLate && extraFee > 0) {
+    if (isLate && extraFee > 0 && this.isDriver) {
+      applyExtraFee = true;
+    } else if (isLate && extraFee > 0) {
       const lateResult = await Swal.fire({
         title: 'Late Check-out Detected',
         html: `The actual check-out is later than scheduled.<br>Estimated extra fee: <strong>€${extraFee.toFixed(2)}</strong><br>Do you want to apply it?`,
@@ -1054,13 +1063,16 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       const priorHtml = priorNote
         ? `<p style="margin-bottom:12px; color:#374151; font-size:14px;">${priorNote}.</p>`
         : '';
+      // Drivers collect exactly the pre-filled amount — only the payment method is theirs to choose.
+      const amountDisabledAttr = this.isDriver ? 'disabled' : '';
+      const amountDisabledStyle = this.isDriver ? 'background:#f3f4f6; color:#6b7280; cursor:not-allowed;' : '';
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
         html: `
           ${priorHtml}
           <div class="mb-3">
             <label class="form-label fw-semibold">Amount (€)</label>
-            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${remainingBalance.toFixed(2)}" style="width:100%;margin:0">
+            <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${remainingBalance.toFixed(2)}" style="width:100%;margin:0; ${amountDisabledStyle}" ${amountDisabledAttr}>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Payment Method</label>
@@ -1262,6 +1274,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.isRegularUser = roleInfo.isUser;
         this.isAdminOrDriver = roleInfo.isAdmin || roleInfo.isDriver;
         this.isAdmin = roleInfo.isAdmin;
+        this.isDriver = roleInfo.isDriver;
         this.applyAvailableAfterRestriction();
         if (this.isAdmin) {
           if (this.isEditMode && this.existingBooking?.finalPrice !== null && this.existingBooking?.finalPrice !== undefined) {
