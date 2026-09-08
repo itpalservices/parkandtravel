@@ -11,6 +11,7 @@ import {
   createBooking as createBookingService,
   updateBooking as updateBookingService,
   updateBookingStatus as updateBookingStatusService,
+  updateBookingNote as updateBookingNoteService,
   stageBookingUpdate as stageBookingUpdateService,
   estimateExtraFee as estimateExtraFeeService,
   completeBooking as completeBookingService,
@@ -651,6 +652,40 @@ export async function updateParkedBooking(
     });
   } catch (error) {
     console.error("Error updating parked booking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function updateBookingNote(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") {
+      res.status(403).json({ error: "Admin or driver role required" });
+      return;
+    }
+
+    const { id } = req.params;
+    if (!isValidUUID(id)) {
+      res.status(400).json({ error: "Invalid booking ID format" });
+      return;
+    }
+
+    const { parkingComments } = req.body;
+    if (parkingComments !== null && parkingComments !== undefined && typeof parkingComments !== "string") {
+      res.status(400).json({ error: "parkingComments must be a string or null" });
+      return;
+    }
+
+    const trimmed = typeof parkingComments === "string" ? parkingComments.trim() : null;
+    const result = await updateBookingNoteService(id, trimmed ? trimmed : null);
+    if (!result) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error updating booking note:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

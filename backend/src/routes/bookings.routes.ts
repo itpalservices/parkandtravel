@@ -8,6 +8,7 @@ import {
   createBooking,
   updateBooking,
   updateBookingStatus,
+  updateBookingNote,
   updateParkedBooking,
   checkParkPlaceAvailability,
   stageBookingUpdate,
@@ -42,6 +43,7 @@ router.get("/:id", checkJwt, getBooking);
 router.put("/:id", checkJwt, updateBooking);
 router.patch("/:id/status", checkJwt, updateBookingStatus);
 router.patch("/:id/parked", checkJwt, updateParkedBooking);
+router.patch("/:id/notes", checkJwt, updateBookingNote);
 router.put("/:id/delete", checkJwt, deleteBooking);
 router.post("/:id/stage-update", checkJwt, stageBookingUpdate);
 router.get("/:id/extra-fee-estimate", checkJwt, getExtraFeeEstimate);

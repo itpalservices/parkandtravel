@@ -1601,6 +1601,29 @@ export async function updateBookingStatus(
   };
 }
 
+/**
+ * Updates only the free-text booking note (parkingComments), independent of status.
+ * Deliberately separate from updateBookingStatus, which has status-transition side effects
+ * (re-stamping actualCheckIn/actualCheckOut, recalculating extraFee, etc.) that would corrupt
+ * real timestamps if reused just to edit a note on an already-parked or completed booking.
+ */
+export async function updateBookingNote(
+  id: string,
+  note: string | null,
+): Promise<{ id: string; parkingComments: string | null } | null> {
+  if (!isValidUUID(id)) return null;
+
+  const existingBooking = await prisma.booking.findUnique({ where: { id } });
+  if (!existingBooking) return null;
+
+  const updated = await prisma.booking.update({
+    where: { id },
+    data: { parkingComments: note },
+  });
+
+  return { id: updated.id, parkingComments: updated.parkingComments };
+}
+
 interface UpdateParkedBookingParams {
   parkPlace?: string;
   washService?: boolean;

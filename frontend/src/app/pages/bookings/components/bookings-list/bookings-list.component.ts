@@ -227,6 +227,48 @@ export class BookingsListComponent {
     });
   }
 
+  openEditNoteModal(booking: Booking): void {
+    Swal.fire({
+      title: 'Edit Note',
+      input: 'textarea',
+      inputValue: booking.parkingComments ?? '',
+      inputPlaceholder: 'Add a note about this booking...',
+      inputAttributes: { 'aria-label': 'Booking note' },
+      showCancelButton: true,
+      confirmButtonText: 'Save',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: PRIMARY_COLOR,
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      const note = (result.value ?? '').trim() || null;
+      this.apiService.patch<any>(`/bookings/${booking.id}/notes`, { parkingComments: note }).subscribe({
+        next: () => {
+          booking.parkingComments = note;
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Note saved',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        },
+        error: () => {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'Failed to save note',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        },
+      });
+    });
+  }
+
   openCarouselForBooking(bookingId: string, event: MouseEvent): void {
     event.stopPropagation();
     this.bookingsService.getBookingImages(bookingId).subscribe({
