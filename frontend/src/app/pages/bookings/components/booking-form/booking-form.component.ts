@@ -39,6 +39,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
 import { ZebraPrintService } from '../../../../core/services/zebra-print.service';
 import { PRIMARY_COLOR } from '../../../../shared/constants/theme.constants';
 import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
+import { compressImageFile } from '../../../../shared/utils/image-compression.util';
 
 interface UserSearchResponse {
   success: boolean;
@@ -466,6 +467,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private async showParkPlaceAndImagesModal(newStatusId: string, newStatusLabel: string): Promise<void> {
     const modalSelectedFiles: File[] = [];
+    const modalFileSignatures = new Set<string>();
     const currentPlateNo = this.bookingForm?.get('licensePlate')?.value || '';
     const currentCarModel = this.bookingForm?.get('vehicleModel')?.value || '';
     const currentAdults = this.bookingForm?.get('adults')?.value || (this.existingBooking as any)?.adults || 1;
@@ -699,12 +701,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           uploadArea.style.borderColor = '#d1d5db';
           uploadArea.style.background = '#f9fafb';
           if (e.dataTransfer?.files) {
-            this.handleImageFiles(Array.from(e.dataTransfer.files), modalSelectedFiles, previewContainer);
+            this.handleImageFiles(Array.from(e.dataTransfer.files), modalSelectedFiles, modalFileSignatures, previewContainer);
           }
         });
         fileInput.addEventListener('change', () => {
           if (fileInput.files) {
-            this.handleImageFiles(Array.from(fileInput.files), modalSelectedFiles, previewContainer);
+            this.handleImageFiles(Array.from(fileInput.files), modalSelectedFiles, modalFileSignatures, previewContainer);
             fileInput.value = '';
           }
         });
@@ -927,28 +929,61 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.parkPlace = formatted;
   }
 
+  /** Absolute sanity ceiling before we even attempt to process a file — well above any real
+   *  camera photo, just guarding against something pathological. Actual sizing down to the
+   *  backend-friendly target happens in compressImageFile. */
+  private static readonly MAX_RAW_IMAGE_SIZE = 25 * 1024 * 1024;
+
+  private warnImageSkipped(message: string): void {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'warning',
+      title: message,
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+    });
+  }
+
   private handleImageFiles(
     newFiles: File[],
     selectedFiles: File[],
+    fileSignatures: Set<string>,
     previewContainer: HTMLElement,
   ): void {
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const maxSize = 10 * 1024 * 1024;
-
     newFiles.forEach((file) => {
-      if (!validTypes.includes(file.type)) return;
-      if (file.size > maxSize) return;
-      if (selectedFiles.some((f) => f.name === file.name && f.size === file.size)) return;
-      selectedFiles.push(file);
+      const signature = `${file.name}_${file.size}_${file.lastModified}`;
+      if (fileSignatures.has(signature)) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      if (file.size > BookingFormComponent.MAX_RAW_IMAGE_SIZE) {
+        this.warnImageSkipped(`${file.name} is too large and was skipped`);
+        return;
+      }
+      // Some devices report camera captures with no MIME type at all — let compression
+      // attempt to decode it rather than rejecting on the MIME string alone.
+      if (file.type && !file.type.startsWith('image/')) {
+        this.warnImageSkipped(`${file.name} isn't a supported image and was skipped`);
+        return;
+      }
+
+      fileSignatures.add(signature);
+
+      compressImageFile(file).then((compressed) => {
+        if (!compressed) {
+          this.warnImageSkipped(`Could not process ${file.name} — unsupported photo format`);
+          return;
+        }
+
+        selectedFiles.push(compressed);
+
+        const previewUrl = URL.createObjectURL(compressed);
         const wrapper = document.createElement('div');
         wrapper.style.cssText =
           'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;';
 
         const img = document.createElement('img');
-        img.src = e.target?.result as string;
+        img.src = previewUrl;
         img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
 
         const removeBtn = document.createElement('button');
@@ -958,16 +993,17 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           'position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;';
         removeBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          const idx = selectedFiles.indexOf(file);
+          const idx = selectedFiles.indexOf(compressed);
           if (idx > -1) selectedFiles.splice(idx, 1);
+          fileSignatures.delete(signature);
+          URL.revokeObjectURL(previewUrl);
           wrapper.remove();
         });
 
         wrapper.appendChild(img);
         wrapper.appendChild(removeBtn);
         previewContainer.appendChild(wrapper);
-      };
-      reader.readAsDataURL(file);
+      });
     });
   }
 
