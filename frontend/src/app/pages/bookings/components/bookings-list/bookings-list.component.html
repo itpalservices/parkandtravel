@@ -445,6 +445,20 @@
               <td [ngbTooltip]="(isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed' ? 'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2') : ''" placement="top" container="body">
                 @if (!booking.dateTo) {
                   <span class="text-muted fst-italic">TBC</span>
+                } @else if (hasManualDiscount(booking)) {
+                  <span class="text-decoration-line-through text-muted me-1">{{
+                    originalCalculatedPrice(booking) | currency: 'EUR' : 'symbol' : '1.2-2'
+                  }}</span>
+                  <span class="fw-bold">{{
+                    (booking.finalPrice ?? 0) + (booking.extraFee ?? 0)
+                      | currency: 'EUR' : 'symbol' : '1.2-2'
+                  }}</span>
+                  <div class="price-breakdown-note">
+                    @if (booking.extraFee) {
+                      <span class="text-danger">+{{ booking.extraFee | currency: 'EUR' : 'symbol' : '1.2-2' }} extra fee</span>
+                    }
+                    <span class="text-success">-{{ booking.deductedAmount | currency: 'EUR' : 'symbol' : '1.2-2' }} discount</span>
+                  </div>
                 } @else if (booking.extraFee) {
                   <span class="text-decoration-line-through text-muted me-1">{{
                     booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2'
@@ -667,6 +681,22 @@
             <div class="mobile-price" [ngbTooltip]="(isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed' ? 'Paid: ' + (booking.paidAmount | currency: 'EUR' : 'symbol' : '1.2-2') : ''" placement="top" container="body">
               @if (!booking.dateTo) {
                 <span class="text-muted fst-italic">TBC</span>
+              } @else if (hasManualDiscount(booking)) {
+                <span
+                  class="text-decoration-line-through text-muted me-1"
+                  style="font-size: 0.85rem"
+                  >{{ originalCalculatedPrice(booking) | currency: 'EUR' : 'symbol' : '1.2-2' }}</span
+                >
+                <span class="fw-bold">{{
+                  (booking.finalPrice ?? 0) + (booking.extraFee ?? 0)
+                    | currency: 'EUR' : 'symbol' : '1.2-2'
+                }}</span>
+                <div class="price-breakdown-note">
+                  @if (booking.extraFee) {
+                    <span class="text-danger">+{{ booking.extraFee | currency: 'EUR' : 'symbol' : '1.2-2' }} extra fee</span>
+                  }
+                  <span class="text-success">-{{ booking.deductedAmount | currency: 'EUR' : 'symbol' : '1.2-2' }} discount</span>
+                </div>
               } @else if (booking.extraFee) {
                 <span
                   class="text-decoration-line-through text-muted me-1"

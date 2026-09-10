@@ -45,6 +45,8 @@ model Booking {
   adults       Int?
   washService  Boolean      @default(false)
   finalPrice   Decimal?     @db.Decimal(10, 2)
+  deductedAmount Decimal?   @db.Decimal(10, 2)
+  discountPercentage Decimal? @db.Decimal(5, 2)
   dropOffOption String?     @db.VarChar(20)
   pickUpOption  String?     @db.VarChar(20)
   bookingStatusId String?   @default("bookingStatus_created") @db.VarChar(50)

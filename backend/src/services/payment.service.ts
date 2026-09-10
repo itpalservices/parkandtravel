@@ -428,6 +428,7 @@ async function createBookingFromAuthPending(
       parkingTypeId: formData.parkingTypeId,
       washService: formData.washService || false,
       finalPrice,
+      discountPercentage: formData.discountPercentage ?? null,
       dropOffOption: formData.dropOffOption || null,
       pickUpOption: derivePickUpOption(formData.dropOffOption),
       deleteflag: 0,
@@ -701,6 +702,7 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
   updateData.pickUpOption = derivePickUpOption(resolvedDropOffOption);
   if (formData.washService !== undefined) updateData.washService = formData.washService;
   if (formData.parkingTypeId !== undefined) updateData.parkingTypeId = formData.parkingTypeId;
+  if (formData.discountPercentage !== undefined) updateData.discountPercentage = formData.discountPercentage;
   if (formData.checkInDate !== undefined) updateData.dateFrom = new Date(formData.checkInDate + 'T12:00:00Z');
   if (formData.checkInTime !== undefined) updateData.timeFrom = parseTimeToDate(formData.checkInTime);
   if (formData.checkOutDate !== undefined) updateData.dateTo = formData.checkOutDate ? new Date(formData.checkOutDate + 'T12:00:00Z') : null;
@@ -817,6 +819,70 @@ async function handlePendingUpdatePaymentSuccess(merchantReference: string, wlTr
   }
 }
 
+/**
+ * Builds and stores the receipt (+ PDF) for a full payment against an *already-existing*
+ * booking — the "pay for an existing booking" flow (merchantReference starting with
+ * "booking_"), reached whenever a customer isn't required to pay upfront (e.g. exempt from
+ * mandatory pre-payment) and pays afterward instead. Unlike the auth-pending flow, this path
+ * previously never created a receipt at all, so "Download Pre-paid Receipt" had nothing to
+ * find and the confirmation email went out with no attachment.
+ *
+ * Returns the rendered PDF buffer so the confirmation email can attach it; returns undefined
+ * (logging the error) if receipt/PDF generation fails — the payment itself is already recorded
+ * by the caller either way, so a receipt hiccup must never block the confirmation email.
+ */
+async function createReceiptForBookingPayment(
+  booking: {
+    id: string;
+    name: string;
+    surname: string;
+    dateFrom: Date;
+    dateTo: Date | null;
+    parkingTypeId: string | null;
+    washService: boolean;
+    dropOffOption: string | null;
+    discountPercentage: unknown;
+  },
+  transactionId: number,
+): Promise<Buffer | undefined> {
+  try {
+    const priceSettings = await getPriceSettings();
+    const lines = buildLinesForNewBooking(
+      {
+        dateFrom: booking.dateFrom,
+        dateTo: booking.dateTo,
+        parkingTypeId: booking.parkingTypeId,
+        washService: booking.washService,
+        dropOffOption: booking.dropOffOption,
+      },
+      priceSettings,
+    );
+
+    const discountPercentage = booking.discountPercentage !== null && booking.discountPercentage !== undefined
+      ? Number(booking.discountPercentage)
+      : null;
+
+    const receipt = await createReceipt({ bookingId: booking.id, transactionId, lines, discountPercentage });
+    if (!receipt) return undefined;
+
+    const pdfBuffer = await generateReceiptPdf({
+      receiptNumber: receipt.receiptNumber,
+      receiptDate: receipt.createdAt,
+      bookingId: booking.id,
+      customerName: `${booking.name} ${booking.surname}`.trim(),
+      totalAmount: receipt.totalAmount,
+      discount: receipt.discount,
+      lines: receipt.lines,
+    });
+    const s3Key = await uploadPdfToS3(booking.id, pdfBuffer, receipt.receiptNumber);
+    await prisma.receiptHeader.update({ where: { id: receipt.id }, data: { pdfKey: s3Key } });
+    return pdfBuffer;
+  } catch (err) {
+    console.error(`Failed to create receipt for booking payment ${booking.id}:`, err);
+    return undefined;
+  }
+}
+
 async function sendPaidConfirmationEmailForBooking(bookingId: string, receiptPdfBuffer?: Buffer): Promise<void> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking || !booking.email) return;
@@ -902,7 +968,8 @@ async function handleBookingPaymentSuccess(merchantReference: string, wlTransact
   });
   console.log(`Webhook: wallee_transaction ${wlTransactionId} recorded for booking ${bookingId}`);
 
-  await sendPaidConfirmationEmailForBooking(bookingId);
+  const pdfBuffer = await createReceiptForBookingPayment(booking, wlTransactionId);
+  await sendPaidConfirmationEmailForBooking(bookingId, pdfBuffer);
 }
 
 export async function handleWalleeWebhook(body: any): Promise<void> {
@@ -1089,7 +1156,8 @@ export async function verifyAndFinalizePayment(ref: string): Promise<{
           data: { id: BigInt(wlTxId), amount, bookingId },
         }).catch((err) => console.error('Failed to record wallee_transaction on verify:', err));
 
-        await sendPaidConfirmationEmailForBooking(bookingId);
+        const pdfBuffer = await createReceiptForBookingPayment(booking, Number(wlTxId));
+        await sendPaidConfirmationEmailForBooking(bookingId, pdfBuffer);
       }
       return { status: 'success', bookingId };
     }

@@ -661,22 +661,29 @@
                   @if (displayedFinalPrice() !== null && calculateDays() > 0) {
                     @if (isAdmin) {
                       <div class="admin-price-wrapper">
-                        @if (customerDiscountPercentage && customerDiscountPercentage > 0 && calculateTotalPrice() !== null) {
-                          <span class="price-before-discount">Before discount: {{ calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                        @if (customerDiscountPercentage && customerDiscountPercentage > 0 && beforeDiscountTotal() !== null) {
+                          <span class="price-before-discount">Before discount: {{ beforeDiscountTotal() | currency: 'EUR' : 'symbol' : '1.2-2' }} ({{ customerDiscountPercentage }}% off)</span>
                         }
-                        <input
-                          type="number"
-                          class="admin-price-input"
-                          [(ngModel)]="adminFinalPrice"
-                          [ngModelOptions]="{ standalone: true }"
-                          min="0"
-                          step="0.01"
-                        />
+                        <span class="price-before-discount">Calculated: {{ adminBaseTotal() | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
+                        <div class="admin-deduction-row">
+                          <label for="deductedAmount" class="admin-deduction-label">Manual Discount (€)</label>
+                          <input
+                            id="deductedAmount"
+                            type="number"
+                            class="admin-price-input"
+                            [(ngModel)]="deductedAmount"
+                            [ngModelOptions]="{ standalone: true }"
+                            min="0"
+                            [max]="adminMaxDeduction()"
+                            step="0.01"
+                          />
+                        </div>
+                        <span class="total-amount">{{ adminDisplayedTotal() | currency: 'EUR' : 'symbol' : '1.2-2' }}</span>
                       </div>
                     } @else {
-                      @if (customerDiscountPercentage && customerDiscountPercentage > 0 && calculateTotalPrice() !== null) {
+                      @if (customerDiscountPercentage && customerDiscountPercentage > 0 && beforeDiscountTotal() !== null) {
                         <span class="total-amount">
-                          {{ calculateTotalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }} &rarr; {{ displayedFinalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }} ({{ customerDiscountPercentage }}% off)
+                          {{ beforeDiscountTotal() | currency: 'EUR' : 'symbol' : '1.2-2' }} &rarr; {{ displayedFinalPrice() | currency: 'EUR' : 'symbol' : '1.2-2' }} ({{ customerDiscountPercentage }}% off)
                         </span>
                       } @else {
                         <span class="total-amount">{{

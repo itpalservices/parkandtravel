@@ -22,6 +22,8 @@ export interface Booking {
   parkingType?: string;
   washService: boolean;
   finalPrice: number | null;
+  deductedAmount: number | null;
+  discountPercentage: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
   bookingStatusId: string | null;
@@ -122,6 +124,8 @@ export interface BookingDetails {
   parkingTypeId: string | null;
   washService: boolean;
   finalPrice: number | null;
+  deductedAmount: number | null;
+  discountPercentage: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
   userId: string | null;

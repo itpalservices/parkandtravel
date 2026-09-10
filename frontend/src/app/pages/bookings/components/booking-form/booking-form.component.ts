@@ -122,9 +122,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   isAdminOrDriver = false;
   isAdmin = false;
   isDriver = false;
-  adminFinalPrice: number | null = null;
+  /** Admin-only: manually deducted from the (already-discounted) calculated total. Default 0. */
+  deductedAmount = 0;
   customerDiscountPercentage: number | null = null;
   storedFinalPrice: number | null | undefined = undefined;
+  storedPreDeductionPrice: number | null | undefined = undefined;
   userProfile: UserProfile | null = null;
   cars: Car[] = [];
   selectedCar: Car | null = null;
@@ -301,6 +303,14 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   private populateFormWithBookingData(booking: BookingDetails): void {
     this.storedFinalPrice = booking.finalPrice;
+    this.storedPreDeductionPrice = booking.finalPrice !== null
+      ? booking.finalPrice + (booking.deductedAmount ?? 0)
+      : null;
+    // Seed from what was actually stored for this booking, not a fresh live lookup — keeps
+    // "Before discount" consistent with the frozen storedPreDeductionPrice/storedFinalPrice
+    // above even if the customer's live discount setting has since changed. loadUserDiscountById
+    // (called later once the user's role is known) may still refresh this to the live value.
+    this.customerDiscountPercentage = booking.discountPercentage ?? null;
     const fullName = `${booking.name} ${booking.surname}`.trim();
 
     const checkInDate = this.parseApiDate(booking.dateFrom);
@@ -398,7 +408,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   toggleReturnDetails(): void {
     this.returnDetailsEnabled = !this.returnDetailsEnabled;
     this.applyReturnDetailsValidators();
-    this.refreshAdminPrice();
   }
 
   private applyReturnDetailsValidators(): void {
@@ -422,6 +431,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const allFormFields = Object.keys(this.bookingForm.controls);
 
     this.storedFinalPrice = null;
+    this.storedPreDeductionPrice = null;
     allFormFields.forEach((field) => {
       if (!fieldsAlwaysDisabled.includes(field)) {
         this.bookingForm.get(field)?.enable({ emitEvent: false });
@@ -1312,12 +1322,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         this.isAdmin = roleInfo.isAdmin;
         this.isDriver = roleInfo.isDriver;
         this.applyAvailableAfterRestriction();
-        if (this.isAdmin) {
-          if (this.isEditMode && this.existingBooking?.finalPrice !== null && this.existingBooking?.finalPrice !== undefined) {
-            this.adminFinalPrice = this.existingBooking.finalPrice;
-          } else {
-            this.refreshAdminPrice();
-          }
+        if (this.isAdmin && this.isEditMode && this.existingBooking) {
+          this.deductedAmount = this.existingBooking.deductedAmount ?? 0;
         }
 
         if (this.isRegularUser) {
@@ -1425,7 +1431,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             this.foundUserId = response.data.userId || null;
             this.customerDiscountPercentage = response.data.discountPercentage ?? null;
             this.applyFoundUserData(response.data, 'email');
-            this.refreshAdminPrice();
           } else {
             this.clearFoundUser();
           }
@@ -1466,7 +1471,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.foundUserId = response.data.userId || null;
           this.customerDiscountPercentage = response.data.discountPercentage ?? null;
           this.applyFoundUserData(response.data, 'phone');
-          this.refreshAdminPrice();
         } else {
           this.clearFoundUser('phone');
         }
@@ -1636,9 +1640,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success) {
             this.customerDiscountPercentage = response.data.discountPercentage;
-            if (this.isAdmin && !this.isEditMode) {
-              this.refreshAdminPrice();
-            }
           }
         },
         error: () => {},
@@ -1745,23 +1746,23 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           this.updateMinCheckInTime();
           this.checkAvailability();
           this.storedFinalPrice = null;
-          this.refreshAdminPrice();
+          this.storedPreDeductionPrice = null;
         }
       });
 
     this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(() => {
       this.storedFinalPrice = null;
-      this.refreshAdminPrice();
+      this.storedPreDeductionPrice = null;
     });
 
     this.bookingForm.get('parkingType')?.valueChanges.subscribe(() => {
       this.storedFinalPrice = null;
-      this.refreshAdminPrice();
+      this.storedPreDeductionPrice = null;
     });
 
     this.bookingForm.get('dropOffOption')?.valueChanges.subscribe(() => {
       this.storedFinalPrice = null;
-      this.refreshAdminPrice();
+      this.storedPreDeductionPrice = null;
     });
   }
 
@@ -1918,7 +1919,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   toggleWashService(): void {
     this.washServiceEnabled = !this.washServiceEnabled;
     this.storedFinalPrice = null;
-    this.refreshAdminPrice();
+    this.storedPreDeductionPrice = null;
   }
 
   getSelectedParkingType(): ParkingType | undefined {
@@ -1983,9 +1984,43 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return this.applyDiscount(this.calculateTotalPrice());
   }
 
-  refreshAdminPrice(): void {
-    if (!this.isAdmin) return;
-    this.adminFinalPrice = this.applyDiscount(this.calculateTotalPrice());
+  /** The calculated (discount-applied) total *before* the admin's manual deduction. For an
+   *  unchanged existing booking this is reconstructed from what was actually stored last time
+   *  (finalPrice + deductedAmount) rather than recalculated live, mirroring displayedFinalPrice's
+   *  own "don't silently reprice an untouched booking" behavior. */
+  adminBaseTotal(): number | null {
+    if (this.isEditMode && this.storedPreDeductionPrice !== null && this.storedPreDeductionPrice !== undefined) {
+      return this.storedPreDeductionPrice;
+    }
+    return this.applyDiscount(this.calculateTotalPrice());
+  }
+
+  /** The calculated total *before* the customer discount is applied. Derived by inverting the
+   *  discount off of adminBaseTotal()/displayedFinalPrice's own base, rather than recalculated
+   *  independently — so it can never drift from the "Calculated"/final figures shown next to it
+   *  (e.g. if pricing settings changed since this booking was made). Falls back to the plain live
+   *  total when nothing is frozen yet (new booking, or a price-affecting field just changed),
+   *  matching what was already shown there before. */
+  beforeDiscountTotal(): number | null {
+    if (!this.isEditMode || this.storedPreDeductionPrice === null || this.storedPreDeductionPrice === undefined) {
+      return this.calculateTotalPrice();
+    }
+    if (!this.customerDiscountPercentage || this.customerDiscountPercentage <= 0) {
+      return this.storedPreDeductionPrice;
+    }
+    return Math.round((this.storedPreDeductionPrice / (1 - this.customerDiscountPercentage / 100)) * 100) / 100;
+  }
+
+  /** Upper bound for the deduction input — can't deduct more than the base total. */
+  adminMaxDeduction(): number {
+    return this.adminBaseTotal() ?? 0;
+  }
+
+  /** The actual amount to charge once the admin's manual deduction is applied — never negative. */
+  adminDisplayedTotal(): number | null {
+    const base = this.adminBaseTotal();
+    if (base === null) return null;
+    return Math.max(0, Math.round((base - this.deductedAmount) * 100) / 100);
   }
 
   loadPhoneCodes(): void {
@@ -2139,8 +2174,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           : null,
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       finalPrice: this.returnDetailsEnabled
-        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.displayedFinalPrice())
+        ? (this.isAdmin ? this.adminDisplayedTotal() : this.displayedFinalPrice())
         : null,
+      deductedAmount: this.isAdmin ? this.deductedAmount : undefined,
+      discountPercentage: this.isAdmin ? this.customerDiscountPercentage : undefined,
     };
 
     if (this.isAdminOrDriver) {
@@ -2415,8 +2452,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       checkOutTime: this.returnDetailsEnabled ? formValue.checkOutTime : null,
       washService: this.washServiceEnabled,
       finalPrice: this.returnDetailsEnabled
-        ? (this.isAdmin && this.adminFinalPrice !== null ? this.adminFinalPrice : this.applyDiscount(this.calculateTotalPrice()))
+        ? (this.isAdmin ? this.adminDisplayedTotal() : this.applyDiscount(this.calculateTotalPrice()))
         : null,
+      deductedAmount: this.isAdmin ? this.deductedAmount : undefined,
+      discountPercentage: this.isAdmin ? this.customerDiscountPercentage : undefined,
     };
 
     this.apiService.patch(`/bookings/${this.bookingId}/parked`, updateData).subscribe({

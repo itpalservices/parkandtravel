@@ -673,6 +673,19 @@ input[type="time"].form-control {
   font-weight: 400;
 }
 
+.admin-deduction-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-deduction-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .admin-price-input {
   width: 110px;
   text-align: right;

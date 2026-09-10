@@ -318,6 +318,8 @@ export async function createBooking(
       dropOffOption,
       userId: requestUserId,
       finalPrice: requestFinalPrice,
+      deductedAmount: requestDeductedAmount,
+      discountPercentage: requestDiscountPercentage,
     } = req.body;
 
     if (
@@ -363,6 +365,8 @@ export async function createBooking(
       try {
         discountPercentage = await getUserDiscount(userId);
       } catch (e) {}
+    } else if (isAdmin && requestDiscountPercentage !== undefined && requestDiscountPercentage !== null) {
+      discountPercentage = Number(requestDiscountPercentage);
     }
 
     const result = await createBookingService({
@@ -385,6 +389,9 @@ export async function createBooking(
       userId,
       ...(isAdmin && requestFinalPrice !== undefined && requestFinalPrice !== null
         ? { finalPrice: Number(requestFinalPrice) }
+        : {}),
+      ...(isAdmin && requestDeductedAmount !== undefined && requestDeductedAmount !== null
+        ? { deductedAmount: Number(requestDeductedAmount) }
         : {}),
       discountPercentage: discountPercentage ?? undefined,
     });
@@ -454,6 +461,8 @@ export async function updateBooking(
       dropOffOption,
       userId: requestUserId,
       finalPrice,
+      deductedAmount,
+      discountPercentage,
     } = req.body;
 
     if (checkInDate && !isValidDateFormat(checkInDate)) {
@@ -507,6 +516,12 @@ export async function updateBooking(
       dropOffOption,
       userId,
       finalPrice,
+      deductedAmount: isAdmin && deductedAmount !== undefined && deductedAmount !== null
+        ? Number(deductedAmount)
+        : undefined,
+      discountPercentage: isAdmin && discountPercentage !== undefined && discountPercentage !== null
+        ? Number(discountPercentage)
+        : undefined,
       isRegularUser,
     });
 
@@ -625,7 +640,7 @@ export async function updateParkedBooking(
     const authUser = req.authUser as AuthUser | undefined;
 
     const { id } = req.params;
-    const { parkPlace, washService, flightNumber, checkOutDate, checkOutTime, finalPrice } = req.body;
+    const { parkPlace, washService, flightNumber, checkOutDate, checkOutTime, finalPrice, deductedAmount, discountPercentage } = req.body;
 
     if (!isValidUUID(id)) {
       res.status(400).json({ error: "Invalid booking ID format" });
@@ -644,7 +659,7 @@ export async function updateParkedBooking(
     }
 
     const { updateParkedBooking: updateParkedBookingService } = await import("../services/bookings.service");
-    const result = await updateParkedBookingService(id, { parkPlace, washService, flightNumber, checkOutDate, checkOutTime, finalPrice });
+    const result = await updateParkedBookingService(id, { parkPlace, washService, flightNumber, checkOutDate, checkOutTime, finalPrice, deductedAmount, discountPercentage });
 
     res.json({
       success: true,

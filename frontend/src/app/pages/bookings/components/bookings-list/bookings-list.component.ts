@@ -216,6 +216,18 @@ export class BookingsListComponent {
     return booking.bookingStatusId === 'bookingStatus_parked' || booking.bookingStatusId === 'bookingStatus_completed';
   }
 
+  /** Admin-only: whether this booking's price was manually reduced by an admin — everyone
+   *  else always sees the plain finalPrice, exactly as before this existed. */
+  hasManualDiscount(booking: Booking): boolean {
+    return this.isAdmin && !!booking.deductedAmount && booking.deductedAmount > 0;
+  }
+
+  /** The calculated total before the admin's manual deduction was applied (finalPrice already
+   *  has the deduction baked in, so this adds it back for the "before" figure). */
+  originalCalculatedPrice(booking: Booking): number {
+    return (booking.finalPrice ?? 0) + (booking.deductedAmount ?? 0);
+  }
+
   showParkingNote(booking: Booking, event: MouseEvent): void {
     event.stopPropagation();
     Swal.fire({

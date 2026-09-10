@@ -62,6 +62,8 @@ interface BookingResponse {
   adults: number | null;
   washService: boolean;
   finalPrice: number | null;
+  deductedAmount: number | null;
+  discountPercentage: number | null;
   dropOffOption: string | null;
   pickUpOption: string | null;
   userId: string | null;
@@ -262,6 +264,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       b.adults,
       b."washService",
       b."finalPrice",
+      b."deductedAmount",
+      b."discountPercentage",
       b."dropOffOption",
       b."pickUpOption",
       b.deleteflag,
@@ -320,6 +324,8 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    deductedAmount: b.deductedAmount !== null ? parseFloat(b.deductedAmount) : null,
+    discountPercentage: b.discountPercentage !== null ? parseFloat(b.discountPercentage) : null,
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
     userId: b.userId || null,
@@ -382,6 +388,8 @@ export async function getOverstayedBookings(): Promise<{ data: BookingResponse[]
       b.adults,
       b."washService",
       b."finalPrice",
+      b."deductedAmount",
+      b."discountPercentage",
       b."dropOffOption",
       b."pickUpOption",
       b.deleteflag,
@@ -435,6 +443,8 @@ export async function getOverstayedBookings(): Promise<{ data: BookingResponse[]
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    deductedAmount: b.deductedAmount !== null ? parseFloat(b.deductedAmount) : null,
+    discountPercentage: b.discountPercentage !== null ? parseFloat(b.discountPercentage) : null,
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
     userId: b.userId || null,
@@ -494,6 +504,8 @@ export async function getBookingById(
       b.adults,
       b."washService",
       b."finalPrice",
+      b."deductedAmount",
+      b."discountPercentage",
       b."dropOffOption",
       b."pickUpOption",
       b."userId",
@@ -546,6 +558,8 @@ export async function getBookingById(
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    deductedAmount: b.deductedAmount !== null ? parseFloat(b.deductedAmount) : null,
+    discountPercentage: b.discountPercentage !== null ? parseFloat(b.discountPercentage) : null,
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
     userId: b.userId || null,
@@ -622,6 +636,9 @@ interface CreateGuestBookingParams {
 export interface CreateBookingParams extends CreateGuestBookingParams {
   userId?: string | null;
   finalPrice?: number | null;
+  /** Admin-only manual discount, already baked into finalPrice by the caller — stored
+   *  alongside it purely so the admin-only price display can show what was deducted. */
+  deductedAmount?: number | null;
   discountPercentage?: number | null;
 }
 
@@ -929,6 +946,8 @@ export async function createBooking(
       parkingTypeId: params.parkingTypeId,
       washService: params.washService || false,
       finalPrice: finalPrice,
+      deductedAmount: params.deductedAmount ?? null,
+      discountPercentage: params.discountPercentage ?? null,
       dropOffOption: params.dropOffOption || null,
       pickUpOption,
       deleteflag: 0,
@@ -997,6 +1016,8 @@ export interface UpdateBookingParams {
   dropOffOption?: string | null;
   userId?: string | null;
   finalPrice?: number | null;
+  deductedAmount?: number | null;
+  discountPercentage?: number | null;
   isRegularUser?: boolean;
 }
 
@@ -1051,6 +1072,8 @@ export async function updateBooking(
   if (params.userId !== undefined) updateData.userId = params.userId;
   if (params.washService !== undefined) updateData.washService = params.washService;
   if (params.parkingTypeId !== undefined) updateData.parkingTypeId = params.parkingTypeId;
+  if (params.deductedAmount !== undefined) updateData.deductedAmount = params.deductedAmount;
+  if (params.discountPercentage !== undefined) updateData.discountPercentage = params.discountPercentage;
 
   if (params.checkInDate !== undefined) {
     updateData.dateFrom = new Date(params.checkInDate + "T12:00:00Z");
@@ -1394,6 +1417,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       b.adults,
       b."washService",
       b."finalPrice",
+      b."deductedAmount",
+      b."discountPercentage",
       b."dropOffOption",
       b."pickUpOption",
       b."userId",
@@ -1442,6 +1467,8 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     adults: b.adults,
     washService: b.washService ?? false,
     finalPrice: b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+    deductedAmount: b.deductedAmount !== null ? parseFloat(b.deductedAmount) : null,
+    discountPercentage: b.discountPercentage !== null ? parseFloat(b.discountPercentage) : null,
     dropOffOption: b.dropOffOption || null,
     pickUpOption: b.pickUpOption || null,
     userId: b.userId || null,
@@ -1631,6 +1658,8 @@ interface UpdateParkedBookingParams {
   checkOutDate?: string | null;
   checkOutTime?: string | null;
   finalPrice?: number | null;
+  deductedAmount?: number | null;
+  discountPercentage?: number | null;
 }
 
 export async function updateParkedBooking(
@@ -1669,6 +1698,14 @@ export async function updateParkedBooking(
 
   if (params.checkOutTime !== undefined) {
     updateData.timeTo = params.checkOutTime ? parseTimeToDate(params.checkOutTime) : null;
+  }
+
+  if (params.deductedAmount !== undefined) {
+    updateData.deductedAmount = params.deductedAmount;
+  }
+
+  if (params.discountPercentage !== undefined) {
+    updateData.discountPercentage = params.discountPercentage;
   }
 
   const checkInDate = existingBooking.dateFrom;
