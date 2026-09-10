@@ -278,8 +278,12 @@ function generateReceiptHtml(data: ReceiptPdfData, company: CompanySettings): st
 function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettings): string {
   const taxRate = company.tax ?? 0;
   const subtotal = data.totalAmount;
-  const net = parseFloat((subtotal / (1 + taxRate / 100)).toFixed(2));
-  const vatAmount = parseFloat((subtotal - net).toFixed(2));
+  const discountAmount = data.discount && data.discount > 0
+    ? parseFloat((subtotal * data.discount / 100).toFixed(2))
+    : 0;
+  const grossAfterDiscount = parseFloat((subtotal - discountAmount).toFixed(2));
+  const net = parseFloat((grossAfterDiscount / (1 + taxRate / 100)).toFixed(2));
+  const vatAmount = parseFloat((grossAfterDiscount - net).toFixed(2));
 
   const date = new Date(data.receiptDate);
   const dateStr = date.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
@@ -369,6 +373,16 @@ function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettin
   <hr class="divider-solid">
 
   <div class="totals">
+    ${data.discount && data.discount > 0 ? `
+    <div class="totals-row small">
+      <span>Subtotal</span>
+      <span>€${subtotal.toFixed(2)}</span>
+    </div>
+    <div class="totals-row small">
+      <span>Discount (${data.discount}%)</span>
+      <span>-€${discountAmount.toFixed(2)}</span>
+    </div>
+    ` : ''}
     <div class="totals-row small">
       <span>Net (excl. VAT ${taxRate}%)</span>
       <span>€${net.toFixed(2)}</span>
@@ -379,7 +393,7 @@ function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettin
     </div>
     <div class="totals-row grand">
       <span>TOTAL PAID</span>
-      <span>€${subtotal.toFixed(2)}</span>
+      <span>€${grossAfterDiscount.toFixed(2)}</span>
     </div>
   </div>
 
@@ -846,7 +860,11 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   const company = await getCompanySettings();
 
   const taxRate = company.tax ?? 0;
-  const total = data.totalAmount;
+  const subtotal = data.totalAmount;
+  const discountAmount = data.discount && data.discount > 0
+    ? parseFloat((subtotal * data.discount / 100).toFixed(2))
+    : 0;
+  const total = parseFloat((subtotal - discountAmount).toFixed(2));
   const net = parseFloat((total / (1 + taxRate / 100)).toFixed(2));
   const vatAmount = parseFloat((total - net).toFixed(2));
 
@@ -901,6 +919,11 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   y += 4; solid(); y += 10;
 
   // Totals (match HTML exactly)
+  if (data.discount && data.discount > 0) {
+    left('Subtotal', 23); right(`€${subtotal.toFixed(2)}`, 23); y += 29;
+    left(`Discount (${data.discount}%)`, 23); right(`-€${discountAmount.toFixed(2)}`, 23); y += 29;
+    thin(); y += 8;
+  }
   left(`Net (excl. VAT ${taxRate}%)`, 23); right(`€${net.toFixed(2)}`, 23); y += 29;
   left(`VAT (${taxRate}%)`, 23); right(`€${vatAmount.toFixed(2)}`, 23); y += 29;
   solid(); y += 10;
