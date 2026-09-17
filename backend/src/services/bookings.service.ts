@@ -42,6 +42,7 @@ const OVERSTAYED_OR_UNKNOWN_CONDITION =
 
 interface BookingResponse {
   id: string;
+  bookingReference: string | null;
   name: string;
   surname: string;
   email: string | null;
@@ -242,8 +243,9 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   const offset = (page - 1) * limit;
   const dataQuery = `
-    SELECT 
+    SELECT
       b.id,
+      b.booking_reference as "bookingReference",
       b.name,
       b.surname,
       b.email,
@@ -304,6 +306,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   const data: BookingResponse[] = bookings.map((b: any) => ({
     id: b.id,
+    bookingReference: b.bookingReference || null,
     name: b.name,
     surname: b.surname,
     email: b.email,
@@ -368,6 +371,7 @@ export async function getOverstayedBookings(): Promise<{ data: BookingResponse[]
   const dataQuery = `
     SELECT
       b.id,
+      b.booking_reference as "bookingReference",
       b.name,
       b.surname,
       b.email,
@@ -423,6 +427,7 @@ export async function getOverstayedBookings(): Promise<{ data: BookingResponse[]
 
   const data: BookingResponse[] = bookings.map((b: any) => ({
     id: b.id,
+    bookingReference: b.bookingReference || null,
     name: b.name,
     surname: b.surname,
     email: b.email,
@@ -483,8 +488,9 @@ export async function getBookingById(
   if (!isValidUUID(id)) return null;
 
   const bookings = await prisma.$queryRawUnsafe<any[]>(`
-    SELECT 
+    SELECT
       b.id,
+      b.booking_reference as "bookingReference",
       b.name,
       b.surname,
       b.email,
@@ -539,6 +545,7 @@ export async function getBookingById(
 
   return {
     id: b.id,
+    bookingReference: b.bookingReference || null,
     name: b.name,
     surname: b.surname,
     email: b.email,
@@ -738,6 +745,15 @@ function hasAirportDelivery(dropOffOption?: string | null): boolean {
   return dropOffOption === 'airport_pickup';
 }
 
+/** PT-YYMMDD-00000 — YYMMDD is the check-in date, the sequence never resets and never changes
+ *  for a given booking (only the date portion is regenerated if check-in date is edited later). */
+function formatBookingReference(seq: number, checkInDate: Date): string {
+  const yy = String(checkInDate.getUTCFullYear()).slice(-2);
+  const mm = String(checkInDate.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(checkInDate.getUTCDate()).padStart(2, '0');
+  return `PT-${yy}${mm}${dd}-${String(seq).padStart(5, '0')}`;
+}
+
 /**
  * The pick-up method always mirrors how the car was dropped off — there is no
  * independent choice for it (self_drive => self_pickup, airport_pickup => airport_delivery).
@@ -824,6 +840,11 @@ export async function createGuestBooking(
       pickUpOption,
       deleteflag: 0,
     },
+  });
+
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { bookingReference: formatBookingReference(booking.bookingSeq, booking.dateFrom) },
   });
 
   const parkingType = await prisma.parkingType.findUnique({
@@ -954,6 +975,11 @@ export async function createBooking(
     },
   });
 
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { bookingReference: formatBookingReference(booking.bookingSeq, booking.dateFrom) },
+  });
+
   const parkingType = await prisma.parkingType.findUnique({
     where: { id: params.parkingTypeId },
     select: { name: true },
@@ -1077,6 +1103,7 @@ export async function updateBooking(
 
   if (params.checkInDate !== undefined) {
     updateData.dateFrom = new Date(params.checkInDate + "T12:00:00Z");
+    updateData.bookingReference = formatBookingReference(existingBooking.bookingSeq, updateData.dateFrom as Date);
   }
   if (params.checkInTime !== undefined) {
     updateData.timeFrom = parseTimeToDate(params.checkInTime);
@@ -1396,8 +1423,9 @@ export async function getPhoneCodes(): Promise<
 
 export async function getBookingsByUserId(userId: string): Promise<BookingResponse[]> {
   const bookings = await prisma.$queryRawUnsafe<any[]>(`
-    SELECT 
+    SELECT
       b.id,
+      b.booking_reference as "bookingReference",
       b.name,
       b.surname,
       b.email,
@@ -1448,6 +1476,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
 
   return bookings.map((b: any) => ({
     id: b.id,
+    bookingReference: b.bookingReference || null,
     name: b.name,
     surname: b.surname,
     email: b.email,

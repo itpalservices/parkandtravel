@@ -32,6 +32,10 @@
         </div>
       }
       <div class="filter-field">
+        <label for="filterBookingReference">Booking Reference</label>
+        <input type="text" id="filterBookingReference" class="form-control" [(ngModel)]="draft.bookingReference" placeholder="e.g. PT-261005-00042" />
+      </div>
+      <div class="filter-field">
         <label for="filterPlate">Plate No.</label>
         <input type="text" id="filterPlate" class="form-control" [(ngModel)]="draft.plateNo" placeholder="e.g. ABC123" />
       </div>

@@ -1,5 +1,6 @@
 export interface Booking {
   id: string;
+  bookingReference: string | null;
   name: string;
   surname: string;
   email: string;
@@ -188,6 +189,7 @@ export interface BookingsFilterState {
   name: string;
   email: string;
   mobile: string;
+  bookingReference: string;
   plateNo: string;
   carBrand: string;
   carModel: string;

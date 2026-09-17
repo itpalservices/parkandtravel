@@ -393,6 +393,13 @@
   margin-top: 2px;
 }
 
+.booking-reference {
+  font-size: 0.75rem;
+  color: #888;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
 .booking-card-mobile {
   background: #fff;
   border: 1px solid #e0e0e0;
@@ -414,6 +421,11 @@
 .mobile-status-section {
   display: flex;
   align-items: center;
+}
+
+.mobile-status-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .park-place-badge {

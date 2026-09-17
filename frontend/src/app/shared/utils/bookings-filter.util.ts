@@ -30,6 +30,7 @@ export function createDefaultBookingsFilterState(
     name: '',
     email: '',
     mobile: '',
+    bookingReference: '',
     plateNo: '',
     carBrand: '',
     carModel: '',
@@ -57,6 +58,7 @@ export function buildBookingsPredicate(state: BookingsFilterState): (booking: Bo
     if (state.name.trim() && !(matchesPrefix(b.name, state.name) || matchesPrefix(b.surname, state.name))) return false;
     if (!matchesPrefix(b.email, state.email)) return false;
     if (!matchesPrefix(b.mobile, state.mobile)) return false;
+    if (!matchesPrefix(b.bookingReference, state.bookingReference)) return false;
     if (!matchesPrefix(b.plateNo, state.plateNo)) return false;
     if (!matchesPrefix(b.carBrand, state.carBrand)) return false;
     if (!matchesPrefix(b.carModel, state.carModel)) return false;
@@ -81,6 +83,7 @@ export function countActiveFilters(state: BookingsFilterState): number {
   if (state.name.trim()) count++;
   if (state.email.trim()) count++;
   if (state.mobile.trim()) count++;
+  if (state.bookingReference.trim()) count++;
   if (state.plateNo.trim()) count++;
   if (state.carBrand.trim()) count++;
   if (state.carModel.trim()) count++;
@@ -226,6 +229,7 @@ export function filterStateToQueryParams(state: BookingsFilterState): Record<str
   if (state.name.trim()) params['name'] = state.name;
   if (state.email.trim()) params['email'] = state.email;
   if (state.mobile.trim()) params['mobile'] = state.mobile;
+  if (state.bookingReference.trim()) params['ref'] = state.bookingReference;
   if (state.plateNo.trim()) params['plate'] = state.plateNo;
   if (state.carBrand.trim()) params['brand'] = state.carBrand;
   if (state.carModel.trim()) params['model'] = state.carModel;
@@ -275,6 +279,7 @@ export function filterStateFromQueryParams(
     name: get('name') ?? '',
     email: get('email') ?? '',
     mobile: get('mobile') ?? '',
+    bookingReference: get('ref') ?? '',
     plateNo: get('plate') ?? '',
     carBrand: get('brand') ?? '',
     carModel: get('model') ?? '',
