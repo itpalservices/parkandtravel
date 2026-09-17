@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { washServiceReport, dailyInOutReport, zReport, pendingBookingsReport } from "../controllers/reports.controller";
+import { washServiceReport, dailyInOutReport, onlinePaymentsReport, pendingBookingsReport } from "../controllers/reports.controller";
 import {
   employeeSessionReportEmployees,
   employeeSessionReportShifts,
@@ -20,7 +20,7 @@ const router = Router();
 
 router.get("/wash-service", washServiceReport);
 router.get("/daily-in-out", dailyInOutReport);
-router.get("/z-report", zReport);
+router.get("/online-payments", onlinePaymentsReport);
 router.get("/pending-bookings", pendingBookingsReport);
 
 router.get("/employee-session/employees", employeeSessionReportEmployees);

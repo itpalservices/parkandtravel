@@ -61,7 +61,7 @@ export async function pendingBookingsReport(
   }
 }
 
-export async function zReport(
+export async function onlinePaymentsReport(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -83,7 +83,7 @@ export async function zReport(
     const data = await getWalleeTransactions(dateFrom, dateTo, offsetValue);
     res.json(data);
   } catch (error: any) {
-    console.error("Error fetching z-report from Wallee:", error?.response?.data || error?.message || error);
-    res.status(500).json({ error: "Failed to fetch z-report" });
+    console.error("Error fetching online payments report from Wallee:", error?.response?.data || error?.message || error);
+    res.status(500).json({ error: "Failed to fetch online payments report" });
   }
 }

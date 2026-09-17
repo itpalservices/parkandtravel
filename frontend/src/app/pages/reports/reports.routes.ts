@@ -17,9 +17,9 @@ export const reportsRoutes: Routes = [
       import('./daily-in-out-report/daily-in-out-report.component').then((m) => m.DailyInOutReportComponent),
   },
   {
-    path: 'z-report',
+    path: 'online-payments',
     loadComponent: () =>
-      import('./z-report/z-report.component').then((m) => m.ZReportComponent),
+      import('./online-payments/online-payments.component').then((m) => m.OnlinePaymentsComponent),
   },
   {
     path: 'pending-bookings',

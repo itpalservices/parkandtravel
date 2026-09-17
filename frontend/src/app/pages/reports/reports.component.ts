@@ -13,7 +13,7 @@ import { ReportCard } from '../../shared/models/reports.model';
 export class ReportsComponent {
   reports: ReportCard[] = [
     {
-      id: 'z-report',
+      id: 'online-payments',
       title: 'Online Payments',
       description: 'View daily summary reports for online payments'
     },

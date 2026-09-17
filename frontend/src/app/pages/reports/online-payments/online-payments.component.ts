@@ -15,13 +15,13 @@ const FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
 const REPORT_COLUMNS = ['Transaction ID', 'Date', 'Full Name', 'Car Details', 'Amount', 'Status'];
 
 @Component({
-  selector: 'app-z-report',
+  selector: 'app-online-payments',
   standalone: true,
   imports: [CommonModule, RouterLink, DateRangePickerComponent, NgbDropdownModule],
-  templateUrl: './z-report.component.html',
-  styleUrl: './z-report.component.scss',
+  templateUrl: './online-payments.component.html',
+  styleUrl: './online-payments.component.scss',
 })
-export class ZReportComponent {
+export class OnlinePaymentsComponent {
   private calendar = inject(NgbCalendar);
   private apiService = inject(ApiService);
 
@@ -80,7 +80,7 @@ export class ZReportComponent {
     const dateToStr = this.formatDateTimeForApi(this.dateTo);
 
     this.apiService
-      .get<WalleeResponse>(`/reports/z-report?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=${this.currentOffset}`)
+      .get<WalleeResponse>(`/reports/online-payments?dateFrom=${dateFromStr}&dateTo=${dateToStr}&offset=${this.currentOffset}`)
       .subscribe({
         next: (data) => {
           this.walleeData = data;
@@ -128,7 +128,7 @@ export class ZReportComponent {
       firstValueFrom(this.apiService.get<{ tax: number | null }>('/settings')),
       firstValueFrom(
         this.apiService.get<WalleeResponse>(
-          `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=0`
+          `/reports/online-payments?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=0`
         )
       ),
     ]);
@@ -140,7 +140,7 @@ export class ZReportComponent {
     while (hasMore) {
       const page = await firstValueFrom(
         this.apiService.get<WalleeResponse>(
-          `/reports/z-report?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=${offset}`
+          `/reports/online-payments?dateFrom=${dateFromApiStr}&dateTo=${dateToApiStr}&offset=${offset}`
         )
       );
       allTransactions.push(...page.data);
