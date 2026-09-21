@@ -1,8 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { take } from 'rxjs/operators';
 import { ApiService } from '../../core/services/api.service';
-import { XReportData, XReportTransaction } from '../../shared/models/reports.model';
+import { RoleService } from '../../core/services/role.service';
+import { AdminXReportData } from '../../shared/models/reports.model';
+import { ShiftSummary } from '../../shared/models/shifts.model';
+import { formatPaymentMethodLabel, formatSignedCurrency } from '../../shared/utils/payment-method-format.util';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -15,43 +19,83 @@ import autoTable from 'jspdf-autotable';
 })
 export class XReportComponent implements OnInit {
   private apiService = inject(ApiService);
+  private roleService = inject(RoleService);
   private router = inject(Router);
 
   loading = false;
   exporting = false;
-  data: XReportData | null = null;
+  isDriver = false;
+  isAdmin = false;
+
+  /** Admin view: one section per employee (including the admin) who currently has an open
+   *  shift — oldest open shift first. Gone from the list the moment that shift is closed. */
+  adminSummary: AdminXReportData | null = null;
+
+  /** Driver view: a live read of their own currently-open shift, identical to the logout
+   *  modal — empty the moment that shift is closed. */
+  driverSummary: ShiftSummary | null = null;
+
+  private expandedUserIds = new Set<string>();
+
+  formatMethod = formatPaymentMethodLabel;
+  formatAmount = formatSignedCurrency;
 
   ngOnInit(): void {
-    this.load();
+    this.roleService.getUserRole().pipe(take(1)).subscribe((roleInfo) => {
+      this.isDriver = roleInfo.isDriver;
+      this.isAdmin = roleInfo.isAdmin;
+      this.load();
+    });
   }
 
   private load(): void {
     this.loading = true;
-    this.apiService.get<XReportData>('/reports/x-report').subscribe({
-      next: (res) => {
-        this.data = res;
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-      },
-    });
+    if (this.isDriver) {
+      this.apiService.get<ShiftSummary>('/reports/x-report').subscribe({
+        next: (res) => {
+          this.driverSummary = res;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
+      });
+    } else {
+      this.apiService.get<AdminXReportData>('/reports/x-report').subscribe({
+        next: (res) => {
+          this.adminSummary = res;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
+      });
+    }
   }
 
-  get totalCash(): number {
-    return this.data?.totals['cash'] ?? 0;
+  get driverTransactions() {
+    return this.driverSummary?.transactions ?? [];
   }
 
-  get totalCard(): number {
-    return this.data?.totals['card'] ?? 0;
+  get driverGrandTotal(): number {
+    return this.driverSummary?.totals.reduce((sum, t) => sum + t.total, 0) ?? 0;
   }
 
-  get grandTotal(): number {
-    return Object.values(this.data?.totals ?? {}).reduce((s, v) => s + v, 0);
+  get hasTransactions(): boolean {
+    if (this.isDriver) return this.driverTransactions.length > 0;
+    return (this.adminSummary?.employees.length ?? 0) > 0;
   }
 
-  get transactions(): XReportTransaction[] {
-    return this.data?.transactions ?? [];
+  isExpanded(userId: string): boolean {
+    return this.expandedUserIds.has(userId);
+  }
+
+  toggleExpanded(userId: string): void {
+    if (this.expandedUserIds.has(userId)) {
+      this.expandedUserIds.delete(userId);
+    } else {
+      this.expandedUserIds.add(userId);
+    }
   }
 
   formatDate(dateStr: string): string {
@@ -59,12 +103,25 @@ export class XReportComponent implements OnInit {
     return d.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
+  formatTime(dateStr: string): string {
+    const d = new Date(dateStr);
+    return d.toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
   goBack(): void {
     this.router.navigate(['/admin/bookings']);
   }
 
   exportPDF(): void {
-    if (!this.data || this.transactions.length === 0) return;
+    if (this.isDriver) {
+      this.exportDriverPDF();
+    }
+    // Admin export intentionally not implemented yet for the new per-employee view —
+    // the button is hidden for admins until that's asked for.
+  }
+
+  private exportDriverPDF(): void {
+    if (!this.driverSummary || this.driverTransactions.length === 0) return;
     this.exporting = true;
 
     const doc = new jsPDF();
@@ -74,7 +131,7 @@ export class XReportComponent implements OnInit {
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 107, 143);
-    const title = 'X Report — Unreported Transactions';
+    const title = 'X Report — Current Shift';
     doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, y);
     y += 8;
 
@@ -88,18 +145,19 @@ export class XReportComponent implements OnInit {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(`Cash: €${this.totalCash.toFixed(2)}   Card: €${this.totalCard.toFixed(2)}   Total: €${this.grandTotal.toFixed(2)}`, 14, y);
+    doc.text(`Grand Total: ${this.formatAmount(this.driverGrandTotal)}`, 14, y);
     y += 10;
 
     autoTable(doc, {
       startY: y,
-      head: [['Date', 'Plate No', 'Type', 'Payment', 'Amount (€)']],
-      body: this.transactions.map(t => [
+      head: [['Date', 'Type', 'Booking Ref.', 'Plate', 'Method', 'Amount']],
+      body: this.driverTransactions.map(t => [
         this.formatDate(t.datetime),
-        t.plateNo || '-',
         t.type === 'checkin' ? 'Check-in' : 'Check-out',
-        t.paymentMethod,
-        Number(t.amount).toFixed(2),
+        t.bookingReference || '-',
+        t.plateNo || '-',
+        this.formatMethod(t.paymentMethod),
+        this.formatAmount(t.amount),
       ]),
       theme: 'striped',
       headStyles: { fillColor: [0, 107, 143], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
@@ -108,7 +166,7 @@ export class XReportComponent implements OnInit {
       margin: { left: 10, right: 10 },
     });
 
-    doc.save(`x-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`x-report-shift-${new Date().toISOString().slice(0, 10)}.pdf`);
     this.exporting = false;
   }
 }

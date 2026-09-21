@@ -9,7 +9,7 @@
       </button>
       <h1 class="page-title">X Report</h1>
     </div>
-    <button class="btn-export" (click)="exportPDF()" [disabled]="exporting || transactions.length === 0">
+    <button *ngIf="isDriver" class="btn-export" (click)="exportPDF()" [disabled]="exporting || !hasTransactions">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
         <polyline points="7 10 12 15 17 10"></polyline>
@@ -19,75 +19,198 @@
     </button>
   </div>
 
-  <div class="subtitle">Unreported transactions — not yet included in a Z Report</div>
+  <div class="subtitle">
+    {{ isDriver
+      ? 'Your currently open shift — cleared automatically once the shift is closed'
+      : 'Every employee currently on an open shift, including yourself — a section disappears once that shift is closed' }}
+  </div>
 
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
     <p>Loading...</p>
   </div>
 
-  <ng-container *ngIf="!loading && data">
-    <div class="summary-cards">
-      <div class="summary-card">
-        <span class="summary-label">Cash</span>
-        <span class="summary-value">€{{ totalCash.toFixed(2) }}</span>
+  <!-- Driver view: live read of the currently-open shift, same data as the logout modal -->
+  <ng-container *ngIf="!loading && isDriver">
+    <ng-container *ngIf="driverTransactions.length > 0; else driverEmptyState">
+      <div class="table-wrapper d-none d-md-block">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Booking Ref.</th>
+              <th>Plate</th>
+              <th>Method</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of driverTransactions">
+              <td>{{ formatDate(t.datetime) }}</td>
+              <td>
+                <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                  {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+                </span>
+              </td>
+              <td class="reference-cell">{{ t.bookingReference || '—' }}</td>
+              <td>{{ t.plateNo || '-' }}</td>
+              <td>{{ formatMethod(t.paymentMethod) }}</td>
+              <td class="text-right amount">{{ formatAmount(t.amount) }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="summary-card">
-        <span class="summary-label">Card</span>
-        <span class="summary-value">€{{ totalCard.toFixed(2) }}</span>
-      </div>
-      <div class="summary-card summary-card--total">
-        <span class="summary-label">Total</span>
-        <span class="summary-value">€{{ grandTotal.toFixed(2) }}</span>
-      </div>
-    </div>
 
-    <div class="table-wrapper d-none d-md-block" *ngIf="transactions.length > 0; else emptyState">
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Plate No</th>
-            <th>Type</th>
-            <th>Payment</th>
-            <th class="text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let t of transactions">
-            <td>{{ formatDate(t.datetime) }}</td>
-            <td>{{ t.plateNo || '-' }}</td>
-            <td>
-              <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
-                {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
-              </span>
-            </td>
-            <td class="capitalize">{{ t.paymentMethod }}</td>
-            <td class="text-right amount">€{{ t.amount.toFixed(2) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mobile-transaction-list d-block d-md-none" *ngIf="transactions.length > 0">
-      <div class="transaction-card" *ngFor="let t of transactions">
-        <div class="transaction-card-top">
-          <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
-            {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
-          </span>
-          <span class="transaction-amount">€{{ t.amount.toFixed(2) }}</span>
+      <div class="mobile-transaction-list d-block d-md-none">
+        <div class="transaction-card" *ngFor="let t of driverTransactions">
+          <div class="transaction-card-top">
+            <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+              {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+            </span>
+            <span class="transaction-amount">{{ formatAmount(t.amount) }}</span>
+          </div>
+          <div class="transaction-card-mid">
+            <span class="transaction-plate">{{ t.plateNo || '-' }}</span>
+            <span class="transaction-payment">{{ formatMethod(t.paymentMethod) }}</span>
+          </div>
+          <div class="transaction-card-mid">
+            <span class="reference-cell">{{ t.bookingReference || '—' }}</span>
+          </div>
+          <div class="transaction-date">{{ formatDate(t.datetime) }}</div>
         </div>
-        <div class="transaction-card-mid">
-          <span class="transaction-plate">{{ t.plateNo || '-' }}</span>
-          <span class="transaction-payment capitalize">{{ t.paymentMethod }}</span>
-        </div>
-        <div class="transaction-date">{{ formatDate(t.datetime) }}</div>
       </div>
-    </div>
 
-    <ng-template #emptyState>
+      <div class="totals-section">
+        <div class="totals-grid">
+          <div class="totals-row" *ngFor="let total of driverSummary?.totals">
+            <span class="total-label">{{ formatMethod(total.paymentMethod) }}</span>
+            <span class="total-count">{{ total.count }} transaction{{ total.count !== 1 ? 's' : '' }}</span>
+            <span class="total-amount">{{ formatAmount(total.total) }}</span>
+          </div>
+        </div>
+        <div class="grand-total-row">
+          <span class="grand-label">Grand Total</span>
+          <span class="grand-amount">{{ formatAmount(driverGrandTotal) }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #driverEmptyState>
       <div class="empty-state">
-        <p>No unreported transactions found.</p>
+        <p *ngIf="driverSummary?.shiftId === null">No open shift.</p>
+        <p *ngIf="driverSummary?.shiftId !== null">No transactions were recorded this shift.</p>
+      </div>
+    </ng-template>
+  </ng-container>
+
+  <!-- Admin view: one collapsible section per employee currently on an open shift -->
+  <ng-container *ngIf="!loading && isAdmin && adminSummary">
+    <ng-container *ngIf="adminSummary.employees.length > 0; else adminEmptyState">
+      <div class="totals-section grand-summary">
+        <div class="totals-grid">
+          <div class="totals-row" *ngFor="let total of adminSummary.grandTotals">
+            <span class="total-label">{{ formatMethod(total.paymentMethod) }}</span>
+            <span class="total-count">{{ total.count }} transaction{{ total.count !== 1 ? 's' : '' }}</span>
+            <span class="total-amount">{{ formatAmount(total.total) }}</span>
+          </div>
+        </div>
+        <div class="grand-total-row">
+          <span class="grand-label">Grand Total — All Employees</span>
+          <span class="grand-amount">{{ formatAmount(adminSummary.grandTotal) }}</span>
+        </div>
+      </div>
+
+      <div class="employee-sections">
+        <div class="employee-section" *ngFor="let emp of adminSummary.employees">
+          <button class="employee-header" (click)="toggleExpanded(emp.userId)">
+            <svg class="chevron" [class.chevron--open]="isExpanded(emp.userId)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <span class="employee-name">{{ emp.employeeName }}</span>
+            <span class="employee-shift-start">Shift started {{ formatTime(emp.shiftStart) }}</span>
+            <span class="employee-count">{{ emp.transactions.length }} transaction{{ emp.transactions.length !== 1 ? 's' : '' }}</span>
+            <span class="employee-total">{{ formatAmount(emp.employeeTotal) }}</span>
+          </button>
+
+          <div class="employee-body" *ngIf="isExpanded(emp.userId)">
+            <ng-container *ngIf="emp.transactions.length > 0; else employeeNoTransactions">
+              <div class="table-wrapper d-none d-md-block">
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Booking Ref.</th>
+                      <th>Plate</th>
+                      <th>Method</th>
+                      <th class="text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let t of emp.transactions">
+                      <td>{{ formatDate(t.datetime) }}</td>
+                      <td>
+                        <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                          {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+                        </span>
+                      </td>
+                      <td class="reference-cell">{{ t.bookingReference || '—' }}</td>
+                      <td>{{ t.plateNo || '-' }}</td>
+                      <td>{{ formatMethod(t.paymentMethod) }}</td>
+                      <td class="text-right amount">{{ formatAmount(t.amount) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mobile-transaction-list d-block d-md-none">
+                <div class="transaction-card" *ngFor="let t of emp.transactions">
+                  <div class="transaction-card-top">
+                    <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                      {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+                    </span>
+                    <span class="transaction-amount">{{ formatAmount(t.amount) }}</span>
+                  </div>
+                  <div class="transaction-card-mid">
+                    <span class="transaction-plate">{{ t.plateNo || '-' }}</span>
+                    <span class="transaction-payment">{{ formatMethod(t.paymentMethod) }}</span>
+                  </div>
+                  <div class="transaction-card-mid">
+                    <span class="reference-cell">{{ t.bookingReference || '—' }}</span>
+                  </div>
+                  <div class="transaction-date">{{ formatDate(t.datetime) }}</div>
+                </div>
+              </div>
+
+              <div class="totals-section">
+                <div class="totals-grid">
+                  <div class="totals-row" *ngFor="let total of emp.totals">
+                    <span class="total-label">{{ formatMethod(total.paymentMethod) }}</span>
+                    <span class="total-count">{{ total.count }} transaction{{ total.count !== 1 ? 's' : '' }}</span>
+                    <span class="total-amount">{{ formatAmount(total.total) }}</span>
+                  </div>
+                </div>
+                <div class="grand-total-row">
+                  <span class="grand-label">Employee Total</span>
+                  <span class="grand-amount">{{ formatAmount(emp.employeeTotal) }}</span>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-template #employeeNoTransactions>
+              <div class="empty-state">
+                <p>No transactions recorded in this shift.</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #adminEmptyState>
+      <div class="empty-state">
+        <p>No employees currently have an open shift.</p>
       </div>
     </ng-template>
   </ng-container>

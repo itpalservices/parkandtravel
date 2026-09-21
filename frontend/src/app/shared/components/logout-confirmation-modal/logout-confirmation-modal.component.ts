@@ -8,6 +8,7 @@ import { ShiftService } from '../../../core/services/shift.service';
 import { ZebraPrintService } from '../../../core/services/zebra-print.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
 import { LogoutConfirmationState, ShiftTotals } from '../../models/shifts.model';
+import { formatPaymentMethodLabel, formatSignedCurrency } from '../../utils/payment-method-format.util';
 
 @Component({
   selector: 'app-logout-confirmation-modal',
@@ -46,20 +47,8 @@ export class LogoutConfirmationModalComponent implements OnInit, OnDestroy {
     return this.state.summary?.totals.reduce((sum, t: ShiftTotals) => sum + t.total, 0) ?? 0;
   }
 
-  private readonly methodLabels: Record<string, string> = {
-    fee_waived: 'Extra Fee Waived',
-  };
-
-  formatMethod(method: string): string {
-    if (this.methodLabels[method]) return this.methodLabels[method];
-    return method.charAt(0).toUpperCase() + method.slice(1).toLowerCase();
-  }
-
-  /** Puts the minus sign before the currency symbol (-€3.00), not between them (€-3.00). */
-  formatAmount(amount: number): string {
-    const sign = amount < 0 ? '-' : '';
-    return `${sign}€${Math.abs(amount).toFixed(2)}`;
-  }
+  formatMethod = formatPaymentMethodLabel;
+  formatAmount = formatSignedCurrency;
 
   cancel(): void {
     this.printError = null;

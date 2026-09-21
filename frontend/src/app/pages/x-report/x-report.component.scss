@@ -144,6 +144,75 @@
 .capitalize { text-transform: capitalize; }
 .amount { font-weight: 600; }
 
+.reference-cell {
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.totals-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.totals-grid {
+  padding: 0.25rem 0;
+}
+
+.totals-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.total-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.total-count {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.total-amount {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 70px;
+  text-align: right;
+}
+
+.grand-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background-color: $primary-color;
+  color: #ffffff;
+}
+
+.grand-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.grand-amount {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
 .badge {
   display: inline-block;
   padding: 2px 8px;
@@ -256,4 +325,93 @@
 .transaction-date {
   font-size: 0.8rem;
   color: #9ca3af;
+}
+
+/* Admin view: page-level grand total + per-employee accordion */
+.grand-summary {
+  margin-bottom: 24px;
+  border-color: $primary-color;
+}
+
+.employee-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.employee-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.employee-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background 0.15s;
+
+  &:hover { background: #f9fafb; }
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: transform 0.15s ease;
+
+  &--open { transform: rotate(90deg); }
+}
+
+.employee-name {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+}
+
+.employee-shift-start {
+  color: #6b7280;
+  font-size: 0.8rem;
+  flex: 1;
+}
+
+.employee-count {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.employee-total {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
+}
+
+.employee-body {
+  padding: 0 18px 18px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 14px;
+}
+
+@media (max-width: 767px) {
+  .employee-header {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .employee-shift-start {
+    flex-basis: 100%;
+    order: 3;
+  }
 }

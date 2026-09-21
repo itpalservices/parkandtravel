@@ -1,6 +1,13 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { getAllEmployees, getUserById } from "../services/auth0.service";
+import {
+  getOpenShiftForUser,
+  getOpenShiftTransactions,
+  getOpenShiftTotals,
+  OpenShiftTransaction,
+  OpenShiftTotal,
+} from "../services/shift-summary.service";
 
 interface TransactionRow {
   id: string;
@@ -76,6 +83,76 @@ async function fetchTransactionsByUserAndZReport(userId: string, zReportId: stri
   ` as Promise<TransactionRow[]>;
 }
 
+export interface OpenShiftEmployeeSummary {
+  userId: string;
+  employeeName: string;
+  shiftId: number;
+  shiftStart: Date;
+  transactions: OpenShiftTransaction[];
+  totals: OpenShiftTotal[];
+  employeeTotal: number;
+}
+
+/** Admin view: one section per employee who currently has a shift open (including the admin
+ *  themselves, if they have one) — oldest open shift first, so a forgotten/stale shift surfaces
+ *  at the top. Each section is exactly what that employee would see on their own X Report. */
+async function getAllOpenShiftsSummary(): Promise<{
+  employees: OpenShiftEmployeeSummary[];
+  grandTotal: number;
+  grandTotals: OpenShiftTotal[];
+}> {
+  const openShifts = await prisma.shift.findMany({
+    where: { status: "open" },
+    orderBy: { shiftStart: "asc" },
+    select: { id: true, userId: true, shiftStart: true },
+  });
+
+  if (openShifts.length === 0) {
+    return { employees: [], grandTotal: 0, grandTotals: [] };
+  }
+
+  const employeeList = await getAllEmployees().catch(() => []);
+  const employeeMap = new Map(employeeList.map((e) => [e.userId, e]));
+
+  const employees: OpenShiftEmployeeSummary[] = await Promise.all(
+    openShifts.map(async (shift) => {
+      const [transactions, totals] = await Promise.all([
+        getOpenShiftTransactions(shift.id),
+        getOpenShiftTotals(shift.id),
+      ]);
+      const employee = employeeMap.get(shift.userId);
+      const employeeName = employee ? `${employee.name} ${employee.surname}`.trim() : shift.userId;
+
+      return {
+        userId: shift.userId,
+        employeeName,
+        shiftId: shift.id,
+        shiftStart: shift.shiftStart,
+        transactions,
+        totals,
+        employeeTotal: totals.reduce((sum, t) => sum + t.total, 0),
+      };
+    })
+  );
+
+  const grandTotalsMap = new Map<string, { total: number; count: number }>();
+  for (const emp of employees) {
+    for (const t of emp.totals) {
+      const existing = grandTotalsMap.get(t.paymentMethod) ?? { total: 0, count: 0 };
+      existing.total += t.total;
+      existing.count += t.count;
+      grandTotalsMap.set(t.paymentMethod, existing);
+    }
+  }
+  const grandTotals: OpenShiftTotal[] = Array.from(grandTotalsMap.entries())
+    .map(([paymentMethod, v]) => ({ paymentMethod, total: v.total, count: v.count }))
+    .sort((a, b) => a.paymentMethod.localeCompare(b.paymentMethod));
+
+  const grandTotal = grandTotals.reduce((sum, t) => sum + t.total, 0);
+
+  return { employees, grandTotal, grandTotals };
+}
+
 export async function getXReport(req: Request, res: Response) {
   const userId = req.authUser?.sub;
   if (!userId) {
@@ -83,33 +160,35 @@ export async function getXReport(req: Request, res: Response) {
     return;
   }
 
+  // Drivers see a live view of their own currently-open shift only — the same data as the
+  // logout modal's shift summary, gone the moment that shift is closed.
+  if (req.authUser?.role === "driver") {
+    try {
+      const openShift = await getOpenShiftForUser(userId);
+      if (!openShift) {
+        res.json({ shiftId: null, transactions: [], totals: [] });
+        return;
+      }
+
+      const [transactions, totals] = await Promise.all([
+        getOpenShiftTransactions(openShift.id),
+        getOpenShiftTotals(openShift.id),
+      ]);
+
+      res.json({ shiftId: openShift.id, transactions, totals });
+    } catch (error) {
+      console.error("getXReport (driver) error:", error);
+      res.status(500).json({ error: "Failed to fetch X report" });
+    }
+    return;
+  }
+
+  // Admin view: one section per employee (including the admin) who currently has an open shift.
   try {
-    const [transactions, totalsRaw] = await Promise.all([
-      fetchTransactionsByUserAndZReport(userId, null),
-      prisma.$queryRaw`
-        SELECT payment_method, SUM(amount) AS total
-        FROM (
-          SELECT payment_method, amount FROM completion_transactions
-          WHERE user_id = ${userId} AND z_report_id IS NULL
-          UNION ALL
-          SELECT payment_method, amount FROM checkin_transactions
-          WHERE user_id = ${userId} AND z_report_id IS NULL
-        ) combined
-        GROUP BY payment_method
-      ` as Promise<TotalsRow[]>,
-    ]);
-
-    const totals: Record<string, number> = {};
-    (totalsRaw as TotalsRow[]).forEach((t) => {
-      totals[t.payment_method] = Number(t.total);
-    });
-
-    res.json({
-      transactions: (transactions as TransactionRow[]).map(mapTransaction),
-      totals,
-    });
+    const summary = await getAllOpenShiftsSummary();
+    res.json(summary);
   } catch (error) {
-    console.error("getXReport error:", error);
+    console.error("getXReport (admin) error:", error);
     res.status(500).json({ error: "Failed to fetch X report" });
   }
 }

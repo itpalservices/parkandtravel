@@ -1,3 +1,5 @@
+import { ShiftTransaction, ShiftTotals } from './shifts.model';
+
 export interface ReportCard {
   id: string;
   title: string;
@@ -83,6 +85,22 @@ export interface XReportTransaction {
 export interface XReportData {
   transactions: XReportTransaction[];
   totals: Record<string, number>;
+}
+
+export interface OpenShiftEmployeeSummary {
+  userId: string;
+  employeeName: string;
+  shiftId: number;
+  shiftStart: string;
+  transactions: ShiftTransaction[];
+  totals: ShiftTotals[];
+  employeeTotal: number;
+}
+
+export interface AdminXReportData {
+  employees: OpenShiftEmployeeSummary[];
+  grandTotal: number;
+  grandTotals: ShiftTotals[];
 }
 
 export interface ZReportEmployee {
