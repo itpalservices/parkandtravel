@@ -13,7 +13,7 @@ interface CompanySettings {
 export interface ReceiptPdfData {
   receiptNumber: string;
   receiptDate: Date;
-  bookingId: string;
+  bookingReference: string;
   customerName: string;
   totalAmount: number;
   discount: number | null;
@@ -233,7 +233,7 @@ function generateReceiptHtml(data: ReceiptPdfData, company: CompanySettings): st
     </div>
     <div class="info-group" style="text-align: right;">
       <label>Booking Reference</label>
-      <p class="booking-id">${data.bookingId}</p>
+      <p class="booking-id">${data.bookingReference}</p>
     </div>
   </div>
 
@@ -354,7 +354,7 @@ function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettin
   <div class="label">Billed To</div>
   <div class="value">${data.customerName}</div>
   <div class="label">Booking Ref</div>
-  <div class="value" style="font-size:8px;">${data.bookingId}</div>
+  <div class="value" style="font-size:8px;">${data.bookingReference}</div>
 
   <hr class="divider">
 
@@ -406,7 +406,7 @@ function generateThermalReceiptHtml(data: ReceiptPdfData, company: CompanySettin
 }
 
 export interface CheckinReceiptData {
-  bookingId: string;
+  bookingReference: string;
   customerName: string;
   checkInDateTime: Date;
   scheduledCheckOut: Date | null;
@@ -498,7 +498,7 @@ function generateCheckinReceiptHtml(data: CheckinReceiptData, company: CompanySe
   <div class="label">Customer</div>
   <div class="value">${data.customerName}</div>
   <div class="label">Booking Reference</div>
-  <div class="value" style="font-size:8px;">${data.bookingId}</div>
+  <div class="value" style="font-size:8px;">${data.bookingReference}</div>
 
   <hr class="divider">
 
@@ -580,7 +580,7 @@ export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promi
   left('CUSTOMER', 21); y += 26;
   left(data.customerName, 24); y += 30;
   left('BOOKING REFERENCE', 21); y += 26;
-  left(data.bookingId, 19); y += 25;
+  left(data.bookingReference, 19); y += 25;
   y += 6; thin(); y += 10;
 
   // Vehicle
@@ -906,7 +906,7 @@ export async function generateThermalReceiptZpl(data: ReceiptPdfData): Promise<s
   left('BILLED TO', 21); y += 26;
   left(data.customerName, 24); y += 30;
   left('BOOKING REF', 21); y += 26;
-  left(data.bookingId, 19); y += 25;
+  left(data.bookingReference, 19); y += 25;
   y += 6; thin(); y += 10;
 
   // Line items

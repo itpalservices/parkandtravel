@@ -780,23 +780,35 @@ export async function getExtraFeeEstimate(req: Request, res: Response): Promise<
 
 export async function completeBookingHandler(req: Request, res: Response): Promise<void> {
   try {
+    const authUser = req.authUser as AuthUser | undefined;
+
+    if (!authUser || authUser.role === "user") {
+      res.status(403).json({ error: "Admin or driver role required" });
+      return;
+    }
+
     const { id } = req.params;
-    const { amount, paymentMethod, applyExtraFee, notes, actorName } = req.body;
-    const authUser = req.authUser;
+    const { amount, paymentMethod, isDiscount, applyExtraFee, notes, actorName } = req.body;
 
     if (amount === undefined || !paymentMethod) {
       res.status(400).json({ error: "amount and paymentMethod are required" });
       return;
     }
 
-    const shiftId = authUser?.sub ? await getOpenShiftId(authUser.sub) : null;
+    if (isDiscount && authUser.role !== "admin") {
+      res.status(403).json({ error: "Admin role required to apply a discount" });
+      return;
+    }
+
+    const shiftId = authUser.sub ? await getOpenShiftId(authUser.sub) : null;
 
     const result = await completeBookingService(id, {
       amount: parseFloat(amount),
       paymentMethod,
+      isDiscount: !!isDiscount,
       applyExtraFee: !!applyExtraFee,
-      actorUserId: authUser?.sub || '',
-      actorName: actorName || authUser?.email || '',
+      actorUserId: authUser.sub || '',
+      actorName: actorName || authUser.email || '',
       notes,
       shiftId,
     });
@@ -806,13 +818,17 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
       return;
     }
 
-    if (authUser?.sub) {
+    if (authUser.sub) {
       updateShiftActivity(authUser.sub);
     }
 
     res.json({ success: true, data: result });
   } catch (error) {
     console.error("Error completing booking:", error);
+    if (error instanceof Error && error.message.startsWith("Amount must equal")) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -842,10 +858,15 @@ export async function recordCheckinPaymentHandler(req: Request, res: Response): 
     }
 
     const { id } = req.params;
-    const { amount, paymentMethod, notes, actorName } = req.body;
+    const { amount, paymentMethod, isDiscount, notes, actorName } = req.body;
 
     if (amount === undefined || !paymentMethod) {
       res.status(400).json({ error: "amount and paymentMethod are required" });
+      return;
+    }
+
+    if ((isDiscount || paymentMethod === 'complimentary') && authUser.role !== "admin") {
+      res.status(403).json({ error: "Admin role required to apply a discount or complimentary check-in" });
       return;
     }
 
@@ -854,6 +875,7 @@ export async function recordCheckinPaymentHandler(req: Request, res: Response): 
     const result = await recordCheckinPaymentService(id, {
       amount: parseFloat(amount),
       paymentMethod,
+      isDiscount: !!isDiscount,
       actorUserId: authUser.sub || '',
       notes,
       shiftId,

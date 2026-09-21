@@ -9,7 +9,7 @@ import { sendBookingConfirmationEmail } from './email.service';
 import { createReceipt, ReceiptLineInput } from './receipt.service';
 import { generateReceiptPdf } from './pdf.service';
 import { uploadPdfToS3 } from './upload.service';
-import { derivePickUpOption } from './bookings.service';
+import { derivePickUpOption, formatBookingReference } from './bookings.service';
 
 const WALLEE_SUCCESS_STATES = ['AUTHORIZED', 'FULFILL', 'COMPLETED'];
 const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
@@ -307,6 +307,12 @@ async function createBookingFromPending(
     },
   });
 
+  const bookingReference = formatBookingReference(booking.bookingSeq, booking.dateFrom);
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { bookingReference },
+  });
+
   let pdfBuffer: Buffer | undefined;
 
   if (finalPrice !== null) {
@@ -337,7 +343,7 @@ async function createBookingFromPending(
         pdfBuffer = await generateReceiptPdf({
           receiptNumber: receipt.receiptNumber,
           receiptDate: receipt.createdAt,
-          bookingId: booking.id,
+          bookingReference,
           customerName: `${name} ${surname}`.trim(),
           totalAmount: receipt.totalAmount,
           discount: receipt.discount,
@@ -435,6 +441,12 @@ async function createBookingFromAuthPending(
     },
   });
 
+  const authBookingReference = formatBookingReference(booking.bookingSeq, booking.dateFrom);
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { bookingReference: authBookingReference },
+  });
+
   await prisma.walleeTransaction.create({
     data: {
       id: BigInt(wlTransactionId),
@@ -464,7 +476,7 @@ async function createBookingFromAuthPending(
       authPdfBuffer = await generateReceiptPdf({
         receiptNumber: authReceipt.receiptNumber,
         receiptDate: authReceipt.createdAt,
-        bookingId: booking.id,
+        bookingReference: authBookingReference,
         customerName: `${name} ${surname}`.trim(),
         totalAmount: authReceipt.totalAmount,
         discount: authReceipt.discount,
@@ -703,7 +715,12 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
   if (formData.washService !== undefined) updateData.washService = formData.washService;
   if (formData.parkingTypeId !== undefined) updateData.parkingTypeId = formData.parkingTypeId;
   if (formData.discountPercentage !== undefined) updateData.discountPercentage = formData.discountPercentage;
-  if (formData.checkInDate !== undefined) updateData.dateFrom = new Date(formData.checkInDate + 'T12:00:00Z');
+  if (formData.checkInDate !== undefined) {
+    updateData.dateFrom = new Date(formData.checkInDate + 'T12:00:00Z');
+    if (oldBooking) {
+      updateData.bookingReference = formatBookingReference(oldBooking.bookingSeq, updateData.dateFrom as Date);
+    }
+  }
   if (formData.checkInTime !== undefined) updateData.timeFrom = parseTimeToDate(formData.checkInTime);
   if (formData.checkOutDate !== undefined) updateData.dateTo = formData.checkOutDate ? new Date(formData.checkOutDate + 'T12:00:00Z') : null;
   if (formData.checkOutTime !== undefined) updateData.timeTo = formData.checkOutTime ? parseTimeToDate(formData.checkOutTime) : null;
@@ -753,14 +770,14 @@ async function applyPendingBookingUpdate(pending: { id: string; formData: any },
 
       if (updateReceipt) {
         try {
-          const updatedBookingForPdf = await prisma.booking.findUnique({ where: { id: bookingId }, select: { name: true, surname: true } });
+          const updatedBookingForPdf = await prisma.booking.findUnique({ where: { id: bookingId }, select: { name: true, surname: true, bookingReference: true } });
           const customerName = updatedBookingForPdf
             ? `${updatedBookingForPdf.name} ${updatedBookingForPdf.surname}`.trim()
             : bookingId;
           const updatePdfBuffer = await generateReceiptPdf({
             receiptNumber: updateReceipt.receiptNumber,
             receiptDate: updateReceipt.createdAt,
-            bookingId,
+            bookingReference: updatedBookingForPdf?.bookingReference || bookingId,
             customerName,
             totalAmount: updateReceipt.totalAmount,
             discount: updateReceipt.discount,
@@ -834,6 +851,7 @@ async function handlePendingUpdatePaymentSuccess(merchantReference: string, wlTr
 async function createReceiptForBookingPayment(
   booking: {
     id: string;
+    bookingReference: string | null;
     name: string;
     surname: string;
     dateFrom: Date;
@@ -868,7 +886,7 @@ async function createReceiptForBookingPayment(
     const pdfBuffer = await generateReceiptPdf({
       receiptNumber: receipt.receiptNumber,
       receiptDate: receipt.createdAt,
-      bookingId: booking.id,
+      bookingReference: booking.bookingReference || booking.id,
       customerName: `${booking.name} ${booking.surname}`.trim(),
       totalAmount: receipt.totalAmount,
       discount: receipt.discount,

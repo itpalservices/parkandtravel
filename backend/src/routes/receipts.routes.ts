@@ -13,7 +13,7 @@ router.get("/thermal/:receiptId", async (req: Request, res: Response): Promise<v
 
     const receipt = await prisma.receiptHeader.findUnique({
       where: { id: receiptId },
-      include: { lines: true, booking: { select: { name: true, surname: true } } },
+      include: { lines: true, booking: { select: { name: true, surname: true, bookingReference: true } } },
     });
 
     if (!receipt) {
@@ -30,7 +30,7 @@ router.get("/thermal/:receiptId", async (req: Request, res: Response): Promise<v
     const pdfBuffer = await generateThermalReceiptPdf({
       receiptNumber: receipt.receiptNumber || receiptId,
       receiptDate: receipt.createdAt,
-      bookingId: receipt.bookingId,
+      bookingReference: receipt.booking.bookingReference || receipt.bookingId,
       customerName: `${receipt.booking.name} ${receipt.booking.surname}`.trim(),
       totalAmount: Number(receipt.totalAmount),
       discount: receipt.discount ?? null,
@@ -56,7 +56,7 @@ router.get("/thermal/:receiptId/zpl", async (req: Request, res: Response): Promi
 
     const receipt = await prisma.receiptHeader.findUnique({
       where: { id: receiptId },
-      include: { lines: true, booking: { select: { name: true, surname: true } } },
+      include: { lines: true, booking: { select: { name: true, surname: true, bookingReference: true } } },
     });
 
     if (!receipt) {
@@ -73,7 +73,7 @@ router.get("/thermal/:receiptId/zpl", async (req: Request, res: Response): Promi
     const zpl = await generateThermalReceiptZpl({
       receiptNumber: receipt.receiptNumber || receiptId,
       receiptDate: receipt.createdAt,
-      bookingId: receipt.bookingId,
+      bookingReference: receipt.booking.bookingReference || receipt.bookingId,
       customerName: `${receipt.booking.name} ${receipt.booking.surname}`.trim(),
       totalAmount: Number(receipt.totalAmount),
       discount: receipt.discount ?? null,
@@ -95,7 +95,7 @@ router.get("/:id/pdf", async (req: Request, res: Response): Promise<void> => {
 
     const receipt = await prisma.receiptHeader.findUnique({
       where: { id },
-      include: { lines: true, booking: { select: { name: true, surname: true } } },
+      include: { lines: true, booking: { select: { name: true, surname: true, bookingReference: true } } },
     });
 
     if (!receipt) {
@@ -118,7 +118,7 @@ router.get("/:id/pdf", async (req: Request, res: Response): Promise<void> => {
     const pdfBuffer = await generateReceiptPdf({
       receiptNumber: receipt.receiptNumber || id,
       receiptDate: receipt.createdAt,
-      bookingId: receipt.bookingId,
+      bookingReference: receipt.booking.bookingReference || receipt.bookingId,
       customerName: `${receipt.booking.name} ${receipt.booking.surname}`.trim(),
       totalAmount: Number(receipt.totalAmount),
       discount: receipt.discount ?? null,

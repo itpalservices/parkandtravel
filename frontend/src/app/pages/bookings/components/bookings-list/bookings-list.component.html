@@ -477,6 +477,11 @@
                       : '-'
                   }}
                 }
+                @if (hasCheckinWaiver(booking)) {
+                  <div class="checkin-waiver-note">
+                    Discount applied at check-in: -{{ booking.waivedAmount | currency: 'EUR' : 'symbol' : '1.2-2' }}
+                  </div>
+                }
                 @if (booking.paymentStatus && (isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') {
                   <div class="mt-1">
                     <span class="badge" [ngClass]="getPaymentBadgeClass(booking.paymentStatus)">
@@ -721,6 +726,11 @@
                     ? (booking.finalPrice | currency: 'EUR' : 'symbol' : '1.2-2')
                     : '-'
                 }}
+              }
+              @if (hasCheckinWaiver(booking)) {
+                <div class="checkin-waiver-note">
+                  Discount applied at check-in: -{{ booking.waivedAmount | currency: 'EUR' : 'symbol' : '1.2-2' }}
+                </div>
               }
               @if (booking.paymentStatus && (isAdmin || isDriver) && booking.bookingStatusId !== 'bookingStatus_completed') {
                 <span class="badge ms-2" [ngClass]="getPaymentBadgeClass(booking.paymentStatus)">

@@ -81,6 +81,11 @@ interface BookingResponse {
   walleePaidAmount: number;
   checkinPaidAmount: number;
   completionPaidAmount: number;
+  /** Amount permanently waived off the price via a check-in discount/complimentary pair
+   *  (negative 'discount'/'complimentary' rows in checkin_transactions). Already factored
+   *  into paymentStatus below; exposed so the frontend's own remaining-balance math at
+   *  checkout stays correct too. */
+  waivedAmount: number;
   paidAmount: number;
   checkInBy: string | null;
   checkOutBy: string | null;
@@ -286,6 +291,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id AND ct.amount < 0 AND ct.payment_method IN ('discount', 'complimentary')), 0) as "checkinWaivedAmount",
       b."estimated_arrival_time",
       (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl",
       CASE
@@ -345,11 +351,12 @@ export async function getBookings(params: GetBookingsParams): Promise<{
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
     checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
     completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
+    waivedAmount: Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
     paymentStatus: derivePaymentStatus(
-      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      b.finalPrice !== null ? parseFloat(b.finalPrice) - Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')) : null,
       parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
     isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
@@ -412,6 +419,7 @@ export async function getOverstayedBookings(): Promise<{ data: BookingResponse[]
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id AND ct.amount < 0 AND ct.payment_method IN ('discount', 'complimentary')), 0) as "checkinWaivedAmount",
       b."estimated_arrival_time",
       (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl",
       COALESCE(b."dateTo", b."dateFrom") + COALESCE(b."timeTo", '23:59:59'::time) AS "sortingDatetime"
@@ -466,11 +474,12 @@ export async function getOverstayedBookings(): Promise<{ data: BookingResponse[]
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
     checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
     completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
+    waivedAmount: Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     checkInBy: b.checkInBy,
     checkOutBy: b.checkOutBy,
     paymentStatus: derivePaymentStatus(
-      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      b.finalPrice !== null ? parseFloat(b.finalPrice) - Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')) : null,
       parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
     isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
@@ -530,6 +539,7 @@ export async function getBookingById(
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id AND ct.amount < 0 AND ct.payment_method IN ('discount', 'complimentary')), 0) as "checkinWaivedAmount",
       (SELECT wt.amount FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeAmount",
       (SELECT wt."created_at" FROM wallee_transactions wt WHERE wt."bookingId" = b.id ORDER BY wt."created_at" DESC LIMIT 1) as "walleeCreatedAt",
       b.estimated_arrival_time,
@@ -585,9 +595,10 @@ export async function getBookingById(
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
     checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
     completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
+    waivedAmount: Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
-      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      b.finalPrice !== null ? parseFloat(b.finalPrice) - Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')) : null,
       parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
     isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
@@ -747,7 +758,7 @@ function hasAirportDelivery(dropOffOption?: string | null): boolean {
 
 /** PT-YYMMDD-00000 — YYMMDD is the check-in date, the sequence never resets and never changes
  *  for a given booking (only the date portion is regenerated if check-in date is edited later). */
-function formatBookingReference(seq: number, checkInDate: Date): string {
+export function formatBookingReference(seq: number, checkInDate: Date): string {
   const yy = String(checkInDate.getUTCFullYear()).slice(-2);
   const mm = String(checkInDate.getUTCMonth() + 1).padStart(2, '0');
   const dd = String(checkInDate.getUTCDate()).padStart(2, '0');
@@ -1465,6 +1476,7 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
       COALESCE((SELECT SUM(wt.amount) FROM wallee_transactions wt WHERE wt."bookingId" = b.id), 0) as "walleePaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id), 0) as "checkinPaidAmount",
       COALESCE((SELECT SUM(ct.amount) FROM completion_transactions ct WHERE ct.booking_id = b.id), 0) as "completionPaidAmount",
+      COALESCE((SELECT SUM(ct.amount) FROM checkin_transactions ct WHERE ct.booking_id = b.id AND ct.amount < 0 AND ct.payment_method IN ('discount', 'complimentary')), 0) as "checkinWaivedAmount",
       b.estimated_arrival_time,
       (SELECT url FROM booking_images bi WHERE bi."bookingId" = b.id ORDER BY bi.created_at ASC LIMIT 1) as "thumbnailUrl"
     FROM bookings b
@@ -1516,9 +1528,10 @@ export async function getBookingsByUserId(userId: string): Promise<BookingRespon
     walleePaidAmount: parseFloat(b.walleePaidAmount ?? '0'),
     checkinPaidAmount: parseFloat(b.checkinPaidAmount ?? '0'),
     completionPaidAmount: parseFloat(b.completionPaidAmount ?? '0'),
+    waivedAmount: Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')),
     paidAmount: parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0'),
     paymentStatus: derivePaymentStatus(
-      b.finalPrice !== null ? parseFloat(b.finalPrice) : null,
+      b.finalPrice !== null ? parseFloat(b.finalPrice) - Math.abs(parseFloat(b.checkinWaivedAmount ?? '0')) : null,
       parseFloat(b.walleePaidAmount ?? '0') + parseFloat(b.checkinPaidAmount ?? '0')
     ),
     isPrepaid: parseFloat(b.walleePaidAmount ?? '0') > 0,
@@ -1912,6 +1925,51 @@ export async function estimateExtraFee(
   return { extraFee: calculatedExtraFee, isLate: true, walleePaymentDate };
 }
 
+/** Non-cash/card tags used on checkin_transactions/completion_transactions rows.
+ *  'discount' and 'complimentary' rows permanently waive part of what's owed (see
+ *  getBookingPaidBreakdown); 'fee_waived' rows are purely informational and never affect it. */
+const WAIVER_PAYMENT_METHODS = ['discount', 'complimentary'];
+
+/** Sums real money collected so far (Wallee + in-person, whatever their tag) and how much has
+ *  been permanently waived off the price via a discount/complimentary pair (see the two negative
+ *  tags above) — everything callers need to compute what's still due at check-in or checkout. */
+async function getBookingPaidBreakdown(bookingId: string): Promise<{
+  walleePaid: number;
+  checkinPaid: number;
+  completionPaid: number;
+  waived: number;
+}> {
+  const [walleeResult, checkinResult, completionResult, waivedResult] = await Promise.all([
+    prisma.$queryRawUnsafe<{ total: string }[]>(
+      `SELECT COALESCE(SUM(amount), 0)::text as total FROM wallee_transactions WHERE "bookingId" = $1`,
+      bookingId,
+    ),
+    prisma.$queryRawUnsafe<{ total: string }[]>(
+      `SELECT COALESCE(SUM(amount), 0)::text as total FROM checkin_transactions WHERE booking_id = $1`,
+      bookingId,
+    ),
+    prisma.$queryRawUnsafe<{ total: string }[]>(
+      `SELECT COALESCE(SUM(amount), 0)::text as total FROM completion_transactions WHERE booking_id = $1`,
+      bookingId,
+    ),
+    prisma.$queryRawUnsafe<{ total: string }[]>(
+      `SELECT
+        COALESCE((SELECT SUM(amount) FROM checkin_transactions WHERE booking_id = $1 AND amount < 0 AND payment_method = ANY($2)), 0)
+        + COALESCE((SELECT SUM(amount) FROM completion_transactions WHERE booking_id = $1 AND amount < 0 AND payment_method = ANY($2)), 0)
+        as total`,
+      bookingId,
+      WAIVER_PAYMENT_METHODS,
+    ),
+  ]);
+
+  return {
+    walleePaid: parseFloat(walleeResult[0]?.total ?? '0'),
+    checkinPaid: parseFloat(checkinResult[0]?.total ?? '0'),
+    completionPaid: parseFloat(completionResult[0]?.total ?? '0'),
+    waived: Math.abs(parseFloat(waivedResult[0]?.total ?? '0')),
+  };
+}
+
 async function createAndSendReceiptForInPersonPayment(
   bookingId: string,
   lineType: 'CHECKIN' | 'CHECKOUT',
@@ -1939,7 +1997,7 @@ async function createAndSendReceiptForInPersonPayment(
       pdfBuffer = await generateReceiptPdf({
         receiptNumber: receipt.receiptNumber,
         receiptDate: receipt.createdAt,
-        bookingId,
+        bookingReference: booking.bookingReference || booking.id,
         customerName: `${booking.name} ${booking.surname}`.trim(),
         totalAmount: receipt.totalAmount,
         discount: null,
@@ -2000,6 +2058,10 @@ export async function completeBooking(
   params: {
     amount: number;
     paymentMethod: string;
+    /** Admin confirmed the shortfall between the full remaining balance and `amount` is a
+     *  discount. Unlike check-in, checkout has no later collection point, so a shortfall
+     *  without this flag is rejected rather than silently deferred. */
+    isDiscount?: boolean;
     applyExtraFee: boolean;
     actorUserId: string;
     actorName: string;
@@ -2009,13 +2071,25 @@ export async function completeBooking(
 ): Promise<{ success: boolean; completionTransactionId: string; receiptId?: string } | null> {
   if (!isValidUUID(bookingId)) return null;
 
-  let extraFeeToApply: number | null = null;
-  if (params.applyExtraFee) {
-    const estimate = await estimateExtraFee(bookingId);
-    if (estimate && estimate.extraFee > 0) {
-      extraFeeToApply = estimate.extraFee;
-    }
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) return null;
+
+  const estimate = await estimateExtraFee(bookingId);
+  const estimatedFee = estimate?.extraFee ?? 0;
+  const extraFeeToApply = (params.applyExtraFee && estimatedFee > 0) ? estimatedFee : null;
+
+  const breakdown = await getBookingPaidBreakdown(bookingId);
+  const fullDue = Math.max(
+    parseFloat((Number(booking.finalPrice ?? 0) + (extraFeeToApply ?? 0) - breakdown.waived
+      - (breakdown.walleePaid + breakdown.checkinPaid + breakdown.completionPaid)).toFixed(2)),
+    0,
+  );
+
+  if (params.amount < fullDue && !params.isDiscount) {
+    throw new Error('Amount must equal the full remaining balance, or be confirmed as a discount.');
   }
+  const isActualDiscount = params.isDiscount && params.amount < fullDue;
+  const discountAmount = isActualDiscount ? parseFloat((fullDue - params.amount).toFixed(2)) : 0;
 
   const result = await prisma.$transaction(async (tx) => {
     const updateData: Record<string, any> = {
@@ -2027,16 +2101,35 @@ export async function completeBooking(
 
     await tx.booking.update({ where: { id: bookingId }, data: updateData });
 
-    const completion = await tx.completionTransaction.create({
-      data: {
-        bookingId,
-        amount: params.amount,
-        userId: params.actorUserId,
-        paymentMethod: params.paymentMethod,
-        notes: params.notes || null,
-        shiftId: params.shiftId ?? null,
-      },
-    });
+    let completion;
+    if (isActualDiscount) {
+      await tx.completionTransaction.create({
+        data: { bookingId, amount: fullDue, userId: params.actorUserId, paymentMethod: params.paymentMethod, notes: `Full remaining balance due at checkout: €${fullDue.toFixed(2)}.`, shiftId: params.shiftId ?? null },
+      });
+      completion = await tx.completionTransaction.create({
+        data: { bookingId, amount: -discountAmount, userId: params.actorUserId, paymentMethod: 'discount', notes: `Discount applied at checkout: -€${discountAmount.toFixed(2)}.`, shiftId: params.shiftId ?? null },
+      });
+    } else {
+      completion = await tx.completionTransaction.create({
+        data: {
+          bookingId,
+          amount: params.amount,
+          userId: params.actorUserId,
+          paymentMethod: params.paymentMethod,
+          notes: params.notes || null,
+          shiftId: params.shiftId ?? null,
+        },
+      });
+    }
+
+    if (!params.applyExtraFee && estimatedFee > 0) {
+      await tx.completionTransaction.create({
+        data: { bookingId, amount: estimatedFee, userId: params.actorUserId, paymentMethod: 'fee_waived', notes: `Extra fee that would normally apply: €${estimatedFee.toFixed(2)}.`, shiftId: params.shiftId ?? null },
+      });
+      await tx.completionTransaction.create({
+        data: { bookingId, amount: -estimatedFee, userId: params.actorUserId, paymentMethod: 'fee_waived', notes: 'Extra fee waived at checkout.', shiftId: params.shiftId ?? null },
+      });
+    }
 
     return completion;
   });
@@ -2073,6 +2166,9 @@ export async function recordCheckinPayment(
   params: {
     amount: number;
     paymentMethod: string;
+    /** Admin confirmed the shortfall between the full due amount and `amount` is a discount,
+     *  not a partial payment to defer to checkout. Ignored unless amount is actually short. */
+    isDiscount?: boolean;
     actorUserId: string;
     notes?: string;
     shiftId?: number | null;
@@ -2083,16 +2179,49 @@ export async function recordCheckinPayment(
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking || booking.deleteflag !== 0) return null;
 
-  const record = await prisma.checkinTransaction.create({
-    data: {
-      bookingId,
-      amount: params.amount,
-      userId: params.actorUserId,
-      paymentMethod: params.paymentMethod,
-      notes: params.notes || null,
-      shiftId: params.shiftId ?? null,
-    },
-  });
+  const breakdown = await getBookingPaidBreakdown(bookingId);
+  const fullDue = Math.max(
+    parseFloat((Number(booking.finalPrice ?? 0) - breakdown.waived
+      - (breakdown.walleePaid + breakdown.checkinPaid + breakdown.completionPaid)).toFixed(2)),
+    0,
+  );
+
+  let recordId: string;
+
+  if (params.paymentMethod === 'complimentary') {
+    const negative = await prisma.$transaction(async (tx) => {
+      await tx.checkinTransaction.create({
+        data: { bookingId, amount: fullDue, userId: params.actorUserId, paymentMethod: 'complimentary', notes: 'Complimentary', shiftId: params.shiftId ?? null },
+      });
+      return tx.checkinTransaction.create({
+        data: { bookingId, amount: -fullDue, userId: params.actorUserId, paymentMethod: 'complimentary', notes: 'Complimentary', shiftId: params.shiftId ?? null },
+      });
+    });
+    recordId = negative.id;
+  } else if (params.isDiscount && params.amount < fullDue) {
+    const discountAmount = parseFloat((fullDue - params.amount).toFixed(2));
+    const discountRecord = await prisma.$transaction(async (tx) => {
+      await tx.checkinTransaction.create({
+        data: { bookingId, amount: fullDue, userId: params.actorUserId, paymentMethod: params.paymentMethod, notes: `Full amount due at check-in: €${fullDue.toFixed(2)}.`, shiftId: params.shiftId ?? null },
+      });
+      return tx.checkinTransaction.create({
+        data: { bookingId, amount: -discountAmount, userId: params.actorUserId, paymentMethod: 'discount', notes: `Discount applied at check-in: -€${discountAmount.toFixed(2)}.`, shiftId: params.shiftId ?? null },
+      });
+    });
+    recordId = discountRecord.id;
+  } else {
+    const record = await prisma.checkinTransaction.create({
+      data: {
+        bookingId,
+        amount: params.amount,
+        userId: params.actorUserId,
+        paymentMethod: params.paymentMethod,
+        notes: params.notes || null,
+        shiftId: params.shiftId ?? null,
+      },
+    });
+    recordId = record.id;
+  }
 
   let receiptId: string | undefined;
   if (params.amount > 0) {
@@ -2100,7 +2229,7 @@ export async function recordCheckinPayment(
       .catch((err) => { console.error('Failed to process check-in receipt:', err); return null; }) ?? undefined;
   }
 
-  return { success: true, id: record.id, receiptId };
+  return { success: true, id: recordId, receiptId };
 }
 
 export async function generateAndStoreCheckinReceipt(bookingId: string): Promise<string | null> {
@@ -2122,7 +2251,7 @@ export async function generateAndStoreCheckinReceipt(bookingId: string): Promise
   const checkInDateTime = booking.actualCheckIn ?? new Date();
 
   const data: CheckinReceiptData = {
-    bookingId,
+    bookingReference: booking.bookingReference || booking.id,
     customerName: `${booking.name} ${booking.surname}`.trim(),
     checkInDateTime,
     scheduledCheckOut: booking.dateTo ?? null,
@@ -2166,7 +2295,7 @@ async function buildInPersonPaymentReceiptsData(
   return receipts.map((r) => ({
     receiptNumber: r.receiptNumber || r.id,
     receiptDate: r.createdAt,
-    bookingId,
+    bookingReference: booking.bookingReference || booking.id,
     customerName,
     totalAmount: Number(r.totalAmount),
     discount: r.discount ?? null,
@@ -2201,7 +2330,7 @@ async function buildPrepaidReceiptsData(bookingId: string): Promise<ReceiptPdfDa
   return receipts.map((r) => ({
     receiptNumber: r.receiptNumber || r.id,
     receiptDate: r.createdAt,
-    bookingId,
+    bookingReference: booking.bookingReference || booking.id,
     customerName,
     totalAmount: Number(r.totalAmount),
     discount: r.discount ?? null,
@@ -2250,7 +2379,7 @@ async function buildCheckinReceiptData(bookingId: string): Promise<CheckinReceip
   if (!booking || booking.deleteflag !== 0) return null;
 
   return {
-    bookingId,
+    bookingReference: booking.bookingReference || booking.id,
     customerName: `${booking.name} ${booking.surname}`.trim(),
     checkInDateTime: booking.actualCheckIn ?? new Date(),
     scheduledCheckOut: booking.dateTo ?? null,

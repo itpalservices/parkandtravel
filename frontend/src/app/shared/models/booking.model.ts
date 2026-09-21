@@ -43,6 +43,8 @@ export interface Booking {
   walleePaidAmount?: number;
   checkinPaidAmount?: number;
   completionPaidAmount?: number;
+  /** Amount permanently waived off the price via a check-in discount/complimentary pair. */
+  waivedAmount?: number;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   estimated_arrival_time: string | null;
@@ -134,6 +136,8 @@ export interface BookingDetails {
   bookingStatus: string | null;
   parkPlace: string | null;
   walleePaidAmount?: number;
+  /** Amount permanently waived off the price via a check-in discount/complimentary pair. */
+  waivedAmount?: number;
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'overpaid' | 'unpaid' | null;
   isPrepaid: boolean;

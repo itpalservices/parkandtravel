@@ -501,7 +501,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     } catch {
       // proceed with defaults
     }
-    const effectiveMandatory = mandatoryCheckInPayment && !exemptMandatoryPayment;
+    // The mandatory toggle only binds drivers — admins always see check-in payment as optional,
+    // regardless of the setting, since they have full discretion over amount/discount/complimentary.
+    const effectiveMandatory = this.isDriver && mandatoryCheckInPayment && !exemptMandatoryPayment;
 
     const finalPrice = this.existingBooking?.finalPrice ?? null;
     const paidAmount = this.existingBooking?.paidAmount ?? 0;
@@ -554,17 +556,29 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       // choose. Admins keep full control and can adjust the amount as today.
       const amountDisabledAttr = this.isDriver ? 'disabled' : '';
       const amountDisabledStyle = this.isDriver ? 'background:#f3f4f6; color:#6b7280; cursor:not-allowed;' : '';
+      const complimentaryOptionHtml = this.isDriver ? '' : `
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" id="swal-checkin-pm-complimentary" name="swal-checkin-pm" value="complimentary" style="width:16px;height:16px;"> Complimentary</label>`;
+      const discountQuestionHtml = this.isDriver ? '' : `
+        <div id="swal-checkin-discount-question" style="display:none; margin-top:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px;">
+          <div style="font-size:13px; color:#92400e; margin-bottom:8px;">The entered amount is less than the €${prefilledAmount.toFixed(2)} due. Is the remaining balance discounted?</div>
+          <div style="display:flex; gap:16px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-discount" value="yes" style="width:16px;height:16px;"> Yes, discount</label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-discount" value="no" style="width:16px;height:16px;"> No, remainder due at checkout</label>
+          </div>
+        </div>`;
       const fieldsHtml = `
         ${infoHtml}
         <div style="margin-bottom:12px;">
           <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Amount (€)${effectiveMandatory ? ' <span style="color:#dc3545;">*</span>' : ''}</label>
           <input id="swal-checkin-amount" type="number" step="0.01" min="0" class="swal2-input" value="${prefilledAmount.toFixed(2)}" style="margin:0; width:100%; box-sizing:border-box; ${amountDisabledStyle}" ${amountDisabledAttr}>
+          ${discountQuestionHtml}
         </div>
         <div>
           <label style="display:block; font-weight:600; margin-bottom:6px; color:#374151; font-size:14px;">Payment Method</label>
-          <div style="display:flex; gap:16px; margin-top:6px;">
+          <div style="display:flex; gap:16px; margin-top:6px; flex-wrap:wrap;">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-pm" value="cash" checked style="width:16px;height:16px;"> Cash</label>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-pm" value="card" style="width:16px;height:16px;"> Card</label>
+            ${complimentaryOptionHtml}
           </div>
         </div>`;
       if (effectiveMandatory) {
@@ -692,6 +706,38 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           }
         }
 
+        if (showPaymentFields && !this.isDriver) {
+          const amountInput = document.getElementById('swal-checkin-amount') as HTMLInputElement | null;
+          const discountQuestion = document.getElementById('swal-checkin-discount-question');
+          const complimentaryRadio = document.getElementById('swal-checkin-pm-complimentary') as HTMLInputElement | null;
+          const updateDiscountVisibility = () => {
+            if (!amountInput || !discountQuestion) return;
+            const isComplimentary = complimentaryRadio?.checked ?? false;
+            const value = parseFloat(amountInput.value || '0');
+            const isShort = !isComplimentary && !isNaN(value) && value < prefilledAmount - 0.001;
+            discountQuestion.style.display = isShort ? 'block' : 'none';
+            if (!isShort) {
+              document.querySelectorAll<HTMLInputElement>('input[name="swal-checkin-discount"]').forEach((el) => { el.checked = false; });
+            }
+          };
+          amountInput?.addEventListener('input', updateDiscountVisibility);
+          document.querySelectorAll<HTMLInputElement>('input[name="swal-checkin-pm"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+              if (!amountInput) return;
+              if (radio.value === 'complimentary' && radio.checked) {
+                amountInput.value = '0.00';
+                amountInput.disabled = true;
+              } else if (radio.checked) {
+                amountInput.disabled = false;
+                if (parseFloat(amountInput.value || '0') === 0) {
+                  amountInput.value = prefilledAmount.toFixed(2);
+                }
+              }
+              updateDiscountVisibility();
+            });
+          });
+        }
+
         const uploadArea = document.getElementById('swal-image-upload-area')!;
         const fileInput = document.getElementById('swal-image-input') as HTMLInputElement;
         const previewContainer = document.getElementById('swal-image-preview')!;
@@ -737,7 +783,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         const adults = parseInt(adultsStr, 10);
         if (!adultsStr || isNaN(adults) || adults < 1) { Swal.showValidationMessage('Adults is required (minimum 1)'); return false; }
 
-        let checkinPayment: { amount: number; paymentMethod: string; notes: string } | null = null;
+        let checkinPayment: { amount: number; paymentMethod: string; notes: string; isDiscount?: boolean } | null = null;
         if (showPaymentFields) {
           const body = document.getElementById('swal-checkin-body');
           const isExpanded = effectiveMandatory || (body !== null && body.style.display !== 'none');
@@ -746,10 +792,19 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             const pmEl = document.querySelector('input[name="swal-checkin-pm"]:checked') as HTMLInputElement;
             const amount = parseFloat(amtEl?.value || '0');
             const paymentMethod = pmEl?.value || 'cash';
-            if (effectiveMandatory && (!amtEl?.value || isNaN(amount) || amount <= 0)) {
+            const isComplimentary = paymentMethod === 'complimentary';
+            if (effectiveMandatory && (!amtEl?.value || isNaN(amount) || (amount <= 0 && !isComplimentary))) {
               Swal.showValidationMessage('Check-in payment amount is required'); return false;
             }
-            if (amount > 0) {
+            let isDiscount = false;
+            if (!isComplimentary && amount < prefilledAmount - 0.001) {
+              const discountChoice = document.querySelector('input[name="swal-checkin-discount"]:checked') as HTMLInputElement | null;
+              if (!discountChoice) {
+                Swal.showValidationMessage('Please confirm whether the reduced amount is a discount'); return false;
+              }
+              isDiscount = discountChoice.value === 'yes';
+            }
+            if (amount > 0 || isComplimentary) {
               const pmCap = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
               const noteParts: string[] = [];
               if (walleePaidCI > 0) noteParts.push(`Paid online: €${walleePaidCI.toFixed(2)}${dateStr ? ` at ${dateStr}` : ''}`);
@@ -758,7 +813,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
               const notes = prevNote
                 ? `${prevNote}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
                 : `Full amount collected at check-in: €${amount.toFixed(2)} (${pmCap}).`;
-              checkinPayment = { amount, paymentMethod, notes };
+              checkinPayment = { amount, paymentMethod, notes, isDiscount };
             }
           }
         }
@@ -1070,11 +1125,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       if (!lateConfirm.isConfirmed) return;
     }
 
-    const totalAmount = (this.existingBooking.finalPrice ?? 0) + (applyExtraFee ? extraFee : 0);
+    const totalAmount = (this.existingBooking.finalPrice ?? 0) - (this.existingBooking.waivedAmount ?? 0) + (applyExtraFee ? extraFee : 0);
 
     let paymentMethod: string;
     let amount: number;
     let notes: string | undefined;
+    let isDiscount = false;
 
     const walleePaid = this.existingBooking.walleePaidAmount ?? 0;
     const checkinPaid = (this.existingBooking.paidAmount ?? 0) - walleePaid;
@@ -1112,6 +1168,20 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       // Drivers collect exactly the pre-filled amount — only the payment method is theirs to choose.
       const amountDisabledAttr = this.isDriver ? 'disabled' : '';
       const amountDisabledStyle = this.isDriver ? 'background:#f3f4f6; color:#6b7280; cursor:not-allowed;' : '';
+      const discountQuestionHtml = this.isDriver ? '' : `
+        <div id="swal-checkout-discount-question" style="display:none; margin-top:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; text-align:left;">
+          <div style="font-size:13px; color:#92400e; margin-bottom:8px;">The entered amount is less than the €${remainingBalance.toFixed(2)} remaining balance. Since this is checkout, it must either be raised to the full amount or confirmed as a discount.</div>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="swal-checkout-discount" id="checkout-discount-yes" value="yes">
+              <label class="form-check-label" for="checkout-discount-yes">Yes, discount</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="swal-checkout-discount" id="checkout-discount-no" value="no">
+              <label class="form-check-label" for="checkout-discount-no">No</label>
+            </div>
+          </div>
+        </div>`;
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
         html: `
@@ -1119,6 +1189,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           <div class="mb-3">
             <label class="form-label fw-semibold">Amount (€)</label>
             <input id="swal-amount" type="number" step="0.01" min="0" class="swal2-input" value="${remainingBalance.toFixed(2)}" style="width:100%;margin:0; ${amountDisabledStyle}" ${amountDisabledAttr}>
+            ${discountQuestionHtml}
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Payment Method</label>
@@ -1138,10 +1209,38 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         confirmButtonText: 'Complete Booking',
         cancelButtonText: 'Cancel',
         confirmButtonColor: PRIMARY_COLOR,
+        didOpen: () => {
+          if (this.isDriver) return;
+          const amountInput = document.getElementById('swal-amount') as HTMLInputElement | null;
+          const discountQuestion = document.getElementById('swal-checkout-discount-question');
+          const updateDiscountVisibility = () => {
+            if (!amountInput || !discountQuestion) return;
+            const value = parseFloat(amountInput.value || '0');
+            const isShort = !isNaN(value) && value < remainingBalance - 0.001;
+            discountQuestion.style.display = isShort ? 'block' : 'none';
+            if (!isShort) {
+              document.querySelectorAll<HTMLInputElement>('input[name="swal-checkout-discount"]').forEach((el) => { el.checked = false; });
+            }
+          };
+          amountInput?.addEventListener('input', updateDiscountVisibility);
+        },
         preConfirm: () => {
           const amtEl = document.getElementById('swal-amount') as HTMLInputElement;
           const pmEl = document.querySelector('input[name="swal-pm"]:checked') as HTMLInputElement;
-          return { amount: parseFloat(amtEl?.value || '0'), paymentMethod: pmEl?.value || 'cash' };
+          const enteredAmount = parseFloat(amtEl?.value || '0');
+          const selectedMethod = pmEl?.value || 'cash';
+          let discountConfirmed = false;
+          if (enteredAmount < remainingBalance - 0.001) {
+            const discountChoice = document.querySelector('input[name="swal-checkout-discount"]:checked') as HTMLInputElement | null;
+            if (!discountChoice) {
+              Swal.showValidationMessage('Please confirm whether the reduced amount is a discount'); return false;
+            }
+            if (discountChoice.value !== 'yes') {
+              Swal.showValidationMessage('At checkout, the amount must either be raised to the full remaining balance or confirmed as a discount'); return false;
+            }
+            discountConfirmed = true;
+          }
+          return { amount: enteredAmount, paymentMethod: selectedMethod, isDiscount: discountConfirmed };
         },
       });
       if (!formValues) return;
@@ -1151,6 +1250,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       notes = priorNote
         ? `${priorNote}. Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`
         : `Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`;
+      isDiscount = !!formValues.isDiscount;
     }
 
     const actorName = this.userProfileService.getDisplayName() || undefined;
@@ -1158,6 +1258,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.apiService.post<any>(`/bookings/${this.bookingId}/complete`, {
       amount,
       paymentMethod,
+      isDiscount,
       applyExtraFee,
       notes,
       actorName,
