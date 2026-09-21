@@ -5,6 +5,7 @@ export interface ShiftTransaction {
   paymentMethod: string;
   notes: string | null;
   plateNo: string | null;
+  bookingReference: string | null;
   type: 'checkin' | 'checkout';
 }
 

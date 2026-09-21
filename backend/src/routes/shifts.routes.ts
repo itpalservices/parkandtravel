@@ -77,6 +77,7 @@ interface SummaryTransactionRow {
   payment_method: string;
   notes: string | null;
   plate_no: string | null;
+  booking_reference: string | null;
   type: string;
 }
 
@@ -109,28 +110,32 @@ router.get("/summary", checkJwt, async (req: Request, res: Response) => {
 
     const [transactions, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT id, datetime, amount, payment_method, notes, plate_no, type
+        SELECT id, datetime, amount, payment_method, notes, plate_no, booking_reference, type
         FROM (
           SELECT ct.id, ct.datetime, ct.amount, ct.payment_method, ct.notes,
-                 b."plateNo" AS plate_no, 'checkout' AS type
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
           FROM completion_transactions ct
           LEFT JOIN bookings b ON b.id = ct.booking_id
-          WHERE ct.shift_id = ${shiftId} AND ct.amount > 0
+          WHERE ct.shift_id = ${shiftId}
+            AND NOT (ct.payment_method = 'online' AND ct.amount = 0)
           UNION ALL
           SELECT kit.id, kit.datetime, kit.amount, kit.payment_method, kit.notes,
-                 b."plateNo" AS plate_no, 'checkin' AS type
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
           FROM checkin_transactions kit
           LEFT JOIN bookings b ON b.id = kit.booking_id
-          WHERE kit.shift_id = ${shiftId} AND kit.amount > 0
+          WHERE kit.shift_id = ${shiftId}
         ) combined
         ORDER BY datetime DESC
       `.then((r) => r as SummaryTransactionRow[]),
       prisma.$queryRaw`
         SELECT payment_method, SUM(amount) AS total, COUNT(*) AS count
         FROM (
-          SELECT payment_method, amount FROM completion_transactions WHERE shift_id = ${shiftId} AND amount > 0
+          SELECT payment_method, amount FROM completion_transactions
+          WHERE shift_id = ${shiftId}
+            AND NOT (payment_method = 'online' AND amount = 0)
           UNION ALL
-          SELECT payment_method, amount FROM checkin_transactions WHERE shift_id = ${shiftId} AND amount > 0
+          SELECT payment_method, amount FROM checkin_transactions
+          WHERE shift_id = ${shiftId}
         ) combined
         GROUP BY payment_method
         ORDER BY payment_method
@@ -146,6 +151,7 @@ router.get("/summary", checkJwt, async (req: Request, res: Response) => {
         paymentMethod: t.payment_method,
         notes: t.notes,
         plateNo: t.plate_no,
+        bookingReference: t.booking_reference,
         type: t.type,
       })),
       totals: totalsRaw.map((t) => ({

@@ -20,13 +20,21 @@
       border-radius: 16px;
       padding: 2rem;
       width: 100%;
-      max-width: 560px;
+      max-width: 640px;
       max-height: 90vh;
       overflow-y: auto;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+    }
+
+    @media (max-width: 480px) {
+      .modal-container {
+        padding: 1.25rem;
+        border-radius: 12px;
+        gap: 1.1rem;
+      }
     }
 
     .modal-header {
@@ -117,15 +125,28 @@
     .table-wrapper {
       border: 1px solid #e5e7eb;
       border-radius: 8px;
-      overflow: hidden;
       max-height: 240px;
+      overflow-x: auto;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .transactions-table {
       width: 100%;
+      min-width: 540px;
       border-collapse: collapse;
       font-size: 0.875rem;
+    }
+
+    @media (max-width: 480px) {
+      .transactions-table {
+        font-size: 0.8rem;
+      }
+
+      .transactions-table th,
+      .transactions-table td {
+        padding: 0.5rem;
+      }
     }
 
     .transactions-table thead {
@@ -143,6 +164,7 @@
       text-transform: uppercase;
       letter-spacing: 0.025em;
       border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
     }
 
     .transactions-table th.col-amount {
@@ -183,21 +205,32 @@
       color: #1e40af;
     }
 
+    .reference-cell {
+      font-family: monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+
     .plate-cell {
       font-family: monospace;
       font-size: 0.875rem;
       font-weight: 500;
       color: #1f2937;
+      white-space: nowrap;
     }
 
     .method-cell {
       color: #6b7280;
+      white-space: nowrap;
     }
 
     .amount-cell {
       text-align: right;
       font-weight: 600;
       color: #1f2937;
+      white-space: nowrap;
     }
 
     /* Totals */
@@ -218,6 +251,21 @@
       align-items: center;
       padding: 0.5rem 1rem;
       font-size: 0.875rem;
+    }
+
+    @media (max-width: 480px) {
+      .totals-row {
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "label amount" "count amount";
+        row-gap: 0.15rem;
+        column-gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+      }
+
+      .total-label { grid-area: label; }
+      .total-count { grid-area: count; }
+      .total-amount { grid-area: amount; }
     }
 
     .totals-row:not(:last-child) {

@@ -40,8 +40,19 @@ export class LogoutConfirmationModalComponent implements OnInit, OnDestroy {
     return this.state.summary?.totals.reduce((sum, t: ShiftTotals) => sum + t.total, 0) ?? 0;
   }
 
+  private readonly methodLabels: Record<string, string> = {
+    fee_waived: 'Extra Fee Waived',
+  };
+
   formatMethod(method: string): string {
+    if (this.methodLabels[method]) return this.methodLabels[method];
     return method.charAt(0).toUpperCase() + method.slice(1).toLowerCase();
+  }
+
+  /** Puts the minus sign before the currency symbol (-€3.00), not between them (€-3.00). */
+  formatAmount(amount: number): string {
+    const sign = amount < 0 ? '-' : '';
+    return `${sign}€${Math.abs(amount).toFixed(2)}`;
   }
 
   cancel(): void {
