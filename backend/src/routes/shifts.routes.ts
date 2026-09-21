@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { checkJwt } from "../middleware/auth.middleware";
 import { prisma } from "../lib/prisma";
+import { generateShiftSummaryZpl } from "../services/pdf.service";
 
 const router = Router();
 
@@ -87,6 +88,30 @@ interface SummaryTotalsRow {
   count: bigint;
 }
 
+/** Same exclusion rules as the transactions list below (hide the zero-amount 'online'
+ *  no-payment-required marker; discount/complimentary/fee_waived pairs are shown in full). */
+async function getOpenShiftTotals(shiftId: number): Promise<{ paymentMethod: string; total: number; count: number }[]> {
+  const totalsRaw = await prisma.$queryRaw`
+    SELECT payment_method, SUM(amount) AS total, COUNT(*) AS count
+    FROM (
+      SELECT payment_method, amount FROM completion_transactions
+      WHERE shift_id = ${shiftId}
+        AND NOT (payment_method = 'online' AND amount = 0)
+      UNION ALL
+      SELECT payment_method, amount FROM checkin_transactions
+      WHERE shift_id = ${shiftId}
+    ) combined
+    GROUP BY payment_method
+    ORDER BY payment_method
+  `.then((r) => r as SummaryTotalsRow[]);
+
+  return totalsRaw.map((t) => ({
+    paymentMethod: t.payment_method,
+    total: Number(t.total),
+    count: Number(t.count),
+  }));
+}
+
 router.get("/summary", checkJwt, async (req: Request, res: Response) => {
   try {
     const authUser = req.authUser;
@@ -108,7 +133,7 @@ router.get("/summary", checkJwt, async (req: Request, res: Response) => {
 
     const shiftId = openShift.id;
 
-    const [transactions, totalsRaw] = await Promise.all([
+    const [transactions, totals] = await Promise.all([
       prisma.$queryRaw`
         SELECT id, datetime, amount, payment_method, notes, plate_no, booking_reference, type
         FROM (
@@ -127,19 +152,7 @@ router.get("/summary", checkJwt, async (req: Request, res: Response) => {
         ) combined
         ORDER BY datetime DESC
       `.then((r) => r as SummaryTransactionRow[]),
-      prisma.$queryRaw`
-        SELECT payment_method, SUM(amount) AS total, COUNT(*) AS count
-        FROM (
-          SELECT payment_method, amount FROM completion_transactions
-          WHERE shift_id = ${shiftId}
-            AND NOT (payment_method = 'online' AND amount = 0)
-          UNION ALL
-          SELECT payment_method, amount FROM checkin_transactions
-          WHERE shift_id = ${shiftId}
-        ) combined
-        GROUP BY payment_method
-        ORDER BY payment_method
-      `.then((r) => r as SummaryTotalsRow[]),
+      getOpenShiftTotals(shiftId),
     ]);
 
     res.json({
@@ -154,15 +167,48 @@ router.get("/summary", checkJwt, async (req: Request, res: Response) => {
         bookingReference: t.booking_reference,
         type: t.type,
       })),
-      totals: totalsRaw.map((t) => ({
-        paymentMethod: t.payment_method,
-        total: Number(t.total),
-        count: Number(t.count),
-      })),
+      totals,
     });
   } catch (error: any) {
     console.error("Error fetching shift summary:", error.message);
     res.status(500).json({ error: "Failed to fetch shift summary" });
+  }
+});
+
+router.get("/summary/zpl", checkJwt, async (req: Request, res: Response) => {
+  try {
+    const authUser = req.authUser;
+
+    if (!authUser || (authUser.role !== "admin" && authUser.role !== "driver")) {
+      res.status(403).json({ error: "Only admins and drivers can print a shift summary" });
+      return;
+    }
+
+    const openShift = await prisma.shift.findFirst({
+      where: { userId: authUser.sub, status: "open" },
+      select: { id: true, shiftStart: true },
+    });
+
+    if (!openShift) {
+      res.status(404).json({ error: "No open shift found" });
+      return;
+    }
+
+    const totals = await getOpenShiftTotals(openShift.id);
+    const cashierName = (req.query.actorName as string) || authUser.email;
+
+    const zpl = await generateShiftSummaryZpl({
+      cashierName,
+      shiftStart: openShift.shiftStart,
+      shiftEnd: new Date(),
+      totals,
+    });
+
+    res.set({ "Content-Type": "text/plain" });
+    res.send(zpl);
+  } catch (error: any) {
+    console.error("Error generating shift summary ZPL:", error.message);
+    res.status(500).json({ error: "Failed to generate shift summary" });
   }
 });
 

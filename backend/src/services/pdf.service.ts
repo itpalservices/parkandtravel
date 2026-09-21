@@ -623,6 +623,91 @@ export async function generateCheckinReceiptZpl(data: CheckinReceiptData): Promi
   return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
+export interface ShiftSummaryZplData {
+  cashierName: string;
+  shiftStart: Date;
+  shiftEnd: Date;
+  totals: { paymentMethod: string; total: number; count: number }[];
+}
+
+const SHIFT_METHOD_LABELS: Record<string, string> = {
+  fee_waived: 'Extra Fee Waived',
+};
+
+function formatShiftMethodLabel(method: string): string {
+  return SHIFT_METHOD_LABELS[method] || (method.charAt(0).toUpperCase() + method.slice(1).toLowerCase());
+}
+
+export async function generateShiftSummaryZpl(data: ShiftSummaryZplData): Promise<string> {
+  const company = await getCompanySettings();
+
+  const dateTimeStr = (d: Date) => new Date(d).toLocaleString('en-GB', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : company.companyPhone1 || company.companyPhone2 || '';
+
+  const PW = 576;
+  const LM = 10;
+  const BW = PW - LM * 2;
+  let y = 80;
+  const cmds: string[] = [];
+
+  const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
+  const center = (text: string, h: number) => cmds.push(`^FO0,${y}^A0N,${h},${h}^FB${PW},1,0,C,0^FD${esc(text)}^FS`);
+  const left   = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FD${esc(text)}^FS`);
+  const right  = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FB${BW},1,0,R,0^FD${esc(text)}^FS`);
+  const solid  = () => cmds.push(`^FO${LM},${y}^GB${BW},2,2^FS`);
+  const thin   = () => cmds.push(`^FO${LM},${y}^GB${BW},1,1^FS`);
+
+  // Header
+  center(company.companyName || 'Park & Travel', 30); y += 36;
+  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 22); y += 27; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 22); y += 27; }
+  y += 6; solid(); y += 10;
+
+  // Title
+  center('SHIFT SUMMARY', 27); y += 33;
+  y += 6; thin(); y += 10;
+
+  // Cashier + shift window
+  left('CASHIER', 21); y += 26;
+  left(data.cashierName || '-', 24); y += 30;
+  left('SHIFT START', 21); y += 26;
+  left(dateTimeStr(data.shiftStart), 22); y += 27;
+  left('SHIFT END', 21); y += 26;
+  left(dateTimeStr(data.shiftEnd), 22); y += 27;
+  y += 6; solid(); y += 10;
+
+  // Per payment-method totals
+  if (data.totals.length === 0) {
+    center('No transactions this shift', 22); y += 28;
+  } else {
+    for (const t of data.totals) {
+      const sign = t.total < 0 ? '-' : '';
+      left(`${formatShiftMethodLabel(t.paymentMethod)} (${t.count})`, 22);
+      right(`${sign}€${Math.abs(t.total).toFixed(2)}`, 22);
+      y += 28;
+    }
+  }
+  y += 4; solid(); y += 10;
+
+  const grandTotal = data.totals.reduce((sum, t) => sum + t.total, 0);
+  const grandSign = grandTotal < 0 ? '-' : '';
+  left('GRAND TOTAL', 25);
+  right(`${grandSign}€${Math.abs(grandTotal).toFixed(2)}`, 25);
+  y += 32;
+
+  // Footer
+  y += 10;
+  center('Thank you for choosing Park & Travel.', 19); y += 25;
+  y += 20;
+
+  return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+}
+
 export interface BookingTagData {
   customerName: string;
   plateNo: string | null;

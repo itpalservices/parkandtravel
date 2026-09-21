@@ -84,22 +84,39 @@
 
         </ng-container>
 
+        <!-- Print failure -->
+        <div *ngIf="printError" class="print-error">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ printError }} The shift was <strong>not</strong> closed.</span>
+        </div>
+
         <!-- Actions -->
         <div class="modal-actions">
-          <button class="btn-cancel" (click)="cancel()" [disabled]="isLoggingOut">
+          <button class="btn-cancel" (click)="cancel()" [disabled]="isPrinting || isLoggingOut">
             Cancel
           </button>
-          <button class="btn-logout" (click)="confirmLogout()" [disabled]="state.loading || isLoggingOut">
-            <svg *ngIf="!isLoggingOut" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+          <button class="btn-logout-only" (click)="logoutOnly()" [disabled]="state.loading || isPrinting || isLoggingOut">
+            Log Out Only
+          </button>
+          <button class="btn-logout" (click)="closeShiftAndLogout()" [disabled]="state.loading || isPrinting || isLoggingOut">
+            <svg *ngIf="!isPrinting && !isLoggingOut" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
-            <div *ngIf="isLoggingOut" class="btn-spinner"></div>
-            {{ isLoggingOut ? 'Logging out...' : 'Log Out' }}
+            <div *ngIf="isPrinting || isLoggingOut" class="btn-spinner"></div>
+            {{ isPrinting ? 'Printing summary...' : (isLoggingOut ? 'Closing shift...' : 'Close Shift & Log Out') }}
           </button>
         </div>
+        <p class="logout-only-hint">
+          "Log Out Only" leaves your shift open — you'll continue it next time you log in.
+        </p>
 
       </div>
     </div>

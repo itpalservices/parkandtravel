@@ -308,11 +308,75 @@
       font-size: 1rem;
     }
 
+    /* Print failure */
+    .print-error {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: #b91c1c;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+
+    .print-error svg {
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
     /* Actions */
     .modal-actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.75rem;
       justify-content: flex-end;
+    }
+
+    .logout-only-hint {
+      margin: -0.75rem 0 0;
+      font-size: 0.775rem;
+      color: #9ca3af;
+      text-align: right;
+    }
+
+    @media (max-width: 480px) {
+      .modal-actions {
+        flex-direction: column-reverse;
+      }
+
+      .modal-actions button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .logout-only-hint {
+        text-align: center;
+      }
+    }
+
+    .btn-logout-only {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: $primary-color;
+      background-color: transparent;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-logout-only:hover:not(:disabled) {
+      background-color: #f0f9ff;
+    }
+
+    .btn-logout-only:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .btn-cancel {

@@ -51,6 +51,20 @@ export class ZebraPrintService {
     );
   }
 
+  /** Unlike the other print methods, this one rethrows on failure — closing a shift requires
+   *  a successful print as proof, so the caller must be able to detect failure and abort. */
+  async printShiftSummary(cashierName: string): Promise<void> {
+    this.progress.start();
+    try {
+      const zpl = await this.http.get(`/api/shifts/summary/zpl?actorName=${encodeURIComponent(cashierName)}`, { responseType: 'text' }).toPromise();
+      await this.sendZpl(zpl!);
+      this.progress.success();
+    } catch (err: any) {
+      this.progress.error(err?.message || 'Print failed. Please try again.');
+      throw err;
+    }
+  }
+
   private async run(action: () => Promise<void>): Promise<void> {
     this.progress.start();
     try {
