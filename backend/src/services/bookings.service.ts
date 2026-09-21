@@ -2079,16 +2079,21 @@ export async function completeBooking(
   const extraFeeToApply = (params.applyExtraFee && estimatedFee > 0) ? estimatedFee : null;
 
   const breakdown = await getBookingPaidBreakdown(bookingId);
-  const fullDue = Math.max(
-    parseFloat((Number(booking.finalPrice ?? 0) + (extraFeeToApply ?? 0) - breakdown.waived
-      - (breakdown.walleePaid + breakdown.checkinPaid + breakdown.completionPaid)).toFixed(2)),
-    0,
-  );
+  const rawDue = parseFloat((Number(booking.finalPrice ?? 0) + (extraFeeToApply ?? 0) - breakdown.waived
+    - (breakdown.walleePaid + breakdown.checkinPaid + breakdown.completionPaid)).toFixed(2));
+  const fullDue = Math.max(rawDue, 0);
 
-  if (params.amount < fullDue && !params.isDiscount) {
+  const isRefund = params.paymentMethod === 'refund';
+  if (isRefund) {
+    // Server re-derives the refund from the booking's own numbers — never trusts a client-supplied
+    // amount — so a refund can only be recorded when the booking is genuinely overpaid.
+    if (rawDue >= 0 || Math.abs(params.amount - rawDue) > 0.01) {
+      throw new Error("Refund amount does not match this booking's actual overpayment.");
+    }
+  } else if (params.amount < fullDue && !params.isDiscount) {
     throw new Error('Amount must equal the full remaining balance, or be confirmed as a discount.');
   }
-  const isActualDiscount = params.isDiscount && params.amount < fullDue;
+  const isActualDiscount = !isRefund && params.isDiscount && params.amount < fullDue;
   const discountAmount = isActualDiscount ? parseFloat((fullDue - params.amount).toFixed(2)) : 0;
 
   const result = await prisma.$transaction(async (tx) => {
@@ -2102,7 +2107,11 @@ export async function completeBooking(
     await tx.booking.update({ where: { id: bookingId }, data: updateData });
 
     let completion;
-    if (isActualDiscount) {
+    if (isRefund) {
+      completion = await tx.completionTransaction.create({
+        data: { bookingId, amount: params.amount, userId: params.actorUserId, paymentMethod: 'refund', notes: params.notes || `Refund issued at checkout: €${Math.abs(params.amount).toFixed(2)} (Cash).`, shiftId: params.shiftId ?? null },
+      });
+    } else if (isActualDiscount) {
       await tx.completionTransaction.create({
         data: { bookingId, amount: fullDue, userId: params.actorUserId, paymentMethod: params.paymentMethod, notes: `Full remaining balance due at checkout: €${fullDue.toFixed(2)}.`, shiftId: params.shiftId ?? null },
       });

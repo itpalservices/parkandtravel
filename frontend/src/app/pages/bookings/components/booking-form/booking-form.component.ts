@@ -1147,7 +1147,25 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     if (checkinPaid > 0) priorParts.push(`Paid at check-in: €${checkinPaid.toFixed(2)}`);
     const priorNote = priorParts.join('. ');
 
-    if (remainingBalance <= 0) {
+    if (remainingBalance < -0.001) {
+      // Overpaid (e.g. a service was removed after being paid for) — cash refund owed back
+      const refundAmount = parseFloat(Math.abs(remainingBalance).toFixed(2));
+      paymentMethod = 'refund';
+      amount = -refundAmount;
+      notes = priorNote
+        ? `${priorNote}. Refund issued at checkout: €${refundAmount.toFixed(2)} (Cash).`
+        : `Refund issued at checkout: €${refundAmount.toFixed(2)} (Cash).`;
+      const confirmResult = await Swal.fire({
+        title: 'Confirm Completion',
+        html: `Booking was overpaid.<br><strong>Refund due: €${refundAmount.toFixed(2)} (Cash)</strong><br>Please return this amount to the customer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Complete Booking',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: PRIMARY_COLOR,
+      });
+      if (!confirmResult.isConfirmed) return;
+    } else if (remainingBalance <= 0) {
       paymentMethod = 'online';
       amount = 0;
       notes = priorNote ? `${priorNote}. No additional payment required.` : 'No additional payment required.';
