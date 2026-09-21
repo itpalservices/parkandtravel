@@ -17,6 +17,7 @@ interface TransactionRow {
   payment_method: string;
   notes: string | null;
   plate_no: string | null;
+  booking_reference: string | null;
   type: string;
 }
 
@@ -82,16 +83,16 @@ export async function employeeSessionReportByShift(req: Request, res: Response) 
 
     const [transactions, countRaw, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT id, datetime, amount, user_id, payment_method, notes, plate_no, type
+        SELECT id, datetime, amount, user_id, payment_method, notes, plate_no, booking_reference, type
         FROM (
           SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes,
-                 b."plateNo" AS plate_no, 'checkout' AS type
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
           FROM completion_transactions ct
           LEFT JOIN bookings b ON b.id = ct.booking_id
           WHERE ct.shift_id = ${shiftIdNum}
           UNION ALL
           SELECT kit.id, kit.datetime, kit.amount, kit.user_id, kit.payment_method, kit.notes,
-                 b."plateNo" AS plate_no, 'checkin' AS type
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
           FROM checkin_transactions kit
           LEFT JOIN bookings b ON b.id = kit.booking_id
           WHERE kit.shift_id = ${shiftIdNum}
@@ -129,6 +130,7 @@ export async function employeeSessionReportByShift(req: Request, res: Response) 
         paymentMethod: t.payment_method,
         notes: t.notes,
         plateNo: t.plate_no,
+        bookingReference: t.booking_reference,
         type: t.type,
       })),
       total,
@@ -162,16 +164,16 @@ export async function employeeSessionReportByDate(req: Request, res: Response) {
 
     const [transactions, countRaw, totalsRaw] = await Promise.all([
       prisma.$queryRaw`
-        SELECT id, datetime, amount, user_id, payment_method, notes, plate_no, type
+        SELECT id, datetime, amount, user_id, payment_method, notes, plate_no, booking_reference, type
         FROM (
           SELECT ct.id, ct.datetime, ct.amount, ct.user_id, ct.payment_method, ct.notes,
-                 b."plateNo" AS plate_no, 'checkout' AS type
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
           FROM completion_transactions ct
           LEFT JOIN bookings b ON b.id = ct.booking_id
           WHERE ct.datetime >= ${fromDate} AND ct.datetime <= ${toDate}
           UNION ALL
           SELECT kit.id, kit.datetime, kit.amount, kit.user_id, kit.payment_method, kit.notes,
-                 b."plateNo" AS plate_no, 'checkin' AS type
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
           FROM checkin_transactions kit
           LEFT JOIN bookings b ON b.id = kit.booking_id
           WHERE kit.datetime >= ${fromDate} AND kit.datetime <= ${toDate}
@@ -222,6 +224,7 @@ export async function employeeSessionReportByDate(req: Request, res: Response) {
         paymentMethod: t.payment_method,
         notes: t.notes,
         plateNo: t.plate_no,
+        bookingReference: t.booking_reference,
         type: t.type,
         employeeName: userMap[t.user_id] || t.user_id,
       })),

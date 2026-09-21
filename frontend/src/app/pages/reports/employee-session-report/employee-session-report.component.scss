@@ -260,6 +260,13 @@
   white-space: nowrap;
 }
 
+.reference-cell {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #1e293b !important;
+  white-space: nowrap;
+}
+
 .amount-cell {
   font-weight: 600;
   color: #1e293b !important;
@@ -286,6 +293,10 @@
   &[data-method="card"] { background: #dbeafe; color: #1e40af; }
   &[data-method="wallee"],
   &[data-method="online"] { background: #f3e8ff; color: #6b21a8; }
+  &[data-method="discount"] { background: #d1fae5; color: #047857; }
+  &[data-method="complimentary"] { background: #e0f2fe; color: #0369a1; }
+  &[data-method="fee_waived"] { background: #fef3c7; color: #92400e; }
+  &[data-method="refund"] { background: #fee2e2; color: #b91c1c; }
 }
 
 .badge-tx-type {

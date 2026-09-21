@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 import { ApiService } from '../../../core/services/api.service';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
 import { exportToExcel } from '../../../shared/utils/excel-export.util';
+import { formatPaymentMethodLabel, formatSignedCurrency } from '../../../shared/utils/payment-method-format.util';
 
 interface ExportData {
   title: string;
@@ -50,6 +51,7 @@ export interface TransactionRow {
   paymentMethod: string;
   notes: string | null;
   plateNo: string | null;
+  bookingReference: string | null;
   type: 'checkout' | 'checkin';
   employeeName?: string;
 }
@@ -356,6 +358,7 @@ export class EmployeeSessionReportComponent implements OnInit {
     const rows = all.map((t) => [
       this.formatDateTime(t.datetime),
       t.plateNo || '-',
+      t.bookingReference || '-',
       this.formatTxType(t.type),
       this.formatPaymentMethod(t.paymentMethod),
       this.formatAmount(t.amount),
@@ -366,12 +369,12 @@ export class EmployeeSessionReportComponent implements OnInit {
     return {
       title: 'Income by Employee',
       subtitle: periodLabel,
-      headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Employee', 'Notes'],
+      headers: ['Date / Time', 'Plate No', 'Booking Ref.', 'Type', 'Payment Method', 'Amount', 'Employee', 'Notes'],
       rows,
       totals,
       total: all.length,
       filenameBase,
-      colStyles: { 4: { halign: 'right' as const }, 6: { cellWidth: 40 } },
+      colStyles: { 5: { halign: 'right' as const }, 7: { cellWidth: 40 } },
     };
   }
 
@@ -404,6 +407,7 @@ export class EmployeeSessionReportComponent implements OnInit {
     const rows = all.map((t) => [
       this.formatDateTime(t.datetime),
       t.plateNo || '-',
+      t.bookingReference || '-',
       this.formatTxType(t.type),
       this.formatPaymentMethod(t.paymentMethod),
       this.formatAmount(t.amount),
@@ -413,12 +417,12 @@ export class EmployeeSessionReportComponent implements OnInit {
     return {
       title: 'Income by Employee',
       subtitle: periodLabel,
-      headers: ['Date / Time', 'Plate No', 'Type', 'Payment Method', 'Amount', 'Notes'],
+      headers: ['Date / Time', 'Plate No', 'Booking Ref.', 'Type', 'Payment Method', 'Amount', 'Notes'],
       rows,
       totals,
       total: all.length,
       filenameBase,
-      colStyles: { 4: { halign: 'right' as const }, 5: { cellWidth: 40 } },
+      colStyles: { 5: { halign: 'right' as const }, 6: { cellWidth: 40 } },
     };
   }
 
@@ -573,12 +577,12 @@ export class EmployeeSessionReportComponent implements OnInit {
   }
 
   formatAmount(amount: number): string {
-    return `€${amount.toFixed(2)}`;
+    return formatSignedCurrency(amount);
   }
 
   formatPaymentMethod(m: string): string {
     if (!m) return '-';
-    return m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+    return formatPaymentMethodLabel(m);
   }
 
   formatTxType(type: string): string {
