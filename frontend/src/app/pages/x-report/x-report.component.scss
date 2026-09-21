@@ -213,6 +213,25 @@
   font-size: 1rem;
 }
 
+@media (max-width: 767px) {
+  .totals-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "label amount" "count amount";
+    row-gap: 0.15rem;
+    column-gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.8rem;
+  }
+
+  .total-label { grid-area: label; }
+  .total-count { grid-area: count; }
+  .total-amount { grid-area: amount; }
+
+  .grand-total-row {
+    padding: 0.6rem 0.9rem;
+  }
+}
+
 .badge {
   display: inline-block;
   padding: 2px 8px;
@@ -372,21 +391,37 @@
 }
 
 .employee-name {
+  flex-shrink: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 700;
   color: #1a1a2e;
   font-size: 0.95rem;
 }
 
+.employee-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
 .employee-shift-start {
   color: #6b7280;
   font-size: 0.8rem;
-  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .employee-count {
   color: #9ca3af;
   font-size: 0.8rem;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .employee-total {
@@ -396,6 +431,7 @@
   white-space: nowrap;
   min-width: 80px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .employee-body {
@@ -406,12 +442,47 @@
 
 @media (max-width: 767px) {
   .employee-header {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 10px;
     row-gap: 4px;
+    padding: 12px 14px;
   }
 
-  .employee-shift-start {
-    flex-basis: 100%;
-    order: 3;
+  .chevron {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .employee-name {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 100%;
+    font-size: 0.875rem;
+  }
+
+  .employee-total {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+
+  .employee-meta {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .employee-shift-start,
+  .employee-count {
+    font-size: 0.72rem;
+  }
+
+  .employee-body {
+    padding: 0 12px 14px;
+    padding-top: 12px;
   }
 }

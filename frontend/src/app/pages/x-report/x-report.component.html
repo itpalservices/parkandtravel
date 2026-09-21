@@ -128,8 +128,10 @@
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
             <span class="employee-name">{{ emp.employeeName }}</span>
-            <span class="employee-shift-start">Shift started {{ formatTime(emp.shiftStart) }}</span>
-            <span class="employee-count">{{ emp.transactions.length }} transaction{{ emp.transactions.length !== 1 ? 's' : '' }}</span>
+            <span class="employee-meta">
+              <span class="employee-shift-start">Shift started {{ formatTime(emp.shiftStart) }}</span>
+              <span class="employee-count">{{ emp.transactions.length }} transaction{{ emp.transactions.length !== 1 ? 's' : '' }}</span>
+            </span>
             <span class="employee-total">{{ formatAmount(emp.employeeTotal) }}</span>
           </button>
 
