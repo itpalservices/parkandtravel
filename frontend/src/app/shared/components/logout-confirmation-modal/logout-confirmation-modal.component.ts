@@ -57,20 +57,26 @@ export class LogoutConfirmationModalComponent implements OnInit, OnDestroy {
 
   /** Printing the shift summary is the staff member's proof of what they collected —
    *  the shift must not be closed (and they must not be logged out) unless it actually
-   *  printed, so a failed print aborts here and leaves the shift open for a retry. */
+   *  printed, so a failed print aborts here and leaves the shift open for a retry.
+   *  A shift with nothing recorded has nothing to prove, so it skips printing entirely. */
   async closeShiftAndLogout(): Promise<void> {
     if (!this.authService || this.isLoggingOut) return;
     this.printError = null;
-    this.isPrinting = true;
-    try {
-      const cashierName = this.userProfileService.getDisplayName() || '';
-      await this.zebraPrintService.printShiftSummary(cashierName);
-    } catch (err: any) {
+
+    const hasTransactions = (this.state.summary?.transactions.length ?? 0) > 0;
+    if (hasTransactions) {
+      this.isPrinting = true;
+      try {
+        const cashierName = this.userProfileService.getDisplayName() || '';
+        await this.zebraPrintService.printShiftSummary(cashierName);
+      } catch (err: any) {
+        this.isPrinting = false;
+        this.printError = err?.message || 'Could not print the shift summary. Please check the printer and try again.';
+        return;
+      }
       this.isPrinting = false;
-      this.printError = err?.message || 'Could not print the shift summary. Please check the printer and try again.';
-      return;
     }
-    this.isPrinting = false;
+
     this.isLoggingOut = true;
     await this.shiftService.endShift();
     this.logoutConfirmationService.hide();

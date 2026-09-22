@@ -211,6 +211,7 @@ export async function createZReport(req: Request, res: Response) {
             SET z_report_id = ${report.id}::uuid
             FROM shifts s
             WHERE s.id = ct.shift_id AND s.status = 'closed' AND ct.z_report_id IS NULL
+              AND NOT (ct.payment_method = 'online' AND ct.amount = 0)
             RETURNING ct.id, ct.datetime, ct.amount, ct.payment_method, ct.notes, ct.user_id, ct.booking_id
           )
           SELECT u.id, u.datetime, u.amount, u.payment_method, u.notes, u.user_id,

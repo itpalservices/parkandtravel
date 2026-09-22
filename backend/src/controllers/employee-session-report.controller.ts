@@ -90,6 +90,7 @@ export async function employeeSessionReportByShift(req: Request, res: Response) 
           FROM completion_transactions ct
           LEFT JOIN bookings b ON b.id = ct.booking_id
           WHERE ct.shift_id = ${shiftIdNum}
+            AND NOT (ct.payment_method = 'online' AND ct.amount = 0)
           UNION ALL
           SELECT kit.id, kit.datetime, kit.amount, kit.user_id, kit.payment_method, kit.notes,
                  b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
@@ -102,7 +103,8 @@ export async function employeeSessionReportByShift(req: Request, res: Response) 
       `.then((r) => r as TransactionRow[]),
       prisma.$queryRaw`
         SELECT (
-          SELECT COUNT(*) FROM completion_transactions WHERE shift_id = ${shiftIdNum}
+          SELECT COUNT(*) FROM completion_transactions
+          WHERE shift_id = ${shiftIdNum} AND NOT (payment_method = 'online' AND amount = 0)
         ) + (
           SELECT COUNT(*) FROM checkin_transactions WHERE shift_id = ${shiftIdNum}
         ) AS count
@@ -110,7 +112,8 @@ export async function employeeSessionReportByShift(req: Request, res: Response) 
       prisma.$queryRaw`
         SELECT payment_method, SUM(amount) AS total, COUNT(*) AS count
         FROM (
-          SELECT payment_method, amount FROM completion_transactions WHERE shift_id = ${shiftIdNum}
+          SELECT payment_method, amount FROM completion_transactions
+          WHERE shift_id = ${shiftIdNum} AND NOT (payment_method = 'online' AND amount = 0)
           UNION ALL
           SELECT payment_method, amount FROM checkin_transactions WHERE shift_id = ${shiftIdNum}
         ) combined
@@ -171,6 +174,7 @@ export async function employeeSessionReportByDate(req: Request, res: Response) {
           FROM completion_transactions ct
           LEFT JOIN bookings b ON b.id = ct.booking_id
           WHERE ct.datetime >= ${fromDate} AND ct.datetime <= ${toDate}
+            AND NOT (ct.payment_method = 'online' AND ct.amount = 0)
           UNION ALL
           SELECT kit.id, kit.datetime, kit.amount, kit.user_id, kit.payment_method, kit.notes,
                  b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
@@ -185,6 +189,7 @@ export async function employeeSessionReportByDate(req: Request, res: Response) {
         SELECT (
           SELECT COUNT(*) FROM completion_transactions
           WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+            AND NOT (payment_method = 'online' AND amount = 0)
         ) + (
           SELECT COUNT(*) FROM checkin_transactions
           WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
@@ -195,6 +200,7 @@ export async function employeeSessionReportByDate(req: Request, res: Response) {
         FROM (
           SELECT payment_method, amount FROM completion_transactions
           WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
+            AND NOT (payment_method = 'online' AND amount = 0)
           UNION ALL
           SELECT payment_method, amount FROM checkin_transactions
           WHERE datetime >= ${fromDate} AND datetime <= ${toDate}
