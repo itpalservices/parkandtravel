@@ -106,11 +106,12 @@
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .report-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
 
   thead tr {

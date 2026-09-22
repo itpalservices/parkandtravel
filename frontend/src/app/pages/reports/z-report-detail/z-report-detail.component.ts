@@ -3,17 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from '../../../core/services/api.service';
-import { ZReportData, XReportTransaction } from '../../../shared/models/reports.model';
+import { ZReportData } from '../../../shared/models/reports.model';
+import { ZReportSummaryComponent } from '../../../shared/components/z-report-summary/z-report-summary.component';
+import { formatPaymentMethodLabel, formatSignedCurrency } from '../../../shared/utils/payment-method-format.util';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { exportToExcel } from '../../../shared/utils/excel-export.util';
 
-const REPORT_COLUMNS = ['Date', 'Plate No', 'Type', 'Payment', 'Amount (€)'];
+const REPORT_COLUMNS = ['Date', 'Employee', 'Booking Ref.', 'Plate', 'Type', 'Method', 'Amount'];
 
 @Component({
   selector: 'app-z-report-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgbDropdownModule],
+  imports: [CommonModule, RouterLink, NgbDropdownModule, ZReportSummaryComponent],
   templateUrl: './z-report-detail.component.html',
   styleUrl: './z-report-detail.component.scss',
 })
@@ -24,6 +26,9 @@ export class ZReportDetailComponent implements OnInit {
   loading = false;
   exporting = false;
   report: ZReportData | null = null;
+
+  formatMethod = formatPaymentMethodLabel;
+  formatAmount = formatSignedCurrency;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -43,36 +48,27 @@ export class ZReportDetailComponent implements OnInit {
     });
   }
 
-  get transactions(): XReportTransaction[] {
-    return this.report?.transactions ?? [];
-  }
-
-  get cashDiff(): number {
-    if (!this.report) return 0;
-    return parseFloat((this.report.declaredCash - this.report.actualCash).toFixed(2));
-  }
-
-  get cardDiff(): number {
-    if (!this.report) return 0;
-    return parseFloat((this.report.declaredCard - this.report.actualCard).toFixed(2));
-  }
-
-  get totalDiff(): number {
-    return parseFloat((this.cashDiff + this.cardDiff).toFixed(2));
-  }
-
   formatDateTime(dateStr: string): string {
     return new Date(dateStr).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
-  diffLabel(diff: number): string {
-    if (diff === 0) return 'Match';
-    return diff > 0 ? `+€${diff.toFixed(2)} surplus` : `-€${Math.abs(diff).toFixed(2)} shortage`;
-  }
-
-  diffClass(diff: number): string {
-    if (diff === 0) return 'match';
-    return diff > 0 ? 'surplus' : 'shortage';
+  private flattenRows(): string[][] {
+    if (!this.report) return [];
+    const rows: string[][] = [];
+    this.report.employees.forEach((emp) => {
+      emp.transactions.forEach((t) => {
+        rows.push([
+          this.formatDateTime(t.datetime),
+          emp.employeeName,
+          t.bookingReference || '-',
+          t.plateNo || '-',
+          t.type === 'checkin' ? 'Check-in' : 'Check-out',
+          this.formatMethod(t.paymentMethod),
+          this.formatAmount(t.amount),
+        ]);
+      });
+    });
+    return rows;
   }
 
   exportPDF(): void {
@@ -93,50 +89,36 @@ export class ZReportDetailComponent implements OnInit {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(55, 65, 81);
-    const sub = `Employee: ${this.report.targetUserName}   |   Run by: ${this.report.runByUserName}   |   ${this.formatDateTime(this.report.createdAt)}`;
+    const sub = `Run by: ${this.report.runByUserName}   |   ${this.formatDateTime(this.report.createdAt)}`;
     doc.text(sub, (pageWidth - doc.getTextWidth(sub)) / 2, y);
-    y += 12;
+    y += 10;
 
-    autoTable(doc, {
-      startY: y,
-      head: [['', 'Declared', 'Actual', 'Difference']],
-      body: [
-        ['Cash', `€${this.report.declaredCash.toFixed(2)}`, `€${this.report.actualCash.toFixed(2)}`, this.diffLabel(this.cashDiff)],
-        ['Card', `€${this.report.declaredCard.toFixed(2)}`, `€${this.report.actualCard.toFixed(2)}`, this.diffLabel(this.cardDiff)],
-        ['Total', `€${(this.report.declaredCash + this.report.declaredCard).toFixed(2)}`, `€${(this.report.actualCash + this.report.actualCard).toFixed(2)}`, this.diffLabel(this.totalDiff)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [0, 107, 143], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
-      bodyStyles: { fontSize: 10 },
-      margin: { left: 14, right: 14 },
-    });
-
-    y = (doc as any).lastAutoTable.finalY + 12;
-
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text('Transactions', 14, y);
+    let xCursor = 14;
+    this.report.grandTotals.forEach((t) => {
+      const label = `${this.formatMethod(t.paymentMethod)}: ${this.formatAmount(t.total)}`;
+      doc.text(label, xCursor, y);
+      xCursor += doc.getTextWidth(label) + 10;
+    });
     y += 6;
+    doc.setTextColor(0, 107, 143);
+    doc.text(`Grand Total: ${this.formatAmount(this.report.grandTotal)}`, 14, y);
+    y += 10;
 
     autoTable(doc, {
       startY: y,
-      head: [['Date', 'Plate No', 'Type', 'Payment', 'Amount (€)']],
-      body: this.transactions.map(t => [
-        this.formatDateTime(t.datetime),
-        t.plateNo || '-',
-        t.type === 'checkin' ? 'Check-in' : 'Check-out',
-        t.paymentMethod,
-        Number(t.amount).toFixed(2),
-      ]),
+      head: [REPORT_COLUMNS],
+      body: this.flattenRows(),
       theme: 'striped',
-      headStyles: { fillColor: [0, 107, 143], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
-      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+      headStyles: { fillColor: [0, 107, 143], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
       alternateRowStyles: { fillColor: [249, 250, 251] },
       margin: { left: 10, right: 10 },
     });
 
-    doc.save(`z-report-${this.report.targetUserName.replace(/\s+/g, '-')}-${new Date(this.report.createdAt).toISOString().slice(0, 10)}.pdf`);
+    doc.save(`z-report-${new Date(this.report.createdAt).toISOString().slice(0, 10)}.pdf`);
     this.exporting = false;
   }
 
@@ -144,27 +126,21 @@ export class ZReportDetailComponent implements OnInit {
     if (!this.report || this.exporting) return;
     this.exporting = true;
     try {
-      const totalDeclared = this.report.declaredCash + this.report.declaredCard;
-      const totalActual = this.report.actualCash + this.report.actualCard;
+      const infoLines = [
+        `Run by: ${this.report.runByUserName}   |   ${this.formatDateTime(this.report.createdAt)}`,
+        `Employees: ${this.report.employees.length}`,
+        'Totals by payment method:',
+        ...this.report.grandTotals.map((t) => `${this.formatMethod(t.paymentMethod)}: ${this.formatAmount(t.total)} (${t.count} tx)`),
+        `Grand Total: ${this.formatAmount(this.report.grandTotal)}`,
+      ];
 
       await exportToExcel({
-        fileName: `z-report-${this.report.targetUserName.replace(/\s+/g, '-')}-${new Date(this.report.createdAt).toISOString().slice(0, 10)}.xlsx`,
+        fileName: `z-report-${new Date(this.report.createdAt).toISOString().slice(0, 10)}.xlsx`,
         sheetName: 'Z-Report',
         title: 'Z Report',
-        infoLines: [
-          `Employee: ${this.report.targetUserName}   |   Run by: ${this.report.runByUserName}   |   ${this.formatDateTime(this.report.createdAt)}`,
-          `Cash: Declared €${this.report.declaredCash.toFixed(2)} | Actual €${this.report.actualCash.toFixed(2)} | ${this.diffLabel(this.cashDiff)}`,
-          `Card: Declared €${this.report.declaredCard.toFixed(2)} | Actual €${this.report.actualCard.toFixed(2)} | ${this.diffLabel(this.cardDiff)}`,
-          `Total: Declared €${totalDeclared.toFixed(2)} | Actual €${totalActual.toFixed(2)} | ${this.diffLabel(this.totalDiff)}`,
-        ],
+        infoLines,
         columns: REPORT_COLUMNS,
-        rows: this.transactions.map(t => [
-          this.formatDateTime(t.datetime),
-          t.plateNo || '-',
-          t.type === 'checkin' ? 'Check-in' : 'Check-out',
-          t.paymentMethod,
-          Number(t.amount).toFixed(2),
-        ]),
+        rows: this.flattenRows(),
       });
     } finally {
       this.exporting = false;

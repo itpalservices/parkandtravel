@@ -1,87 +1,17 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { getAllEmployees, getUserById } from "../services/auth0.service";
+import { getAllEmployees } from "../services/auth0.service";
 import {
   getOpenShiftForUser,
   getOpenShiftTransactions,
   getOpenShiftTotals,
+  resolveEmployeeName,
+  summarizeTotals,
+  mergeTotals,
+  EmployeeLookup,
   OpenShiftTransaction,
   OpenShiftTotal,
 } from "../services/shift-summary.service";
-
-interface TransactionRow {
-  id: string;
-  booking_id: string;
-  datetime: Date;
-  amount: string;
-  payment_method: string;
-  notes: string | null;
-  plate_no: string | null;
-  type: string;
-}
-
-interface TotalsRow {
-  payment_method: string;
-  total: string;
-}
-
-function mapTransaction(t: TransactionRow) {
-  return {
-    id: t.id,
-    bookingId: t.booking_id,
-    datetime: t.datetime,
-    amount: Number(t.amount),
-    paymentMethod: t.payment_method,
-    notes: t.notes,
-    plateNo: t.plate_no,
-    type: t.type,
-  };
-}
-
-async function fetchTransactionsByUserAndZReport(userId: string, zReportId: string | null) {
-  const condition = zReportId
-    ? `ct.z_report_id = '${zReportId}'::uuid`
-    : `ct.user_id = '${userId}' AND ct.z_report_id IS NULL`;
-
-  // Use parameterized queries to avoid injection
-  if (zReportId) {
-    return prisma.$queryRaw`
-      SELECT id, booking_id, datetime, amount, payment_method, notes, plate_no, type
-      FROM (
-        SELECT ct.id, ct.booking_id, ct.datetime, ct.amount, ct.payment_method, ct.notes,
-               b."plateNo" AS plate_no, 'checkout' AS type
-        FROM completion_transactions ct
-        LEFT JOIN bookings b ON b.id = ct.booking_id
-        WHERE ct.z_report_id = ${zReportId}::uuid
-        UNION ALL
-        SELECT kit.id, kit.booking_id, kit.datetime, kit.amount, kit.payment_method, kit.notes,
-               b."plateNo" AS plate_no, 'checkin' AS type
-        FROM checkin_transactions kit
-        LEFT JOIN bookings b ON b.id = kit.booking_id
-        WHERE kit.z_report_id = ${zReportId}::uuid
-      ) combined
-      ORDER BY datetime DESC
-    ` as Promise<TransactionRow[]>;
-  }
-
-  return prisma.$queryRaw`
-    SELECT id, booking_id, datetime, amount, payment_method, notes, plate_no, type
-    FROM (
-      SELECT ct.id, ct.booking_id, ct.datetime, ct.amount, ct.payment_method, ct.notes,
-             b."plateNo" AS plate_no, 'checkout' AS type
-      FROM completion_transactions ct
-      LEFT JOIN bookings b ON b.id = ct.booking_id
-      WHERE ct.user_id = ${userId} AND ct.z_report_id IS NULL
-      UNION ALL
-      SELECT kit.id, kit.booking_id, kit.datetime, kit.amount, kit.payment_method, kit.notes,
-             b."plateNo" AS plate_no, 'checkin' AS type
-      FROM checkin_transactions kit
-      LEFT JOIN bookings b ON b.id = kit.booking_id
-      WHERE kit.user_id = ${userId} AND kit.z_report_id IS NULL
-    ) combined
-    ORDER BY datetime DESC
-  ` as Promise<TransactionRow[]>;
-}
 
 export interface OpenShiftEmployeeSummary {
   userId: string;
@@ -112,7 +42,7 @@ async function getAllOpenShiftsSummary(): Promise<{
   }
 
   const employeeList = await getAllEmployees().catch(() => []);
-  const employeeMap = new Map(employeeList.map((e) => [e.userId, e]));
+  const employeeMap = new Map<string, EmployeeLookup>(employeeList.map((e) => [e.userId, e]));
 
   const employees: OpenShiftEmployeeSummary[] = await Promise.all(
     openShifts.map(async (shift) => {
@@ -120,12 +50,10 @@ async function getAllOpenShiftsSummary(): Promise<{
         getOpenShiftTransactions(shift.id),
         getOpenShiftTotals(shift.id),
       ]);
-      const employee = employeeMap.get(shift.userId);
-      const employeeName = employee ? `${employee.name} ${employee.surname}`.trim() : shift.userId;
 
       return {
         userId: shift.userId,
-        employeeName,
+        employeeName: resolveEmployeeName(shift.userId, employeeMap),
         shiftId: shift.id,
         shiftStart: shift.shiftStart,
         transactions,
@@ -135,20 +63,7 @@ async function getAllOpenShiftsSummary(): Promise<{
     })
   );
 
-  const grandTotalsMap = new Map<string, { total: number; count: number }>();
-  for (const emp of employees) {
-    for (const t of emp.totals) {
-      const existing = grandTotalsMap.get(t.paymentMethod) ?? { total: 0, count: 0 };
-      existing.total += t.total;
-      existing.count += t.count;
-      grandTotalsMap.set(t.paymentMethod, existing);
-    }
-  }
-  const grandTotals: OpenShiftTotal[] = Array.from(grandTotalsMap.entries())
-    .map(([paymentMethod, v]) => ({ paymentMethod, total: v.total, count: v.count }))
-    .sort((a, b) => a.paymentMethod.localeCompare(b.paymentMethod));
-
-  const grandTotal = grandTotals.reduce((sum, t) => sum + t.total, 0);
+  const { grandTotal, grandTotals } = mergeTotals(employees.map((e) => e.totals));
 
   return { employees, grandTotal, grandTotals };
 }
@@ -193,20 +108,84 @@ export async function getXReport(req: Request, res: Response) {
   }
 }
 
-export async function getZReportEmployees(req: Request, res: Response) {
-  const currentUserId = req.authUser?.sub;
-  if (!currentUserId || req.authUser?.role !== "admin") {
-    res.status(403).json({ error: "Admin only" });
-    return;
+// ===================== Z REPORT =====================
+// A Z-report is a global sweep, not a per-employee action: it closes out every checkin/completion
+// transaction whose shift is CLOSED and not yet reported, across every employee at once. Open
+// shifts are left completely untouched — they only become eligible once that employee closes out
+// (which itself requires a successful printed proof, per the shift-close flow). There's no
+// declared/actual reconciliation anymore; that already happens per-shift at close time.
+
+interface ZReportSweepRow {
+  id: string;
+  datetime: Date;
+  amount: string;
+  payment_method: string;
+  notes: string | null;
+  plate_no: string | null;
+  booking_reference: string | null;
+  user_id: string;
+}
+
+export interface ZReportEmployeeSummary {
+  userId: string;
+  employeeName: string;
+  transactions: OpenShiftTransaction[];
+  totals: OpenShiftTotal[];
+  employeeTotal: number;
+}
+
+export interface ZReportResult {
+  id: string;
+  runByUserId: string;
+  runByUserName: string;
+  createdAt: Date;
+  employees: ZReportEmployeeSummary[];
+  grandTotal: number;
+  grandTotals: OpenShiftTotal[];
+}
+
+/** Groups a flat list of rows (already tagged with a single z_report_id, whether just-swept or
+ *  historical) into one summary section per employee, sorted alphabetically by name. */
+async function buildZReportEmployeeSummaries(rows: ZReportSweepRow[]): Promise<ZReportEmployeeSummary[]> {
+  if (rows.length === 0) return [];
+
+  const employeeList = await getAllEmployees().catch(() => []);
+  const employeeMap = new Map<string, EmployeeLookup>(employeeList.map((e) => [e.userId, e]));
+
+  const byUser = new Map<string, ZReportSweepRow[]>();
+  for (const row of rows) {
+    const list = byUser.get(row.user_id) ?? [];
+    list.push(row);
+    byUser.set(row.user_id, list);
   }
 
-  try {
-    const employees = await getAllEmployees();
-    res.json(employees.filter((e) => e.userId !== currentUserId));
-  } catch (error) {
-    console.error("getZReportEmployees error:", error);
-    res.status(500).json({ error: "Failed to fetch employees" });
-  }
+  const employees: ZReportEmployeeSummary[] = Array.from(byUser.entries()).map(([userId, userRows]) => {
+    const transactions: OpenShiftTransaction[] = userRows
+      .map((r) => ({
+        id: r.id,
+        datetime: r.datetime,
+        amount: Number(r.amount),
+        paymentMethod: r.payment_method,
+        notes: r.notes,
+        plateNo: r.plate_no,
+        bookingReference: r.booking_reference,
+        type: ((r as any).type) as "checkin" | "checkout",
+      }))
+      .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+
+    const totals = summarizeTotals(transactions.map((t) => ({ paymentMethod: t.paymentMethod, amount: t.amount })));
+
+    return {
+      userId,
+      employeeName: resolveEmployeeName(userId, employeeMap),
+      transactions,
+      totals,
+      employeeTotal: totals.reduce((sum, t) => sum + t.total, 0),
+    };
+  });
+
+  employees.sort((a, b) => a.employeeName.localeCompare(b.employeeName));
+  return employees;
 }
 
 export async function createZReport(req: Request, res: Response) {
@@ -217,97 +196,70 @@ export async function createZReport(req: Request, res: Response) {
     return;
   }
 
-  const { targetUserId, targetUserName, declaredCash, declaredCard } = req.body;
-
-  if (!targetUserId || !targetUserName) {
-    res.status(400).json({ error: "targetUserId and targetUserName are required" });
-    return;
-  }
-  if (targetUserId === adminId) {
-    res.status(400).json({ error: "Cannot run Z report for yourself" });
-    return;
-  }
-  if (typeof declaredCash !== "number" || typeof declaredCard !== "number" || declaredCash < 0 || declaredCard < 0) {
-    res.status(400).json({ error: "declaredCash and declaredCard must be non-negative numbers" });
-    return;
-  }
-
   try {
-    const adminUser = await getUserById(adminId).catch(() => null);
-    const adminName = adminUser
-      ? `${adminUser.user_metadata?.name || adminUser.given_name || ""} ${adminUser.user_metadata?.surname || adminUser.family_name || ""}`.trim() || adminEmail || adminId
-      : adminEmail || adminId;
-
-    const totalsRaw = (await prisma.$queryRaw`
-      SELECT payment_method, SUM(amount) AS total
-      FROM (
-        SELECT payment_method, amount FROM completion_transactions
-        WHERE user_id = ${targetUserId} AND z_report_id IS NULL
-        UNION ALL
-        SELECT payment_method, amount FROM checkin_transactions
-        WHERE user_id = ${targetUserId} AND z_report_id IS NULL
-      ) combined
-      GROUP BY payment_method
-    `) as TotalsRow[];
-
-    const actualsMap: Record<string, number> = {};
-    totalsRaw.forEach((t) => {
-      actualsMap[t.payment_method] = Number(t.total);
-    });
-
-    const actualCash = actualsMap["cash"] || 0;
-    const actualCard = actualsMap["card"] || 0;
-
-    if (actualCash === 0 && actualCard === 0) {
-      res.status(400).json({ error: "No unreported transactions found for this employee. Z report cannot be created." });
-      return;
-    }
+    const adminName = adminEmail || adminId;
 
     const zReport = await prisma.$transaction(async (tx) => {
       const report = await tx.zReport.create({
-        data: {
-          targetUserId,
-          targetUserName,
-          runByUserId: adminId,
-          runByUserName: adminName,
-          declaredCash,
-          declaredCard,
-          actualCash,
-          actualCard,
-        },
+        data: { runByUserId: adminId, runByUserName: adminName },
       });
 
-      await tx.$executeRaw`
-        UPDATE completion_transactions
-        SET z_report_id = ${report.id}::uuid
-        WHERE user_id = ${targetUserId} AND z_report_id IS NULL
-      `;
+      const [completionRows, checkinRows] = await Promise.all([
+        tx.$queryRaw`
+          WITH updated AS (
+            UPDATE completion_transactions ct
+            SET z_report_id = ${report.id}::uuid
+            FROM shifts s
+            WHERE s.id = ct.shift_id AND s.status = 'closed' AND ct.z_report_id IS NULL
+            RETURNING ct.id, ct.datetime, ct.amount, ct.payment_method, ct.notes, ct.user_id, ct.booking_id
+          )
+          SELECT u.id, u.datetime, u.amount, u.payment_method, u.notes, u.user_id,
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
+          FROM updated u
+          LEFT JOIN bookings b ON b.id = u.booking_id
+        ` as Promise<(ZReportSweepRow & { type: string })[]>,
+        tx.$queryRaw`
+          WITH updated AS (
+            UPDATE checkin_transactions kit
+            SET z_report_id = ${report.id}::uuid
+            FROM shifts s
+            WHERE s.id = kit.shift_id AND s.status = 'closed' AND kit.z_report_id IS NULL
+            RETURNING kit.id, kit.datetime, kit.amount, kit.payment_method, kit.notes, kit.user_id, kit.booking_id
+          )
+          SELECT u.id, u.datetime, u.amount, u.payment_method, u.notes, u.user_id,
+                 b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
+          FROM updated u
+          LEFT JOIN bookings b ON b.id = u.booking_id
+        ` as Promise<(ZReportSweepRow & { type: string })[]>,
+      ]);
 
-      await tx.$executeRaw`
-        UPDATE checkin_transactions
-        SET z_report_id = ${report.id}::uuid
-        WHERE user_id = ${targetUserId} AND z_report_id IS NULL
-      `;
+      const rows = [...completionRows, ...checkinRows];
+      if (rows.length === 0) {
+        throw new Error("NOTHING_TO_REPORT");
+      }
 
-      return report;
+      return { report, rows };
     });
 
-    const transactions = (await fetchTransactionsByUserAndZReport(targetUserId, zReport.id)) as TransactionRow[];
+    const employees = await buildZReportEmployeeSummaries(zReport.rows as any);
+    const { grandTotal, grandTotals } = mergeTotals(employees.map((e) => e.totals));
 
-    res.status(201).json({
-      id: zReport.id,
-      targetUserId: zReport.targetUserId,
-      targetUserName: zReport.targetUserName,
-      runByUserId: zReport.runByUserId,
-      runByUserName: zReport.runByUserName,
-      declaredCash: Number(zReport.declaredCash),
-      declaredCard: Number(zReport.declaredCard),
-      actualCash: Number(zReport.actualCash),
-      actualCard: Number(zReport.actualCard),
-      createdAt: zReport.createdAt,
-      transactions: transactions.map(mapTransaction),
-    });
-  } catch (error) {
+    const result: ZReportResult = {
+      id: zReport.report.id,
+      runByUserId: zReport.report.runByUserId,
+      runByUserName: zReport.report.runByUserName,
+      createdAt: zReport.report.createdAt,
+      employees,
+      grandTotal,
+      grandTotals,
+    };
+
+    res.status(201).json(result);
+  } catch (error: any) {
+    if (error?.message === "NOTHING_TO_REPORT") {
+      res.status(400).json({ error: "No unreported transactions from closed shifts were found." });
+      return;
+    }
     console.error("createZReport error:", error);
     res.status(500).json({ error: "Failed to create Z report" });
   }
@@ -335,19 +287,37 @@ export async function getZReportHistory(req: Request, res: Response) {
       orderBy: { createdAt: "desc" },
     });
 
+    if (reports.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const ids = reports.map((r) => r.id);
+    const aggregateRows = await prisma.$queryRaw`
+      SELECT z_report_id, COUNT(DISTINCT user_id) AS employee_count, COUNT(*) AS transaction_count, SUM(amount) AS grand_total
+      FROM (
+        SELECT z_report_id, user_id, amount FROM completion_transactions WHERE z_report_id = ANY(${ids}::uuid[])
+        UNION ALL
+        SELECT z_report_id, user_id, amount FROM checkin_transactions WHERE z_report_id = ANY(${ids}::uuid[])
+      ) combined
+      GROUP BY z_report_id
+    ` as { z_report_id: string; employee_count: bigint; transaction_count: bigint; grand_total: string }[];
+
+    const aggregateMap = new Map(aggregateRows.map((a) => [a.z_report_id, a]));
+
     res.json(
-      reports.map((r) => ({
-        id: r.id,
-        targetUserId: r.targetUserId,
-        targetUserName: r.targetUserName,
-        runByUserId: r.runByUserId,
-        runByUserName: r.runByUserName,
-        declaredCash: Number(r.declaredCash),
-        declaredCard: Number(r.declaredCard),
-        actualCash: Number(r.actualCash),
-        actualCard: Number(r.actualCard),
-        createdAt: r.createdAt,
-      }))
+      reports.map((r) => {
+        const agg = aggregateMap.get(r.id);
+        return {
+          id: r.id,
+          runByUserId: r.runByUserId,
+          runByUserName: r.runByUserName,
+          createdAt: r.createdAt,
+          employeeCount: agg ? Number(agg.employee_count) : 0,
+          transactionCount: agg ? Number(agg.transaction_count) : 0,
+          grandTotal: agg ? Number(agg.grand_total) : 0,
+        };
+      })
     );
   } catch (error) {
     console.error("getZReportHistory error:", error);
@@ -370,21 +340,37 @@ export async function getZReportById(req: Request, res: Response) {
       return;
     }
 
-    const transactions = (await fetchTransactionsByUserAndZReport(zReport.targetUserId, id)) as TransactionRow[];
+    const [completionRows, checkinRows] = await Promise.all([
+      prisma.$queryRaw`
+        SELECT ct.id, ct.datetime, ct.amount, ct.payment_method, ct.notes, ct.user_id,
+               b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
+        FROM completion_transactions ct
+        LEFT JOIN bookings b ON b.id = ct.booking_id
+        WHERE ct.z_report_id = ${id}::uuid
+      ` as Promise<(ZReportSweepRow & { type: string })[]>,
+      prisma.$queryRaw`
+        SELECT kit.id, kit.datetime, kit.amount, kit.payment_method, kit.notes, kit.user_id,
+               b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
+        FROM checkin_transactions kit
+        LEFT JOIN bookings b ON b.id = kit.booking_id
+        WHERE kit.z_report_id = ${id}::uuid
+      ` as Promise<(ZReportSweepRow & { type: string })[]>,
+    ]);
 
-    res.json({
+    const employees = await buildZReportEmployeeSummaries([...completionRows, ...checkinRows] as any);
+    const { grandTotal, grandTotals } = mergeTotals(employees.map((e) => e.totals));
+
+    const result: ZReportResult = {
       id: zReport.id,
-      targetUserId: zReport.targetUserId,
-      targetUserName: zReport.targetUserName,
       runByUserId: zReport.runByUserId,
       runByUserName: zReport.runByUserName,
-      declaredCash: Number(zReport.declaredCash),
-      declaredCard: Number(zReport.declaredCard),
-      actualCash: Number(zReport.actualCash),
-      actualCard: Number(zReport.actualCard),
       createdAt: zReport.createdAt,
-      transactions: transactions.map(mapTransaction),
-    });
+      employees,
+      grandTotal,
+      grandTotals,
+    };
+
+    res.json(result);
   } catch (error) {
     console.error("getZReportById error:", error);
     res.status(500).json({ error: "Failed to fetch Z report" });

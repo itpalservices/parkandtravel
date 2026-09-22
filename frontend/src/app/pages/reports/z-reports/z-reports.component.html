@@ -24,29 +24,25 @@
     <p>Loading...</p>
   </div>
 
-  <div class="table-wrapper" *ngIf="!loading && reports.length > 0">
+  <div class="table-wrapper d-none d-md-block" *ngIf="!loading && reports.length > 0">
     <table class="report-table">
       <thead>
         <tr>
           <th>Date</th>
-          <th>Employee</th>
           <th>Run by</th>
-          <th class="text-right">Actual Total</th>
-          <th class="text-center">Status</th>
+          <th class="text-right">Employees</th>
+          <th class="text-right">Transactions</th>
+          <th class="text-right">Grand Total</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let r of reports" (click)="viewDetail(r.id)" class="clickable-row">
           <td>{{ formatDateTime(r.createdAt) }}</td>
-          <td class="font-medium">{{ r.targetUserName }}</td>
           <td class="text-muted">{{ r.runByUserName }}</td>
-          <td class="text-right font-medium">€{{ (r.actualCash + r.actualCard).toFixed(2) }}</td>
-          <td class="text-center">
-            <span class="status-badge" [class.status-badge--match]="isMatch(r)" [class.status-badge--mismatch]="!isMatch(r)">
-              {{ isMatch(r) ? 'Match' : 'Mismatch' }}
-            </span>
-          </td>
+          <td class="text-right">{{ r.employeeCount }}</td>
+          <td class="text-right">{{ r.transactionCount }}</td>
+          <td class="text-right font-medium">{{ formatAmount(r.grandTotal) }}</td>
           <td class="text-right">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
@@ -55,6 +51,23 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="mobile-report-list d-block d-md-none" *ngIf="!loading && reports.length > 0">
+    <button class="report-card" *ngFor="let r of reports" (click)="viewDetail(r.id)">
+      <div class="report-card-top">
+        <span class="report-date">{{ formatDateTime(r.createdAt) }}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </div>
+      <div class="report-card-run-by">Run by {{ r.runByUserName }}</div>
+      <div class="report-card-stats">
+        <span><strong>{{ r.employeeCount }}</strong> employee{{ r.employeeCount !== 1 ? 's' : '' }}</span>
+        <span><strong>{{ r.transactionCount }}</strong> transaction{{ r.transactionCount !== 1 ? 's' : '' }}</span>
+      </div>
+      <div class="report-card-total">{{ formatAmount(r.grandTotal) }}</div>
+    </button>
   </div>
 
   <div class="empty-state" *ngIf="!loading && reports.length === 0">

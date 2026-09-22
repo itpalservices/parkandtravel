@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
-import { ZReportData } from '../../../shared/models/reports.model';
+import { ZReportHistoryItem } from '../../../shared/models/reports.model';
+import { formatSignedCurrency } from '../../../shared/utils/payment-method-format.util';
 import { DateRangePickerComponent, DateRange } from '../../../shared/components/date-range-picker/date-range-picker.component';
 import { NgbCalendar } from '@ng-bootstrap/ng-bootstrap';
 
@@ -19,8 +20,10 @@ export class ZReportsComponent implements OnInit {
   private calendar = inject(NgbCalendar);
 
   loading = false;
-  reports: ZReportData[] = [];
+  reports: ZReportHistoryItem[] = [];
   dateFilter: DateRange;
+
+  formatAmount = formatSignedCurrency;
 
   constructor() {
     const today = this.calendar.getToday();
@@ -40,7 +43,7 @@ export class ZReportsComponent implements OnInit {
     const dateFrom = this.formatDate(this.dateFilter.from);
     const dateTo = this.formatDate(this.dateFilter.to);
 
-    this.apiService.get<ZReportData[]>(`/reports/z-report-new/history?dateFrom=${dateFrom}&dateTo=${dateTo}`).subscribe({
+    this.apiService.get<ZReportHistoryItem[]>(`/reports/z-report-new/history?dateFrom=${dateFrom}&dateTo=${dateTo}`).subscribe({
       next: (data) => {
         this.reports = data;
         this.loading = false;
@@ -65,10 +68,6 @@ export class ZReportsComponent implements OnInit {
 
   formatDateTime(dateStr: string): string {
     return new Date(dateStr).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
-  }
-
-  isMatch(report: ZReportData): boolean {
-    return report.declaredCash === report.actualCash && report.declaredCard === report.actualCard;
   }
 
   viewDetail(id: string): void {

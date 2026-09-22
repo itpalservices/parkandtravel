@@ -1,0 +1,94 @@
+<div class="z-report-summary">
+  <div class="totals-section grand-summary">
+    <div class="totals-grid">
+      <div class="totals-row" *ngFor="let total of data.grandTotals">
+        <span class="total-label">{{ formatMethod(total.paymentMethod) }}</span>
+        <span class="total-count">{{ total.count }} transaction{{ total.count !== 1 ? 's' : '' }}</span>
+        <span class="total-amount">{{ formatAmount(total.total) }}</span>
+      </div>
+    </div>
+    <div class="grand-total-row">
+      <span class="grand-label">Grand Total — All Employees</span>
+      <span class="grand-amount">{{ formatAmount(data.grandTotal) }}</span>
+    </div>
+  </div>
+
+  <div class="employee-sections">
+    <div class="employee-section" *ngFor="let emp of data.employees">
+      <button class="employee-header" (click)="toggleExpanded(emp.userId)">
+        <svg class="chevron" [class.chevron--open]="isExpanded(emp.userId)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+        <span class="employee-name">{{ emp.employeeName }}</span>
+        <span class="employee-meta">
+          <span class="employee-count">{{ emp.transactions.length }} transaction{{ emp.transactions.length !== 1 ? 's' : '' }}</span>
+        </span>
+        <span class="employee-total">{{ formatAmount(emp.employeeTotal) }}</span>
+      </button>
+
+      <div class="employee-body" *ngIf="isExpanded(emp.userId)">
+        <div class="table-wrapper d-none d-md-block">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Booking Ref.</th>
+                <th>Plate</th>
+                <th>Method</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of emp.transactions">
+                <td>{{ formatDateTime(t.datetime) }}</td>
+                <td>
+                  <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                    {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+                  </span>
+                </td>
+                <td class="reference-cell">{{ t.bookingReference || '—' }}</td>
+                <td>{{ t.plateNo || '-' }}</td>
+                <td>{{ formatMethod(t.paymentMethod) }}</td>
+                <td class="text-right amount">{{ formatAmount(t.amount) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mobile-transaction-list d-block d-md-none">
+          <div class="transaction-card" *ngFor="let t of emp.transactions">
+            <div class="transaction-card-top">
+              <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
+                {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
+              </span>
+              <span class="transaction-amount">{{ formatAmount(t.amount) }}</span>
+            </div>
+            <div class="transaction-card-mid">
+              <span class="transaction-plate">{{ t.plateNo || '-' }}</span>
+              <span class="transaction-payment">{{ formatMethod(t.paymentMethod) }}</span>
+            </div>
+            <div class="transaction-card-mid">
+              <span class="reference-cell">{{ t.bookingReference || '—' }}</span>
+            </div>
+            <div class="transaction-date">{{ formatDateTime(t.datetime) }}</div>
+          </div>
+        </div>
+
+        <div class="totals-section">
+          <div class="totals-grid">
+            <div class="totals-row" *ngFor="let total of emp.totals">
+              <span class="total-label">{{ formatMethod(total.paymentMethod) }}</span>
+              <span class="total-count">{{ total.count }} transaction{{ total.count !== 1 ? 's' : '' }}</span>
+              <span class="total-amount">{{ formatAmount(total.total) }}</span>
+            </div>
+          </div>
+          <div class="grand-total-row">
+            <span class="grand-label">Employee Total</span>
+            <span class="grand-amount">{{ formatAmount(emp.employeeTotal) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -42,11 +42,12 @@
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .report-table {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
 
   thead tr { background: $primary-color; }
@@ -82,17 +83,6 @@
 .text-right { text-align: right !important; }
 .text-center { text-align: center !important; }
 
-.status-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 99px;
-  font-size: 0.75rem;
-  font-weight: 600;
-
-  &--match { background: #dcfce7; color: #15803d; }
-  &--mismatch { background: #fee2e2; color: #dc2626; }
-}
-
 .loading-state {
   text-align: center;
   padding: 60px 0;
@@ -118,4 +108,74 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ============ Mobile card list ============ */
+
+.mobile-report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #f0f9ff; }
+}
+
+.report-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #9ca3af;
+}
+
+.report-date {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 0.9rem;
+}
+
+.report-card-run-by {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.report-card-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: #6b7280;
+
+  strong { color: #374151; }
+}
+
+.report-card-total {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: $primary-color;
+  margin-top: 2px;
+}
+
+@media (max-width: 767px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 1.2rem;
+  }
 }

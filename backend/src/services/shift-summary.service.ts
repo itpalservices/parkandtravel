@@ -98,3 +98,50 @@ export async function getOpenShiftTotals(shiftId: number): Promise<OpenShiftTota
     count: Number(t.count),
   }));
 }
+
+export interface EmployeeLookup {
+  userId: string;
+  name: string;
+  surname: string;
+}
+
+export function resolveEmployeeName(userId: string, employeeMap: Map<string, EmployeeLookup>): string {
+  const employee = employeeMap.get(userId);
+  if (!employee) return userId;
+  return `${employee.name} ${employee.surname}`.trim() || userId;
+}
+
+/** Derives a payment-method breakdown from a flat list of transactions — used wherever totals
+ *  aren't already computed by a GROUP BY query (e.g. a Z-report sweep's per-employee totals,
+ *  built from rows already fetched for the transaction list). */
+export function summarizeTotals(rows: { paymentMethod: string; amount: number }[]): OpenShiftTotal[] {
+  const byMethod = new Map<string, { total: number; count: number }>();
+  for (const row of rows) {
+    const existing = byMethod.get(row.paymentMethod) ?? { total: 0, count: 0 };
+    existing.total += row.amount;
+    existing.count += 1;
+    byMethod.set(row.paymentMethod, existing);
+  }
+  return Array.from(byMethod.entries())
+    .map(([paymentMethod, v]) => ({ paymentMethod, total: v.total, count: v.count }))
+    .sort((a, b) => a.paymentMethod.localeCompare(b.paymentMethod));
+}
+
+/** Merges several employees' own totals breakdowns into one combined payment-method breakdown
+ *  plus a single grand total — used for both the admin X-Report and Z-Report sweeps. */
+export function mergeTotals(totalsPerEmployee: OpenShiftTotal[][]): { grandTotal: number; grandTotals: OpenShiftTotal[] } {
+  const byMethod = new Map<string, { total: number; count: number }>();
+  for (const totals of totalsPerEmployee) {
+    for (const t of totals) {
+      const existing = byMethod.get(t.paymentMethod) ?? { total: 0, count: 0 };
+      existing.total += t.total;
+      existing.count += t.count;
+      byMethod.set(t.paymentMethod, existing);
+    }
+  }
+  const grandTotals = Array.from(byMethod.entries())
+    .map(([paymentMethod, v]) => ({ paymentMethod, total: v.total, count: v.count }))
+    .sort((a, b) => a.paymentMethod.localeCompare(b.paymentMethod));
+  const grandTotal = grandTotals.reduce((sum, t) => sum + t.total, 0);
+  return { grandTotal, grandTotals };
+}

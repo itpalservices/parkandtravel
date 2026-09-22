@@ -45,75 +45,11 @@
     </div>
 
     <div class="result-meta">
-      <span><strong>Employee:</strong> {{ report.targetUserName }}</span>
       <span><strong>Run by:</strong> {{ report.runByUserName }}</span>
       <span><strong>Date:</strong> {{ formatDateTime(report.createdAt) }}</span>
+      <span><strong>Employees:</strong> {{ report.employees.length }}</span>
     </div>
 
-    <div class="reconciliation-table-wrapper">
-      <table class="reconciliation-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Declared</th>
-            <th>Actual</th>
-            <th>Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="row-label">Cash</td>
-            <td>€{{ report.declaredCash.toFixed(2) }}</td>
-            <td>€{{ report.actualCash.toFixed(2) }}</td>
-            <td><span class="diff-badge" [ngClass]="diffClass(cashDiff)">{{ diffLabel(cashDiff) }}</span></td>
-          </tr>
-          <tr>
-            <td class="row-label">Card</td>
-            <td>€{{ report.declaredCard.toFixed(2) }}</td>
-            <td>€{{ report.actualCard.toFixed(2) }}</td>
-            <td><span class="diff-badge" [ngClass]="diffClass(cardDiff)">{{ diffLabel(cardDiff) }}</span></td>
-          </tr>
-          <tr class="total-row">
-            <td class="row-label">Total</td>
-            <td>€{{ (report.declaredCash + report.declaredCard).toFixed(2) }}</td>
-            <td>€{{ (report.actualCash + report.actualCard).toFixed(2) }}</td>
-            <td><span class="diff-badge" [ngClass]="diffClass(totalDiff)">{{ diffLabel(totalDiff) }}</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h2 class="section-title">Transactions ({{ transactions.length }})</h2>
-
-    <div class="table-wrapper" *ngIf="transactions.length > 0; else emptyTransactions">
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Plate No</th>
-            <th>Type</th>
-            <th>Payment</th>
-            <th class="text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let t of transactions">
-            <td>{{ formatDateTime(t.datetime) }}</td>
-            <td>{{ t.plateNo || '-' }}</td>
-            <td>
-              <span class="badge" [class.badge--checkin]="t.type === 'checkin'" [class.badge--checkout]="t.type === 'checkout'">
-                {{ t.type === 'checkin' ? 'Check-in' : 'Check-out' }}
-              </span>
-            </td>
-            <td class="capitalize">{{ t.paymentMethod }}</td>
-            <td class="text-right amount">€{{ t.amount.toFixed(2) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <ng-template #emptyTransactions>
-      <div class="empty-state">No transactions in this Z report.</div>
-    </ng-template>
+    <app-z-report-summary [data]="report"></app-z-report-summary>
   </ng-container>
 </div>

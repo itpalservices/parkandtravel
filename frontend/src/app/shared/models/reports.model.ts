@@ -103,24 +103,32 @@ export interface AdminXReportData {
   grandTotals: ShiftTotals[];
 }
 
-export interface ZReportEmployee {
+export interface ZReportEmployeeSummary {
   userId: string;
-  name: string;
-  surname: string;
-  email: string;
-  role: string;
+  employeeName: string;
+  transactions: ShiftTransaction[];
+  totals: ShiftTotals[];
+  employeeTotal: number;
 }
 
+/** A Z-report is a global sweep, not a per-employee reconciliation — one run can cover several
+ *  employees' closed shifts at once, with no declared-vs-actual amounts anymore. */
 export interface ZReportData {
   id: string;
-  targetUserId: string;
-  targetUserName: string;
   runByUserId: string;
   runByUserName: string;
-  declaredCash: number;
-  declaredCard: number;
-  actualCash: number;
-  actualCard: number;
   createdAt: string;
-  transactions: XReportTransaction[];
+  employees: ZReportEmployeeSummary[];
+  grandTotal: number;
+  grandTotals: ShiftTotals[];
+}
+
+export interface ZReportHistoryItem {
+  id: string;
+  runByUserId: string;
+  runByUserName: string;
+  createdAt: string;
+  employeeCount: number;
+  transactionCount: number;
+  grandTotal: number;
 }

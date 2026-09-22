@@ -8,7 +8,6 @@ import {
 } from "../controllers/employee-session-report.controller";
 import {
   getXReport,
-  getZReportEmployees,
   createZReport,
   getZReportHistory,
   getZReportById,
@@ -28,7 +27,6 @@ router.get("/employee-session/shifts/:shiftId/transactions", employeeSessionRepo
 router.get("/employee-session/by-date", employeeSessionReportByDate);
 
 router.get("/x-report", checkJwt, getXReport);
-router.get("/z-report-new/employees", checkJwt, getZReportEmployees);
 router.post("/z-report-new", checkJwt, createZReport);
 router.get("/z-report-new/history", checkJwt, getZReportHistory);
 router.get("/z-report-new/:id", checkJwt, getZReportById);

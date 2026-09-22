@@ -1,0 +1,342 @@
+@use '../../../../styles/variables' as *;
+
+.z-report-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ============ Totals ============ */
+
+.totals-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.grand-summary {
+  border-color: $primary-color;
+}
+
+.totals-grid {
+  padding: 0.25rem 0;
+}
+
+.totals-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.total-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.total-count {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.total-amount {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 70px;
+  text-align: right;
+}
+
+.grand-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background-color: $primary-color;
+  color: #ffffff;
+}
+
+.grand-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.grand-amount {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+@media (max-width: 767px) {
+  .totals-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "label amount" "count amount";
+    row-gap: 0.15rem;
+    column-gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.8rem;
+  }
+
+  .total-label { grid-area: label; }
+  .total-count { grid-area: count; }
+  .total-amount { grid-area: amount; }
+
+  .grand-total-row {
+    padding: 0.6rem 0.9rem;
+  }
+}
+
+/* ============ Employee accordion ============ */
+
+.employee-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.employee-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.employee-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background 0.15s;
+
+  &:hover { background: #f9fafb; }
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: transform 0.15s ease;
+
+  &--open { transform: rotate(90deg); }
+}
+
+.employee-name {
+  flex-shrink: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+}
+
+.employee-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.employee-count {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.employee-total {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.employee-body {
+  padding: 0 18px 18px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 14px;
+}
+
+@media (max-width: 767px) {
+  .employee-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 4px;
+    padding: 12px 14px;
+  }
+
+  .chevron {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .employee-name {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 100%;
+    font-size: 0.875rem;
+  }
+
+  .employee-total {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+
+  .employee-meta {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .employee-count {
+    font-size: 0.72rem;
+  }
+
+  .employee-body {
+    padding: 0 12px 14px;
+    padding-top: 12px;
+  }
+}
+
+/* ============ Table ============ */
+
+.table-wrapper {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.report-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+
+  thead tr {
+    background: $primary-color;
+  }
+
+  thead th {
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    &:last-child { border-bottom: none; }
+    &:hover { background: #f9fafb; }
+  }
+
+  tbody td {
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    color: #374151;
+  }
+}
+
+.text-right { text-align: right !important; }
+.amount { font-weight: 600; }
+
+.reference-cell {
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--checkin {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &--checkout {
+    background: #dcfce7;
+    color: #15803d;
+  }
+}
+
+/* ============ Mobile card list ============ */
+
+.mobile-transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transaction-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.transaction-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transaction-amount {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a1a2e;
+}
+
+.transaction-card-mid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.transaction-plate {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.transaction-payment {
+  color: #6b7280;
+}
+
+.transaction-date {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}

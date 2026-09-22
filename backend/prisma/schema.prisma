@@ -214,22 +214,19 @@ model Car {
   @@map("cars")
 }
 
+/** A global sweep of every closed-shift transaction not yet reported, run by an admin. No
+ *  declared/actual reconciliation and no single target employee — a run can cover several
+ *  employees' closed shifts at once. Which employees/transactions were included is always
+ *  derived from checkin_transactions/completion_transactions.z_report_id, never stored here. */
 model ZReport {
-  id               String   @id @default(uuid()) @db.Uuid
-  targetUserId     String   @map("target_user_id") @db.VarChar(255)
-  targetUserName   String   @map("target_user_name") @db.VarChar(255)
-  runByUserId      String   @map("run_by_user_id") @db.VarChar(255)
-  runByUserName    String   @map("run_by_user_name") @db.VarChar(255)
-  declaredCash     Decimal  @map("declared_cash") @db.Decimal(10, 2)
-  declaredCard     Decimal  @map("declared_card") @db.Decimal(10, 2)
-  actualCash       Decimal  @map("actual_cash") @db.Decimal(10, 2)
-  actualCard       Decimal  @map("actual_card") @db.Decimal(10, 2)
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id            String   @id @default(uuid()) @db.Uuid
+  runByUserId   String   @map("run_by_user_id") @db.VarChar(255)
+  runByUserName String   @map("run_by_user_name") @db.VarChar(255)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   completionTransactions CompletionTransaction[]
   checkinTransactions    CheckinTransaction[]
 
-  @@index([targetUserId], name: "idx_z_reports_target_user_id")
   @@index([createdAt], name: "idx_z_reports_created_at")
   @@map("z_reports")
 }
