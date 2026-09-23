@@ -30,6 +30,7 @@ import {
   getCheckinPaymentPdfHandler,
   getCompletionPaymentPdfHandler,
   getPrepaidPaymentPdfHandler,
+  markReceiptPrintedHandler,
 } from "../controllers/bookings.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -64,6 +65,7 @@ router.post("/:id/checkin-payment/email", checkJwt, emailCheckinPaymentHandler);
 router.post("/:id/completion-payment/email", checkJwt, emailCompletionPaymentHandler);
 router.post("/:id/prepaid-payment/email", checkJwt, emailPrepaidPaymentHandler);
 router.post("/:id/booking-tag/email", checkJwt, emailBookingTagHandler);
+router.post("/:id/receipt-printed", checkJwt, markReceiptPrintedHandler);
 router.post("/guest", createGuestBooking);
 
 export default router;

@@ -1970,10 +1970,24 @@ async function getBookingPaidBreakdown(bookingId: string): Promise<{
   };
 }
 
+/** Sets bookings.emailSent: a receipt has reached the customer, either emailed as an attachment
+ *  (call only after the mail provider accepted it) or printed (reported by the frontend once the
+ *  printer agent accepted the job). Never call it for emails/prints that carry no receipt. */
+export async function markReceiptDelivered(bookingId: string): Promise<void> {
+  await prisma.booking.update({ where: { id: bookingId }, data: { emailSent: true } })
+    .catch((err) => console.error(`Failed to set emailSent for booking ${bookingId}:`, err));
+}
+
+/** Card payments are always emailed; cash only when the driver/admin ticked "Email receipt". */
+function shouldEmailInPersonReceipt(paymentMethod: string, sendEmail?: boolean): boolean {
+  return paymentMethod === 'card' || (paymentMethod === 'cash' && sendEmail === true);
+}
+
 async function createAndSendReceiptForInPersonPayment(
   bookingId: string,
   lineType: 'CHECKIN' | 'CHECKOUT',
   amount: number,
+  sendEmail: boolean,
 ): Promise<string | null> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) return null;
@@ -2010,7 +2024,7 @@ async function createAndSendReceiptForInPersonPayment(
       pdfBuffer = undefined;
     }
 
-    if (booking.email) {
+    if (sendEmail && booking.email) {
       const parkingType = await prisma.parkingType.findUnique({
         where: { id: booking.parkingTypeId || '' },
         select: { name: true },
@@ -2046,6 +2060,8 @@ async function createAndSendReceiptForInPersonPayment(
         paymentStatus: 'paid',
         isPaymentConfirmation: true,
         receiptPdfBuffer: pdfBuffer,
+      }).then(async (result) => {
+        if (result.success && pdfBuffer) await markReceiptDelivered(bookingId);
       }).catch((err) => console.error('Failed to send in-person payment email:', err));
     }
   })().catch((err) => console.error('Failed to deliver receipt for in-person payment:', err));
@@ -2062,6 +2078,8 @@ export async function completeBooking(
      *  discount. Unlike check-in, checkout has no later collection point, so a shortfall
      *  without this flag is rejected rather than silently deferred. */
     isDiscount?: boolean;
+    /** Cash only: driver/admin opted to email the receipt. Card receipts are always emailed. */
+    sendEmail?: boolean;
     applyExtraFee: boolean;
     actorUserId: string;
     actorName: string;
@@ -2145,7 +2163,7 @@ export async function completeBooking(
 
   let receiptId: string | undefined;
   if (params.amount > 0) {
-    receiptId = await createAndSendReceiptForInPersonPayment(bookingId, 'CHECKOUT', params.amount)
+    receiptId = await createAndSendReceiptForInPersonPayment(bookingId, 'CHECKOUT', params.amount, shouldEmailInPersonReceipt(params.paymentMethod, params.sendEmail))
       .catch((err) => { console.error('Failed to process checkout receipt:', err); return null; }) ?? undefined;
   }
 
@@ -2178,6 +2196,8 @@ export async function recordCheckinPayment(
     /** Admin confirmed the shortfall between the full due amount and `amount` is a discount,
      *  not a partial payment to defer to checkout. Ignored unless amount is actually short. */
     isDiscount?: boolean;
+    /** Cash only: driver/admin opted to email the receipt. Card receipts are always emailed. */
+    sendEmail?: boolean;
     actorUserId: string;
     notes?: string;
     shiftId?: number | null;
@@ -2234,7 +2254,7 @@ export async function recordCheckinPayment(
 
   let receiptId: string | undefined;
   if (params.amount > 0) {
-    receiptId = await createAndSendReceiptForInPersonPayment(bookingId, 'CHECKIN', params.amount)
+    receiptId = await createAndSendReceiptForInPersonPayment(bookingId, 'CHECKIN', params.amount, shouldEmailInPersonReceipt(params.paymentMethod, params.sendEmail))
       .catch((err) => { console.error('Failed to process check-in receipt:', err); return null; }) ?? undefined;
   }
 
@@ -2490,7 +2510,7 @@ export async function emailCheckinPaymentForBooking(bookingId: string, email: st
 
   const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
   const multiple = receipts.length > 1;
-  return sendDocumentEmail({
+  const result = await sendDocumentEmail({
     email,
     subject: multiple ? "Your Check-in Payment Receipts - Park & Travel" : "Your Check-in Payment Receipt - Park & Travel",
     bodyText: multiple
@@ -2500,6 +2520,8 @@ export async function emailCheckinPaymentForBooking(bookingId: string, email: st
     attachmentName: multiple ? "checkin-payment-receipt-1.pdf" : "checkin-payment-receipt.pdf",
     additionalAttachments: restBuffers.map((buffer, i) => ({ buffer, name: `checkin-payment-receipt-${i + 2}.pdf` })),
   });
+  if (result.success) await markReceiptDelivered(bookingId);
+  return result;
 }
 
 export async function emailCompletionPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
@@ -2508,7 +2530,7 @@ export async function emailCompletionPaymentForBooking(bookingId: string, email:
 
   const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
   const multiple = receipts.length > 1;
-  return sendDocumentEmail({
+  const result = await sendDocumentEmail({
     email,
     subject: multiple ? "Your Checkout Payment Receipts - Park & Travel" : "Your Checkout Payment Receipt - Park & Travel",
     bodyText: multiple
@@ -2518,6 +2540,8 @@ export async function emailCompletionPaymentForBooking(bookingId: string, email:
     attachmentName: multiple ? "checkout-payment-receipt-1.pdf" : "checkout-payment-receipt.pdf",
     additionalAttachments: restBuffers.map((buffer, i) => ({ buffer, name: `checkout-payment-receipt-${i + 2}.pdf` })),
   });
+  if (result.success) await markReceiptDelivered(bookingId);
+  return result;
 }
 
 export async function emailPrepaidPaymentForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {
@@ -2527,7 +2551,7 @@ export async function emailPrepaidPaymentForBooking(bookingId: string, email: st
   const [firstBuffer, ...restBuffers] = await Promise.all(receipts.map((r) => generateReceiptPdf(r)));
   const multiple = receipts.length > 1;
 
-  return sendDocumentEmail({
+  const result = await sendDocumentEmail({
     email,
     subject: multiple ? "Your Pre-paid Receipts - Park & Travel" : "Your Pre-paid Receipt - Park & Travel",
     bodyText: multiple
@@ -2537,6 +2561,8 @@ export async function emailPrepaidPaymentForBooking(bookingId: string, email: st
     attachmentName: multiple ? "prepaid-receipt-1.pdf" : "prepaid-receipt.pdf",
     additionalAttachments: restBuffers.map((buffer, i) => ({ buffer, name: `prepaid-receipt-${i + 2}.pdf` })),
   });
+  if (result.success) await markReceiptDelivered(bookingId);
+  return result;
 }
 
 export async function emailCheckinReceiptForBooking(bookingId: string, email: string): Promise<EmailDocumentResult> {

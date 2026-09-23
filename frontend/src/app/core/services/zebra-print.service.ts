@@ -9,10 +9,11 @@ export class ZebraPrintService {
   private http = inject(HttpClient);
   private progress = inject(PrintProgressService);
 
-  async printThermalReceipt(receiptId: string): Promise<void> {
+  async printThermalReceipt(receiptId: string, bookingId: string): Promise<void> {
     await this.run(() =>
       this.http.get(`/api/receipts/thermal/${receiptId}/zpl`, { responseType: 'text' })
         .toPromise().then(zpl => this.sendZpl(zpl!))
+        .then(() => this.markReceiptPrinted(bookingId))
     );
   }
 
@@ -27,6 +28,7 @@ export class ZebraPrintService {
     await this.run(() =>
       this.http.get(`/api/bookings/${bookingId}/checkin-payment/zpl`, { responseType: 'text' })
         .toPromise().then(zpl => this.sendZpl(zpl!))
+        .then(() => this.markReceiptPrinted(bookingId))
     );
   }
 
@@ -34,6 +36,7 @@ export class ZebraPrintService {
     await this.run(() =>
       this.http.get(`/api/bookings/${bookingId}/completion-payment/zpl`, { responseType: 'text' })
         .toPromise().then(zpl => this.sendZpl(zpl!))
+        .then(() => this.markReceiptPrinted(bookingId))
     );
   }
 
@@ -41,6 +44,7 @@ export class ZebraPrintService {
     await this.run(() =>
       this.http.get(`/api/bookings/${bookingId}/prepaid-payment/zpl`, { responseType: 'text' })
         .toPromise().then(zpl => this.sendZpl(zpl!))
+        .then(() => this.markReceiptPrinted(bookingId))
     );
   }
 
@@ -73,6 +77,14 @@ export class ZebraPrintService {
     } catch (err: any) {
       this.progress.error(err?.message || 'Print failed. Please try again.');
     }
+  }
+
+  /** Payment receipts only (not the booking tag or car check-in receipt): flags the booking's
+   *  emailSent once the printer agent accepted the job. A failure here must not surface as a
+   *  print failure — the receipt did print — so it is only logged. */
+  private async markReceiptPrinted(bookingId: string): Promise<void> {
+    await firstValueFrom(this.http.post(`/api/bookings/${bookingId}/receipt-printed`, {}))
+      .catch((err) => console.error('Failed to record receipt print:', err));
   }
 
   private async sendZpl(zpl: string): Promise<void> {

@@ -566,6 +566,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-discount" value="no" style="width:16px;height:16px;"> No, remainder due at checkout</label>
           </div>
         </div>`;
+      // Card receipts are always emailed; for cash the driver/admin decides (unticked by default).
+      const customerEmail = this.existingBooking?.email || '';
+      const sendEmailHtml = customerEmail ? `
+        <div id="swal-checkin-send-email-wrap" style="margin-top:12px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="checkbox" id="swal-checkin-send-email" style="width:16px;height:16px;"> Email receipt to ${customerEmail}</label>
+        </div>` : '';
       const fieldsHtml = `
         ${infoHtml}
         <div style="margin-bottom:12px;">
@@ -580,7 +586,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;"><input type="radio" name="swal-checkin-pm" value="card" style="width:16px;height:16px;"> Card</label>
             ${complimentaryOptionHtml}
           </div>
-        </div>`;
+        </div>
+        ${sendEmailHtml}`;
       if (effectiveMandatory) {
         paymentSectionHtml = `
           <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">
@@ -706,6 +713,19 @@ export class BookingFormComponent implements OnInit, OnDestroy {
           }
         }
 
+        if (showPaymentFields) {
+          const sendEmailWrap = document.getElementById('swal-checkin-send-email-wrap');
+          const sendEmailInput = document.getElementById('swal-checkin-send-email') as HTMLInputElement | null;
+          document.querySelectorAll<HTMLInputElement>('input[name="swal-checkin-pm"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+              if (!sendEmailWrap || !radio.checked) return;
+              const isCash = radio.value === 'cash';
+              sendEmailWrap.style.display = isCash ? 'block' : 'none';
+              if (!isCash && sendEmailInput) sendEmailInput.checked = false;
+            });
+          });
+        }
+
         if (showPaymentFields && !this.isDriver) {
           const amountInput = document.getElementById('swal-checkin-amount') as HTMLInputElement | null;
           const discountQuestion = document.getElementById('swal-checkin-discount-question');
@@ -783,7 +803,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         const adults = parseInt(adultsStr, 10);
         if (!adultsStr || isNaN(adults) || adults < 1) { Swal.showValidationMessage('Adults is required (minimum 1)'); return false; }
 
-        let checkinPayment: { amount: number; paymentMethod: string; notes: string; isDiscount?: boolean } | null = null;
+        let checkinPayment: { amount: number; paymentMethod: string; notes: string; isDiscount?: boolean; sendEmail?: boolean } | null = null;
         if (showPaymentFields) {
           const body = document.getElementById('swal-checkin-body');
           const isExpanded = effectiveMandatory || (body !== null && body.style.display !== 'none');
@@ -813,7 +833,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
               const notes = prevNote
                 ? `${prevNote}. Remaining balance collected at check-in: €${amount.toFixed(2)} (${pmCap}).`
                 : `Full amount collected at check-in: €${amount.toFixed(2)} (${pmCap}).`;
-              checkinPayment = { amount, paymentMethod, notes, isDiscount };
+              const sendEmail = paymentMethod === 'cash'
+                && (document.getElementById('swal-checkin-send-email') as HTMLInputElement | null)?.checked === true;
+              checkinPayment = { amount, paymentMethod, notes, isDiscount, sendEmail };
             }
           }
         }
@@ -846,7 +868,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
                     denyButtonColor: '#6c757d',
                   }).then(async (r) => {
                     if (r.isConfirmed) {
-                      await this.openThermalReceipt(receiptId);
+                      await this.openThermalReceipt(receiptId, this.bookingId!);
                     }
                   }).then(() => this.generateAndShowCheckinReceipt(this.bookingId!));
                 } else {
@@ -869,8 +891,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async openThermalReceipt(receiptId: string): Promise<void> {
-    await this.zebraPrintService.printThermalReceipt(receiptId);
+  private async openThermalReceipt(receiptId: string, bookingId: string): Promise<void> {
+    await this.zebraPrintService.printThermalReceipt(receiptId, bookingId);
   }
 
   private generateAndShowCheckinReceipt(bookingId: string): void {
@@ -1131,6 +1153,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     let amount: number;
     let notes: string | undefined;
     let isDiscount = false;
+    let sendEmail = false;
 
     const walleePaid = this.existingBooking.walleePaidAmount ?? 0;
     const checkinPaid = (this.existingBooking.paidAmount ?? 0) - walleePaid;
@@ -1200,6 +1223,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             </div>
           </div>
         </div>`;
+      // Card receipts are always emailed; for cash the driver/admin decides (unticked by default).
+      const customerEmail = this.existingBooking?.email || '';
+      const sendEmailHtml = customerEmail ? `
+          <div id="swal-send-email-wrap" class="form-check d-flex justify-content-center gap-2 mb-3">
+            <input class="form-check-input" type="checkbox" id="swal-send-email">
+            <label class="form-check-label" for="swal-send-email">Email receipt to ${customerEmail}</label>
+          </div>` : '';
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
         html: `
@@ -1222,12 +1252,23 @@ export class BookingFormComponent implements OnInit, OnDestroy {
               </div>
             </div>
           </div>
+          ${sendEmailHtml}
         `,
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
         cancelButtonText: 'Cancel',
         confirmButtonColor: PRIMARY_COLOR,
         didOpen: () => {
+          const sendEmailWrap = document.getElementById('swal-send-email-wrap');
+          const sendEmailInput = document.getElementById('swal-send-email') as HTMLInputElement | null;
+          document.querySelectorAll<HTMLInputElement>('input[name="swal-pm"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+              if (!sendEmailWrap || !radio.checked) return;
+              const isCash = radio.value === 'cash';
+              sendEmailWrap.style.setProperty('display', isCash ? 'flex' : 'none', 'important');
+              if (!isCash && sendEmailInput) sendEmailInput.checked = false;
+            });
+          });
           if (this.isDriver) return;
           const amountInput = document.getElementById('swal-amount') as HTMLInputElement | null;
           const discountQuestion = document.getElementById('swal-checkout-discount-question');
@@ -1258,7 +1299,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             }
             discountConfirmed = true;
           }
-          return { amount: enteredAmount, paymentMethod: selectedMethod, isDiscount: discountConfirmed };
+          const sendEmail = selectedMethod === 'cash'
+            && (document.getElementById('swal-send-email') as HTMLInputElement | null)?.checked === true;
+          return { amount: enteredAmount, paymentMethod: selectedMethod, sendEmail, isDiscount: discountConfirmed };
         },
       });
       if (!formValues) return;
@@ -1269,6 +1312,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         ? `${priorNote}. Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`
         : `Collected at checkout: €${amount.toFixed(2)} (${pmCap}).`;
       isDiscount = !!formValues.isDiscount;
+      sendEmail = !!formValues.sendEmail;
     }
 
     const actorName = this.userProfileService.getDisplayName() || undefined;
@@ -1277,6 +1321,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       amount,
       paymentMethod,
       isDiscount,
+      sendEmail,
       applyExtraFee,
       notes,
       actorName,
@@ -1295,7 +1340,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
             denyButtonColor: '#6c757d',
           }).then((r) => {
             if (r.isConfirmed) {
-              this.openThermalReceipt(receiptId);
+              this.openThermalReceipt(receiptId, this.bookingId!);
             }
             this.router.navigate(['/admin/bookings']);
           });

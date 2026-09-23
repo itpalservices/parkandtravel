@@ -27,6 +27,7 @@ import {
   emailCheckinPaymentForBooking,
   emailCompletionPaymentForBooking,
   emailPrepaidPaymentForBooking,
+  markReceiptDelivered,
   emailBookingTagForBooking,
   getCheckinPaymentPdf,
   getCompletionPaymentPdf,
@@ -788,7 +789,7 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
     }
 
     const { id } = req.params;
-    const { amount, paymentMethod, isDiscount, applyExtraFee, notes, actorName } = req.body;
+    const { amount, paymentMethod, isDiscount, sendEmail, applyExtraFee, notes, actorName } = req.body;
 
     if (amount === undefined || !paymentMethod) {
       res.status(400).json({ error: "amount and paymentMethod are required" });
@@ -806,6 +807,7 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
       amount: parseFloat(amount),
       paymentMethod,
       isDiscount: !!isDiscount,
+      sendEmail: sendEmail === true,
       applyExtraFee: !!applyExtraFee,
       actorUserId: authUser.sub || '',
       actorName: actorName || authUser.email || '',
@@ -858,7 +860,7 @@ export async function recordCheckinPaymentHandler(req: Request, res: Response): 
     }
 
     const { id } = req.params;
-    const { amount, paymentMethod, isDiscount, notes, actorName } = req.body;
+    const { amount, paymentMethod, isDiscount, sendEmail, notes, actorName } = req.body;
 
     if (amount === undefined || !paymentMethod) {
       res.status(400).json({ error: "amount and paymentMethod are required" });
@@ -876,6 +878,7 @@ export async function recordCheckinPaymentHandler(req: Request, res: Response): 
       amount: parseFloat(amount),
       paymentMethod,
       isDiscount: !!isDiscount,
+      sendEmail: sendEmail === true,
       actorUserId: authUser.sub || '',
       notes,
       shiftId,
@@ -1153,6 +1156,22 @@ export async function emailBookingTagHandler(req: Request, res: Response): Promi
     res.json({ success: true });
   } catch (error) {
     console.error("Error emailing booking tag:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+/** Called by the frontend after the Zebra printer agent accepted a receipt print job — the
+ *  backend only generates the ZPL, so it can't know on its own whether printing succeeded. */
+export async function markReceiptPrintedHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (!authUser || authUser.role === "user") { res.status(403).json({ error: "Admin or driver role required" }); return; }
+    const { id } = req.params;
+    if (!isValidUUID(id)) { res.status(400).json({ error: "Invalid booking ID format" }); return; }
+    await markReceiptDelivered(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error marking receipt as printed:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

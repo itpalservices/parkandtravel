@@ -9,7 +9,7 @@ import { sendBookingConfirmationEmail } from './email.service';
 import { createReceipt, ReceiptLineInput } from './receipt.service';
 import { generateReceiptPdf } from './pdf.service';
 import { uploadPdfToS3 } from './upload.service';
-import { derivePickUpOption, formatBookingReference } from './bookings.service';
+import { derivePickUpOption, formatBookingReference, markReceiptDelivered } from './bookings.service';
 
 const WALLEE_SUCCESS_STATES = ['AUTHORIZED', 'FULFILL', 'COMPLETED'];
 const WALLEE_FAILED_STATES = ['FAILED', 'VOIDED', 'DECLINE', 'DECLINED'];
@@ -391,6 +391,8 @@ async function createBookingFromPending(
       emailDescription,
       paymentStatus: 'paid',
       receiptPdfBuffer: pdfBuffer,
+    }).then(async (result) => {
+      if (result.success && pdfBuffer) await markReceiptDelivered(booking.id);
     }).catch((err) => console.error('Failed to send payment confirmation email:', err));
   }
 
@@ -523,6 +525,8 @@ async function createBookingFromAuthPending(
       emailDescription,
       paymentStatus: 'paid',
       receiptPdfBuffer: authPdfBuffer,
+    }).then(async (result) => {
+      if (result.success && authPdfBuffer) await markReceiptDelivered(booking.id);
     }).catch((err) => console.error('Failed to send auth_pending booking confirmation email:', err));
   }
 
@@ -942,6 +946,8 @@ async function sendPaidConfirmationEmailForBooking(bookingId: string, receiptPdf
     paymentStatus: 'paid',
     isPaymentConfirmation: true,
     receiptPdfBuffer,
+  }).then(async (result) => {
+    if (result.success && receiptPdfBuffer) await markReceiptDelivered(bookingId);
   }).catch((err) => console.error('Failed to send paid confirmation email:', err));
 }
 
