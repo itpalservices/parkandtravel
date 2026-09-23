@@ -217,11 +217,11 @@ export async function getAllRegularUsers(): Promise<{
     }
   }
 
-  // Filter to only regular users - exclude admin and driver roles from app_metadata
+  // Filter to only regular users - exclude admin, driver and super_admin roles from app_metadata
   // Users with no role, role="user", or any other role that's not admin/driver are considered regular users
   const regularUsers = allUsers.filter(user => {
     const role = user.app_metadata?.role?.toLowerCase();
-    return role !== "admin" && role !== "driver";
+    return role !== "admin" && role !== "driver" && role !== "super_admin";
   });
 
   return regularUsers.map(user => ({
@@ -268,7 +268,7 @@ export async function searchRegularUserByEmail(email: string): Promise<UserSearc
   }
 
   const userRole = user.app_metadata?.role?.toLowerCase();
-  if (userRole === "admin" || userRole === "driver") {
+  if (userRole === "admin" || userRole === "driver" || userRole === "super_admin") {
     return { found: false };
   }
 
@@ -297,7 +297,7 @@ export async function searchRegularUserByPhone(phone: string, phoneCode: string)
 
   const regularUser = response.data.find(user => {
     const role = user.app_metadata?.role?.toLowerCase();
-    return role !== "admin" && role !== "driver";
+    return role !== "admin" && role !== "driver" && role !== "super_admin";
   });
 
   if (!regularUser) {

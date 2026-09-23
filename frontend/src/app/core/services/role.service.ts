@@ -4,13 +4,17 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-export type UserRole = 'admin' | 'driver' | 'user';
+export type UserRole = 'admin' | 'driver' | 'user' | 'super_admin';
+
+const KNOWN_ROLES: UserRole[] = ['admin', 'driver', 'user', 'super_admin'];
 
 export interface UserRoleInfo {
   role: UserRole;
   isAdmin: boolean;
   isDriver: boolean;
   isUser: boolean;
+  /** Restricted role: sees only the Undelivered Receipts page. */
+  isSuperAdmin: boolean;
 }
 
 @Injectable({
@@ -48,29 +52,18 @@ export class RoleService {
   private extractRoleFromUser(user: any): UserRole {
     const roles = user[this.roleNamespace];
     
-    if (Array.isArray(roles) && roles.length > 0) {
-      const role = roles[0].toLowerCase();
-      if (role === 'admin' || role === 'driver' || role === 'user') {
-        return role;
-      }
-    }
-
-    if (typeof roles === 'string') {
-      const role = roles.toLowerCase();
-      if (role === 'admin' || role === 'driver' || role === 'user') {
-        return role;
-      }
-    }
+    const claimed = Array.isArray(roles) ? roles[0] : roles;
+    const fromClaim = this.toKnownRole(claimed);
+    if (fromClaim) return fromClaim;
 
     const appMetadata = user['https://park-and-travel/app_metadata'] || user.app_metadata;
-    if (appMetadata?.role) {
-      const role = appMetadata.role.toLowerCase();
-      if (role === 'admin' || role === 'driver' || role === 'user') {
-        return role;
-      }
-    }
+    return this.toKnownRole(appMetadata?.role) ?? 'user';
+  }
 
-    return 'user';
+  private toKnownRole(value: unknown): UserRole | null {
+    if (typeof value !== 'string') return null;
+    const role = value.toLowerCase() as UserRole;
+    return KNOWN_ROLES.includes(role) ? role : null;
   }
 
   private createRoleInfo(role: UserRole): UserRoleInfo {
@@ -78,7 +71,8 @@ export class RoleService {
       role,
       isAdmin: role === 'admin',
       isDriver: role === 'driver',
-      isUser: role === 'user'
+      isUser: role === 'user',
+      isSuperAdmin: role === 'super_admin',
     };
   }
 

@@ -1,0 +1,45 @@
+@use '../../../styles/variables' as *;
+
+.page-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.result-count {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.select-col {
+  width: 1%;
+  padding-right: 0 !important;
+
+  .form-check-input {
+    cursor: pointer;
+    margin: 0;
+  }
+}
+
+.row-selected {
+  background-color: #f0f9ff !important;
+}
+
+.btn-hide {
+  background: $primary-color;
+  color: #ffffff;
+  border: none;
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.92);
+    color: #ffffff;
+  }
+
+  &:disabled {
+    background: #d1d5db;
+    color: #6b7280;
+  }
+}

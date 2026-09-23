@@ -40,6 +40,11 @@ export class HeaderComponent {
     })
   );
   
+  /** super_admin has no profile page, so the avatar is not a link for it. */
+  profileLink$: Observable<string | null> = this.roleService.getUserRole().pipe(
+    map(roleInfo => roleInfo.isSuperAdmin ? null : '/admin/user-profile')
+  );
+
   emailVerified$: Observable<boolean> = this.profile$.pipe(
     map(profile => profile?.emailVerified === true)
   );

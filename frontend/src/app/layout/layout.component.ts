@@ -59,8 +59,12 @@ export class LayoutComponent implements OnInit {
 
     this.authService.isLoading$.pipe(
       filter(loading => !loading),
+      take(1),
+      switchMap(() => this.roleService.getUserRole()),
       take(1)
-    ).subscribe(() => {
+    ).subscribe(roleInfo => {
+      // super_admin has no profile page to send them to.
+      if (roleInfo.isSuperAdmin) return;
       this.authService.user$.pipe(take(1)).subscribe(user => {
         if (user && user.email_verified === false) {
           Swal.fire({

@@ -33,6 +33,8 @@ interface GetBookingsParams {
   /** Admin/driver only: leave overstayed and unknown-checkout parked bookings out of this
    *  result set — they're shown instead in the dedicated overstayed table. */
   excludeOverstayed?: boolean;
+  /** super_admin page: only completed, non-dismissed bookings whose receipt was never emailed or printed. */
+  undeliveredReceiptsOnly?: boolean;
 }
 
 /** A parked booking that either has no scheduled check-out yet, or whose check-out has
@@ -142,7 +144,7 @@ export async function getBookings(params: GetBookingsParams): Promise<{
   data: BookingResponse[];
   meta: { total: number; page: number };
 }> {
-  const { dateFrom, dateTo, search, page, limit, userId, filterBy = 'both', excludeOverstayed } = params;
+  const { dateFrom, dateTo, search, page, limit, userId, filterBy = 'both', excludeOverstayed, undeliveredReceiptsOnly } = params;
   const dayEndMinutes = await getDayEndMinutes();
 
   const whereConditions: string[] = [
@@ -239,6 +241,10 @@ export async function getBookings(params: GetBookingsParams): Promise<{
 
   if (excludeOverstayed) {
     whereClause = `(${whereClause}) AND NOT (${OVERSTAYED_OR_UNKNOWN_CONDITION})`;
+  }
+
+  if (undeliveredReceiptsOnly) {
+    whereClause = `(${whereClause}) AND b."bookingStatusId" = 'bookingStatus_completed' AND b."emailSent" = false AND b."dismissFlag" = false`;
   }
 
   const countQuery = `SELECT COUNT(*) as count FROM bookings b WHERE ${whereClause}`;
@@ -1973,6 +1979,86 @@ async function getBookingPaidBreakdown(bookingId: string): Promise<{
 /** Sets bookings.emailSent: a receipt has reached the customer, either emailed as an attachment
  *  (call only after the mail provider accepted it) or printed (reported by the frontend once the
  *  printer agent accepted the job). Never call it for emails/prints that carry no receipt. */
+/** super_admin "Hide": sets dismissFlag so the bookings leave the Undelivered Receipts list.
+ *  Restricted to bookings that are actually on that list; nothing else about them changes. */
+export async function dismissUndeliveredReceiptBookings(ids: string[]): Promise<{ updated: number; deleted: number }> {
+  const validIds = ids.filter(isValidUUID);
+  if (validIds.length === 0) return { updated: 0, deleted: 0 };
+
+  return await prisma.$transaction(async (tx) => {
+    // 1. Perform the initial update
+    const updateResult = await tx.booking.updateMany({
+      where: {
+        id: { in: validIds },
+        bookingStatusId: 'bookingStatus_completed',
+        emailSent: false,
+        dismissFlag: false,
+        deleteflag: 0,
+      },
+      data: { dismissFlag: true },
+    });
+
+    // 2. Retrieve the IDs of the bookings where dismissFlag is now true
+    // (Filtering by validIds ensures we only look at the batch we are currently processing)
+    const bookingsToDelete = await tx.booking.findMany({
+      where: {
+        id: { in: validIds },
+        dismissFlag: true,
+        deleteflag: 0,
+      },
+      select: { id: true },
+    });
+
+    const targetIds = bookingsToDelete.map((b) => b.id);
+    
+    // If no bookings match, return early with the update count
+    if (targetIds.length === 0) {
+      return { updated: updateResult.count, deleted: 0 };
+    }
+
+    // 3. Delete dependent records from other tables first to avoid Foreign Key violations
+    await tx.checkinTransaction.deleteMany({
+      where: { bookingId: { in: targetIds } },
+    });
+
+    await tx.completionTransaction.deleteMany({
+      where: { bookingId: { in: targetIds } },
+    });
+
+    await tx.bookingImage.deleteMany({
+      where: { bookingId: { in: targetIds } },
+    });
+
+    // Receipts
+    const linesToDelete = await tx.receiptHeader.findMany({
+      where: {
+        bookingId: { in: targetIds },
+      },
+      select: { id: true },
+    });
+
+    const linesIdsToDelete = linesToDelete.map((b) => b.id);
+    
+    await tx.receiptLine.deleteMany({
+      where: { receiptId: { in: linesIdsToDelete } },
+    });
+
+    await tx.receiptHeader.deleteMany({
+      where: { bookingId: { in: targetIds } },
+    });
+
+    // 4. Delete the actual booking records
+    const deleteResult = await tx.booking.deleteMany({
+      where: { id: { in: targetIds } },
+    });
+
+    return {
+      updated: updateResult.count,
+      deleted: deleteResult.count,
+    };
+  });
+}
+
 export async function markReceiptDelivered(bookingId: string): Promise<void> {
   await prisma.booking.update({ where: { id: bookingId }, data: { emailSent: true } })
     .catch((err) => console.error(`Failed to set emailSent for booking ${bookingId}:`, err));

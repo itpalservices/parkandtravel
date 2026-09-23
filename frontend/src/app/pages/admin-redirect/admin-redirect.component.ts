@@ -37,7 +37,9 @@ export class AdminRedirectComponent implements OnInit {
 
   ngOnInit(): void {
     this.roleService.getUserRole().pipe(take(1)).subscribe(roleInfo => {
-      if (roleInfo.isAdmin) {
+      if (roleInfo.isSuperAdmin) {
+        this.router.navigate(['/admin/undelivered-receipts'], { replaceUrl: true });
+      } else if (roleInfo.isAdmin) {
         this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
       } else {
         this.router.navigate(['/admin/bookings'], { replaceUrl: true });

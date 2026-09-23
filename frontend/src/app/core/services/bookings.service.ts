@@ -105,4 +105,17 @@ export class BookingsService {
   getOverstayedBookings(): Observable<{ data: Booking[] }> {
     return this.http.get<{ data: Booking[] }>(`${this.baseUrl}/overstayed`);
   }
+
+  /** super_admin only: completed bookings whose receipt was never emailed or printed. */
+  getUndeliveredReceiptBookings(params: { dateFrom?: string; dateTo?: string }): Observable<BookingsResponse> {
+    let httpParams = new HttpParams();
+    if (params.dateFrom) httpParams = httpParams.set('dateFrom', params.dateFrom);
+    if (params.dateTo) httpParams = httpParams.set('dateTo', params.dateTo);
+    return this.http.get<BookingsResponse>(`${this.baseUrl}/undelivered-receipts`, { params: httpParams });
+  }
+
+  /** super_admin "Hide": sets dismissFlag so the bookings leave the Undelivered Receipts list. */
+  dismissUndeliveredReceiptBookings(ids: string[]): Observable<{ success: boolean; data: { dismissed: number } }> {
+    return this.http.post<{ success: boolean; data: { dismissed: number } }>(`${this.baseUrl}/undelivered-receipts/dismiss`, { ids });
+  }
 }

@@ -5,7 +5,24 @@ const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "powersoft.eu.auth0.com";
 const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || "https://park-and-travel-api";
 const ROLE_NAMESPACE = "https://park-and-travel/roles";
 
-export type UserRole = "admin" | "driver" | "user";
+export type UserRole = "admin" | "driver" | "user" | "super_admin";
+
+const KNOWN_ROLES: UserRole[] = ["admin", "driver", "user", "super_admin"];
+
+/** super_admin is a restricted role: it may call only these endpoints. Every other endpoint
+ *  behind checkJwt answers 403, because many handlers only reject role "user" and would
+ *  otherwise let an unknown role through. */
+const SUPER_ADMIN_ALLOWED: { method: string; path: RegExp }[] = [
+  { method: "GET", path: /^\/api\/bookings\/undelivered-receipts\/?$/ },
+  { method: "POST", path: /^\/api\/bookings\/undelivered-receipts\/dismiss\/?$/ },
+];
+
+function parseRoleClaim(rolesClaim: unknown): UserRole | null {
+  const claimed = Array.isArray(rolesClaim) ? rolesClaim[0] : rolesClaim;
+  if (typeof claimed !== "string") return null;
+  const role = claimed.toLowerCase() as UserRole;
+  return KNOWN_ROLES.includes(role) ? role : null;
+}
 
 export interface AuthUser {
   sub: string;
@@ -71,46 +88,25 @@ function extractUserInfo(req: Request, res: Response, next: NextFunction): void 
                 payload["https://park-and-travel/email"] || 
                 "";
 
-  let role: UserRole = "user";
-  const rolesClaim = payload[ROLE_NAMESPACE];
-  
-  if (Array.isArray(rolesClaim) && rolesClaim.length > 0) {
-    const claimedRole = rolesClaim[0].toLowerCase();
-    if (claimedRole === "admin" || claimedRole === "driver" || claimedRole === "user") {
-      role = claimedRole;
-    }
-  } else if (typeof rolesClaim === "string") {
-    const claimedRole = rolesClaim.toLowerCase();
-    if (claimedRole === "admin" || claimedRole === "driver" || claimedRole === "user") {
-      role = claimedRole;
-    }
-  }
+  const role: UserRole = parseRoleClaim(payload[ROLE_NAMESPACE]) ?? "user";
 
   req.authUser = { sub, email, role };
   next();
 }
 
-export const checkJwt = [jwtCheckWithErrorHandling, extractUserInfo];
+function restrictSuperAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (req.authUser?.role !== "super_admin") return next();
+  const path = req.originalUrl.split("?")[0];
+  if (SUPER_ADMIN_ALLOWED.some((a) => a.method === req.method && a.path.test(path))) return next();
+  res.status(403).json({ error: "Not available for this role" });
+}
+
+export const checkJwt = [jwtCheckWithErrorHandling, extractUserInfo, restrictSuperAdmin];
 
 export function getUserRole(auth: any): UserRole {
   if (!auth?.payload) {
     return "user";
   }
 
-  const payload = auth.payload;
-  const rolesClaim = payload[ROLE_NAMESPACE];
-
-  if (Array.isArray(rolesClaim) && rolesClaim.length > 0) {
-    const claimedRole = rolesClaim[0].toLowerCase();
-    if (claimedRole === "admin" || claimedRole === "driver" || claimedRole === "user") {
-      return claimedRole;
-    }
-  } else if (typeof rolesClaim === "string") {
-    const claimedRole = rolesClaim.toLowerCase();
-    if (claimedRole === "admin" || claimedRole === "driver" || claimedRole === "user") {
-      return claimedRole;
-    }
-  }
-
-  return "user";
+  return parseRoleClaim(auth.payload[ROLE_NAMESPACE]) ?? "user";
 }

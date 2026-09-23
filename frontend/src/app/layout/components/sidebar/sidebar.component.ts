@@ -26,20 +26,25 @@ export class SidebarComponent implements OnInit {
     { label: 'Bookings', route: '/admin/bookings', icon: 'bookings' },
     { label: 'Customers', route: '/admin/customers', icon: 'customers', adminOnly: true },
     { label: 'Reports', route: '/admin/reports', icon: 'reports', adminOnly: true },
-    { label: 'Drivers', route: '/admin/drivers', icon: 'drivers', adminOnly: true }
+    { label: 'Drivers', route: '/admin/drivers', icon: 'drivers', adminOnly: true },
+    { label: 'Undelivered Receipts', route: '/admin/undelivered-receipts', icon: 'receipts', superAdminOnly: true }
   ];
 
   navItems$: Observable<NavItem[]> = of([]);
-  userRole$: Observable<UserRoleInfo> = of({ role: 'user', isAdmin: false, isDriver: false, isUser: true });
+  userRole$: Observable<UserRoleInfo> = of({ role: 'user', isAdmin: false, isDriver: false, isUser: true, isSuperAdmin: false });
 
   ngOnInit(): void {
     this.userRole$ = this.roleService.getUserRole();
     this.navItems$ = this.userRole$.pipe(
       map(roleInfo => {
-        if (roleInfo.isAdmin) {
-          return this.allNavItems;
+        if (roleInfo.isSuperAdmin) {
+          return this.allNavItems.filter(item => item.superAdminOnly);
         }
-        return this.allNavItems.filter(item => !item.adminOnly);
+        const items = this.allNavItems.filter(item => !item.superAdminOnly);
+        if (roleInfo.isAdmin) {
+          return items;
+        }
+        return items.filter(item => !item.adminOnly);
       })
     );
   }

@@ -27,6 +27,10 @@ export class BookingsFilterPanelComponent implements OnInit {
   @Input() enablePastDates = false;
   @Input() checkInByOptions: string[] = [];
   @Input() checkOutByOptions: string[] = [];
+  /** Hidden where the status is fixed (e.g. Undelivered Receipts lists only completed bookings). */
+  @Input() showStatusFilter = true;
+  /** Limits the mobile "Sort by" choices to the columns the host table actually shows. */
+  @Input() allowedSortFields: BookingSortField[] | null = null;
 
   @Output() apply = new EventEmitter<BookingsFilterState>();
   @Output() reset = new EventEmitter<void>();
@@ -86,7 +90,9 @@ export class BookingsFilterPanelComponent implements OnInit {
   ];
 
   get sortFieldOptions(): Option[] {
-    return this.allSortFieldOptions.filter((o) => this.isAdmin || !o.adminOnly);
+    return this.allSortFieldOptions
+      .filter((o) => this.isAdmin || !o.adminOnly)
+      .filter((o) => !this.allowedSortFields || this.allowedSortFields.includes(o.id));
   }
 
   ngOnInit(): void {

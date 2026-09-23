@@ -32,6 +32,7 @@ import {
   getCheckinPaymentPdf,
   getCompletionPaymentPdf,
   getPrepaidPaymentPdf,
+  dismissUndeliveredReceiptBookings,
 } from "../services/bookings.service";
 import { AuthUser } from "../middleware/auth.middleware";
 import { getAvailableAfterDays } from "../services/settings.service";
@@ -103,6 +104,64 @@ export async function listBookings(req: Request, res: Response): Promise<void> {
     res.json(result);
   } catch (error) {
     console.error("Error listing bookings:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+/** super_admin only: completed bookings with emailSent = false. Same date-range semantics as
+ *  the bookings listing (filterBy 'both'); every other filter is applied client-side. */
+export async function listUndeliveredReceiptBookings(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (authUser?.role !== "super_admin") {
+      res.status(403).json({ error: "Super admin role required" });
+      return;
+    }
+
+    const { dateFrom, dateTo } = req.query;
+    if ((dateFrom !== undefined && !isValidDateFormat(dateFrom as string)) ||
+        (dateTo !== undefined && !isValidDateFormat(dateTo as string))) {
+      res.status(400).json({ error: "dateFrom/dateTo must be valid dates in YYYY-MM-DD format" });
+      return;
+    }
+    if (dateFrom && dateTo && new Date(dateFrom as string) > new Date(dateTo as string)) {
+      res.status(400).json({ error: "dateFrom cannot be after dateTo" });
+      return;
+    }
+
+    const result = await getBookings({
+      dateFrom: dateFrom as string | undefined,
+      dateTo: dateTo as string | undefined,
+      page: 1,
+      limit: 20,
+      filterBy: 'both',
+      undeliveredReceiptsOnly: true,
+    });
+    res.json(result);
+  } catch (error) {
+    console.error("Error listing undelivered receipt bookings:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function dismissUndeliveredReceiptsHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authUser = req.authUser as AuthUser | undefined;
+    if (authUser?.role !== "super_admin") {
+      res.status(403).json({ error: "Super admin role required" });
+      return;
+    }
+
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string")) {
+      res.status(400).json({ error: "ids must be a non-empty array of booking IDs" });
+      return;
+    }
+
+    const dismissed = await dismissUndeliveredReceiptBookings(ids);
+    res.json({ success: true, data: { dismissed } });
+  } catch (error) {
+    console.error("Error dismissing undelivered receipt bookings:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

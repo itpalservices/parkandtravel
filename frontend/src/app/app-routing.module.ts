@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout/layout.component';
 import { authGuard, guestFormGuard } from './core/guards/auth.guard';
-import { adminOnlyGuard, adminOrDriverOnlyGuard } from './core/guards/role-redirect.guard';
+import { adminOnlyGuard, adminOrDriverOnlyGuard, superAdminOnlyGuard, superAdminRestrictionGuard } from './core/guards/role-redirect.guard';
 
 export const appRoutes: Routes = [
   {
@@ -29,6 +29,7 @@ export const appRoutes: Routes = [
     path: 'admin',
     component: LayoutComponent,
     canActivate: [authGuard],
+    canActivateChild: [superAdminRestrictionGuard],
     children: [
       {
         path: 'dashboard',
@@ -82,6 +83,12 @@ export const appRoutes: Routes = [
         canActivate: [adminOnlyGuard],
         loadComponent: () =>
           import('./pages/z-report/z-report.component').then((m) => m.ZReportComponent),
+      },
+      {
+        path: 'undelivered-receipts',
+        canActivate: [superAdminOnlyGuard],
+        loadComponent: () =>
+          import('./pages/undelivered-receipts/undelivered-receipts.component').then((m) => m.UndeliveredReceiptsComponent),
       },
       {
         path: 'user-profile',

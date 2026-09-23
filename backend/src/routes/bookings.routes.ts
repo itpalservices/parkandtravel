@@ -2,6 +2,8 @@ import { Router } from "express";
 import {
   listBookings,
   listOverstayedBookings,
+  listUndeliveredReceiptBookings,
+  dismissUndeliveredReceiptsHandler,
   getBooking,
   deleteBooking,
   createGuestBooking,
@@ -40,6 +42,8 @@ router.get("/", checkJwt, listBookings);
 router.post("/", checkJwt, createBooking);
 router.get("/check-park-place", checkJwt, checkParkPlaceAvailability);
 router.get("/overstayed", checkJwt, listOverstayedBookings);
+router.get("/undelivered-receipts", checkJwt, listUndeliveredReceiptBookings);
+router.post("/undelivered-receipts/dismiss", checkJwt, dismissUndeliveredReceiptsHandler);
 router.get("/:id", checkJwt, getBooking);
 router.put("/:id", checkJwt, updateBooking);
 router.patch("/:id/status", checkJwt, updateBookingStatus);
