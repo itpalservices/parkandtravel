@@ -95,8 +95,6 @@ export interface OpenShiftEmployeeSummary {
   transactions: ShiftTransaction[];
   totals: ShiftTotals[];
   employeeTotal: number;
-  employeeNet: number;
-  employeeVat: number;
 }
 
 export interface AdminXReportData {
@@ -111,6 +109,8 @@ export interface ZReportEmployeeSummary {
   transactions: ShiftTransaction[];
   totals: ShiftTotals[];
   employeeTotal: number;
+  employeeNet: number;
+  employeeVat: number;
 }
 
 /** A Z-report is a global sweep, not a per-employee reconciliation — one run can cover several
