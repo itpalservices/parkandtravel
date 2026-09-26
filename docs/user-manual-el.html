@@ -2,6 +2,7 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Εγχειρίδιο Χρήσης — Park &amp; Travel</title>
 <style>
   @page {
@@ -14,7 +15,10 @@
     font-size: 11pt;
     line-height: 1.55;
     color: #222;
-    margin: 0;
+    background: #fff;
+    margin: 0 auto;
+    max-width: 900px;
+    padding: 0 16px;
   }
   h1, h2, h3, h4 { color: #00506b; font-weight: 600; }
   h1 { font-size: 20pt; border-bottom: 2px solid #006B8F; padding-bottom: 6px; margin-top: 0; }
@@ -23,26 +27,29 @@
   p { margin: 8px 0; text-align: justify; }
   ul, ol { margin: 6px 0 12px 0; padding-left: 22px; }
   li { margin: 4px 0; }
-  .chapter { page-break-before: always; }
-  .new-page { page-break-before: always; }
-  .cover { page-break-after: always; text-align: center; padding-top: 22%; }
+  .chapter { page-break-before: always; padding-top: 24px; }
+  .cover { page-break-after: always; text-align: center; padding-top: 22%; min-height: 90vh; }
   .cover h1 { border: none; font-size: 30pt; color: #00506b; margin-bottom: 4px; }
   .cover .subtitle { font-size: 15pt; color: #444; margin-bottom: 40px; }
   .cover .badge { display: inline-block; background:#006B8F; color:#fff; padding: 5px 16px; border-radius: 20px; font-size: 10.5pt; margin-top: 30px; }
   .cover .meta { margin-top: 60px; font-size: 10pt; color: #777; }
   .toc { page-break-after: always; }
-  .toc ol { list-style: none; padding-left: 0; counter-reset: item; }
+  .toc ol { list-style: none; padding-left: 0; }
   .toc li { margin: 10px 0; font-size: 11.5pt; }
   .toc a { text-decoration: none; color: #222; }
-  .toc .num { color: #006B8F; font-weight: 600; display: inline-block; width: 26px; }
-  note, .note {
-    display: block; background: #eef7fa; border-left: 4px solid #006B8F;
-    padding: 10px 14px; margin: 12px 0; font-size: 10.3pt;
+  .toc .num { color: #006B8F; font-weight: 600; display: inline-block; width: 30px; }
+  .note, .warn, .tip {
+    display: block; padding: 10px 14px; margin: 12px 0; font-size: 10.3pt;
+    border-left: 4px solid; break-inside: avoid;
   }
-  .warn {
-    display: block; background: #fdf3ea; border-left: 4px solid #c97a2e;
-    padding: 10px 14px; margin: 12px 0; font-size: 10.3pt;
-  }
+  .note { background: #eef7fa; border-color: #006B8F; }
+  .warn { background: #fdf3ea; border-color: #c97a2e; }
+  .tip  { background: #eef7f0; border-color: #2f7d4f; }
+  .box-label { font-weight: 700; }
+  .note .box-label { color: #006B8F; }
+  .warn .box-label { color: #c97a2e; }
+  .tip .box-label { color: #2f7d4f; }
+  .note ul, .warn ul, .tip ul { margin-bottom: 0; }
   .role-tag {
     display: inline-block; font-size: 9pt; font-weight: 600; color: #fff;
     background: #888; padding: 1px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
@@ -51,12 +58,31 @@
   .role-driver { background: #b8860b; }
   .role-user { background: #2f7d4f; }
   .role-guest { background: #555; }
-  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10.3pt; }
-  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10.3pt; break-inside: avoid; }
+  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
   th { background: #eef7fa; color: #00506b; }
   code { background: #f2f2f2; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; font-size: 95%; }
   .eng { color: #666; font-style: italic; font-size: 92%; }
-  footer.pagefoot { }
+  .flow { text-align: center; font-weight: 600; color: #00506b; margin: 14px 0; }
+  .flow span { display: inline-block; background: #eef7fa; border: 1px solid #b9dbe6; border-radius: 16px; padding: 3px 12px; }
+  figure { margin: 16px auto 4px; text-align: center; break-inside: avoid; }
+  figure img { max-width: 100%; height: auto; border: 1px solid #d6dde2; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  figcaption { font-size: 9.5pt; color: #555; font-style: italic; margin-top: 6px; }
+  .imgrow { display: flex; gap: 16px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .imgrow figure { flex: 1 1 260px; margin: 16px 0 4px; }
+  ol.legend { list-style: none; padding-left: 0; margin: 8px 0 16px; font-size: 10.3pt; break-inside: avoid; }
+  ol.legend li { display: flex; gap: 10px; align-items: flex-start; margin: 5px 0; }
+  ol.legend .num { flex: 0 0 22px; height: 22px; border-radius: 50%; background: #e11d48; color: #fff; font-weight: 700; font-size: 9.5pt; line-height: 22px; text-align: center; margin-top: 1px; }
+  ol.steps li::marker { color: #006B8F; font-weight: 700; }
+  dl.faq dt { font-weight: 700; margin-top: 14px; color: #00506b; }
+  dl.faq dt::before { content: "Ε: "; }
+  dl.faq dd { margin: 4px 0 0 18px; text-align: justify; }
+  dl.faq dd::before { content: "Α: "; font-weight: 700; color: #2f7d4f; }
+  @media print {
+    body { max-width: none; padding: 0; }
+    .chapter { padding-top: 0; }
+  }
+
 </style>
 </head>
 <body>
@@ -66,7 +92,7 @@
   <h1>Park &amp; Travel</h1>
   <div class="subtitle">Εγχειρίδιο Χρήσης Συστήματος Κρατήσεων Πάρκινγκ</div>
   <div class="badge">Πλήρης Οδηγός — Επισκέπτες, Χρήστες, Οδηγοί &amp; Διαχειριστές</div>
-  <div class="meta">Έκδοση 1.0 — Ιούλιος 2026</div>
+  <div class="meta">Έκδοση 2.0 — Σεπτέμβριος 2026</div>
 </div>
 
 <!-- ============ TOC ============ -->
@@ -78,344 +104,254 @@
   <li><span class="num">3.</span> <a href="#c3">Σύνδεση &amp; Προφίλ Χρήστη</a></li>
   <li><span class="num">4.</span> <a href="#c4">Διαχείριση Κρατήσεων</a></li>
   <li><span class="num">5.</span> <a href="#c5">Εκτυπώσεις &amp; Εκτυπωτής Zebra</a></li>
-  <li><span class="num">6.</span> <a href="#c6">Πίνακας Ελέγχου (Dashboard)</a></li>
-  <li><span class="num">7.</span> <a href="#c7">Αναφορές</a></li>
-  <li><span class="num">8.</span> <a href="#c8">Πελάτες</a></li>
-  <li><span class="num">9.</span> <a href="#c9">Οδηγοί</a></li>
-  <li><span class="num">10.</span> <a href="#c10">Ρυθμίσεις Συστήματος</a></li>
-  <li><span class="num">11.</span> <a href="#c11">Βάρδιες Προσωπικού &amp; Αποσύνδεση</a></li>
+  <li><span class="num">6.</span> <a href="#c6">Βάρδιες Προσωπικού &amp; Αποσύνδεση</a></li>
+  <li><span class="num">7.</span> <a href="#c7">Αναφορές X &amp; Z — Ταμείο</a></li>
+  <li><span class="num">8.</span> <a href="#c8">Πίνακας Ελέγχου (Dashboard)</a></li>
+  <li><span class="num">9.</span> <a href="#c9">Αναφορές</a></li>
+  <li><span class="num">10.</span> <a href="#c10">Πελάτες</a></li>
+  <li><span class="num">11.</span> <a href="#c11">Οδηγοί</a></li>
+  <li><span class="num">12.</span> <a href="#c12">Ρυθμίσεις Συστήματος</a></li>
+  <li><span class="num">13.</span> <a href="#c13">Συχνές Ερωτήσεις &amp; Προβλήματα</a></li>
 </ol>
 </div>
 
-<!-- ============ CHAPTER 1 ============ -->
 <div class="chapter" id="c1">
-<h1>1. Εισαγωγή &amp; Επισκόπηση Συστήματος</h1>
-
-<p>Το σύστημα έχει να κάνει με τις λειτουργίες ενός χώρου στάθμευσης, από τη στιγμή που ένας πελάτης κάνει την κράτησή του online, μέχρι τη στιγμή που παραλαμβάνει το αυτοκίνητό του και φεύγει.</p>
-
+<h1>1. Εισαγωγή &amp; Επισκόπηση Συστήματος </h1>
+<p>Το σύστημα καλύπτει όλες τις λειτουργίες ενός χώρου στάθμευσης: από τη στιγμή που ο πελάτης κάνει την κράτησή του, μέχρι τη στιγμή που παραλαμβάνει το αυτοκίνητό του, πληρώνει και φεύγει. Παράλληλα, κρατά ταμείο ανά υπάλληλο, εκδίδει αποδείξεις και παράγει τις αναφορές κλεισίματος ταμείου.</p>
 <p>Το σύστημα χωρίζεται σε δύο μεγάλα κομμάτια:</p>
-
-<ul>
-  <li><strong>Σελίδα Επισκεπτών (Guest Page):</strong> Η σελίδα που βλέπει ο απλός χρήστης όταν μπαίνει στο site για να κλείσει θέση πάρκινγκ, χωρίς να χρειάζεται λογαριασμό.</li>
-  <li><strong>Σελίδα Διαχείρισης Κρατήσεων:</strong> Εκεί μπαίνει το προσωπικό, αφού συνδεθεί, για να διαχειριστεί κρατήσεις, ταμείο, πελάτες και ρυθμίσεις αλλά και ο απλός χρήστης ο οποίος επιθυμεί να κάνει κράτηση για στάθμευση με τον λογαριασμό του.</li>
-</ul>
-
-<h2>Οι ρόλοι χρηστών</h2>
-<p>Μέσα στο σύστημα υπάρχουν τέσσερις ρόλοι.</p>
-
-<table>
-  <tr><th>Ρόλος</th><th>Τι βλέπει &amp; τι μπορεί να κάνει</th></tr>
-  <tr>
-    <td><strong>Διαχειριστής</strong><span class="role-tag role-admin">admin</span></td>
-    <td>Έχει πρόσβαση σε όλα: Κρατήσεις, dashboard, αναφορές, πελάτες, οδηγούς, ρυθμίσεις συστήματος. Είναι, ουσιαστικά, ο ιδιοκτήτης ή ο υπεύθυνος λειτουργίας.</td>
-  </tr>
-  <tr>
-    <td><strong>Οδηγός</strong><span class="role-tag role-driver">driver</span></td>
-    <td>Ο υπάλληλος: Βλέπει όλες τις κρατήσεις, κάνει check-in/check-out, τυπώνει αποδείξεις, ανεβάζει φωτογραφίες οχημάτων και μπορεί να τρέξει το X Report για τις δικές του ενέργειες. Δεν βλέπει dashboard, πελάτες, οδηγούς.</td>
-  </tr>
-  <tr>
-    <td><strong>Χρήστης</strong><span class="role-tag role-user">user</span></td>
-    <td>Ο απλός, εγγεγραμμένος πελάτης: Βλέπει μόνο τις δικές του κρατήσεις, το προφίλ του και τα αποθηκευμένα του οχήματα.</td>
-  </tr>
-  <tr>
-    <td><strong>Επισκέπτης</strong><span class="role-tag role-guest">guest</span></td>
-    <td>Δεν έχει λογαριασμό: Κάνει μια κράτηση από τη guest φόρμα, χωρίς να συνδεθεί.</td>
-  </tr>
-</table>
-
-<div class="note">Στο υπόλοιπο manual, όπου μια λειτουργία αφορά μόνο συγκεκριμένο ρόλο, θα το βλέπετε σημειωμένο δίπλα στον τίτλο με το χρώμα του ρόλου, ακριβώς όπως παραπάνω.</div>
-
-<!-- ============ CHAPTER 2 ============ -->
+<ul><li><strong>Σελίδα Επισκεπτών</strong> <span class="eng">(Guest Page)</span>: Η σελίδα που βλέπει ο απλός επισκέπτης για να κλείσει θέση πάρκινγκ, χωρίς να χρειάζεται λογαριασμό.</li><li><strong>Εφαρμογή Διαχείρισης</strong>: Εκεί μπαίνει, μετά τη σύνδεση, το προσωπικό (για κρατήσεις, ταμείο, πελάτες, αναφορές και ρυθμίσεις), αλλά και ο εγγεγραμμένος πελάτης, για να δει και να διαχειριστεί τις δικές του κρατήσεις.</li></ul>
+<h2>Οι ρόλοι χρηστών </h2>
+<p>Μέσα στο σύστημα υπάρχουν τέσσερις ρόλοι. Ο ρόλος καθορίζεται από τον λογαριασμό με τον οποίο συνδέεται κανείς και αποφασίζει αυτόματα τι βλέπει και τι μπορεί να κάνει.</p>
+<table><colgroup><col style="width:28%"><col style="width:72%"></colgroup><tr><th>Ρόλος</th><th>Τι βλέπει &amp; τι μπορεί να κάνει</th></tr><tr><td><strong>Διαχειριστής</strong> <span class="role-tag role-admin">admin</span></td><td>Έχει πρόσβαση σε όλα: κρατήσεις, dashboard, αναφορές, πελάτες, οδηγούς και ρυθμίσεις συστήματος. Μπορεί να δώσει εκπτώσεις, να αλλάξει ποσά είσπραξης και να δημιουργήσει Αναφορά Z (κλείσιμο ταμείου).</td></tr><tr><td><strong>Οδηγός</strong> <span class="role-tag role-driver">driver</span></td><td>Ο υπάλληλος του χώρου. Βλέπει όλες τις κρατήσεις, κάνει check-in / check-out, εισπράττει πληρωμές, τυπώνει ή στέλνει αποδείξεις και βλέπει την Αναφορά X της δικής του βάρδιας. Δεν μπορεί να αλλάξει τα ποσά είσπραξης ή να δώσει έκπτωση. Δεν βλέπει dashboard, αναφορές, πελάτες και οδηγούς.</td></tr><tr><td><strong>Χρήστης</strong> <span class="role-tag role-user">user</span></td><td>Ο εγγεγραμμένος πελάτης. Βλέπει μόνο τις δικές του κρατήσεις, κατεβάζει τις αποδείξεις του, διαχειρίζεται το προφίλ και τα αποθηκευμένα οχήματά του.</td></tr><tr><td><strong>Επισκέπτης</strong> <span class="role-tag role-guest">guest</span></td><td>Δεν έχει λογαριασμό. Κάνει κράτηση από τη φόρμα επισκέπτη, χωρίς σύνδεση.</td></tr></table>
+<div class="note"><span class="box-label">Σημείωση</span> Σε όλο το εγχειρίδιο, όπου μια λειτουργία αφορά μόνο συγκεκριμένο ρόλο, ο ρόλος σημειώνεται με χρωματιστή ετικέτα δίπλα στον τίτλο, όπως στον πίνακα.</div>
+<h2>Βασικές έννοιες </h2>
+<p>Πριν προχωρήσετε, αξίζει να γνωρίζετε μερικούς όρους που θα συναντήσετε παντού:</p>
+<ul><li><strong>Κωδικός κράτησης</strong> <span class="eng">(Booking Reference)</span>: Κάθε κράτηση παίρνει έναν αναγνώσιμο κωδικό, π.χ. <code>PT-260917-00023</code>. Τα ψηφία <code>260917</code> είναι η ημερομηνία δημιουργίας (17/09/2026) και το <code>00023</code> ένας αύξων αριθμός. Με αυτόν τον κωδικό αναζητείτε γρήγορα μια κράτηση και τον βλέπετε σε αποδείξεις και αναφορές.</li><li><strong>Κατάσταση κράτησης</strong> <span class="eng">(Status)</span>: Κάθε κράτηση είναι σε μία από τρεις καταστάσεις: <strong>Created</strong> (δημιουργήθηκε), <strong>Parked</strong> (το όχημα είναι στον χώρο) και <strong>Completed</strong> (το όχημα παραδόθηκε).</li><li><strong>Βάρδια</strong> <span class="eng">(Shift)</span>: Το διάστημα εργασίας ενός υπαλλήλου. Κάθε είσπραξη καταγράφεται στη βάρδια του υπαλλήλου που την έκανε (βλ. Κεφάλαιο 6).</li><li><strong>Αναφορά X</strong>: Ζωντανή εικόνα του ταμείου των ανοιχτών βαρδιών, χωρίς να κλείνει τίποτα.</li><li><strong>Αναφορά Z</strong>: Το οριστικό κλείσιμο ταμείου για όλες τις βάρδιες που έχουν κλείσει.</li><li><strong>Τιμή TBC</strong>: Όταν δεν είναι γνωστή η ημερομηνία επιστροφής, η τιμή εμφανίζεται ως «TBC» <span class="eng">(to be confirmed)</span> και υπολογίζεται αυτόματα στο check-out.</li></ul>
+<h2>Πλοήγηση στην εφαρμογή </h2>
+<ul><li><strong>Αριστερό μενού</strong>: Οι βασικές ενότητες (Home, Bookings, Customers, Reports, Drivers). Κάθε ρόλος βλέπει μόνο τις ενότητες που τον αφορούν. Το κουμπί <strong>Collapse</strong> στο κάτω μέρος μαζεύει το μενού, ώστε να μένει περισσότερος χώρος για τους πίνακες.</li><li><strong>Πάνω μπάρα</strong>: Δεξιά φαίνεται το όνομα του συνδεδεμένου χρήστη και το εικονίδιο αποσύνδεσης.</li><li><strong>Τηλέφωνα</strong>: Όπου εμφανίζεται αριθμός τηλεφώνου πελάτη, μπορείτε να τον πατήσετε από κινητό ή tablet για να καλέσετε απευθείας.</li><li><strong>Εξαγωγές</strong>: Οι περισσότερες λίστες και αναφορές εξάγονται σε <strong>PDF</strong> και <strong>Excel</strong>.</li></ul>
+</div>
 <div class="chapter" id="c2">
 <h1>2. Κράτηση ως Επισκέπτης <span class="role-tag role-guest">guest</span></h1>
-
-<p>Ένας υποψήφιος πελάτης φτάνει στην αρχική σελίδα και βλέπει δύο επιλογές: να συνδεθεί σε λογαριασμό που ήδη έχει, ή να προχωρήσει κατευθείαν ως επισκέπτης <span class="eng">(Proceed as a Guest)</span>.</p>
-
-<h2>Φόρμα κράτησης</h2>
-<p>Η φόρμα που ανοίγει είναι χωρισμένη σε τρία κομμάτια: Προσωπικά στοιχεία, στοιχεία οχήματος, και λεπτομέρειες της ίδιας της κράτησης.</p>
-
-<h3>Προσωπικά στοιχεία</h3>
-<p>Όνομα, τηλέφωνο και email, το οποίο είναι προαιρετικό. Αν δεν δοθεί email, ο πελάτης απλώς δεν θα λάβει email επιβεβαίωσης.</p>
-
-<h3>Στοιχεία οχήματος</h3>
-<p>Μάρκα, μοντέλο, πινακίδα και χρώμα. Tα βασικά που θα χρειαστεί το προσωπικό για να αναγνωρίσει το αυτοκίνητο όταν φτάσει στον χώρο στάθμευσης.</p>
-
-<h3>Λεπτομέρειες κράτησης</h3>
-<p>Ο επισκέπτης επιλέγει:</p>
-<ul>
-  <li><strong>Ημερομηνία &amp; ώρα άφιξης:</strong> <span class="eng">(check-in)</span> Με κάποιους περιορισμούς ημερομηνίας που εξαρτώνται από τις ρυθμίσεις του συστήματος (π.χ. πόσες μέρες νωρίτερα επιτρέπεται να κλειστεί μια κράτηση).</li>
-  <li><strong>Τρόπο άφιξης:</strong> Είτε «θα οδηγήσω μόνος μου το αυτοκίνητο στο πάρκινγκ», είτε «παράδοση στο αεροδρόμιο» <span class="eng">(drop-off)</span>, όπου κάποιος από το προσωπικό παραλαμβάνει το όχημα εκεί.</li>
-  <li><strong>Στοιχεία επιστροφής:</strong> Προαιρετικά, μέσω ενός διακόπτη «Γνωρίζετε ήδη τα στοιχεία επιστροφής;». Αν ενεργοποιηθεί, εμφανίζονται αριθμός πτήσης επιστροφής, ημερομηνία/ώρα αναχώρησης <span class="eng">(check-out)</span>, και τρόπος παραλαβής («θα φέρω το αυτοκίνητο στο αεροδρόμιο» ή «θα το παραλάβω από το πάρκινγκ»).</li>
-  <li><strong>Τύπο πάρκινγκ:</strong> Καλυμμένο ή ακάλυπτο, με έλεγχο διαθεσιμότητας σε πραγματικό χρόνο. Αν δεν υπάρχουν άλλες θέσεις διαθέσιμες για τις συγκεκριμένες ημερομηνίες, το σύστημα ενημερώνει τον επισκέπτη και δεν τον αφήνει να προχωρήσει.</li>
-  <li><strong>Υπηρεσία πλυσίματος:</strong> <span class="eng">(Car Wash)</span> Δυνατότητα προσθήκης πλυσίματος, με το κόστος του να εμφανίζεται αμέσως στο σύνολο.</li>
-</ul>
-
-<h3 class="new-page">Η σύνοψη τιμής</h3>
-<p>Καθώς ο επισκέπτης συμπληρώνει τη φόρμα, ενημερώνεται σε πραγματικό χρόνο το κόστος, καθώς και το κόστος πλυσίματος αν επιλέχθηκε, τυχόν κόστος παράδοσης στο αεροδρόμιο, και το τελικό σύνολο. Αν δεν έχει δοθεί ημερομηνία επιστροφής, το σύνολο εμφανίζεται ως «θα προσδιοριστεί» <span class="eng">(TBC)</span>.</p>
-
-<h2>Ολοκλήρωση &amp; πληρωμή</h2>
-<p>Στο τέλος της φόρμας, το κουμπί υποβολής αλλάζει ανάλογα με τις ρυθμίσεις της επιχείρησης εκείνη τη στιγμή:</p>
-<ul>
-  <li>Αν δεν απαιτείται προπληρωμή, ο επισκέπτης απλώς πατά <strong>«Επιβεβαίωση Κράτησης»</strong> και η κράτηση καταχωρείται αμέσως.</li>
-  <li>Αν η προπληρωμή είναι υποχρεωτική, το κουμπί γίνεται <strong>«Προχωρήστε στην Πληρωμή»</strong>, ο επισκέπτης μεταφέρεται στη σελίδα πληρωμής της VPayments (Wallee), ολοκληρώνει την πληρωμή με κάρτα, και μόνο τότε δημιουργείται η κράτηση. Αν η πληρωμή αποτύχει ή ακυρωθεί, δεν δημιουργείται καμία κράτηση.</li>
-</ul>
-
-<p>Μετά την επιτυχή πληρωμή, ο επισκέπτης βλέπει μια σελίδα επιτυχίας και λαμβάνει email επιβεβαίωσης (εφόσον έδωσε email). Σε περίπτωση αποτυχίας, μια αντίστοιχη σελίδα τον ενημερώνει και μπορεί να προσπαθήσει ξανά.</p>
-
+<p>Ο υποψήφιος πελάτης μπαίνει στην αρχική σελίδα και έχει δύο επιλογές: να συνεχίσει ως επισκέπτης, ή να συνδεθεί στον λογαριασμό του.</p>
+<figure style="max-width:70%"><img src="user-manual-images/guest-landing.png" alt="Η αρχική σελίδα του συστήματος"><figcaption>Εικόνα 1: Η αρχική σελίδα του συστήματος</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Proceed as a Guest</strong>: Κράτηση χωρίς λογαριασμό.</span></li><li><span class="num">2</span><span><strong>Login</strong>: Σύνδεση για εγγεγραμμένους πελάτες και για το προσωπικό.</span></li></ol>
+<div class="note"><span class="box-label">Σημείωση</span> Αν ο διαχειριστής απενεργοποιήσει την κράτηση ως επισκέπτης (Ρυθμίσεις → Guest Booking), το κουμπί «Proceed as a Guest» δεν εμφανίζεται και η φόρμα επισκέπτη δεν είναι προσβάσιμη.</div>
+<h2>Η φόρμα κράτησης </h2>
+<p>Η φόρμα είναι χωρισμένη σε τρία μέρη: προσωπικά στοιχεία, στοιχεία οχήματος και λεπτομέρειες κράτησης. Τα πεδία με αστερίσκο (*) είναι υποχρεωτικά.</p>
+<figure style="max-width:78%"><img src="user-manual-images/guest-form.png" alt="Η φόρμα κράτησης επισκέπτη"><figcaption>Εικόνα 2: Η φόρμα κράτησης επισκέπτη</figcaption></figure>
+<h3>Προσωπικά στοιχεία </h3>
+<p>Ονοματεπώνυμο, τηλέφωνο (με επιλογή χώρας) και email. Το email είναι προαιρετικό· αν δεν δοθεί, ο πελάτης απλώς δεν θα λάβει email επιβεβαίωσης και αποδείξεις με email.</p>
+<h3>Στοιχεία οχήματος </h3>
+<p>Μάρκα, μοντέλο, αριθμός εγγραφής (πινακίδα) και χρώμα, ώστε το προσωπικό να αναγνωρίσει το όχημα όταν φτάσει.</p>
+<h3>Λεπτομέρειες κράτησης </h3>
+<ul><li><strong>Ημερομηνία &amp; ώρα άφιξης</strong> <span class="eng">(Check-in)</span>: Η ώρα ξεκινά από 00:00. Οι διαθέσιμες ημερομηνίες εξαρτώνται από τη ρύθμιση «Booking Lead Time» (πόσες ημέρες νωρίτερα πρέπει να γίνει η κράτηση).</li><li><strong>Πώς θα φτάσει το όχημα στο πάρκινγκ</strong>: Είτε ο πελάτης το οδηγεί ο ίδιος στον χώρο, είτε το παραλαμβάνει το προσωπικό στο αεροδρόμιο (με επιπλέον χρέωση παράδοσης). Ο τρόπος επιστροφής ακολουθεί αυτόματα την ίδια επιλογή.</li><li><strong>«Do you know the return details?»</strong>: Διακόπτης για τα στοιχεία επιστροφής. Όταν είναι ενεργός, ζητούνται αριθμός πτήσης επιστροφής, ημερομηνία και ώρα check-out. Αν ο πελάτης δεν τα γνωρίζει, τον απενεργοποιεί και η τιμή εμφανίζεται ως <strong>TBC</strong>.</li><li><strong>Τύπος πάρκινγκ</strong>: Καλυμμένο ή ακάλυπτο, με έλεγχο διαθεσιμότητας σε πραγματικό χρόνο. Αν δεν υπάρχουν θέσεις για τις ημερομηνίες αυτές, το σύστημα δεν επιτρέπει να συνεχίσει.</li><li><strong>Πλύσιμο αυτοκινήτου</strong> <span class="eng">(Car Wash)</span>: Προαιρετική υπηρεσία, με το κόστος να προστίθεται αμέσως στο σύνολο.</li></ul>
+<figure style="max-width:78%"><img src="user-manual-images/guest-form-tbc.png" alt="Χωρίς στοιχεία επιστροφής, η τιμή εμφανίζεται ως TBC"><figcaption>Εικόνα 3: Χωρίς στοιχεία επιστροφής, η τιμή εμφανίζεται ως TBC</figcaption></figure>
+<div class="note"><span class="box-label">Σημείωση</span> Κράτηση με τιμή TBC δεν πληρώνεται εκ των προτέρων και δεν εισπράττεται στο check-in. Η τελική τιμή υπολογίζεται αυτόματα τη στιγμή του check-out, από την ημέρα άφιξης μέχρι εκείνη την ημέρα (βλ. Κεφάλαιο 4, «Check-out χωρίς στοιχεία επιστροφής»).</div>
+<h2>Ολοκλήρωση &amp; πληρωμή </h2>
+<ul><li>Αν <strong>δεν</strong> απαιτείται προπληρωμή, ή αν η τιμή είναι <strong>TBC</strong>, ο επισκέπτης πατά <strong>Confirm Booking</strong> και η κράτηση καταχωρείται αμέσως.</li><li>Αν η προπληρωμή είναι υποχρεωτική (Ρυθμίσεις → Payment), το κουμπί γίνεται <strong>Proceed to Payment</strong>. Ο επισκέπτης μεταφέρεται στη σελίδα πληρωμής της VPayments (Wallee) και η κράτηση δημιουργείται <strong>μόνο</strong> αν η πληρωμή ολοκληρωθεί. Αν αποτύχει ή ακυρωθεί, δεν δημιουργείται κράτηση.</li></ul>
+<p>Μετά την επιτυχή κράτηση εμφανίζεται σελίδα επιτυχίας και αποστέλλεται email επιβεβαίωσης (εφόσον δόθηκε email). Σε αποτυχία πληρωμής, αντίστοιχη σελίδα ενημερώνει τον επισκέπτη ώστε να προσπαθήσει ξανά.</p>
 </div>
-
-<!-- ============ CHAPTER 3 ============ -->
 <div class="chapter" id="c3">
-<h1>3. Σύνδεση &amp; Προφίλ Χρήστη</h1>
-
-<h2>Σύνδεση</h2>
-<p>Η σύνδεση γίνεται μέσω ενός εξωτερικού, ασφαλούς συστήματος ταυτοποίησης <span class="eng">(Auth0)</span>. Ο ρόλος του λογαριασμού (διαχειριστής, οδηγός ή απλός χρήστης) καθορίζει αυτόματα τι θα δει ο χρήστης μόλις μπει στο σύστημα.</p>
-
+<h1>3. Σύνδεση &amp; Προφίλ Χρήστη </h1>
+<h2>Σύνδεση </h2>
+<p>Η σύνδεση γίνεται από το κουμπί <strong>Login</strong> της αρχικής σελίδας, μέσω ενός ασφαλούς εξωτερικού συστήματος ταυτοποίησης <span class="eng">(Auth0)</span>. Ο ρόλος του λογαριασμού καθορίζει αυτόματα τι θα δει ο χρήστης μόλις μπει.</p>
+<div class="note"><span class="box-label">Σημείωση</span> Για το προσωπικό (διαχειριστές &amp; οδηγούς), η είσοδος στην εφαρμογή ανοίγει αυτόματα βάρδια, αν δεν υπάρχει ήδη ανοιχτή. Δείτε το Κεφάλαιο 6.</div>
+<h2>Οι κρατήσεις μου <span class="role-tag role-user">user</span></h2>
+<p>Ο εγγεγραμμένος πελάτης βλέπει στη σελίδα Bookings μόνο τις δικές του κρατήσεις:</p>
+<ul><li><strong>Upcoming Bookings</strong>: Κάρτες με τις επερχόμενες κρατήσεις του.</li><li><strong>Past 10 Bookings</strong>: Κάρτες με τις δέκα πιο πρόσφατες ολοκληρωμένες κρατήσεις (πινακίδα, όχημα, ημερομηνία αναχώρησης, τιμή).</li><li><strong>Αποδείξεις</strong>: Από το μενού κάθε κράτησης μπορεί να κατεβάσει σε PDF τις αποδείξεις πληρωμής του (online προπληρωμή, πληρωμή στο check-in, πληρωμή στο check-out).</li><li><strong>Νέα κράτηση</strong>: Με το κουμπί <strong>Add Booking</strong>, με τα αποθηκευμένα του στοιχεία και οχήματα να συμπληρώνονται αυτόματα.</li></ul>
 <h2>Προφίλ χρήστη <span class="role-tag role-user">user</span><span class="role-tag role-driver">driver</span><span class="role-tag role-admin">admin</span></h2>
-<p>Κάθε συνδεδεμένος χρήστης έχει μια σελίδα προφίλ, η οποία όμως αλλάζει ανάλογα με τον ρόλο του συνδεδεμένου χρήστη.</p>
-
-<h3>Στοιχεία προφίλ (όλοι)</h3>
-<p>Email <span class="eng">(read-only)</span>, όνομα, επώνυμο και τηλέφωνο, με δυνατότητα αποθήκευσης αλλαγών.</p>
-
+<p>Κάθε συνδεδεμένος χρήστης έχει σελίδα προφίλ (από το όνομά του πάνω δεξιά). Περιέχει email (δεν αλλάζει), όνομα, επώνυμο και τηλέφωνο, με το κουμπί <strong>Save Changes</strong>.</p>
 <h3>Τα οχήματά μου <span class="role-tag role-user">user</span></h3>
-<p>Οι απλοί χρήστες έχουν εδώ μια λίστα με τα αυτοκίνητά τους με τις πιο κάτω πληροφορίες:</p>
-<ul>
-  <li>Μάρκα</li>
-  <li>Μοντέλο</li>
-  <li>Πινακίδα</li>
-  <li>Χρώμα</li>
-</ul>
-<p>Υπάρχει δυνατότητα προσθήκης, επεξεργασίας ή διαγραφής μέσα από ένα απλό παράθυρο. Αυτό εξυπηρετεί κυρίως όταν κάνουν νέα κράτηση: αντί να ξαναγράφουν τα στοιχεία του αυτοκινήτου κάθε φορά, απλώς το επιλέγουν από μία λίστα.</p>
-
-<div class="note">Η ενότητα «Ρυθμίσεις» που εμφανίζεται εδώ μόνο σε διαχειριστές, αναλύεται ξεχωριστά στο Κεφάλαιο 10, γιατί αφορά ολόκληρο το σύστημα και όχι το προσωπικό προφίλ.</div>
-
+<p>Οι πελάτες έχουν εδώ λίστα με τα αυτοκίνητά τους (μάρκα, μοντέλο, πινακίδα, χρώμα), με προσθήκη, επεξεργασία και διαγραφή. Σε κάθε νέα κράτηση απλώς επιλέγουν το όχημα από τη λίστα, αντί να ξαναγράφουν τα στοιχεία.</p>
+<div class="note"><span class="box-label">Σημείωση</span> Η ενότητα «Settings» που βλέπει ο διαχειριστής δίπλα στο προφίλ του αφορά ολόκληρο το σύστημα και περιγράφεται στο Κεφάλαιο 12.</div>
 </div>
-
-<!-- ============ CHAPTER 4 ============ -->
 <div class="chapter" id="c4">
 <h1>4. Διαχείριση Κρατήσεων <span class="role-tag role-admin">admin</span><span class="role-tag role-driver">driver</span></h1>
-
-<p>Εδώ βλέπει το προσωπικό όλες τις κρατήσεις, κάνει check-in και check-out αυτοκινήτων, εισπράττει πληρωμές και τυπώνει αποδείξεις.</p>
-
-<h2>Η λίστα κρατήσεων</h2>
-<p>Το περιεχόμενο αυτής της σελίδας είναι η λίστα των κρατήσεων μέσα από το φίλτρο ημερομηνίας. Εδώ φαίνονται:</p>
-<ul>
-  <li>Κατάσταση <span class="eng">(Status)</span></li>
-  <li>Πελάτης</li>
-  <li>Πινακίδα</li>
-  <li>Όχημα</li>
-  <li>Ημερομηνίας άφιξης/αναχώρησης</li>
-  <li>Τρόπο παράδοσης/παραλαβής</li>
-  <li>Αριθμό πτήσης</li>
-  <li>Τύπο πάρκινγκ</li>
-  <li>Υπηρεσία πλυσίματος</li>
-  <li>Τιμή</li>
-</ul>
-<p>Οι διαχειριστές βλέπουν επιπλέον ποιος υπάλληλος έκανε το check-in/check-out, και αν η κράτηση προήλθε από εγγεγραμμένο χρήστη ή από επισκέπτη.</p>
-
-<h2>Η πορεία μιας κράτησης</h2>
-<p>Κάθε κράτηση περνάει από τρία στάδια, με μια λογική φορά:</p>
-<p style="text-align:center; font-weight:600; color:#00506b;">Δημιουργήθηκε <span class="eng">(Created)</span> &nbsp;→&nbsp; Παρκαρισμένο <span class="eng">(Parked)</span> &nbsp;→&nbsp; Ολοκληρώθηκε <span class="eng">(Completed)</span></p>
-
-<h3>Σήμανση ως «Παρκαρισμένο»</h3>
-<p>Όταν φτάνει το αυτοκίνητο, το προσωπικό ανοίγει το παράθυρο check-in και συμπληρώνει:</p>
-<ul>
-  <li>Τη <strong>θέση πάρκινγκ</strong> (π.χ. <code>A-001</code>), με το σύστημα να ελέγχει αν η θέση είναι όντως διαθέσιμη.</li>
-  <li>Τα <strong>χιλιόμετρα</strong> του οχήματος.</li>
-  <li>Διορθώσεις σε <strong>πινακίδα/μοντέλο</strong>, αν χρειάζεται.</li>
-  <li>Τον <strong>αριθμό επιβατών</strong>.</li>
-  <li>Τον διακόπτη <strong>«Ο πελάτης κρατά τα κλειδιά»</strong>.</li>
-  <li>Ελεύθερα <strong>σχόλια</strong>.</li>
-  <li><strong>Φωτογραφίες του οχήματος</strong>. Οι φωτογραφίες αυτές μένουν αποθηκευμένες στην κράτηση για μελλοντική αναφορά π.χ. σε περίπτωση αμφισβήτησης για μια ζημιά.</li>
-</ul>
-<p>Αν χρειάζεται, το ίδιο παράθυρο επιτρέπει την καταγραφή μιας <strong>πληρωμής check-in</strong> (μετρητά ή κάρτα). Στο τέλος, προσφέρεται η επιλογή να τυπωθεί αμέσως η απόδειξη πληρωμής αλλά και η απόδειξη παράδοσης του οχήματος.</p>
-
-<h3>Σήμανση ως «Ολοκληρώθηκε»</h3>
-<p>Στην αναχώρηση, το σύστημα πρώτα υπολογίζει αν υπάρχει επιπλέον χρέωση για καθυστερημένο check-out. Εάν υπάρχει, το προσωπικό αποφασίζει αν θα την εφαρμόσει ή όχι. Στη συνέχεια ανοίγει ένα παράθυρο είσπραξης, όπου φαίνεται καθαρά το υπόλοιπο που μένει να πληρωθεί (αφαιρώντας ό,τι έχει ήδη πληρωθεί online ή στο check-in), σε μετρητά ή κάρτα. Μόλις ολοκληρωθεί, καταγράφεται η συναλλαγή και προσφέρεται η εκτύπωση της απόδειξης.</p>
-
-<h2>Ενέργειες ανά κράτηση</h2>
-<p>Από το μενού ενεργειών δίπλα σε κάθε κράτηση, το προσωπικό μπορεί να:</p>
-<ul>
-  <li><strong>Επεξεργαστεί</strong> την κράτηση.</li>
-  <li><strong>Τυπώσει την ετικέτα κράτησης</strong> <span class="eng">(Booking Tag)</span>.</li>
-  <li><strong>Ξανατυπώσει</strong> την απόδειξη check-in, την πληρωμή check-in, ή την πληρωμή check-out.</li>
-  <li><strong>Διαγράψει</strong> την κράτηση  (δυνατό μόνο όσο βρίσκεται ακόμα στην κατάσταση «Δημιουργήθηκε»).</li>
-</ul>
-<p>Το εικονίδιο φωτογραφίας ανοίγει ένα καρουζέλ με όλες τις φωτογραφίες που έχουν ανέβει για το όχημα. Επίσης, το εικονίδιο σημειώσεων δείχνει τα σχόλια που καταγράφηκαν στο check-in.</p>
-
-<h2>Δημιουργία &amp; επεξεργασία κράτησης από το προσωπικό</h2>
-<p>Η ίδια φόρμα κράτησης χρησιμοποιείται είτε ο πελάτης κάνει κράτηση μόνος του, είτε το προσωπικό τη δημιουργεί για λογαριασμό του πελάτη:</p>
-<ul>
-  <li><strong>Αναζήτηση υπάρχοντος πελάτη:</strong> Με email ή τηλέφωνο, τα στοιχεία του και τα αυτοκίνητά του συμπληρώνονται αυτόματα, ή προστίθεται νέο όχημα στον υπάρχοντα λογαριασμό του.</li>
-  <li><strong>Χειροκίνητη τιμή:</strong> Ο διαχειριστής μπορεί να ορίσει τελική τιμή διαφορετική από την υπολογισμένη, και να δει αν ισχύει έκπτωση για τον συγκεκριμένο πελάτη.</li>
-</ul>
-
-<h2>Πληρωμή κατά τη δημιουργία ή επεξεργασία</h2>
-<p>Αν η προπληρωμή είναι υποχρεωτική, μια νέα κράτηση περνά πρώτα από πληρωμή μέσω VPayments (Wallee) πριν οριστικοποιηθεί. Αν, κατά την επεξεργασία μιας κράτησης, η τελική τιμή αυξηθεί (π.χ. προστέθηκε πλύσιμο ή άλλαξε ο τύπος πάρκινγκ), το σύστημα ζητά από τον πελάτη να πληρώσει μόνο τη διαφορά, με τον ίδιο τρόπο.</p>
-
+<p>Η σελίδα <strong>Bookings</strong> είναι η βασική οθόνη εργασίας του προσωπικού. Εδώ βλέπετε τις κρατήσεις, κάνετε check-in και check-out, εισπράττετε πληρωμές και τυπώνετε ή στέλνετε αποδείξεις.</p>
+<h2>Η λίστα κρατήσεων </h2>
+<figure style="max-width:100%"><img src="user-manual-images/bookings-list.png" alt="Η σελίδα Bookings (προβολή διαχειριστή)"><figcaption>Εικόνα 4: Η σελίδα Bookings (προβολή διαχειριστή)</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Filters</strong>: Άνοιγμα του πάνελ φίλτρων και ταξινόμησης.</span></li><li><span class="num">2</span><span><strong>Εύρος ημερομηνιών</strong>: Οι ημερομηνίες που εμφανίζονται αυτή τη στιγμή (εξ ορισμού, η σημερινή).</span></li><li><span class="num">3</span><span><strong>X Report</strong>: Ζωντανή εικόνα ταμείου (Κεφάλαιο 7).</span></li><li><span class="num">4</span><span><strong>Z Report</strong>: Κλείσιμο ταμείου — μόνο για διαχειριστές (Κεφάλαιο 7).</span></li><li><span class="num">5</span><span><strong>Add Booking</strong>: Δημιουργία νέας κράτησης.</span></li><li><span class="num">6</span><span><strong>Μενού ενεργειών (⋮)</strong>: Επεξεργασία, σημείωση, εκτυπώσεις/email αποδείξεων, διαγραφή.</span></li><li><span class="num">7</span><span><strong>Κατάσταση</strong>: Πατώντας την ετικέτα (π.χ. «Created ▾») αλλάζετε την κατάσταση της κράτησης.</span></li><li><span class="num">8</span><span><strong>Κωδικός κράτησης</strong>: Ο αναγνώσιμος κωδικός (Ref) της κράτησης. Για παρκαρισμένα οχήματα φαίνεται από κάτω και η θέση στάθμευσης (π.χ. A-222).</span></li></ol>
+<p>Για κάθε κράτηση φαίνονται: κατάσταση, πελάτης (με τηλέφωνο), πινακίδα, όχημα και χρώμα, ημερομηνίες check-in / check-out, ποιος υπάλληλος έκανε check-in / check-out, τρόπος παράδοσης/παραλαβής, πτήση επιστροφής, τύπος πάρκινγκ, πλύσιμο και τιμή. Ο πίνακας κυλά οριζόντια για τις στήλες που δεν χωρούν στην οθόνη.</p>
+<h3>Η προβολή του οδηγού <span class="role-tag role-driver">driver</span></h3>
+<p>Ο οδηγός βλέπει την ίδια λίστα, με απλούστερο μενού: μόνο την ενότητα <strong>Bookings</strong> και το κουμπί <strong>X Report</strong> (όχι Z Report, Dashboard, Customers, Reports και Drivers).</p>
+<figure style="max-width:100%"><img src="user-manual-images/driver-bookings.png" alt="Η σελίδα Bookings όπως τη βλέπει ο οδηγός"><figcaption>Εικόνα 5: Η σελίδα Bookings όπως τη βλέπει ο οδηγός</figcaption></figure>
+<p>Δίπλα στην κατάσταση, το εικονίδιο φωτογραφίας ανοίγει τις φωτογραφίες του οχήματος που ανέβηκαν στο check-in (με ημερομηνία και ώρα λήψης), χρήσιμες σε περίπτωση αμφισβήτησης για ζημιά.</p>
+<h3>Ο πίνακας «Overstayed &amp; Unknown Check-out» </h3>
+<p>Κάτω από την κύρια λίστα υπάρχει δεύτερος πίνακας, ανεξάρτητος από το φίλτρο ημερομηνιών. Εκεί εμφανίζονται <strong>πάντα</strong> τα παρκαρισμένα οχήματα που:</p>
+<ul><li>δεν έχουν ημερομηνία επιστροφής (τιμή TBC), ή</li><li>η ημερομηνία επιστροφής τους έχει ήδη περάσει (καθυστερημένη παραλαβή).</li></ul>
+<figure style="max-width:100%"><img src="user-manual-images/bookings-overstayed.png" alt="Ο πίνακας με τα οχήματα που χρειάζονται προσοχή"><figcaption>Εικόνα 6: Ο πίνακας με τα οχήματα που χρειάζονται προσοχή</figcaption></figure>
+<div class="tip"><span class="box-label">Συμβουλή</span> Ελέγχετε αυτόν τον πίνακα στην αρχή κάθε βάρδιας: δείχνει με μια ματιά ποια οχήματα έχουν ξεπεράσει την ημερομηνία τους ή δεν έχουν ορισμένη επιστροφή.</div>
+<h2>Φίλτρα &amp; ταξινόμηση </h2>
+<p>Το κουμπί <strong>Filters</strong> ανοίγει πάνελ με όλα τα κριτήρια αναζήτησης. Μπορείτε να συνδυάσετε όσα θέλετε:</p>
+<ul><li><strong>Εύρος ημερομηνιών</strong> (από / έως).</li><li><strong>Κατάσταση</strong>, <strong>τύπος πάρκινγκ</strong>, <strong>πλύσιμο</strong>, <strong>τρόπος παράδοσης / παραλαβής</strong>, <strong>προέλευση</strong> (εγγεγραμμένος χρήστης ή επισκέπτης).</li><li><strong>Εύρος τιμής</strong> (ελάχιστη / μέγιστη).</li><li><strong>Κείμενο</strong>: όνομα, email, κινητό, κωδικός κράτησης, πινακίδα, μάρκα, μοντέλο, χρώμα, πτήση, ποιος έκανε check-in / check-out.</li><li><strong>Ταξινόμηση</strong> ανά στήλη, αύξουσα ή φθίνουσα.</li></ul>
+<figure style="max-width:85%"><img src="user-manual-images/bookings-filters.png" alt="Το πάνελ φίλτρων"><figcaption>Εικόνα 7: Το πάνελ φίλτρων</figcaption></figure>
+<div class="tip"><span class="box-label">Συμβουλή</span> Τα φίλτρα αποθηκεύονται στη διεύθυνση της σελίδας. Αν αντιγράψετε τη διεύθυνση (URL) και τη στείλετε σε συνάδελφο, θα δει ακριβώς την ίδια φιλτραρισμένη λίστα.</div>
+<div class="note"><span class="box-label">Σημείωση</span> Οι εγγεγραμμένοι πελάτες βλέπουν μόνο τα φίλτρα που αφορούν τις δικές τους κρατήσεις.</div>
+<h2>Η πορεία μιας κράτησης </h2>
+<p class="flow"><span>Created (Δημιουργήθηκε)</span> <b>→</b> <span>Parked (Παρκαρισμένο)</span> <b>→</b> <span>Completed (Ολοκληρώθηκε)</span></p>
+<p>Η κατάσταση αλλάζει πατώντας την ετικέτα κατάστασης στη λίστα. Εμφανίζονται μόνο οι επιτρεπτές κινήσεις:</p>
+<table><colgroup><col style="width:32%"><col style="width:68%"></colgroup><tr><th>Τρέχουσα κατάσταση</th><th>Διαθέσιμες επιλογές</th></tr><tr><td><strong>Created</strong></td><td><strong>Mark as Parked</strong> — check-in του οχήματος.</td></tr><tr><td><strong>Parked</strong></td><td><strong>Mark as Completed</strong> — check-out &amp; είσπραξη. <strong>Revert to Created</strong> — ακύρωση του check-in.</td></tr><tr><td><strong>Completed</strong></td><td>Καμία. Μια ολοκληρωμένη κράτηση δεν αλλάζει κατάσταση.</td></tr></table>
+<div class="imgrow"><figure><img src="user-manual-images/bookings-status-created.png" alt="Επιλογές για κράτηση «Created»"><figcaption>Εικόνα 8: Επιλογές για κράτηση «Created»</figcaption></figure><figure><img src="user-manual-images/bookings-status-parked.png" alt="Επιλογές για κράτηση «Parked»"><figcaption>Εικόνα 9: Επιλογές για κράτηση «Parked»</figcaption></figure></div>
+<h2>Check-in: Σήμανση ως «Parked» </h2>
+<p>Όταν φτάνει το όχημα, πατήστε την ετικέτα <strong>Created ▾</strong> και επιλέξτε <strong>Mark as Parked</strong>. Ανοίγει το παράθυρο <strong>Parked Details</strong>:</p>
+<figure style="max-width:55%"><img src="user-manual-images/checkin-popup.png" alt="Το παράθυρο check-in (Parked Details)"><figcaption>Εικόνα 10: Το παράθυρο check-in (Parked Details)</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Parking Place</strong> *: Η θέση στάθμευσης (π.χ. <code>A-001</code>). Το σύστημα ελέγχει ότι η θέση είναι ελεύθερη.</span></li><li><span class="num">2</span><span><strong>Km</strong>: Τα χιλιόμετρα του οχήματος (τυπώνονται και στην ετικέτα κράτησης).</span></li><li><span class="num">3</span><span><strong>Plate No. / Car Model</strong>: Διορθώστε τα αν διαφέρουν από την κράτηση.</span></li><li><span class="num">4</span><span><strong>Adults</strong> *: Αριθμός επιβατών.</span></li><li><span class="num">5</span><span><strong>Customer Keep Keys</strong>: Σημειώστε το αν ο πελάτης κρατά τα κλειδιά.</span></li><li><span class="num">6</span><span><strong>Comments</strong>: Ελεύθερες σημειώσεις (π.χ. υπάρχουσες γρατζουνιές).</span></li><li><span class="num">7</span><span><strong>Vehicle Photos</strong>: Φωτογραφίες του οχήματος (JPG, PNG, WEBP έως 10MB η καθεμία), αποθηκεύονται με ημερομηνία και ώρα.</span></li><li><span class="num">8</span><span><strong>Πληρωμή στο check-in</strong>: Η ενότητα είσπραξης — δείτε αμέσως παρακάτω.</span></li></ol>
+<h3>Πληρωμή στο check-in </h3>
+<p>Στο κάτω μέρος του παραθύρου υπάρχει η ενότητα πληρωμής. Η μορφή της εξαρτάται από την κράτηση:</p>
+<ul><li>Αν η κράτηση <strong>έχει ήδη εξοφληθεί</strong> (online ή νωρίτερα), εμφανίζεται πράσινο μήνυμα «No payment required».</li><li>Αν η τιμή είναι <strong>TBC</strong>, εμφανίζεται μήνυμα ότι δεν γίνεται είσπραξη, αφού δεν υπάρχουν στοιχεία επιστροφής.</li><li>Σε κάθε άλλη περίπτωση εμφανίζεται η ενότητα <strong>«Record check-in payment (optional)»</strong>. Αν στις ρυθμίσεις είναι ενεργή η «Υποχρεωτική πληρωμή στο check-in», η ενότητα είναι ανοιχτή και υποχρεωτική για τους οδηγούς.</li></ul>
+<figure style="max-width:55%"><img src="user-manual-images/checkin-payment.png" alt="Η ενότητα πληρωμής στο check-in (προβολή διαχειριστή)"><figcaption>Εικόνα 11: Η ενότητα πληρωμής στο check-in (προβολή διαχειριστή)</figcaption></figure>
+<table><colgroup><col style="width:30%"><col style="width:35%"><col style="width:35%"></colgroup><tr><th></th><th>Οδηγός</th><th>Διαχειριστής</th></tr><tr><td><strong>Ποσό</strong></td><td>Συμπληρώνεται αυτόματα με το υπόλοιπο και <strong>δεν αλλάζει</strong>.</td><td>Μπορεί να το αλλάξει.</td></tr><tr><td><strong>Τρόπος πληρωμής</strong></td><td>Cash ή Card.</td><td>Cash, Card ή <strong>Complimentary</strong> (δωρεάν).</td></tr><tr><td><strong>Μικρότερο ποσό</strong></td><td>—</td><td>Το σύστημα ρωτά: είναι <strong>έκπτωση</strong> («Yes, discount») ή το υπόλοιπο θα εισπραχθεί στο check-out («No, remainder due at checkout»);</td></tr></table>
+<ul><li><strong>Απόδειξη με email</strong>: Για πληρωμή με <strong>κάρτα</strong> η απόδειξη στέλνεται πάντα αυτόματα στο email του πελάτη. Για <strong>μετρητά</strong> αποφασίζετε εσείς, τσεκάροντας το «Email receipt to …».</li><li>Με το <strong>Submit</strong> η κράτηση γίνεται «Parked». Στη συνέχεια το σύστημα προσφέρει εκτύπωση της απόδειξης πληρωμής και της απόδειξης παράδοσης οχήματος <span class="eng">(Check-in Receipt)</span>.</li></ul>
+<h2>Check-out: Σήμανση ως «Completed» </h2>
+<p>Όταν ο πελάτης παραλαμβάνει το όχημα, πατήστε την ετικέτα <strong>Parked ▾</strong> και επιλέξτε <strong>Mark as Completed</strong>. Το σύστημα ακολουθεί τα παρακάτω βήματα:</p>
+<h3>Βήμα 1 — Έλεγχος καθυστέρησης </h3>
+<p>Αν η παραλαβή γίνεται <strong>μετά</strong> την προγραμματισμένη ημερομηνία, το σύστημα υπολογίζει επιπλέον χρέωση για τις επιπλέον ημέρες, με βάση την κλίμακα τιμών.</p>
+<figure style="max-width:50%"><img src="user-manual-images/checkout-late-fee.png" alt="Ειδοποίηση καθυστερημένου check-out (διαχειριστής)"><figcaption>Εικόνα 12: Ειδοποίηση καθυστερημένου check-out (διαχειριστής)</figcaption></figure>
+<ul><li><strong>Διαχειριστής</strong>: Επιλέγει <strong>Apply extra fee</strong> (εφαρμογή) ή <strong>Skip extra fee</strong> (χάρισμα). Αν τη χαρίσει, καταγράφεται στις αναφορές ως «Extra Fee Waived» για λόγους ελέγχου.</li><li><strong>Οδηγός</strong>: Δεν ερωτάται — η επιπλέον χρέωση εφαρμόζεται πάντα.</li></ul>
+<h3>Βήμα 2 — Είσπραξη </h3>
+<p>Ανοίγει το παράθυρο <strong>Collect Payment</strong> με το υπόλοιπο που μένει να πληρωθεί: τελική τιμή + τυχόν επιπλέον χρέωση − ό,τι έχει ήδη πληρωθεί (online ή στο check-in).</p>
+<figure style="max-width:50%"><img src="user-manual-images/checkout-collect-payment.png" alt="Είσπραξη υπολοίπου στο check-out"><figcaption>Εικόνα 13: Είσπραξη υπολοίπου στο check-out</figcaption></figure>
+<ul><li>Επιλέξτε <strong>Cash</strong> ή <strong>Card</strong> και πατήστε <strong>Complete Booking</strong>.</li><li><strong>Οδηγός</strong>: Το ποσό είναι κλειδωμένο στο ακριβές υπόλοιπο.</li><li><strong>Διαχειριστής</strong>: Μπορεί να γράψει μικρότερο ποσό, αλλά πρέπει να επιβεβαιώσει ότι η διαφορά είναι <strong>έκπτωση</strong>. Στο check-out δεν υπάρχει «επόμενη φορά» — ή εισπράττεται όλο το ποσό ή δίνεται έκπτωση.</li><li>Αν η κράτηση είναι <strong>ήδη εξοφλημένη</strong>, εμφανίζεται απλή επιβεβαίωση «Booking is fully paid».</li><li>Αν ο πελάτης έχει πληρώσει <strong>περισσότερα</strong> (π.χ. αφαιρέθηκε υπηρεσία), εμφανίζεται «Refund due» με το ποσό που επιστρέφεται σε μετρητά.</li><li>Μετά την ολοκλήρωση, το σύστημα προσφέρει την εκτύπωση της απόδειξης (<strong>Print Receipt</strong>).</li></ul>
+<h3>Check-out χωρίς στοιχεία επιστροφής (τιμή TBC) </h3>
+<p>Αν η κράτηση δημιουργήθηκε <strong>χωρίς</strong> ημερομηνία επιστροφής, το σύστημα ορίζει αυτόματα ως check-out <strong>την τρέχουσα ημερομηνία και ώρα</strong> και υπολογίζει την τιμή από την ημέρα άφιξης μέχρι σήμερα, με τους ίδιους κανόνες τιμολόγησης (τύπος πάρκινγκ, κλίμακα ημερών, πλύσιμο, παράδοση, έκπτωση πελάτη). Το παράθυρο είσπραξης το δείχνει με μπλε πλαίσιο:</p>
+<figure style="max-width:50%"><img src="user-manual-images/checkout-tbc.png" alt="Check-out κράτησης χωρίς στοιχεία επιστροφής"><figcaption>Εικόνα 14: Check-out κράτησης χωρίς στοιχεία επιστροφής</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span>Η υπολογισμένη τιμή από το check-in μέχρι σήμερα (εδώ €14.00 για 3 ημέρες).</span></li><li><span class="num">2</span><span>Ό,τι έχει ήδη πληρωθεί (εδώ €10.00 στο check-in).</span></li><li><span class="num">3</span><span>Το υπόλοιπο προς είσπραξη (€4.00), με τους ίδιους κανόνες όπως κάθε check-out.</span></li></ol>
+<div class="note"><span class="box-label">Σημείωση</span> Σε αυτή την περίπτωση δεν υπάρχει επιπλέον χρέωση καθυστέρησης, αφού η ημερομηνία επιστροφής ορίζεται εκείνη τη στιγμή. Η κράτηση αποθηκεύεται με την ημερομηνία, την ώρα και την τελική τιμή.</div>
+<div class="warn"><span class="box-label">Προσοχή</span> Αν η τιμή δεν μπορεί να υπολογιστεί (π.χ. η κράτηση δεν έχει τύπο πάρκινγκ ή δεν έχει οριστεί τιμή στις ρυθμίσεις), το σύστημα <strong>δεν</strong> επιτρέπει την ολοκλήρωση και εμφανίζει μήνυμα «Cannot Complete Booking». Διορθώστε την κράτηση ή τις ρυθμίσεις και προσπαθήστε ξανά.</div>
+<h2>Επαναφορά σε «Created» </h2>
+<p>Αν έγινε check-in κατά λάθος, επιλέξτε <strong>Parked ▾ → Revert to Created</strong>. Το σύστημα ζητά επιβεβαίωση, γιατί <strong>χάνονται τα στοιχεία check-in</strong> (θέση στάθμευσης, χιλιόμετρα, κλειδιά, σχόλια).</p>
+<h2>Ενέργειες ανά κράτηση </h2>
+<p>Το μενού <strong>⋮</strong> στην αρχή κάθε γραμμής δείχνει μόνο τις ενέργειες που ισχύουν για τη συγκεκριμένη κράτηση:</p>
+<figure style="max-width:100%"><img src="user-manual-images/bookings-actions-menu.png" alt="Το μενού ενεργειών μιας παρκαρισμένης κράτησης"><figcaption>Εικόνα 15: Το μενού ενεργειών μιας παρκαρισμένης κράτησης</figcaption></figure>
+<ul><li><strong>Edit</strong>: Επεξεργασία της κράτησης (όχι για ολοκληρωμένες).</li><li><strong>Edit Note</strong>: Προσθήκη ή αλλαγή σημείωσης στάθμευσης. Η σημείωση φαίνεται από το εικονίδιο σημειώσεων στη λίστα.</li><li><strong>Booking Tag</strong>: Η ετικέτα με τα βασικά στοιχεία που δίνεται στον πελάτη (δεν εμφανίζεται για κρατήσεις «Created»).</li><li><strong>Check-in Receipt</strong>: Η απόδειξη παράδοσης του οχήματος.</li><li><strong>Check-in Payment / Checkout Payment / Pre-paid Receipt</strong>: Οι αποδείξεις πληρωμής (στο check-in, στο check-out, online).</li><li><strong>Download …</strong>: Λήψη των αποδείξεων πληρωμής σε PDF.</li><li><strong>Delete</strong>: Διαγραφή — μόνο όσο η κράτηση είναι «Created».</li></ul>
+<h3>Εκτύπωση ή email; </h3>
+<p>Για κάθε έγγραφο (ετικέτα, απόδειξη) το σύστημα ρωτά πώς θέλετε να το δώσετε στον πελάτη:</p>
+<figure style="max-width:45%"><img src="user-manual-images/delivery-choice.png" alt="Επιλογή τρόπου αποστολής"><figcaption>Εικόνα 16: Επιλογή τρόπου αποστολής</figcaption></figure>
+<ul><li><strong>Print</strong>: Εκτύπωση στον θερμικό εκτυπωτή Zebra.</li><li><strong>Email</strong>: Ανοίγει πεδίο με το email του πελάτη συμπληρωμένο (μπορείτε να το αλλάξετε) και πατάτε <strong>Send</strong>.</li></ul>
+<h3>Σημείωση κράτησης </h3>
+<figure style="max-width:50%"><img src="user-manual-images/edit-note.png" alt="Επεξεργασία σημείωσης"><figcaption>Εικόνα 17: Επεξεργασία σημείωσης</figcaption></figure>
+<h2>Δημιουργία &amp; επεξεργασία κράτησης από το προσωπικό </h2>
+<p>Με το <strong>Add Booking</strong> ανοίγει η ίδια φόρμα που χρησιμοποιεί και ο πελάτης, με επιπλέον δυνατότητες για το προσωπικό:</p>
+<figure style="max-width:80%"><img src="user-manual-images/booking-form-add.png" alt="Δημιουργία κράτησης από διαχειριστή"><figcaption>Εικόνα 18: Δημιουργία κράτησης από διαχειριστή</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Personal Information — αναζήτηση πελάτη</strong>: Γράφοντας το email ή το τηλέφωνο υπάρχοντος πελάτη, το ονοματεπώνυμο και τα οχήματά του συμπληρώνονται αυτόματα.</span></li><li><span class="num">2</span><span><strong>Στοιχεία επιστροφής</strong>: Ο διακόπτης ξεκινά ενεργός ή ανενεργός ανάλογα με τη ρύθμιση «Return Details».</span></li><li><span class="num">3</span><span><strong>Τύπος πάρκινγκ</strong>: Προεπιλέγεται ο τύπος που όρισε ο διαχειριστής στις ρυθμίσεις, με ένδειξη διαθεσιμότητας.</span></li><li><span class="num">4</span><span><strong>Σύνοψη τιμής</strong>: Υπολογισμένη τιμή (Calculated) και τελικό σύνολο.</span></li><li><span class="num">5</span><span><strong>Manual Discount (€)</strong> <span class="role-tag role-admin">admin</span>: Ο διαχειριστής μπορεί να αφαιρέσει συγκεκριμένο ποσό από την υπολογισμένη τιμή για τη συγκεκριμένη κράτηση.</span></li></ol>
+<ul><li><strong>Έκπτωση πελάτη</strong>: Αν ο πελάτης έχει ποσοστό έκπτωσης (Κεφάλαιο 10), εφαρμόζεται αυτόματα και φαίνεται η τιμή πριν και μετά την έκπτωση.</li><li><strong>Επεξεργασία</strong>: Από <strong>⋮ → Edit</strong>. Σε παρκαρισμένη κράτηση μπορείτε να αλλάξετε θέση, πλύσιμο και να προσθέσετε στοιχεία επιστροφής· η τιμή υπολογίζεται ξανά αυτόματα.</li><li><strong>Διαφορά τιμής</strong>: Αν κατά την επεξεργασία η τιμή αυξηθεί και η προπληρωμή είναι υποχρεωτική, ο πελάτης πληρώνει μόνο τη διαφορά.</li></ul>
+<figure style="max-width:80%"><img src="user-manual-images/booking-form-edit.png" alt="Επεξεργασία παρκαρισμένης κράτησης"><figcaption>Εικόνα 19: Επεξεργασία παρκαρισμένης κράτησης</figcaption></figure>
 </div>
-
-<!-- ============ CHAPTER 5 ============ -->
 <div class="chapter" id="c5">
 <h1>5. Εκτυπώσεις &amp; Εκτυπωτής Zebra <span class="role-tag role-admin">admin</span><span class="role-tag role-driver">driver</span></h1>
-
-<p>Το πάρκινγκ χρησιμοποιεί έναν φορητό θερμικό εκτυπωτή <strong>Zebra ZQ521</strong> για την εκτύπωση ετικετών κράτησης και αποδείξεων.</p>
-
-<h2>Τι χρειάζεται να είναι εγκατεστημένο</h2>
-<p>Για να μπορεί η εφαρμογή να στέλνει εκτυπώσεις στον εκτυπωτή, πρέπει στο tablet να τρέχει το πρόγραμμα <strong>Zebra Browser Print</strong>. Χωρίς αυτό το πρόγραμμα, καμία εκτύπωση δεν θα λειτουργήσει, ακόμα κι αν ο εκτυπωτής είναι αναμμένος και συνδεδεμένος.</p>
-
-<div class="warn">Αν κάποια εκτύπωση αποτύχει, ακολουθούνται τα πιο κάτω βήματα:
-  <ul>
-    <li>Αν τρέχει το application Zebra Browser Print στο tablet</li>
-    <li>Αν ο εκτυπωτής είναι ανοιχτός</li>
-    <li>Πατήστε συνεχόμενο το κουμπί Feed στον εκτυπωτή για να μπορεί να αναζητηθεί με τη χρήση bluetooth από το tablet</li>
-  </ul>
+<p>Ο χώρος χρησιμοποιεί φορητό θερμικό εκτυπωτή <strong>Zebra ZQ521</strong> για ετικέτες και αποδείξεις.</p>
+<h2>Τι χρειάζεται να είναι εγκατεστημένο </h2>
+<p>Στη συσκευή (tablet/υπολογιστή) πρέπει να τρέχει το πρόγραμμα <strong>Zebra Browser Print</strong>. Χωρίς αυτό καμία εκτύπωση δεν λειτουργεί, ακόμα κι αν ο εκτυπωτής είναι αναμμένος και συνδεδεμένος.</p>
+<h2>Τι μπορεί να τυπωθεί </h2>
+<table><colgroup><col style="width:35%"><col style="width:65%"></colgroup><tr><th>Έγγραφο</th><th>Πότε / από πού</th></tr><tr><td><strong>Booking Tag</strong></td><td>Ετικέτα με τα βασικά στοιχεία της κράτησης και τα χιλιόμετρα. Από το μενού ⋮.</td></tr><tr><td><strong>Check-in Receipt</strong></td><td>Απόδειξη παράδοσης οχήματος, μετά το check-in ή από το μενού ⋮.</td></tr><tr><td><strong>Απόδειξη πληρωμής check-in</strong></td><td>Μετά την είσπραξη στο check-in ή από το μενού ⋮.</td></tr><tr><td><strong>Απόδειξη πληρωμής check-out</strong></td><td>Μετά την ολοκλήρωση της κράτησης ή από το μενού ⋮.</td></tr><tr><td><strong>Pre-paid Receipt</strong></td><td>Απόδειξη της online προπληρωμής, από το μενού ⋮.</td></tr><tr><td><strong>Shift Summary</strong></td><td>Σύνοψη βάρδιας, αυτόματα στο «Close Shift &amp; Log Out» (Κεφάλαιο 6).</td></tr><tr><td><strong>Αναφορά Z</strong></td><td>Τα συνολικά ποσά του κλεισίματος ταμείου, από το κουμπί <strong>Print</strong> της Αναφοράς Z (Κεφάλαιο 7).</td></tr></table>
+<p>Όλες οι αποδείξεις ξανατυπώνονται ή στέλνονται με email οποιαδήποτε στιγμή, από το μενού ενεργειών της κράτησης. Κατά την εκτύπωση εμφανίζεται ένδειξη προόδου· αν αποτύχει, εμφανίζεται μήνυμα με την αιτία.</p>
+<h2>Ζεύξη &amp; αντιμετώπιση προβλημάτων </h2>
+<p>Η ζεύξη του εκτυπωτή με τη συσκευή γίνεται μία φορά, μέσω Bluetooth.</p>
+<div class="warn"><span class="box-label">Προσοχή</span> Αν μια εκτύπωση αποτύχει, ελέγξτε με τη σειρά:<ul><li>Τρέχει το Zebra Browser Print στη συσκευή; (μήνυμα «Zebra Browser Print is not running»)</li><li>Είναι ο εκτυπωτής ανοιχτός και φορτισμένος;</li><li>Βλέπει το Zebra Browser Print τον εκτυπωτή; (μήνυμα «No Zebra printer found»). Κρατήστε πατημένο το κουμπί Feed του εκτυπωτή ώστε να εντοπιστεί ξανά μέσω Bluetooth.</li><li>Αν η εκτύπωση βγαίνει κομμένη ή αλλοιωμένη, ελέγξτε την μπαταρία και το χαρτί.</li></ul></div>
 </div>
-
-<h2>Τι μπορεί να τυπωθεί</h2>
-<ul>
-  <li><strong>Ετικέτα κράτησης:</strong> <span class="eng">(Booking Tag)</span> Μια σύντομη ετικέτα με τα βασικά στοιχεία της κράτησης για να δοθεί στον πελάτη.</li>
-  <li><strong>Απόδειξη check-in:</strong> Τυπώνεται όταν το αυτοκίνητο σημειώνεται ως «Παρκαρισμένο».</li>
-  <li><strong>Απόδειξη πληρωμής check-in:</strong> Αν εισπράχθηκε ποσό εκείνη τη στιγμή.</li>
-  <li><strong>Απόδειξη πληρωμής check-out:</strong> Κατά την ολοκλήρωση της κράτησης.</li>
-</ul>
-<p>Όλες αυτές οι αποδείξεις μπορούν να ξανατυπωθούν οποιαδήποτε στιγμή, μέσα από το μενού ενεργειών της κράτησης.</p>
-
-<h2>Ζεύξη &amp; αντιμετώπιση προβλημάτων</h2>
-<p>Η ζεύξη του εκτυπωτή με τη συσκευή γίνεται μία φορά, μέσω Bluetooth. Αν οι εκτυπώσεις βγαίνουν αλλοιωμένες ή κόβονται στη μέση, αξίζει να ελεγχθούν, με τη σειρά αυτή: η μπαταρία του εκτυπωτή, η σύνδεσή του με τη συσκευή, και τέλος αν το Zebra Browser Print «βλέπει» τον σωστό εκτυπωτή στη λίστα του.</p>
-
-</div>
-
-<!-- ============ CHAPTER 6 ============ -->
 <div class="chapter" id="c6">
-<h1>6. Πίνακας Ελέγχου <span class="eng">(Dashboard)</span> <span class="role-tag role-admin">admin</span></h1>
-
-<p>Το Dashboard είναι η πρώτη οθόνη που βλέπει ο διαχειριστής μετά τη σύνδεση. Είναι μια γρήγορη, οπτική εικόνα για το τι συμβαίνει στο πάρκινγκ, χωρίς να χρειάζεται να ψάξει σε λίστες.</p>
-
-<h2>Κάρτες βασικών δεικτών</h2>
-<p>Στο πάνω μέρος εμφανίζονται καρτέλες με βασικά νούμερα όπως: σύνολο αυτοκινήτων στον χώρο, check-in σήμερα (πλήθος και ποσό), check-out σήμερα (πλήθος και ποσό), και αυτοκίνητα για πλύσιμο σήμερα ή αύριο. Κάθε καρτέλα δίνει την δυνατότητα στον χρήστη με ένα κλικ πάνω της, να ανοίξει μια αναλυτική λίστα με δυνατότητα αναζήτησης και σελιδοποίησης, ώστε να δει ακριβώς ποιες κρατήσεις κρύβονται πίσω από το νούμερο.</p>
-
-<h2>Επερχόμενα check-in / check-out</h2>
-<p>Παρακάτω, δύο λίστες δείχνουν τις επόμενες αφίξεις και αναχωρήσεις, με επιλογέα εύρους ημερομηνιών (εξ ορισμού δείχνει το σήμερα).</p>
-
-<h2>Γρήγορη πρόσβαση σε αναφορές</h2>
-<p>Στο κάτω μέρος βρίσκονται κουμπιά που οδηγούν κατευθείαν σε κάθε αναφορά (Online Payments, Έσοδα ανά Υπάλληλο, Ημερήσια Αναφορά Εισόδου/Εξόδου, Αναφορά Πλυντηρίου, Αποδείξεις, Z-Reports, Εκκρεμείς Κρατήσεις). Αναλύουμε καθεμία στο επόμενο κεφάλαιο.</p>
-
+<h1>6. Βάρδιες Προσωπικού &amp; Αποσύνδεση <span class="role-tag role-admin">admin</span><span class="role-tag role-driver">driver</span></h1>
+<p>Το σύστημα παρακολουθεί αυτόματα τις <strong>βάρδιες</strong> διαχειριστών και οδηγών. Η βάρδια είναι η «ταμειακή μηχανή» του υπαλλήλου: κάθε είσπραξη καταγράφεται στη βάρδια εκείνου που την έκανε.</p>
+<ul><li><strong>Άνοιγμα βάρδιας</strong>: Γίνεται αυτόματα μόλις ο υπάλληλος μπει στην εφαρμογή. Αν έχει ήδη ανοιχτή βάρδια (π.χ. από προηγούμενη σύνδεση), συνεχίζει την ίδια. Δεν χρειάζεται καμία ενέργεια.</li><li><strong>Κλείσιμο βάρδιας</strong>: Γίνεται <strong>μόνο</strong> από τον ίδιο τον υπάλληλο, με το <strong>Close Shift &amp; Log Out</strong> κατά την αποσύνδεση.</li></ul>
+<h2>Το παράθυρο αποσύνδεσης </h2>
+<p>Πατώντας το εικονίδιο αποσύνδεσης (πάνω δεξιά), εμφανίζεται η <strong>Shift Summary</strong>: όλες οι συναλλαγές της βάρδιας και τα σύνολα ανά τρόπο πληρωμής.</p>
+<figure style="max-width:70%"><img src="user-manual-images/logout-modal.png" alt="Η σύνοψη βάρδιας κατά την αποσύνδεση"><figcaption>Εικόνα 20: Η σύνοψη βάρδιας κατά την αποσύνδεση</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Cancel</strong>: Επιστροφή στην εφαρμογή, χωρίς αποσύνδεση.</span></li><li><span class="num">2</span><span><strong>Log Out Only</strong>: Αποσύνδεση <strong>χωρίς</strong> κλείσιμο βάρδιας. Η βάρδια μένει ανοιχτή και συνεχίζεται στην επόμενη σύνδεση (π.χ. σύντομο διάλειμμα).</span></li><li><span class="num">3</span><span><strong>Close Shift &amp; Log Out</strong>: Τυπώνεται η σύνοψη βάρδιας στον Zebra, κλείνει η βάρδια και γίνεται αποσύνδεση.</span></li></ol>
+<div class="warn"><span class="box-label">Προσοχή</span> Στο <strong>Close Shift &amp; Log Out</strong>, αν η βάρδια έχει συναλλαγές, η εκτύπωση της σύνοψης είναι <strong>υποχρεωτική</strong>. Αν η εκτύπωση αποτύχει, η βάρδια <strong>δεν κλείνει</strong> και εμφανίζεται μήνυμα. Διορθώστε τον εκτυπωτή (Κεφάλαιο 5) και δοκιμάστε ξανά, ή πατήστε «Log Out Only» και κλείστε τη βάρδια αργότερα.</div>
+<div class="note"><span class="box-label">Σημείωση</span> Γιατί είναι σημαντικό να κλείνει η βάρδια; Η <strong>Αναφορά Z</strong> περιλαμβάνει μόνο συναλλαγές από <strong>κλειστές</strong> βάρδιες. Όσο μια βάρδια μένει ανοιχτή, οι εισπράξεις της φαίνονται στην Αναφορά X, αλλά περιμένουν για την επόμενη Αναφορά Z.</div>
 </div>
-
-<!-- ============ CHAPTER 7 ============ -->
 <div class="chapter" id="c7">
-<h1>7. Αναφορές <span class="role-tag role-admin">admin</span></h1>
-
-<h2>Αναφορά X <span class="eng">(X-Report)</span> <span class="role-tag role-driver">driver</span></h2>
-<p>Δείχνει όλες τις συναλλαγές, μετρητά και κάρτα, που έχουν γίνει από το τελευταίο κλείσιμο ταμείου μέχρι τώρα, χωρίς όμως να «κλείνει» τίποτα. Μπορεί να ελεγχθεί οποιαδήποτε στιγμή μέσα στη βάρδια, όσες φορές χρειαστεί, και εξάγεται και σε PDF. Είναι διαθέσιμη και στους οδηγούς, ακριβώς επειδή είναι απλώς ένας έλεγχος, όχι κλείσιμο.</p>
-
-<h2>Κλείσιμο Ταμείου - Αναφορά Z <span class="eng">(Z-Report)</span></h2>
-<p>Αυτή είναι η πραγματική διαδικασία <strong>κλεισίματος βάρδιας</strong>. Ο διαχειριστής επιλέγει τον υπάλληλο, καταχωρεί το ποσό που δηλώνει σε μετρητά και το ποσό σε κάρτα, και επιβεβαιώνει. Το σύστημα συγκρίνει αυτά τα δηλωμένα ποσά με αυτό που υπολογίζει ως «πραγματικό» (βάσει των συναλλαγών που δεν έχουν ακόμα αναφερθεί), και δείχνει καθαρά αν υπάρχει <em>Ταύτιση</em>, <em>Πλεόνασμα</em> ή <em>Έλλειμμα</em>, ξεχωριστά για μετρητά και κάρτα.</p>
-<div class="warn">Προσοχή: Μόλις ολοκληρωθεί ένα κλείσιμο Z, όλες οι συναλλαγές που περιλαμβάνει σημειώνονται ως «αναφερμένες» και η ενέργεια <strong>δεν αναιρείται</strong>.</div>
-
-<h2>Ιστορικό Z-Reports</h2>
-<p>Εδώ βρίσκονται όλα τα προηγούμενα κλεισίματα, με φίλτρο εύρους ημερομηνιών. Μπορεί κανείς να δει αν κάθε κλείσιμο ταίριαξε ή όχι, και να ανοίξει οποιοδήποτε για να δει την αναλυτική λίστα συναλλαγών που το απάρτιζαν.</p>
-
-<h2>Online Payments</h2>
-<p>Πρόκειται για μια λίστα, με εύρος ημερομηνιών, όλων των πληρωμών που έγιναν online μέσω VPayments (Wallee). Σε αθτή την αναφορά, τα σύνολα υπολογίζονται και μικτά και καθαρά (αφαιρώντας τον φόρο). Εξάγεται επίσης σε PDF.</p>
-
-<h2>Έσοδα ανά Υπάλληλο</h2>
-<p>Αυτή η αναφορά έχει δύο τρόπους προβολής:</p>
-<ul>
-  <li><strong>Εύρος ημερομηνιών:</strong> Όλες οι συναλλαγές check-in/check-out όλων των υπαλλήλων μέσα σε μια περίοδο, με σύνολα ανά τρόπο πληρωμής.</li>
-  <li><strong>Ανά υπάλληλο:</strong> Επιλέγοντας έναν υπάλληλο, βλέπετε τις βάρδιές του (πότε συνδέθηκε, πότε αποσυνδέθηκε), και ανοίγοντας μια βάρδια, τις ακριβείς συναλλαγές που έγιναν μέσα σε αυτήν.</li>
-</ul>
-
-<h2>Ημερήσια Αναφορά Εισόδου/Εξόδου</h2>
-<p>Μια λίστα, για μία συγκεκριμένη ημέρα, με όλα τα check-in ή/και check-out. Εξάγεται σε PDF.</p>
-
-<h2>Αναφορά Πλυσίματος</h2>
-<p>Λίστα, για μία ημέρα, όλων των κρατήσεων που περιλαμβάνουν υπηρεσία πλυσίματος.</p>
-
-<h2>Εκκρεμείς Κρατήσεις</h2>
-<p>Δείχνει κρατήσεις που «χρειάζονται προσοχή» (π.χ. δεν έχουν καθόλου ημερομηνία check-out, ή έγινε check-out σε διαφορετική ημερομηνία από την προγραμματισμένη).</p>
-
-<h2>Αποδείξεις</h2>
-<p>Μια πλήρης, σελιδοποιημένη λίστα όλων των αποδείξεων που έχουν εκδοθεί με δυνατότητα λήψης της κάθε απόδειξης ξεχωριστά σε PDF.</p>
-
+<h1>7. Αναφορές X &amp; Z — Ταμείο </h1>
+<h2>Αναφορά X (X-Report) <span class="role-tag role-admin">admin</span><span class="role-tag role-driver">driver</span></h2>
+<p>Η Αναφορά X είναι <strong>ζωντανή εικόνα</strong> του ταμείου των ανοιχτών βαρδιών. Δεν κλείνει και δεν αλλάζει τίποτα· μπορεί να ανοιχτεί οποιαδήποτε στιγμή, όσες φορές χρειαστεί, από το κουμπί <strong>X Report</strong> της σελίδας Bookings.</p>
+<figure style="max-width:100%"><img src="user-manual-images/x-report-admin.png" alt="Αναφορά X — προβολή διαχειριστή"><figcaption>Εικόνα 21: Αναφορά X — προβολή διαχειριστή</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Σύνολα όλων</strong>: Τα ποσά ανά τρόπο πληρωμής και το γενικό σύνολο όλων των ανοιχτών βαρδιών.</span></li><li><span class="num">2</span><span><strong>Ανά υπάλληλο</strong>: Μία ενότητα για κάθε υπάλληλο με ανοιχτή βάρδια (ώρα έναρξης, πλήθος συναλλαγών, σύνολο). Πατώντας την ανοίγει η λίστα συναλλαγών του.</span></li></ol>
+<ul><li><strong>Διαχειριστής</strong>: Βλέπει όλους τους υπαλλήλους με ανοιχτή βάρδια (και τον εαυτό του). Πρώτη εμφανίζεται η παλαιότερη βάρδια, ώστε να φαίνεται αμέσως αν κάποιος ξέχασε να κλείσει βάρδια.</li><li><strong>Οδηγός</strong>: Βλέπει μόνο τη δική του τρέχουσα βάρδια.</li><li>Μόλις μια βάρδια κλείσει, η ενότητά της φεύγει από την Αναφορά X.</li></ul>
+<figure style="max-width:100%"><img src="user-manual-images/x-report-driver.png" alt="Αναφορά X — προβολή οδηγού"><figcaption>Εικόνα 22: Αναφορά X — προβολή οδηγού</figcaption></figure>
+<h2>Αναφορά Z — Κλείσιμο Ταμείου <span class="role-tag role-admin">admin</span></h2>
+<p>Η Αναφορά Z είναι το <strong>οριστικό κλείσιμο ταμείου</strong>. Με ένα πάτημα συγκεντρώνει <strong>όλες</strong> τις συναλλαγές check-in και check-out που:</p>
+<ul><li>ανήκουν σε <strong>κλειστές</strong> βάρδιες (οποιουδήποτε υπαλλήλου), και</li><li>δεν έχουν συμπεριληφθεί ακόμα σε προηγούμενη Αναφορά Z.</li></ul>
+<p>Δεν χρειάζεται επιλογή υπαλλήλου ούτε καταχώρηση δηλωμένων ποσών: η συμφωνία μετρητών γίνεται ήδη ανά βάρδια, με την εκτυπωμένη σύνοψη στο κλείσιμο της βάρδιας.</p>
+<h3>Βήματα </h3>
+<ol class="steps"><li>Βεβαιωθείτε ότι οι υπάλληλοι έχουν κλείσει τις βάρδιές τους (ελέγξτε την Αναφορά X — όσοι εμφανίζονται εκεί έχουν ακόμα ανοιχτή βάρδια).</li><li>Από τη σελίδα Bookings πατήστε <strong>Z Report</strong>.</li><li>Διαβάστε το μήνυμα επιβεβαίωσης και πατήστε <strong>Confirm &amp; Create</strong>.</li><li>Εμφανίζεται η Αναφορά Z που μόλις δημιουργήθηκε. Τυπώστε τη (<strong>Print</strong>) ή εξάγετέ τη σε PDF.</li></ol>
+<figure style="max-width:50%"><img src="user-manual-images/z-confirm.png" alt="Επιβεβαίωση δημιουργίας Αναφοράς Z"><figcaption>Εικόνα 23: Επιβεβαίωση δημιουργίας Αναφοράς Z</figcaption></figure>
+<div class="warn"><span class="box-label">Προσοχή</span> Η δημιουργία Αναφοράς Z <strong>δεν αναιρείται</strong>. Οι συναλλαγές που περιλαμβάνει σημειώνονται οριστικά ως «αναφερμένες» και δεν θα εμφανιστούν σε άλλη Αναφορά Z. Αν δεν υπάρχουν συναλλαγές από κλειστές βάρδιες, η αναφορά δεν δημιουργείται και εμφανίζεται σχετικό μήνυμα.</div>
+<h3>Τι δείχνει η Αναφορά Z </h3>
+<figure style="max-width:88%"><img src="user-manual-images/z-created.png" alt="Η Αναφορά Z μετά τη δημιουργία της"><figcaption>Εικόνα 24: Η Αναφορά Z μετά τη δημιουργία της</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Print</strong>: Εκτύπωση στον Zebra. Η εκτύπωση περιέχει <strong>μόνο</strong> τα γενικά σύνολα: ανάλυση ανά τρόπο πληρωμής, Καθαρό, ΦΠΑ και Μικτό σύνολο — όχι ανά υπάλληλο ή συναλλαγή.</span></li><li><span class="num">2</span><span><strong>Export PDF</strong>: Πλήρης αναφορά σε PDF, με όλες τις συναλλαγές.</span></li><li><span class="num">3</span><span><strong>Ανάλυση ανά τρόπο πληρωμής</strong> για όλους τους υπαλλήλους (Card, Cash, Discount, Refund κ.λπ.), με πλήθος συναλλαγών και ποσό.</span></li><li><span class="num">4</span><span><strong>Καθαρό ποσό (Net) και ΦΠΑ (VAT)</strong> του γενικού συνόλου.</span></li><li><span class="num">5</span><span><strong>Grand Total (Gross)</strong>: Το μικτό γενικό σύνολο όλων των υπαλλήλων.</span></li><li><span class="num">6</span><span><strong>Ενότητα υπαλλήλου</strong>: Πατώντας την ανοίγουν οι συναλλαγές του υπαλλήλου και η δική του ανάλυση.</span></li><li><span class="num">7</span><span><strong>Καθαρό και ΦΠΑ</strong> του υπαλλήλου, πάνω από το «Employee Total (Gross)».</span></li></ol>
+<h3>Καθαρό ποσό, ΦΠΑ και Μικτό </h3>
+<p>Όλα τα ποσά του συστήματος είναι <strong>με ΦΠΑ</strong> (μικτά). Η Αναφορά Z υπολογίζει:</p>
+<ul><li><strong>Καθαρό</strong> <span class="eng">(Net)</span> = Μικτό ÷ (1 + ΦΠΑ%). Π.χ. με ΦΠΑ 19%: €138.00 ÷ 1.19 = €115.97.</li><li><strong>ΦΠΑ</strong> <span class="eng">(VAT)</span> = Μικτό − Καθαρό = €22.03.</li><li>Το γενικό Καθαρό και ΦΠΑ είναι το άθροισμα των αντίστοιχων ποσών των υπαλλήλων, ώστε η αναφορά να «κλείνει» πάντα ακριβώς.</li></ul>
+<div class="note"><span class="box-label">Σημείωση</span> <strong>Ο συντελεστής ΦΠΑ «παγώνει» σε κάθε Αναφορά Z.</strong> Τη στιγμή της δημιουργίας, αποθηκεύεται στην αναφορά ο συντελεστής που ισχύει εκείνη την ημέρα (Ρυθμίσεις → Tax). Αν αργότερα αλλάξει ο ΦΠΑ, αφορά μόνο τις <strong>νέες</strong> Αναφορές Z — οι παλιές εμφανίζονται και τυπώνονται πάντα με τον δικό τους συντελεστή.</div>
+<h2>Ιστορικό Αναφορών Z <span class="role-tag role-admin">admin</span></h2>
+<p>Από <strong>Reports → Z Reports</strong> βλέπετε όλα τα προηγούμενα κλεισίματα, με φίλτρο εύρους ημερομηνιών: ποιος τα έκανε, πότε, πόσους υπαλλήλους και συναλλαγές περιλαμβάνουν και το μικτό σύνολο.</p>
+<figure style="max-width:100%"><img src="user-manual-images/z-history.png" alt="Ιστορικό Αναφορών Z"><figcaption>Εικόνα 25: Ιστορικό Αναφορών Z</figcaption></figure>
+<p>Πατώντας μια αναφορά ανοίγει η πλήρης εικόνα της, με δυνατότητα <strong>Print</strong> (επανεκτύπωση στον Zebra) και <strong>Export</strong> σε PDF ή Excel.</p>
+<figure style="max-width:88%"><img src="user-manual-images/z-detail.png" alt="Λεπτομέρειες προηγούμενης Αναφοράς Z"><figcaption>Εικόνα 26: Λεπτομέρειες προηγούμενης Αναφοράς Z</figcaption></figure>
 </div>
-
-<!-- ============ CHAPTER 8 ============ -->
 <div class="chapter" id="c8">
-<h1>8. Πελάτες <span class="role-tag role-admin">admin</span></h1>
-
-<p>Εδώ βρίσκεται η λίστα όλων των εγγεγραμμένων πελατών του συστήματος με δυνατότητα αναζήτησης. Για κάθε πελάτη, ανοίγουν δύο ξεχωριστές ενέργειες.</p>
-
-<h2>Ιστορικό</h2>
-<p>Ένα παράθυρο με όλες τις κρατήσεις που έχει κάνει ο συγκεκριμένος πελάτης στο παρελθόν, με αναζήτηση και σελιδοποίηση.</p>
-
-<h2>Ρυθμίσεις πελάτη</h2>
-<p>Ένα παράθυρο επιτρέπει δύο ρυθμίσεις ειδικά για τον συγκεκριμένο πελάτη:</p>
-<ul>
-  <li><strong>Ποσοστό έκπτωσης:</strong> Από 0% έως 100%. Αφήνοντάς το κενό, ο πελάτης δεν έχει καμία έκπτωση.</li>
-  <li><strong>Εξαίρεση από υποχρεωτική πληρωμή:</strong> Ένας διακόπτης που, αν ενεργοποιηθεί, απαλλάσσει αυτόν τον συγκεκριμένο πελάτη από τους κανόνες υποχρεωτικής προπληρωμής ή πληρωμής στο check-in, ακόμα κι αν αυτοί οι κανόνες ισχύουν γενικά για όλους τους άλλους.</li>
-</ul>
-
+<h1>8. Πίνακας Ελέγχου (Dashboard) <span class="role-tag role-admin">admin</span></h1>
+<p>Το Dashboard (<strong>Home</strong>) είναι η πρώτη οθόνη του διαχειριστή: μια γρήγορη εικόνα για το τι συμβαίνει στον χώρο, χωρίς αναζήτηση σε λίστες.</p>
+<figure style="max-width:100%"><img src="user-manual-images/dashboard.png" alt="Ο Πίνακας Ελέγχου"><figcaption>Εικόνα 27: Ο Πίνακας Ελέγχου</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Κάρτες δεικτών</strong>: Σύνολο οχημάτων στον χώρο, check-in σήμερα (πλήθος &amp; ποσό), check-out σήμερα (πλήθος &amp; ποσό), οχήματα για πλύσιμο σήμερα και αύριο.</span></li><li><span class="num">2</span><span><strong>Upcoming Check-Ins / Check-Outs</strong>: Οι επόμενες αφίξεις και αναχωρήσεις, με επιλογή εύρους ημερομηνιών (εξ ορισμού, σήμερα).</span></li><li><span class="num">3</span><span><strong>Reports</strong>: Συντομεύσεις προς κάθε αναφορά (Κεφάλαιο 9).</span></li></ol>
+<p>Πατώντας οποιαδήποτε κάρτα ανοίγει αναλυτική λίστα με τις κρατήσεις πίσω από τον αριθμό, με αναζήτηση, ταξινόμηση και σελιδοποίηση:</p>
+<figure style="max-width:100%"><img src="user-manual-images/dashboard-modal.png" alt="Αναλυτική λίστα από κάρτα του Dashboard"><figcaption>Εικόνα 28: Αναλυτική λίστα από κάρτα του Dashboard</figcaption></figure>
 </div>
-
-<!-- ============ CHAPTER 9 ============ -->
 <div class="chapter" id="c9">
-<h1>9. Οδηγοί <span class="role-tag role-admin">admin</span></h1>
-
-<p>Εδώ ο διαχειριστής διαχειρίζεται τους λογαριασμούς του προσωπικού με ρόλο «Οδηγός».</p>
-
-<h2>Προσθήκη &amp; επεξεργασία οδηγού</h2>
-<p>Η φόρμα ζητά όνομα, επώνυμο, email (το οποίο, μόλις οριστεί, δεν αλλάζει πλέον), αριθμό ταυτότητας, διεύθυνση (προαιρετικά) και τηλέφωνο. Μόλις δημιουργηθεί ένας νέος οδηγός, το σύστημα του στέλνει αυτόματα email για να ορίσει τον δικό του κωδικό πρόσβασης.</p>
-
-<h2>Αποκλεισμός &amp; διαγραφή</h2>
-<p>Αν ένας οδηγός σταματήσει προσωρινά να εργάζεται αλλά θέλετε να κρατήσετε το ιστορικό του, χρησιμοποιήστε <strong>Αποκλεισμός</strong> <span class="eng">(Block)</span> (απενεργοποιεί τον λογαριασμό χωρίς να διαγράφει τίποτα, και μπορεί να αναιρεθεί όποτε χρειαστεί). Η <strong>Διαγραφή</strong> είναι πιο οριστική και συνιστάται μόνο όταν είστε σίγουροι ότι δεν θα χρειαστεί ξανά ο λογαριασμός αυτός.</p>
-
+<h1>9. Αναφορές <span class="role-tag role-admin">admin</span></h1>
+<p>Η ενότητα <strong>Reports</strong> συγκεντρώνει όλες τις αναφορές. Οι περισσότερες εξάγονται σε <strong>PDF</strong> και <strong>Excel</strong>.</p>
+<figure style="max-width:100%"><img src="user-manual-images/reports-hub.png" alt="Η σελίδα αναφορών"><figcaption>Εικόνα 29: Η σελίδα αναφορών</figcaption></figure>
+<h2>Online Payments </h2>
+<p>Όλες οι πληρωμές που έγιναν online μέσω VPayments (Wallee), για επιλεγμένο εύρος ημερομηνιών. Τα σύνολα υπολογίζονται μικτά και καθαρά (χωρίς ΦΠΑ).</p>
+<h2>Income by Employee — Έσοδα ανά Υπάλληλο </h2>
+<p>Οι εισπράξεις του προσωπικού (check-in και check-out), με δύο τρόπους προβολής:</p>
+<ul><li><strong>Search by Date</strong>: Όλες οι συναλλαγές όλων των υπαλλήλων σε μια περίοδο, με σύνολα ανά τρόπο πληρωμής.</li><li><strong>Search by Employee</strong>: Επιλέγετε υπάλληλο, βλέπετε τις βάρδιές του (έναρξη, λήξη, αν είναι ανοιχτή ή κλειστή) και ανοίγοντας μια βάρδια τις ακριβείς συναλλαγές της.</li></ul>
+<figure style="max-width:100%"><img src="user-manual-images/report-income-date.png" alt="Έσοδα ανά υπάλληλο — προβολή ανά ημερομηνία"><figcaption>Εικόνα 30: Έσοδα ανά υπάλληλο — προβολή ανά ημερομηνία</figcaption></figure>
+<figure style="max-width:100%"><img src="user-manual-images/report-income-employees.png" alt="Έσοδα ανά υπάλληλο — επιλογή υπαλλήλου"><figcaption>Εικόνα 31: Έσοδα ανά υπάλληλο — επιλογή υπαλλήλου</figcaption></figure>
+<figure style="max-width:100%"><img src="user-manual-images/report-income-sessions.png" alt="Οι βάρδιες ενός υπαλλήλου"><figcaption>Εικόνα 32: Οι βάρδιες ενός υπαλλήλου</figcaption></figure>
+<h2>Daily In/Out Report — Ημερήσιες Είσοδοι/Έξοδοι </h2>
+<p>Όλες οι προγραμματισμένες αφίξεις ή/και αναχωρήσεις μιας ημέρας — το «πρόγραμμα» της βάρδιας. Επιλέγετε <strong>Check-Ins</strong>, <strong>Check-Outs</strong> ή <strong>Both</strong> και την ημερομηνία.</p>
+<ul><li>Για κάθε κράτηση φαίνονται: κατάσταση, τύπος (<strong>P</strong> = ο πελάτης φέρνει το όχημα στο πάρκινγκ, <strong>Airport</strong> = παράδοση/παραλαβή στο αεροδρόμιο), ώρα, πτήση, πελάτης και τηλέφωνο, όχημα, πινακίδα, θέση στάθμευσης, κλειδιά, τιμή και επιβάτες.</li><li>Όπου εφαρμόστηκε επιπλέον χρέωση καθυστέρησης, η αρχική τιμή φαίνεται διαγραμμένη και δίπλα, με κόκκινο, το σύνολο μαζί με τη χρέωση.</li><li>Με το <strong>Export</strong> εξάγεται σε PDF ή Excel για εκτύπωση.</li></ul>
+<figure style="max-width:100%"><img src="user-manual-images/report-daily-in-out.png" alt="Ημερήσια αναφορά εισόδων/εξόδων"><figcaption>Εικόνα 33: Ημερήσια αναφορά εισόδων/εξόδων</figcaption></figure>
+<h2>Wash Service Report — Αναφορά Πλυσίματος </h2>
+<p>Οι κρατήσεις με υπηρεσία πλυσίματος σε ένα εύρος ημερομηνιών, μαζί με τη <strong>θέση στάθμευσης</strong> κάθε οχήματος, ώστε ο υπεύθυνος πλυσίματος να το εντοπίζει αμέσως.</p>
+<h2>Pending Bookings Report — Εκκρεμείς Κρατήσεις </h2>
+<p>Τα <strong>παρκαρισμένα</strong> οχήματα που χρειάζονται προσοχή: δεν έχουν ημερομηνία επιστροφής ή η ημερομηνία επιστροφής τους έχει ήδη περάσει. Με το τηλέφωνο του πελάτη δίπλα, ώστε να επικοινωνήσετε μαζί του.</p>
+<figure style="max-width:100%"><img src="user-manual-images/report-pending.png" alt="Αναφορά εκκρεμών κρατήσεων"><figcaption>Εικόνα 34: Αναφορά εκκρεμών κρατήσεων</figcaption></figure>
+<h2>Z Reports </h2>
+<p>Το ιστορικό των Αναφορών Z — βλ. Κεφάλαιο 7.</p>
 </div>
-
-<!-- ============ CHAPTER 10 ============ -->
 <div class="chapter" id="c10">
-<h1>10. Ρυθμίσεις Συστήματος <span class="role-tag role-admin">admin</span></h1>
-
-<p>Οι ρυθμίσεις βρίσκονται μέσα στη σελίδα προφίλ του διαχειριστή, σε μια ενότητα που βλέπει μόνο αυτός. Εδώ ρυθμίζεται, ουσιαστικά, όλη η επιχειρηματική λογική του πάρκινγκ (τιμές, διαθεσιμότητα, φόρους, πληρωμές).</p>
-
-<h2>Διαθέσιμες θέσεις πάρκινγκ</h2>
-<p>Ο συνολικός αριθμός θέσεων, ξεχωριστά για καλυμμένο και ακάλυπτο πάρκινγκ (αυτό το νούμερο είναι που τροφοδοτεί τον έλεγχο διαθεσιμότητας που είδαμε στο κεφάλαιο της κράτησης).</p>
-
-<h2>Τιμολόγηση &amp; προοδευτική αύξηση</h2>
-<p>Ορίζεται η βασική τιμή ανά ημέρα, ξεχωριστά για κάθε τύπο πάρκινγκ, και πάνω σε αυτήν χτίζεται μια <strong>προοδευτική κλίμακα</strong> (δηλαδή, κάθε επόμενη ημέρα μπορεί να προσθέτει ένα επιπλέον ποσό, διαφορετικό από την προηγούμενη). Η πρώτη ημέρα είναι πάντα η βασική τιμή, και η τελευταία καταχωρημένη προσαύξηση επαναλαμβάνεται επ' άπειρον για όσες ημέρες κι αν διαρκέσει η στάθμευση.</p>
-
-<h2>Λήξη ημέρας <span class="eng">(Day End)</span></h2>
-<p>Ορίζει σε ποιο λεπτό μετά τα μεσάνυχτα θεωρείται ότι «κλείνει» μια ημέρα για σκοπούς χρέωσης και αναζήτησης των κρατήσεων.</p>
-
-<h2>Ελάχιστος χρόνος κράτησης εκ των προτέρων</h2>
-<p>Πόσες ημέρες νωρίτερα πρέπει να γίνει μια κράτηση (το μηδέν επιτρέπει κράτηση ακόμα και την ίδια ημέρα).</p>
-
-<h2>Υπηρεσία πλυσίματος &amp; παράδοση στο αεροδρόμιο</h2>
-<p>Δύο ανεξάρτητοι διακόπτες ενεργοποιούν ή απενεργοποιούν συνολικά αυτές τις δύο υπηρεσίες στη φόρμα κράτησης, με τις αντίστοιχες τιμές (κόστος πλυσίματος, κόστος παράδοσης) να ορίζονται δίπλα.</p>
-
-<h2>Κείμενο email</h2>
-<p>Ένα ελεύθερο πεδίο κειμένου που προστίθεται αυτόματα σε κάθε email επιβεβαίωσης κράτησης.</p>
-
-<h2>Πληρωμή</h2>
-<p>Δύο ανεξάρτητοι διακόπτες: <strong>υποχρεωτική πληρωμή κατά τη δημιουργία</strong> της κράτησης, και <strong>υποχρεωτική πληρωμή στο check-in</strong>. Μπορούν να ενεργοποιηθούν μαζί, χωριστά, ή καθόλου (ανάλογα με την πολιτική που θέλετε να ακολουθείτε).</p>
-
-<h2>Φόρος</h2>
-<p>Το ποσοστό φόρου που χρησιμοποιείται στους υπολογισμούς καθαρού ποσού μέσα στις αναφορές Z.</p>
-
+<h1>10. Πελάτες <span class="role-tag role-admin">admin</span></h1>
+<p>Η λίστα όλων των εγγεγραμμένων πελατών, με φίλτρα και ταξινόμηση. Για κάθε πελάτη υπάρχουν δύο ενέργειες:</p>
+<figure style="max-width:100%"><img src="user-manual-images/customers.png" alt="Η λίστα πελατών"><figcaption>Εικόνα 35: Η λίστα πελατών</figcaption></figure>
+<ol class="legend"><li><span class="num">1</span><span><strong>Ιστορικό</strong> (εικονίδιο ρολογιού): Όλες οι κρατήσεις του πελάτη, με αναζήτηση και σελιδοποίηση.</span></li><li><span class="num">2</span><span><strong>Ρυθμίσεις</strong> (εικονίδιο γραναζιού): Έκπτωση και εξαίρεση από υποχρεωτικές πληρωμές.</span></li></ol>
+<figure style="max-width:100%"><img src="user-manual-images/customer-history.png" alt="Ιστορικό κρατήσεων πελάτη"><figcaption>Εικόνα 36: Ιστορικό κρατήσεων πελάτη</figcaption></figure>
+<h2>Ρυθμίσεις πελάτη </h2>
+<figure style="max-width:100%"><img src="user-manual-images/customer-settings.png" alt="Ρυθμίσεις πελάτη"><figcaption>Εικόνα 37: Ρυθμίσεις πελάτη</figcaption></figure>
+<ul><li><strong>Ποσοστό έκπτωσης</strong> (0–100%): Εφαρμόζεται αυτόματα σε κάθε νέα κράτηση του πελάτη. Κενό = καμία έκπτωση.</li><li><strong>Εξαίρεση από υποχρεωτική πληρωμή</strong>: Απαλλάσσει τον συγκεκριμένο πελάτη από την υποχρεωτική προπληρωμή και την υποχρεωτική πληρωμή στο check-in, ακόμα κι αν ισχύουν για όλους τους άλλους.</li></ul>
 </div>
-
-<!-- ============ CHAPTER 11 ============ -->
 <div class="chapter" id="c11">
-<h1>11. Βάρδιες Προσωπικού &amp; Αποσύνδεση <span class="role-tag role-admin">admin</span><span class="role-tag role-driver">driver</span></h1>
-
-<p>Για διαχειριστές και οδηγούς, το σύστημα παρακολουθεί αυτόματα τις <strong>βάρδιες εργασίας</strong>. Μια βάρδια ξεκινά τη στιγμή που κάποιος συνδέεται, και τελειώνει τη στιγμή που αποσυνδέεται στο σύστημα. Δεν χρειάζεται καμία ξεχωριστή ενέργεια «έναρξη βάρδιας».</p>
-
-<h2>Το παράθυρο αποσύνδεσης</h2>
-<p>Όταν κάποιος πατά αποσύνδεση, πριν ολοκληρωθεί, εμφανίζεται ένα παράθυρο επιβεβαίωσης με μια σύνοψη όπως πόσα μετρητά και πόσα με κάρτα εισπράχθηκαν κατά τη διάρκεια αυτής της βάρδιας. Είναι, στην πράξη, μια μικρή «απόδειξη ταμείου» πριν φύγει κανείς, ώστε να ξέρει τι να αναφέρει αν χρειαστεί κλείσιμο ταμείου εκείνη τη στιγμή.</p>
-
-<p>Αυτές ακριβώς οι βάρδιες είναι που τροφοδοτούν την αναφορά «Έσοδα ανά Υπάλληλο» που είδαμε στο Κεφάλαιο 7. Κάθε βάρδια αντιστοιχεί σε ένα διάστημα σύνδεσης-αποσύνδεσης, με τις συναλλαγές που έγιναν ανάμεσα στα δύο.</p>
-
+<h1>11. Οδηγοί <span class="role-tag role-admin">admin</span></h1>
+<p>Η διαχείριση των λογαριασμών του προσωπικού με ρόλο «Οδηγός».</p>
+<figure style="max-width:100%"><img src="user-manual-images/drivers.png" alt="Η λίστα οδηγών με το μενού ενεργειών ανοιχτό"><figcaption>Εικόνα 38: Η λίστα οδηγών με το μενού ενεργειών ανοιχτό</figcaption></figure>
+<h2>Προσθήκη οδηγού </h2>
+<p>Με το <strong>Add Driver</strong> συμπληρώνετε όνομα, επώνυμο, email (δεν αλλάζει μετά τη δημιουργία), αριθμό ταυτότητας, διεύθυνση (προαιρετικά) και τηλέφωνο. Ο νέος οδηγός λαμβάνει αυτόματα email για να ορίσει τον δικό του κωδικό πρόσβασης.</p>
+<figure style="max-width:80%"><img src="user-manual-images/driver-add.png" alt="Φόρμα νέου οδηγού"><figcaption>Εικόνα 39: Φόρμα νέου οδηγού</figcaption></figure>
+<h2>Ενέργειες οδηγού </h2>
+<ul><li><strong>Edit</strong>: Αλλαγή στοιχείων.</li><li><strong>Reset Password</strong>: Αποστολή email στον οδηγό για νέο κωδικό (μόνο για ενεργούς οδηγούς). Χρήσιμο όταν κάποιος ξεχάσει τον κωδικό του.</li><li><strong>Block / Unblock</strong>: Προσωρινή απενεργοποίηση του λογαριασμού, χωρίς να χαθεί το ιστορικό. Αναιρείται οποιαδήποτε στιγμή.</li><li><strong>Delete</strong>: Οριστική διαγραφή. Προτιμήστε το Block, εκτός αν είστε βέβαιοι ότι ο λογαριασμός δεν θα χρειαστεί ξανά.</li></ul>
+</div>
+<div class="chapter" id="c12">
+<h1>12. Ρυθμίσεις Συστήματος <span class="role-tag role-admin">admin</span></h1>
+<p>Οι ρυθμίσεις βρίσκονται στη σελίδα προφίλ του διαχειριστή (πάνω δεξιά, στο όνομά σας), στη στήλη <strong>Settings</strong>. Εδώ ορίζεται όλη η επιχειρηματική λογική: τιμές, διαθεσιμότητα, ΦΠΑ και πληρωμές. Οι αλλαγές ισχύουν μόλις πατήσετε <strong>Save Settings</strong>.</p>
+<figure style="max-width:62%"><img src="user-manual-images/settings-1.png" alt="Ρυθμίσεις (1/3): θέσεις, προεπιλεγμένος τύπος, τιμές και κλίμακα ημερών"><figcaption>Εικόνα 40: Ρυθμίσεις (1/3): θέσεις, προεπιλεγμένος τύπος, τιμές και κλίμακα ημερών</figcaption></figure>
+<figure style="max-width:62%"><img src="user-manual-images/settings-2.png" alt="Ρυθμίσεις (2/3): λήξη ημέρας, ελάχιστος χρόνος κράτησης, πλύσιμο και παράδοση"><figcaption>Εικόνα 41: Ρυθμίσεις (2/3): λήξη ημέρας, ελάχιστος χρόνος κράτησης, πλύσιμο και παράδοση</figcaption></figure>
+<figure style="max-width:62%"><img src="user-manual-images/settings-3.png" alt="Ρυθμίσεις (3/3): στοιχεία επιστροφής, email, πληρωμές, ΦΠΑ και κράτηση επισκέπτη"><figcaption>Εικόνα 42: Ρυθμίσεις (3/3): στοιχεία επιστροφής, email, πληρωμές, ΦΠΑ και κράτηση επισκέπτη</figcaption></figure>
+<table><colgroup><col style="width:30%"><col style="width:70%"></colgroup><tr><th>Ρύθμιση</th><th>Τι κάνει</th></tr><tr><td><strong>Available Parking Spaces</strong></td><td>Ο συνολικός αριθμός θέσεων, χωριστά για ακάλυπτο και καλυμμένο. Τροφοδοτεί τον έλεγχο διαθεσιμότητας των κρατήσεων.</td></tr><tr><td><strong>Default Parking Type</strong></td><td>Ο τύπος πάρκινγκ που είναι προεπιλεγμένος σε κάθε νέα κράτηση. Αν δεν έχει διαθέσιμες θέσεις, προτείνεται αυτόματα ο άλλος.</td></tr><tr><td><strong>Pricing</strong></td><td>Η βασική τιμή της πρώτης ημέρας, για κάθε τύπο πάρκινγκ.</td></tr><tr><td><strong>Price Increments</strong></td><td>Η προοδευτική κλίμακα: κάθε επόμενη ημέρα προσθέτει το ποσό της γραμμής της (φαίνεται δίπλα το σωρευτικό σύνολο). Η τελευταία προσαύξηση επαναλαμβάνεται για όλες τις επόμενες ημέρες. Το «Copy from Covered/Uncovered» αντιγράφει την κλίμακα από τον άλλο τύπο. Η ίδια κλίμακα χρησιμοποιείται για την επιπλέον χρέωση καθυστέρησης.</td></tr><tr><td><strong>Day End</strong></td><td>Σε πόσα λεπτά μετά τα μεσάνυχτα «κλείνει» η ημέρα για σκοπούς χρέωσης (π.χ. 120 = 02:00).</td></tr><tr><td><strong>Booking Lead Time</strong></td><td>Πόσες ημέρες νωρίτερα πρέπει να γίνει μια κράτηση (0 = επιτρέπεται και αυθημερόν).</td></tr><tr><td><strong>Car Wash Service</strong></td><td>Ενεργοποίηση της υπηρεσίας πλυσίματος και η τιμή της.</td></tr><tr><td><strong>Airport Delivery / Delivery Fee</strong></td><td>Ενεργοποίηση της παράδοσης/παραλαβής στο αεροδρόμιο και η χρέωσή της.</td></tr><tr><td><strong>Return Details</strong></td><td>Αν οι νέες κρατήσεις ξεκινούν με τον διακόπτη «Do you know the return details?» ενεργό ή ανενεργό.</td></tr><tr><td><strong>Email</strong></td><td>Κείμενο που προστίθεται σε κάθε email επιβεβαίωσης κράτησης.</td></tr><tr><td><strong>Payment</strong></td><td>Δύο ανεξάρτητοι διακόπτες: υποχρεωτική πληρωμή κατά τη δημιουργία κράτησης και υποχρεωτική πληρωμή στο check-in (δεσμεύει τους οδηγούς).</td></tr><tr><td><strong>Tax</strong></td><td>Ο συντελεστής ΦΠΑ (%) για τον υπολογισμό Καθαρού/ΦΠΑ στις Αναφορές Z και στα Online Payments. Κάθε Αναφορά Z κρατά τον συντελεστή της ημέρας δημιουργίας της — η αλλαγή εδώ αφορά μόνο νέες αναφορές.</td></tr><tr><td><strong>Guest Booking</strong></td><td>Αν η επιλογή «Proceed as a Guest» εμφανίζεται στην αρχική σελίδα και αν η φόρμα επισκέπτη είναι προσβάσιμη.</td></tr></table>
+</div>
+<div class="chapter" id="c13">
+<h1>13. Συχνές Ερωτήσεις &amp; Προβλήματα </h1>
+<dl class="faq"><dt>Η εκτύπωση δεν βγαίνει. Τι κάνω;</dt><dd>Ακολουθήστε τον έλεγχο του Κεφαλαίου 5: Zebra Browser Print ανοιχτό, εκτυπωτής αναμμένος και φορτισμένος, εντοπισμός μέσω Bluetooth (κουμπί Feed). Εναλλακτικά, στείλτε την απόδειξη με <strong>Email</strong> από το μενού ⋮ της κράτησης.</dd><dt>Δεν μπορώ να κλείσω τη βάρδια μου, γιατί αποτυγχάνει η εκτύπωση.</dt><dd>Η βάρδια κλείνει μόνο με επιτυχημένη εκτύπωση της σύνοψης. Πατήστε <strong>Log Out Only</strong> (η βάρδια μένει ανοιχτή), διορθώστε τον εκτυπωτή και στην επόμενη σύνδεση κάντε <strong>Close Shift &amp; Log Out</strong>.</dd><dt>Μια είσπραξη δεν εμφανίζεται στην Αναφορά Z.</dt><dd>Η βάρδια του υπαλλήλου που την έκανε είναι ακόμα ανοιχτή. Ελέγξτε την Αναφορά X: όσοι εμφανίζονται εκεί πρέπει να κάνουν «Close Shift &amp; Log Out». Η είσπραξη θα μπει στην επόμενη Αναφορά Z.</dd><dt>Έκανα Αναφορά Z κατά λάθος. Αναιρείται;</dt><dd>Όχι. Η Αναφορά Z είναι οριστική. Οι συναλλαγές της δεν θα ξαναεμφανιστούν σε άλλη Αναφορά Z.</dd><dt>Άλλαξε ο ΦΠΑ. Τι γίνεται με τις παλιές Αναφορές Z;</dt><dd>Τίποτα. Κάθε Αναφορά Z κρατά τον συντελεστή που ίσχυε όταν δημιουργήθηκε. Ο νέος συντελεστής ισχύει μόνο για νέες αναφορές.</dd><dt>Ο πελάτης δεν ήξερε πότε επιστρέφει. Πόσο πληρώνει;</dt><dd>Στο check-out, το σύστημα ορίζει ως ημερομηνία επιστροφής τη σημερινή και υπολογίζει αυτόματα την τιμή από την άφιξη μέχρι σήμερα. Βλ. Κεφάλαιο 4, «Check-out χωρίς στοιχεία επιστροφής».</dd><dt>Ως οδηγός, δεν μπορώ να αλλάξω το ποσό είσπραξης.</dt><dd>Σωστά — οι οδηγοί εισπράττουν πάντα το ακριβές υπόλοιπο. Εκπτώσεις, δωρεάν (complimentary) και χάρισμα επιπλέον χρέωσης γίνονται μόνο από διαχειριστή.</dd><dt>Έκανα check-in σε λάθος κράτηση.</dt><dd>Επιλέξτε <strong>Parked ▾ → Revert to Created</strong> στη λάθος κράτηση. Τα στοιχεία check-in (θέση, χιλιόμετρα κ.λπ.) διαγράφονται και η κράτηση επιστρέφει σε «Created».</dd><dt>Ο πελάτης έχασε την απόδειξή του.</dt><dd>Από το μενού ⋮ της κράτησης, επιλέξτε την απόδειξη και <strong>Print</strong> ή <strong>Email</strong>. Ο εγγεγραμμένος πελάτης μπορεί επίσης να την κατεβάσει μόνος του από τις κρατήσεις του.</dd><dt>Δεν μπορώ να διαγράψω μια κράτηση.</dt><dd>Η διαγραφή επιτρέπεται μόνο όσο η κράτηση είναι «Created». Αν έχει γίνει check-in, κάντε πρώτα «Revert to Created».</dd><dt>Ένας οδηγός ξέχασε τον κωδικό του.</dt><dd>Ο διαχειριστής, από <strong>Drivers → ⋮ → Reset Password</strong>, του στέλνει email για νέο κωδικό.</dd></dl>
 </div>
 
 </body>
