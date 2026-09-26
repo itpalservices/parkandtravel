@@ -1879,9 +1879,48 @@ export async function checkParkPlaceAvailability(
   return { available: !existing };
 }
 
+/** A booking created without checkout details (dateTo null, price TBC) gets its checkout set to
+ *  the moment it's actually checked out: dateTo = today, timeTo = now, and the price computed
+ *  from check-in to today with the same rules as any other booking, including the customer
+ *  discount and admin deduction stored on it. No extra fee can apply, since it isn't late. */
+async function resolveTbcCheckout(booking: {
+  dateFrom: Date;
+  parkingTypeId: string | null;
+  washService: boolean;
+  dropOffOption: string | null;
+  discountPercentage: unknown;
+  deductedAmount: unknown;
+}, now: Date): Promise<{ dateTo: Date; timeTo: Date; finalPrice: number | null }> {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const dateTo = new Date(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T12:00:00Z`);
+  const timeTo = parseTimeToDate(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
+
+  const priceSettings = await getPriceSettings();
+  let basePrice: number | null = null;
+  let increments: number[] | null = null;
+  if (booking.parkingTypeId === 'parkingType_uncovered') {
+    basePrice = priceSettings.priceUncovered;
+    increments = priceSettings.priceIncrementsUncovered;
+  } else if (booking.parkingTypeId === 'parkingType_covered') {
+    basePrice = priceSettings.priceCovered;
+    increments = priceSettings.priceIncrementsCovered;
+  }
+  if (basePrice === null) return { dateTo, timeTo, finalPrice: null };
+
+  let price = calculateProgressivePrice(basePrice, calculateDays(booking.dateFrom, dateTo), increments);
+  if (booking.washService && priceSettings.priceWash !== null) price += priceSettings.priceWash;
+  if (hasAirportDelivery(booking.dropOffOption) && priceSettings.deliveryFee !== null) price += priceSettings.deliveryFee;
+
+  const discountPercentage = Number(booking.discountPercentage ?? 0);
+  if (discountPercentage > 0) price = Math.round(price * (1 - discountPercentage / 100) * 100) / 100;
+  price = Math.max(0, Math.round((price - Number(booking.deductedAmount ?? 0)) * 100) / 100);
+
+  return { dateTo, timeTo, finalPrice: price };
+}
+
 export async function estimateExtraFee(
   bookingId: string,
-): Promise<{ extraFee: number; isLate: boolean; walleePaymentDate: string | null } | null> {
+): Promise<{ extraFee: number; isLate: boolean; walleePaymentDate: string | null; tbcFinalPrice?: number | null } | null> {
   if (!isValidUUID(bookingId)) return null;
 
   const [booking, latestWallee] = await Promise.all([
@@ -1899,7 +1938,10 @@ export async function estimateExtraFee(
     : null;
 
   const checkOutDate = booking.dateTo ? new Date(booking.dateTo) : null;
-  if (!checkOutDate) return { extraFee: 0, isLate: false, walleePaymentDate };
+  if (!checkOutDate) {
+    const tbc = await resolveTbcCheckout(booking, new Date());
+    return { extraFee: 0, isLate: false, walleePaymentDate, tbcFinalPrice: tbc.finalPrice };
+  }
 
   checkOutDate.setHours(23, 59, 59, 999);
   const now = new Date();
@@ -2182,8 +2224,16 @@ export async function completeBooking(
   const estimatedFee = estimate?.extraFee ?? 0;
   const extraFeeToApply = (params.applyExtraFee && estimatedFee > 0) ? estimatedFee : null;
 
+  // No checkout details yet (price TBC): checkout happens now, so price it now — never let a
+  // missing price fall through as €0 owed.
+  const tbcCheckout = booking.dateTo ? null : await resolveTbcCheckout(booking, new Date());
+  if (tbcCheckout && tbcCheckout.finalPrice === null) {
+    throw new Error('Cannot calculate the price for this booking — check its parking type and the price settings.');
+  }
+  const finalPrice = tbcCheckout ? tbcCheckout.finalPrice! : Number(booking.finalPrice ?? 0);
+
   const breakdown = await getBookingPaidBreakdown(bookingId);
-  const rawDue = parseFloat((Number(booking.finalPrice ?? 0) + (extraFeeToApply ?? 0) - breakdown.waived
+  const rawDue = parseFloat((finalPrice + (extraFeeToApply ?? 0) - breakdown.waived
     - (breakdown.walleePaid + breakdown.checkinPaid + breakdown.completionPaid)).toFixed(2));
   const fullDue = Math.max(rawDue, 0);
 
@@ -2207,6 +2257,11 @@ export async function completeBooking(
       checkOutBy: params.actorName || params.actorUserId,
       extraFee: extraFeeToApply,
     };
+    if (tbcCheckout) {
+      updateData.dateTo = tbcCheckout.dateTo;
+      updateData.timeTo = tbcCheckout.timeTo;
+      updateData.finalPrice = tbcCheckout.finalPrice;
+    }
 
     await tx.booking.update({ where: { id: bookingId }, data: updateData });
 

@@ -1100,16 +1100,34 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.updatingStatus = true;
     let extraFee = 0;
     let isLate = false;
+    let tbcFinalPrice: number | null = null;
     try {
       const estimateResp: any = await firstValueFrom(
         this.apiService.get<any>(`/bookings/${this.bookingId}/extra-fee-estimate`)
       );
       extraFee = estimateResp?.data?.extraFee ?? 0;
       isLate = estimateResp?.data?.isLate ?? false;
+      tbcFinalPrice = estimateResp?.data?.tbcFinalPrice ?? null;
     } catch {
       // proceed without extra fee
     }
     this.updatingStatus = false;
+
+    // No checkout details (price TBC): checkout is now, so the server prices it from check-in to
+    // today. Without that price there's nothing safe to collect, so don't proceed.
+    const isTbc = !this.existingBooking.dateTo;
+    if (isTbc && tbcFinalPrice === null) {
+      await Swal.fire({
+        title: 'Cannot Complete Booking',
+        text: 'The check-out details are not set and the price could not be calculated. Please check the parking type of the booking and the price settings.',
+        icon: 'error',
+        confirmButtonColor: PRIMARY_COLOR,
+      });
+      return;
+    }
+    const tbcHtml = isTbc
+      ? `<p style="margin-bottom:12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 12px; color:#1e40af; font-size:13px; line-height:1.5;">Check-out details were not set, so check-out is set to now.<br>Price from check-in to today: <strong>€${tbcFinalPrice!.toFixed(2)}</strong></p>`
+      : '';
 
     // Drivers can't waive the extra fee, so they skip the confirmation and go straight to
     // the next step with it applied. Only admins choose.
@@ -1147,7 +1165,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       if (!lateConfirm.isConfirmed) return;
     }
 
-    const totalAmount = (this.existingBooking.finalPrice ?? 0) - (this.existingBooking.waivedAmount ?? 0) + (applyExtraFee ? extraFee : 0);
+    const finalPrice = isTbc ? tbcFinalPrice! : (this.existingBooking.finalPrice ?? 0);
+    const totalAmount = finalPrice - (this.existingBooking.waivedAmount ?? 0) + (applyExtraFee ? extraFee : 0);
 
     let paymentMethod: string;
     let amount: number;
@@ -1180,7 +1199,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         : `Refund issued at checkout: €${refundAmount.toFixed(2)} (Cash).`;
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
-        html: `Booking was overpaid.<br><strong>Refund due: €${refundAmount.toFixed(2)} (Cash)</strong><br>Please return this amount to the customer.`,
+        html: `${tbcHtml}Booking was overpaid.<br><strong>Refund due: €${refundAmount.toFixed(2)} (Cash)</strong><br>Please return this amount to the customer.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
@@ -1194,7 +1213,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       notes = priorNote ? `${priorNote}. No additional payment required.` : 'No additional payment required.';
       const confirmResult = await Swal.fire({
         title: 'Confirm Completion',
-        html: `Booking is fully paid.<br><strong>Total paid: €${totalAlreadyPaid.toFixed(2)}</strong><br>No additional payment required.`,
+        html: `${tbcHtml}Booking is fully paid.<br><strong>Total paid: €${totalAlreadyPaid.toFixed(2)}</strong><br>No additional payment required.`,
         icon: 'info',
         showCancelButton: true,
         confirmButtonText: 'Complete Booking',
@@ -1233,6 +1252,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       const { value: formValues } = await Swal.fire({
         title: 'Collect Payment',
         html: `
+          ${tbcHtml}
           ${priorHtml}
           <div class="mb-3">
             <label class="form-label fw-semibold">Amount (€)</label>

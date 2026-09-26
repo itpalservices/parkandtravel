@@ -886,7 +886,7 @@ export async function completeBookingHandler(req: Request, res: Response): Promi
     res.json({ success: true, data: result });
   } catch (error) {
     console.error("Error completing booking:", error);
-    if (error instanceof Error && error.message.startsWith("Amount must equal")) {
+    if (error instanceof Error && (error.message.startsWith("Amount must equal") || error.message.startsWith("Cannot calculate the price"))) {
       res.status(400).json({ error: error.message });
       return;
     }
