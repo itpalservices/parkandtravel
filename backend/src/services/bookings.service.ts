@@ -2018,9 +2018,6 @@ async function getBookingPaidBreakdown(bookingId: string): Promise<{
   };
 }
 
-/** Sets bookings.emailSent: a receipt has reached the customer, either emailed as an attachment
- *  (call only after the mail provider accepted it) or printed (reported by the frontend once the
- *  printer agent accepted the job). Never call it for emails/prints that carry no receipt. */
 /** super_admin "Hide": sets dismissFlag so the bookings leave the Undelivered Receipts list.
  *  Restricted to bookings that are actually on that list; nothing else about them changes. */
 export async function dismissUndeliveredReceiptBookings(ids: string[]): Promise<{ updated: number; deleted: number }> {
@@ -2101,6 +2098,10 @@ export async function dismissUndeliveredReceiptBookings(ids: string[]): Promise<
   });
 }
 
+/** Sets bookings.emailSent: a receipt has reached the customer, either emailed as an attachment
+ *  (call only after the mail provider accepted it), printed (reported by the frontend once the
+ *  printer agent accepted the job) or downloaded by the customer themselves as a PDF.
+ *  Never call it for emails/prints that carry no receipt. */
 export async function markReceiptDelivered(bookingId: string): Promise<void> {
   await prisma.booking.update({ where: { id: bookingId }, data: { emailSent: true } })
     .catch((err) => console.error(`Failed to set emailSent for booking ${bookingId}:`, err));

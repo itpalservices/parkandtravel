@@ -1062,7 +1062,8 @@ export async function generateBookingTagZplHandler(req: Request, res: Response):
   }
 }
 
-/** Admin/driver can access any booking's receipt; a customer only their own. */
+/** Admin/driver can access any booking's receipt; a customer only their own.
+ *  A customer opening one of the payment receipt PDFs counts as delivery (sets emailSent). */
 async function canAccessBookingReceipt(bookingId: string, authUser: AuthUser | undefined): Promise<boolean> {
   if (!authUser) return false;
   if (authUser.role === "admin" || authUser.role === "driver") return true;
@@ -1079,6 +1080,7 @@ export async function getCheckinPaymentPdfHandler(req: Request, res: Response): 
     }
     const pdfBuffer = await getCheckinPaymentPdf(req.params.id);
     if (!pdfBuffer) { res.status(404).json({ error: "No check-in payment found for this booking" }); return; }
+    if (authUser?.role === "user") await markReceiptDelivered(req.params.id);
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": 'inline; filename="checkin-payment-receipt.pdf"',
@@ -1100,6 +1102,7 @@ export async function getCompletionPaymentPdfHandler(req: Request, res: Response
     }
     const pdfBuffer = await getCompletionPaymentPdf(req.params.id);
     if (!pdfBuffer) { res.status(404).json({ error: "No checkout payment found for this booking" }); return; }
+    if (authUser?.role === "user") await markReceiptDelivered(req.params.id);
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": 'inline; filename="checkout-payment-receipt.pdf"',
@@ -1121,6 +1124,7 @@ export async function getPrepaidPaymentPdfHandler(req: Request, res: Response): 
     }
     const pdfBuffer = await getPrepaidPaymentPdf(req.params.id);
     if (!pdfBuffer) { res.status(404).json({ error: "No pre-paid online payment found for this booking" }); return; }
+    if (authUser?.role === "user") await markReceiptDelivered(req.params.id);
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": 'inline; filename="prepaid-receipt.pdf"',
