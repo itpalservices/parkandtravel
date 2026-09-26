@@ -7,8 +7,18 @@
         <span class="total-amount">{{ formatAmount(total.total) }}</span>
       </div>
     </div>
+    <div class="vat-grid">
+      <div class="vat-row">
+        <span class="total-label">Net Amount (excl. VAT)</span>
+        <span class="total-amount">{{ formatAmount(data.grandNet) }}</span>
+      </div>
+      <div class="vat-row">
+        <span class="total-label">VAT ({{ data.vatRate }}%)</span>
+        <span class="total-amount">{{ formatAmount(data.grandVat) }}</span>
+      </div>
+    </div>
     <div class="grand-total-row">
-      <span class="grand-label">Grand Total — All Employees</span>
+      <span class="grand-label">Grand Total (Gross) — All Employees</span>
       <span class="grand-amount">{{ formatAmount(data.grandTotal) }}</span>
     </div>
   </div>
@@ -83,8 +93,18 @@
               <span class="total-amount">{{ formatAmount(total.total) }}</span>
             </div>
           </div>
+          <div class="vat-grid">
+            <div class="vat-row">
+              <span class="total-label">Net Amount (excl. VAT)</span>
+              <span class="total-amount">{{ formatAmount(emp.employeeNet) }}</span>
+            </div>
+            <div class="vat-row">
+              <span class="total-label">VAT ({{ data.vatRate }}%)</span>
+              <span class="total-amount">{{ formatAmount(emp.employeeVat) }}</span>
+            </div>
+          </div>
           <div class="grand-total-row">
-            <span class="grand-label">Employee Total</span>
+            <span class="grand-label">Employee Total (Gross)</span>
             <span class="grand-amount">{{ formatAmount(emp.employeeTotal) }}</span>
           </div>
         </div>

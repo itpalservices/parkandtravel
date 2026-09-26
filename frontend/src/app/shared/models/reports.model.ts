@@ -95,6 +95,8 @@ export interface OpenShiftEmployeeSummary {
   transactions: ShiftTransaction[];
   totals: ShiftTotals[];
   employeeTotal: number;
+  employeeNet: number;
+  employeeVat: number;
 }
 
 export interface AdminXReportData {
@@ -118,8 +120,12 @@ export interface ZReportData {
   runByUserId: string;
   runByUserName: string;
   createdAt: string;
+  /** VAT rate (%) snapshotted when the report was created — later setting changes don't affect it. */
+  vatRate: number;
   employees: ZReportEmployeeSummary[];
   grandTotal: number;
+  grandNet: number;
+  grandVat: number;
   grandTotals: ShiftTotals[];
 }
 

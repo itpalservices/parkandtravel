@@ -132,6 +132,8 @@ export interface ZReportEmployeeSummary {
   transactions: OpenShiftTransaction[];
   totals: OpenShiftTotal[];
   employeeTotal: number;
+  employeeNet: number;
+  employeeVat: number;
 }
 
 export interface ZReportResult {
@@ -139,14 +141,61 @@ export interface ZReportResult {
   runByUserId: string;
   runByUserName: string;
   createdAt: Date;
+  vatRate: number;
   employees: ZReportEmployeeSummary[];
   grandTotal: number;
+  grandNet: number;
+  grandVat: number;
   grandTotals: OpenShiftTotal[];
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Amounts are VAT-inclusive — same split as the receipts in pdf.service. */
+function splitVat(gross: number, vatRate: number): { net: number; vat: number } {
+  const net = round2(gross / (1 + vatRate / 100));
+  return { net, vat: round2(gross - net) };
+}
+
+/** The VAT rate currently configured — snapshotted onto each Z-report at creation time. */
+async function getCurrentVatRate(tx: Pick<typeof prisma, "configurationSetting">): Promise<number> {
+  const setting = await tx.configurationSetting.findUnique({ where: { id: "configurationSetting_tax" } });
+  const rate = parseFloat(setting?.value ?? "");
+  return Number.isFinite(rate) ? rate : 0;
+}
+
+/** Builds the full response from a report row + its tagged transactions. Net/VAT use the report's
+ *  own stored rate; the grand Net/VAT are the sum of the employees' so the report always adds up. */
+async function buildZReportResult(
+  report: { id: string; runByUserId: string; runByUserName: string; createdAt: Date; vatRate: unknown },
+  rows: ZReportSweepRow[]
+): Promise<ZReportResult> {
+  const vatRate = Number(report.vatRate);
+  const employees = (await buildZReportEmployeeSummaries(rows)).map((e) => {
+    const { net, vat } = splitVat(e.employeeTotal, vatRate);
+    return { ...e, employeeNet: net, employeeVat: vat };
+  });
+  const { grandTotal, grandTotals } = mergeTotals(employees.map((e) => e.totals));
+
+  return {
+    id: report.id,
+    runByUserId: report.runByUserId,
+    runByUserName: report.runByUserName,
+    createdAt: report.createdAt,
+    vatRate,
+    employees,
+    grandTotal,
+    grandNet: round2(employees.reduce((sum, e) => sum + e.employeeNet, 0)),
+    grandVat: round2(employees.reduce((sum, e) => sum + e.employeeVat, 0)),
+    grandTotals,
+  };
 }
 
 /** Groups a flat list of rows (already tagged with a single z_report_id, whether just-swept or
  *  historical) into one summary section per employee, sorted alphabetically by name. */
-async function buildZReportEmployeeSummaries(rows: ZReportSweepRow[]): Promise<ZReportEmployeeSummary[]> {
+async function buildZReportEmployeeSummaries(
+  rows: ZReportSweepRow[]
+): Promise<Omit<ZReportEmployeeSummary, "employeeNet" | "employeeVat">[]> {
   if (rows.length === 0) return [];
 
   const employeeList = await getAllEmployees().catch(() => []);
@@ -159,7 +208,7 @@ async function buildZReportEmployeeSummaries(rows: ZReportSweepRow[]): Promise<Z
     byUser.set(row.user_id, list);
   }
 
-  const employees: ZReportEmployeeSummary[] = Array.from(byUser.entries()).map(([userId, userRows]) => {
+  const employees = Array.from(byUser.entries()).map(([userId, userRows]) => {
     const transactions: OpenShiftTransaction[] = userRows
       .map((r) => ({
         id: r.id,
@@ -200,8 +249,9 @@ export async function createZReport(req: Request, res: Response) {
     const adminName = adminEmail || adminId;
 
     const zReport = await prisma.$transaction(async (tx) => {
+      const vatRate = await getCurrentVatRate(tx);
       const report = await tx.zReport.create({
-        data: { runByUserId: adminId, runByUserName: adminName },
+        data: { runByUserId: adminId, runByUserName: adminName, vatRate },
       });
 
       const [completionRows, checkinRows] = await Promise.all([
@@ -242,19 +292,7 @@ export async function createZReport(req: Request, res: Response) {
       return { report, rows };
     });
 
-    const employees = await buildZReportEmployeeSummaries(zReport.rows as any);
-    const { grandTotal, grandTotals } = mergeTotals(employees.map((e) => e.totals));
-
-    const result: ZReportResult = {
-      id: zReport.report.id,
-      runByUserId: zReport.report.runByUserId,
-      runByUserName: zReport.report.runByUserName,
-      createdAt: zReport.report.createdAt,
-      employees,
-      grandTotal,
-      grandTotals,
-    };
-
+    const result = await buildZReportResult(zReport.report, zReport.rows as any);
     res.status(201).json(result);
   } catch (error: any) {
     if (error?.message === "NOTHING_TO_REPORT") {
@@ -358,19 +396,7 @@ export async function getZReportById(req: Request, res: Response) {
       ` as Promise<(ZReportSweepRow & { type: string })[]>,
     ]);
 
-    const employees = await buildZReportEmployeeSummaries([...completionRows, ...checkinRows] as any);
-    const { grandTotal, grandTotals } = mergeTotals(employees.map((e) => e.totals));
-
-    const result: ZReportResult = {
-      id: zReport.id,
-      runByUserId: zReport.runByUserId,
-      runByUserName: zReport.runByUserName,
-      createdAt: zReport.createdAt,
-      employees,
-      grandTotal,
-      grandTotals,
-    };
-
+    const result = await buildZReportResult(zReport, [...completionRows, ...checkinRows] as any);
     res.json(result);
   } catch (error) {
     console.error("getZReportById error:", error);

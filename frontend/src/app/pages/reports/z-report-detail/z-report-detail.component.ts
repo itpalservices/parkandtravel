@@ -104,7 +104,7 @@ export class ZReportDetailComponent implements OnInit {
     });
     y += 6;
     doc.setTextColor(0, 107, 143);
-    doc.text(`Grand Total: ${this.formatAmount(this.report.grandTotal)}`, 14, y);
+    doc.text(`Net: ${this.formatAmount(this.report.grandNet)}   |   VAT (${this.report.vatRate}%): ${this.formatAmount(this.report.grandVat)}   |   Grand Total (Gross): ${this.formatAmount(this.report.grandTotal)}`, 14, y);
     y += 10;
 
     autoTable(doc, {
@@ -131,7 +131,9 @@ export class ZReportDetailComponent implements OnInit {
         `Employees: ${this.report.employees.length}`,
         'Totals by payment method:',
         ...this.report.grandTotals.map((t) => `${this.formatMethod(t.paymentMethod)}: ${this.formatAmount(t.total)} (${t.count} tx)`),
-        `Grand Total: ${this.formatAmount(this.report.grandTotal)}`,
+        `Net Amount (excl. VAT): ${this.formatAmount(this.report.grandNet)}`,
+        `VAT (${this.report.vatRate}%): ${this.formatAmount(this.report.grandVat)}`,
+        `Grand Total (Gross): ${this.formatAmount(this.report.grandTotal)}`,
       ];
 
       await exportToExcel({

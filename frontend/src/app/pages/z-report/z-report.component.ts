@@ -122,7 +122,7 @@ export class ZReportComponent implements OnInit {
     });
     y += 6;
     doc.setTextColor(0, 107, 143);
-    doc.text(`Grand Total: ${this.formatAmount(this.result.grandTotal)}`, 14, y);
+    doc.text(`Net: ${this.formatAmount(this.result.grandNet)}   |   VAT (${this.result.vatRate}%): ${this.formatAmount(this.result.grandVat)}   |   Grand Total (Gross): ${this.formatAmount(this.result.grandTotal)}`, 14, y);
     y += 10;
 
     const rows: string[][] = [];

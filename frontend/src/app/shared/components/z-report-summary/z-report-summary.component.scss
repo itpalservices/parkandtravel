@@ -53,6 +53,21 @@
   text-align: right;
 }
 
+.vat-grid {
+  padding: 0.25rem 0;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.vat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+}
+
 .grand-total-row {
   display: flex;
   justify-content: space-between;
@@ -85,6 +100,11 @@
   .total-label { grid-area: label; }
   .total-count { grid-area: count; }
   .total-amount { grid-area: amount; }
+
+  .vat-row {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+  }
 
   .grand-total-row {
     padding: 0.6rem 0.9rem;

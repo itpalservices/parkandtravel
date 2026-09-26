@@ -226,6 +226,7 @@ model ZReport {
   id            String   @id @default(uuid()) @db.Uuid
   runByUserId   String   @map("run_by_user_id") @db.VarChar(255)
   runByUserName String   @map("run_by_user_name") @db.VarChar(255)
+  vatRate       Decimal  @default(0) @map("vat_rate") @db.Decimal(5, 2)
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   completionTransactions CompletionTransaction[]
