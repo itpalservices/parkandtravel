@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { ZebraPrintService } from '../../../core/services/zebra-print.service';
 import { ApiService } from '../../../core/services/api.service';
 import { ZReportData } from '../../../shared/models/reports.model';
 import { ZReportSummaryComponent } from '../../../shared/components/z-report-summary/z-report-summary.component';
@@ -21,10 +22,12 @@ const REPORT_COLUMNS = ['Date', 'Employee', 'Booking Ref.', 'Plate', 'Type', 'Me
 })
 export class ZReportDetailComponent implements OnInit {
   private apiService = inject(ApiService);
+  private zebraPrint = inject(ZebraPrintService);
   private route = inject(ActivatedRoute);
 
   loading = false;
   exporting = false;
+  printing = false;
   report: ZReportData | null = null;
 
   formatMethod = formatPaymentMethodLabel;
@@ -69,6 +72,17 @@ export class ZReportDetailComponent implements OnInit {
       });
     });
     return rows;
+  }
+
+  /** Thermal slip: grand totals only. Failures surface through the shared print-progress popup. */
+  async printThermal(): Promise<void> {
+    if (!this.report || this.printing) return;
+    this.printing = true;
+    try {
+      await this.zebraPrint.printZReport(this.report.id);
+    } finally {
+      this.printing = false;
+    }
   }
 
   exportPDF(): void {

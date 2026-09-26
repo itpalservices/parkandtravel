@@ -12,6 +12,7 @@ import {
   OpenShiftTransaction,
   OpenShiftTotal,
 } from "../services/shift-summary.service";
+import { generateZReportZpl } from "../services/pdf.service";
 
 export interface OpenShiftEmployeeSummary {
   userId: string;
@@ -364,42 +365,79 @@ export async function getZReportHistory(req: Request, res: Response) {
   }
 }
 
+/** Loads a stored Z-report with its tagged transactions — null if the id doesn't exist. Shared by
+ *  the detail view and the thermal print, so the printed slip always matches the screen. */
+async function loadZReportResult(id: string): Promise<ZReportResult | null> {
+  const zReport = await prisma.zReport.findUnique({ where: { id } });
+  if (!zReport) return null;
+
+  const [completionRows, checkinRows] = await Promise.all([
+    prisma.$queryRaw`
+      SELECT ct.id, ct.datetime, ct.amount, ct.payment_method, ct.notes, ct.user_id,
+             b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
+      FROM completion_transactions ct
+      LEFT JOIN bookings b ON b.id = ct.booking_id
+      WHERE ct.z_report_id = ${id}::uuid
+    ` as Promise<(ZReportSweepRow & { type: string })[]>,
+    prisma.$queryRaw`
+      SELECT kit.id, kit.datetime, kit.amount, kit.payment_method, kit.notes, kit.user_id,
+             b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
+      FROM checkin_transactions kit
+      LEFT JOIN bookings b ON b.id = kit.booking_id
+      WHERE kit.z_report_id = ${id}::uuid
+    ` as Promise<(ZReportSweepRow & { type: string })[]>,
+  ]);
+
+  return buildZReportResult(zReport, [...completionRows, ...checkinRows] as any);
+}
+
 export async function getZReportById(req: Request, res: Response) {
   if (req.authUser?.role !== "admin") {
     res.status(403).json({ error: "Admin only" });
     return;
   }
 
-  const { id } = req.params;
-
   try {
-    const zReport = await prisma.zReport.findUnique({ where: { id } });
-    if (!zReport) {
+    const result = await loadZReportResult(req.params.id);
+    if (!result) {
       res.status(404).json({ error: "Z report not found" });
       return;
     }
-
-    const [completionRows, checkinRows] = await Promise.all([
-      prisma.$queryRaw`
-        SELECT ct.id, ct.datetime, ct.amount, ct.payment_method, ct.notes, ct.user_id,
-               b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkout' AS type
-        FROM completion_transactions ct
-        LEFT JOIN bookings b ON b.id = ct.booking_id
-        WHERE ct.z_report_id = ${id}::uuid
-      ` as Promise<(ZReportSweepRow & { type: string })[]>,
-      prisma.$queryRaw`
-        SELECT kit.id, kit.datetime, kit.amount, kit.payment_method, kit.notes, kit.user_id,
-               b."plateNo" AS plate_no, b.booking_reference AS booking_reference, 'checkin' AS type
-        FROM checkin_transactions kit
-        LEFT JOIN bookings b ON b.id = kit.booking_id
-        WHERE kit.z_report_id = ${id}::uuid
-      ` as Promise<(ZReportSweepRow & { type: string })[]>,
-    ]);
-
-    const result = await buildZReportResult(zReport, [...completionRows, ...checkinRows] as any);
     res.json(result);
   } catch (error) {
     console.error("getZReportById error:", error);
     res.status(500).json({ error: "Failed to fetch Z report" });
+  }
+}
+
+/** Thermal slip for a Z-report — grand totals only (no per-employee sections or transactions). */
+export async function getZReportZpl(req: Request, res: Response) {
+  if (req.authUser?.role !== "admin") {
+    res.status(403).json({ error: "Admin only" });
+    return;
+  }
+
+  try {
+    const result = await loadZReportResult(req.params.id);
+    if (!result) {
+      res.status(404).json({ error: "Z report not found" });
+      return;
+    }
+
+    const zpl = await generateZReportZpl({
+      createdAt: result.createdAt,
+      runByUserName: result.runByUserName,
+      vatRate: result.vatRate,
+      grandTotals: result.grandTotals,
+      grandNet: result.grandNet,
+      grandVat: result.grandVat,
+      grandTotal: result.grandTotal,
+    });
+
+    res.set({ "Content-Type": "text/plain" });
+    res.send(zpl);
+  } catch (error) {
+    console.error("getZReportZpl error:", error);
+    res.status(500).json({ error: "Failed to generate Z report print" });
   }
 }

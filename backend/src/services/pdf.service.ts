@@ -708,6 +708,74 @@ export async function generateShiftSummaryZpl(data: ShiftSummaryZplData): Promis
   return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
 }
 
+export interface ZReportZplData {
+  createdAt: Date;
+  runByUserName: string;
+  vatRate: number;
+  grandTotals: { paymentMethod: string; total: number; count: number }[];
+  grandNet: number;
+  grandVat: number;
+  grandTotal: number;
+}
+
+/** Thermal Z-report slip: all-employees grand totals only (method breakdown + Net/VAT/Gross). */
+export async function generateZReportZpl(data: ZReportZplData): Promise<string> {
+  const company = await getCompanySettings();
+
+  const dateTimeStr = new Date(data.createdAt).toLocaleString('en-GB', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+
+  const phoneLine = company.companyPhone1 && company.companyPhone2
+    ? `${company.companyPhone1} | ${company.companyPhone2}`
+    : company.companyPhone1 || company.companyPhone2 || '';
+
+  const money = (n: number) => `${n < 0 ? '-' : ''}€${Math.abs(n).toFixed(2)}`;
+
+  const PW = 576;
+  const LM = 10;
+  const BW = PW - LM * 2;
+  let y = 80;
+  const cmds: string[] = [];
+
+  const esc    = (s: string) => String(s).replace(/[\^~\\]/g, '');
+  const center = (text: string, h: number) => cmds.push(`^FO0,${y}^A0N,${h},${h}^FB${PW},1,0,C,0^FD${esc(text)}^FS`);
+  const left   = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FD${esc(text)}^FS`);
+  const right  = (text: string, h: number) => cmds.push(`^FO${LM},${y}^A0N,${h},${h}^FB${BW},1,0,R,0^FD${esc(text)}^FS`);
+  const solid  = () => cmds.push(`^FO${LM},${y}^GB${BW},2,2^FS`);
+  const thin   = () => cmds.push(`^FO${LM},${y}^GB${BW},1,1^FS`);
+
+  // Header
+  center(company.companyName || 'Park & Travel', 30); y += 36;
+  if (company.companyVatNo) { center(`VAT: ${company.companyVatNo}`, 22); y += 27; }
+  if (phoneLine) { center(`Tel: ${phoneLine}`, 22); y += 27; }
+  y += 6; solid(); y += 10;
+
+  // Title
+  center('Z REPORT', 27); y += 33;
+  center(dateTimeStr, 22); y += 27;
+  center(`Run by: ${data.runByUserName}`, 22); y += 27;
+  y += 6; solid(); y += 10;
+
+  // Per payment-method grand totals
+  for (const t of data.grandTotals) {
+    left(`${formatShiftMethodLabel(t.paymentMethod)} (${t.count})`, 22);
+    right(money(t.total), 22);
+    y += 28;
+  }
+  y += 4; solid(); y += 10;
+
+  // Net / VAT / Gross
+  left('Net (excl. VAT)', 22); right(money(data.grandNet), 22); y += 28;
+  left(`VAT (${data.vatRate}%)`, 22); right(money(data.grandVat), 22); y += 28;
+  y += 2; thin(); y += 10;
+  left('GRAND TOTAL (GROSS)', 25); right(money(data.grandTotal), 25); y += 32;
+
+  y += 30;
+
+  return ['^XA', `^PW${PW}`, '^MNN', `^LL${y}`, '^CI28', ...cmds, '^PQ1', '^XZ'].join('');
+}
+
 export interface BookingTagData {
   customerName: string;
   plateNo: string | null;

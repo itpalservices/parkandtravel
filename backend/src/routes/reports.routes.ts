@@ -11,6 +11,7 @@ import {
   createZReport,
   getZReportHistory,
   getZReportById,
+  getZReportZpl,
 } from "../controllers/x-z-report.controller";
 import { checkJwt } from "../middleware/auth.middleware";
 
@@ -30,5 +31,6 @@ router.get("/x-report", checkJwt, getXReport);
 router.post("/z-report-new", checkJwt, createZReport);
 router.get("/z-report-new/history", checkJwt, getZReportHistory);
 router.get("/z-report-new/:id", checkJwt, getZReportById);
+router.get("/z-report-new/:id/zpl", checkJwt, getZReportZpl);
 
 export default router;

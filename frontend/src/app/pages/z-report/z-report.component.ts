@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ZebraPrintService } from '../../core/services/zebra-print.service';
 import { ApiService } from '../../core/services/api.service';
 import { ZReportData } from '../../shared/models/reports.model';
 import { ZReportSummaryComponent } from '../../shared/components/z-report-summary/z-report-summary.component';
@@ -21,11 +22,13 @@ type Step = 'confirming' | 'result';
 })
 export class ZReportComponent implements OnInit {
   private apiService = inject(ApiService);
+  private zebraPrint = inject(ZebraPrintService);
   private router = inject(Router);
 
   step: Step = 'confirming';
   submitting = false;
   exporting = false;
+  printing = false;
   result: ZReportData | null = null;
 
   formatMethod = formatPaymentMethodLabel;
@@ -87,6 +90,17 @@ export class ZReportComponent implements OnInit {
 
   viewHistory(): void {
     this.router.navigate(['/admin/reports/z-reports']);
+  }
+
+  /** Thermal slip: grand totals only. Failures surface through the shared print-progress popup. */
+  async printThermal(): Promise<void> {
+    if (!this.result || this.printing) return;
+    this.printing = true;
+    try {
+      await this.zebraPrint.printZReport(this.result.id);
+    } finally {
+      this.printing = false;
+    }
   }
 
   exportPDF(): void {

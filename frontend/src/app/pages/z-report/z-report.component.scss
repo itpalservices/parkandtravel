@@ -63,6 +63,9 @@
 }
 
 .btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: #f3f4f6;
   color: #374151;
   border: 1px solid #e5e7eb;
@@ -72,7 +75,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
-  &:hover { background: #e5e7eb; }
+  &:hover:not(:disabled) { background: #e5e7eb; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
 .result-meta {

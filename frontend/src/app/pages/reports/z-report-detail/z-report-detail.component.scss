@@ -36,6 +36,29 @@
   &:hover { text-decoration: underline; }
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover:not(:disabled) { background: #e5e7eb; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
 .btn-export {
   display: flex;
   align-items: center;
