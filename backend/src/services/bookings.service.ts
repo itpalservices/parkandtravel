@@ -673,8 +673,9 @@ function parseTimeToDate(timeStr: string): Date {
 
 function calculateDays(checkInDate: Date, checkOutDate: Date): number {
   const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+  // Inclusive: every calendar date the car is parked counts (06→08 = 3 days, same day = 1).
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return Math.max(diffDays, 1); // Minimum 1 day
+  return Math.max(diffDays + 1, 1);
 }
 
 async function getPriceSettings(): Promise<{

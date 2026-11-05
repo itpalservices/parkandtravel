@@ -294,8 +294,10 @@ export class GuestBookingComponent implements OnInit, OnDestroy {
     const checkInDate = new Date(checkIn.year, checkIn.month - 1, checkIn.day);
     const checkOutDate = new Date(checkOut.year, checkOut.month - 1, checkOut.day);
     const diffTime = checkOutDate.getTime() - checkInDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(diffDays, 1);
+    // Inclusive: every calendar date the car is parked counts (06→08 = 3 days, same day = 1).
+    // Math.round, not ceil: local dates span 23h/25h across DST changes.
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(diffDays + 1, 1);
   }
 
   get hasDeliveryFee(): boolean {
